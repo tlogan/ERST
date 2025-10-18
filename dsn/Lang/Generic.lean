@@ -1296,6 +1296,28 @@ lemma ListZone.tidy_soundness {zones0 zones1 am assums e} :
         Typing.Dynamic (am'' ++ am' ++ am) e t1 ) ) )
 := by sorry
 
+lemma ListZone.tidy_soundness_alt
+  {zones0 zones1 e context skolems assums1 t1}
+  {assums : List (Typ × Typ)}
+:
+  ListZone.tidy (ListSubtyping.free_vars assums) zones0 = .some zones1 →
+  ⟨skolems, assums1, t1⟩ ∈ zones1 →
+
+  (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
+    (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+      (∀ {am'},
+        MultiSubtyping.Dynamic (am'' ++ am') (assums0 ++ assums) →
+        ∀ {eam}, MultiTyping.Dynamic am' eam context →
+        Typing.Dynamic (am'' ++ am') (Expr.sub eam e) t0 ) ) ) →
+
+  (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+    (∀ {am'},
+      MultiSubtyping.Dynamic (am'' ++ am') (assums1 ++ assums) →
+      ∀ {eam}, MultiTyping.Dynamic am' eam context →
+      Typing.Dynamic (am'' ++ am') (Expr.sub eam e) t1 ) )
+:= by sorry
+
+
 lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
   MultiSubtyping.Dynamic am cs →
   MultiSubtyping.Dynamic am cs' →
@@ -1311,6 +1333,17 @@ lemma PatLifting.Static.soundness {assums context p t assums' context' am e} :
   Typing.Dynamic am e t →
   ∃ eam , pattern_match e p = .some eam
 := by sorry
+
+
+-- lemma MultiSubtyping.Dynamic.concat_elim {tam cs' cs} :
+--   MultiSubtyping.Dynamic tam (cs' ++ cs) →
+--   (
+--     MultiSubtyping.Dynamic tam cs ∧
+--     ∃ tam' ,
+--       ListPair.dom tam' ∩ ListSubtyping.free_vars cs = [] ∧
+--       MultiSubtyping.Dynamic (tam' ++ tam) cs'
+--   )
+-- := by sorry
 
 lemma PatLifting.Static.attributes {assums context p t assums' context'} :
   PatLifting.Static assums context p t assums' context' →
@@ -1334,20 +1367,34 @@ mutual
   | .nil => by intros ; contradiction
   | .cons
       p e f assums0 context0 tp zones zones' zones'' subtras
-      p0 p1 p2 p3
+      p0 p1 p2 p3 p4
   => by
     intro p10
     apply Iff.mp List.mem_append at p10
     cases p10 with
     | inl p11 =>
-      -- have ⟨tam1,ih1l,ih1r⟩ := PatLifting.Static.soundness p1
-      -- have ⟨p6,p11,p16,p21,p26,p31⟩ := Typing.Record.Static.attributes p1
+      clear p0
+      apply ListZone.tidy_soundness_alt p4 p11
+      intros skolems' assums' t p12
+      have ⟨tr, p20⟩ := p2 p12
+      rw [p20] at p12
+      have p22 := p3 p12
+
+      have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p22
+      have ⟨p24,p26,p28,p30,p32,p34⟩ := Typing.Static.attributes p22
+      exists tam0
+      apply And.intro (fun _ p38 => containment_mdiff_concat_elim (ih0l p38))
+
+      intros tam' p40
+      intros eam p42
+      rw [p20]
+      -- TODO: Dynamic function head lemma
       sorry
+
     | inr p11 =>
       have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p0 p11
       have ⟨p20,p22,p24,p26⟩ := Typing.Function.Static.attributes p0 p11
-      clear p1
-      clear p2
+      clear p1 p2 p3 p4
       exists tam0
       simp [*]
       intros tam' p30

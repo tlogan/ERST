@@ -1691,11 +1691,11 @@ mutual
   :
     Typing.Function.Static skolems assums context f zones subtras →
     PatLifting.Static assums context p tp assums' context' →
-    (∀ skolems' assums'' t,
+    (∀ {skolems' assums'' t},
       ⟨skolems', assums'', t⟩ ∈ zones' →
       ∃ tr , t = (.path (ListTyp.diff tp subtras) tr)
     ) →
-    (∀ skolems' assums'' tr,
+    (∀ {skolems' assums'' tr},
       ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ∈ zones' →
       Typing.Static skolems assums' context' e tr (skolems' ++ skolems) (assums'' ++ assums')
     ) →

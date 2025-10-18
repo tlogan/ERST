@@ -32,6 +32,10 @@ def ListSubtyping := List (Typ × Typ)
 instance : Membership (Typ × Typ) ListSubtyping where
   mem (xs : List (Typ × Typ)) x := x ∈ xs
 
+
+instance : Membership (Typ × Typ) ListSubtyping where
+  mem (xs : List (Typ × Typ)) x := x ∈ xs
+
 mutual
   instance ListSubtyping.decidable_eq : DecidableEq (List (Typ × Typ))
   | [], [] => isTrue rfl
