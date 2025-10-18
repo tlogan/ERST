@@ -609,6 +609,15 @@ lemma Typing.Dynamic.inter_entry_intro {am l e r body t} :
   Typing.Dynamic am (Expr.record ((l, e) :: r)) (Typ.inter (Typ.entry l body) t)
 := by sorry
 
+-- lemma Typing.Dynamic.function_head_elim {am p e tail t subtras} :
+--   Typing.Dynamic am (.function tail) t →
+--   Typing.Dynamic am (.function ((p, e) :: tail)) t
+-- := by sorry
+
+lemma Typing.Dynamic.function_tail_elim {am head tail t} :
+  Typing.Dynamic am (.function tail) t →
+  Typing.Dynamic am (.function (head :: tail)) t
+:= by sorry
 
 
 lemma Typing.Dynamic.path_elim {am ef ea t t'} :
@@ -1324,16 +1333,27 @@ mutual
         Typing.Dynamic (tam ++ tam') (Expr.sub eam (.function f)) t ) )
   | .nil => by intros ; contradiction
   | .cons
-      p e f assums' context' tp zones zones' zones'' subtras
+      p e f assums0 context0 tp zones zones' zones'' subtras
       p0 p1 p2 p3
   => by
     intro p10
-    -- TODO: split membership on concat (++)
-    -- have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p0
-    -- have ⟨p5,p10,p15,p20,p25,p30⟩ := Typing.Static.attributes p0
-    -- have ⟨tam1,ih1l,ih1r⟩ := PatLifting.Static.soundness p1
-    -- have ⟨p6,p11,p16,p21,p26,p31⟩ := Typing.Record.Static.attributes p1
-    sorry
+    apply Iff.mp List.mem_append at p10
+    cases p10 with
+    | inl p11 =>
+      -- have ⟨tam1,ih1l,ih1r⟩ := PatLifting.Static.soundness p1
+      -- have ⟨p6,p11,p16,p21,p26,p31⟩ := Typing.Record.Static.attributes p1
+      sorry
+    | inr p11 =>
+      have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p0 p11
+      have ⟨p20,p22,p24,p26⟩ := Typing.Function.Static.attributes p0 p11
+      clear p1
+      clear p2
+      exists tam0
+      simp [*]
+      intros tam' p30
+      intros eam p32
+      apply Typing.Dynamic.function_tail_elim
+      apply ih0r p30 p32
 
   theorem Typing.Record.Static.soundness {skolems assums context r t skolems' assums'} :
     Typing.Record.Static skolems assums context r t skolems' assums' →
