@@ -609,10 +609,13 @@ lemma Typing.Dynamic.inter_entry_intro {am l e r body t} :
   Typing.Dynamic am (Expr.record ((l, e) :: r)) (Typ.inter (Typ.entry l body) t)
 := by sorry
 
--- lemma Typing.Dynamic.function_head_elim {am p e tail t subtras} :
---   Typing.Dynamic am (.function tail) t →
---   Typing.Dynamic am (.function ((p, e) :: tail)) t
--- := by sorry
+lemma Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
+  (∀ {v} ,
+    IsValue v → Typing.Dynamic am v tp →
+    ∃ eam , pattern_match v p = .some eam ∧ Typing.Dynamic am (Expr.sub eam e) tr
+  ) →
+  Typing.Dynamic am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
+:= by sorry
 
 lemma Typing.Dynamic.function_tail_elim {am head tail t} :
   Typing.Dynamic am (.function tail) t →
@@ -1326,12 +1329,10 @@ lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
 
 
 
-lemma PatLifting.Static.soundness {assums context p t assums' context' am e} :
+lemma PatLifting.Static.soundness {assums context p t assums' context'} :
   PatLifting.Static assums context p t assums' context' →
-  MultiSubtyping.Dynamic am assums' →
-  IsValue e →
-  Typing.Dynamic am e t →
-  ∃ eam , pattern_match e p = .some eam
+  ∀ tam v, IsValue v → Typing.Dynamic tam v t →
+    ∃ eam , pattern_match v p = .some eam ∧ MultiTyping.Dynamic tam eam context'
 := by sorry
 
 
@@ -1382,13 +1383,24 @@ mutual
 
       have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p22
       have ⟨p24,p26,p28,p30,p32,p34⟩ := Typing.Static.attributes p22
+
       exists tam0
       apply And.intro (fun _ p38 => containment_mdiff_concat_elim (ih0l p38))
 
       intros tam' p40
       intros eam p42
       rw [p20]
-      -- TODO: Dynamic function head lemma
+
+      simp [Expr.sub, Expr.Function.sub]
+      apply Typing.Dynamic.function_head_elim
+      intros v p44 p46
+      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p1 (tam0 ++ tam') v p44 p46
+      exists eam0
+      simp [*]
+      -- TODO: rewrite compound sub into a single sub
+      -- apply ih0r
+
+
       sorry
 
     | inr p11 =>
