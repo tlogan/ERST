@@ -1693,11 +1693,12 @@ mutual
     PatLifting.Static assums context p tp assums' context' →
     (∀ {skolems' assums'' t},
       ⟨skolems', assums'', t⟩ ∈ zones' →
+      ∃ assums_ext, assums'' = assums_ext ++ assums' ∧
       ∃ tr , t = (.path (ListTyp.diff tp subtras) tr)
     ) →
     (∀ {skolems' assums'' tr},
       ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ∈ zones' →
-      Typing.Static skolems assums' context' e tr (skolems' ++ skolems) (assums'' ++ assums')
+      Typing.Static skolems assums' context' e tr (skolems' ++ skolems) (assums'' ++ assums)
     ) →
     ListZone.tidy (ListSubtyping.free_vars assums) zones' = .some zones'' →
     Typing.Function.Static skolems assums context

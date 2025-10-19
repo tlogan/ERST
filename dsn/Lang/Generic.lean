@@ -1336,6 +1336,13 @@ lemma PatLifting.Static.soundness {assums context p t assums' context'} :
 := by sorry
 
 
+lemma pattern_match_ids_containment {v p eam} :
+  pattern_match v p = .some eam →
+  ids_pattern p ⊆ ListPair.dom eam
+:= by sorry
+
+
+
 -- lemma MultiSubtyping.Dynamic.concat_elim {tam cs' cs} :
 --   MultiSubtyping.Dynamic tam (cs' ++ cs) →
 --   (
@@ -1351,6 +1358,13 @@ lemma PatLifting.Static.attributes {assums context p t assums' context'} :
   assums ⊆ assums' ∧
   Typ.free_vars t ⊆ ListTyping.free_vars context' ∧
   ListTyping.free_vars context'  ⊆ ListSubtyping.free_vars assums'
+:= by sorry
+
+
+lemma Expr.sub_sub_removal {ids eam0 eam1 e} :
+ids ⊆ ListPair.dom eam0 →
+(Expr.sub eam0 (Expr.sub (remove_all eam1 ids) e)) =
+(Expr.sub (eam0 ++ eam1) e)
 := by sorry
 
 -- set_option maxHeartbeats 1000000 in
@@ -1377,19 +1391,23 @@ mutual
       clear p0
       apply ListZone.tidy_soundness_alt p4 p11
       intros skolems' assums' t p12
-      have ⟨tr, p20⟩ := p2 p12
-      rw [p20] at p12
-      have p22 := p3 p12
+      have ⟨assums_ext, p20, tr, p22⟩ := p2 p12
+      -- rw [p20] at p12
+      rw [p22] at p12
+      have p23 := p3 p12
 
-      have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p22
-      have ⟨p24,p26,p28,p30,p32,p34⟩ := Typing.Static.attributes p22
+      -- have temp : assums_ext ++ assums0 ++ assums = assums_ext ++ (assums0 ++ assums) := by
+      --   apply List.append_assoc assums_ext assums0 assums
+
+      have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p23
+      have ⟨p24,p26,p28,p30,p32,p34⟩ := Typing.Static.attributes p23
 
       exists tam0
       apply And.intro (fun _ p38 => containment_mdiff_concat_elim (ih0l p38))
 
       intros tam' p40
       intros eam p42
-      rw [p20]
+      rw [p22]
 
       simp [Expr.sub, Expr.Function.sub]
       apply Typing.Dynamic.function_head_elim
@@ -1397,12 +1415,13 @@ mutual
       have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p1 (tam0 ++ tam') v p44 p46
       exists eam0
       simp [*]
-      -- TODO: rewrite compound sub into a single sub
-      -- apply ih0r
-
+      rw [Expr.sub_sub_removal (pattern_match_ids_containment p48)]
+      apply ih0r p40
 
       sorry
 
+
+      -- sorry
     | inr p11 =>
       have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p0 p11
       have ⟨p20,p22,p24,p26⟩ := Typing.Function.Static.attributes p0 p11
