@@ -1682,14 +1682,15 @@ inductive Subtyping.LoopListZone.Static : List String → String → List Zone �
 mutual
   inductive Typing.Function.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
-    List (Pat × Expr) → List Zone → List Typ → Prop
-  | nil {skolems assums context} :
-    Typing.Function.Static skolems assums context [] [] []
+    List Typ →  -- subtras
+    List (Pat × Expr) → List Zone → Prop
+  | nil {skolems assums context subtras} :
+    Typing.Function.Static skolems assums context subtras [] []
 
   | cons {skolems assums context }
     p e f assums' context' tp zones zones' zones'' subtras
   :
-    Typing.Function.Static skolems assums context f zones subtras →
+    Typing.Function.Static skolems assums context (tp :: subtras) f zones →
     PatLifting.Static assums context p tp assums' context' →
     (∀ {skolems' assums'' t},
       ⟨skolems', assums'', t⟩ ∈ zones' →
@@ -1702,7 +1703,8 @@ mutual
     ) →
     ListZone.tidy (ListSubtyping.free_vars assums) zones' = .some zones'' →
     Typing.Function.Static skolems assums context
-      ((p,e)::f) (zones'' ++ zones) ((Typ.capture tp) :: subtras)
+      subtras
+      ((p,e)::f) (zones'' ++ zones)
 
   inductive Typing.Record.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
@@ -1730,8 +1732,8 @@ mutual
     Typing.Record.Static skolems assums context r t skolems assums →
     Typing.Static skolems assums context (.record r) t skolems assums
 
-  | function {skolems assums context} f zones subtras t :
-    Typing.Function.Static skolems assums context f zones subtras →
+  | function {skolems assums context} f zones t :
+    Typing.Function.Static skolems assums context [] f zones →
     ListZone.pack (ListSubtyping.free_vars assums) .true zones = t →
     Typing.Static skolems assums context (.function f) t skolems assums
 

@@ -349,7 +349,7 @@ lemma Typing.Static.attributes {skolems assums context e t skolems' assums'} :
 lemma Typing.Function.Static.attributes
   {skolems assums context f zones subtras skolems' assums' t}
 :
-  Typing.Function.Static skolems assums context f zones subtras →
+  Typing.Function.Static skolems assums context subtras f zones →
   ⟨skolems',assums',t⟩ ∈ zones →
   skolems' ∩ skolems = [] ∧
   skolems' ∩ ListSubtyping.free_vars assums = [] ∧
@@ -628,9 +628,11 @@ lemma Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
   Typing.Dynamic am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
 := by sorry
 
-lemma Typing.Dynamic.function_tail_elim {am head tail t} :
-  Typing.Dynamic am (.function tail) t →
-  Typing.Dynamic am (.function (head :: tail)) t
+lemma Typing.Dynamic.function_tail_elim {am p tp e f t } :
+  (∀ {v} , IsValue v → Typing.Dynamic am v tp → ∃ eam , pattern_match v p = .some eam) →
+  ¬ Subtyping.Dynamic am t (.path tp .top) →
+  Typing.Dynamic am (.function f) t →
+  Typing.Dynamic am (.function ((p,e) :: f)) t
 := by sorry
 
 
@@ -1368,13 +1370,24 @@ ids ⊆ ListPair.dom eam0 →
 (Expr.sub (eam0 ++ eam1) e)
 := by sorry
 
+
+
+lemma Typing.Function.Static.subtra_soundness {
+  skolems assums context f zones subtra subtras skolems' assums' t
+} :
+  Typing.Function.Static skolems assums context  subtras f zones →
+  subtra ∈ subtras →
+  ⟨skolems', assums', t⟩ ∈ zones →
+  ∀ am , ¬ Subtyping.Dynamic am t (.path subtra .top)
+:= by sorry
+
 -- set_option maxHeartbeats 1000000 in
 mutual
 
   theorem Typing.Function.Static.soundness {
     skolems assums context f zones subtras skolems' assums' t
   } :
-    Typing.Function.Static skolems assums context f zones subtras →
+    Typing.Function.Static skolems assums context subtras f zones →
     ⟨skolems', assums', t⟩ ∈ zones →
     ∃ tam, ListPair.dom tam ⊆ skolems' ∧
     (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') (assums' ++ assums) →
@@ -1422,13 +1435,19 @@ mutual
     | inr p11 =>
       have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p0 p11
       have ⟨p20,p22,p24,p26⟩ := Typing.Function.Static.attributes p0 p11
-      clear p1 p2 p3 p4
+
       exists tam0
       simp [*]
       intros tam' p30
       intros eam p32
+
       apply Typing.Dynamic.function_tail_elim
-      apply ih0r p30 p32
+      { intros v p40 p42
+        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p1 (tam0 ++ tam') v p40 p42
+        apply Exists.intro eam0 p48 }
+      { apply Typing.Function.Static.subtra_soundness p0 List.mem_cons_self p11 }
+      { apply ih0r p30 p32 }
+
 
   theorem Typing.Record.Static.soundness {skolems assums context r t skolems' assums'} :
     Typing.Record.Static skolems assums context r t skolems' assums' →

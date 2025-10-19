@@ -1283,10 +1283,10 @@ instance : Coe Pat Expr where
   coe := Pat.toExpr
 
 
-def ListTyp.diff (t : Typ) : List Typ → Typ
-| .nil => t
-| .cons x xs => ListTyp.diff (Typ.diff t x) xs
-
 def Typ.capture (t : Typ) : Typ :=
     let ids := Typ.free_vars t
     .exi ids .nil t
+
+def ListTyp.diff (t : Typ) : List Typ → Typ
+| .nil => t
+| .cons x xs => ListTyp.diff (Typ.diff t (Typ.capture x)) xs
