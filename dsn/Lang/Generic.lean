@@ -210,10 +210,21 @@ lemma Typing.Dynamic.dom_extension {tam1 tam0 e t} :
   Typing.Dynamic (tam1 ++ tam0) e t
 := by sorry
 
+lemma MultiTyping.Dynamic.dom_reduction {tam1 tam0 eam cs} :
+  (ListPair.dom tam1) ∩ ListTyping.free_vars cs = [] →
+  MultiTyping.Dynamic (tam1 ++ tam0) eam cs →
+  MultiTyping.Dynamic tam0 eam cs
+:= by sorry
+
 lemma MultiTyping.Dynamic.dom_extension {tam1 tam0 eam cs} :
   (ListPair.dom tam1) ∩ ListTyping.free_vars cs = [] →
   MultiTyping.Dynamic tam0 eam cs →
   MultiTyping.Dynamic (tam1 ++ tam0) eam cs
+:= by sorry
+
+lemma MultiTyping.Dynamic.dom_context_extension {tam eam cs} :
+  MultiTyping.Dynamic tam eam cs →
+  ∀ eam', MultiTyping.Dynamic tam (eam ++ eam') cs
 := by sorry
 
 
@@ -1343,22 +1354,12 @@ lemma pattern_match_ids_containment {v p eam} :
 
 
 
--- lemma MultiSubtyping.Dynamic.concat_elim {tam cs' cs} :
---   MultiSubtyping.Dynamic tam (cs' ++ cs) →
---   (
---     MultiSubtyping.Dynamic tam cs ∧
---     ∃ tam' ,
---       ListPair.dom tam' ∩ ListSubtyping.free_vars cs = [] ∧
---       MultiSubtyping.Dynamic (tam' ++ tam) cs'
---   )
+-- lemma PatLifting.Static.attributes {assums context p t assums' context'} :
+--   PatLifting.Static assums context p t assums' context' →
+--   assums ⊆ assums' ∧
+--   Typ.free_vars t ⊆ ListTyping.free_vars context' ∧
+--   ListTyping.free_vars context'  ⊆ ListSubtyping.free_vars assums'
 -- := by sorry
-
-lemma PatLifting.Static.attributes {assums context p t assums' context'} :
-  PatLifting.Static assums context p t assums' context' →
-  assums ⊆ assums' ∧
-  Typ.free_vars t ⊆ ListTyping.free_vars context' ∧
-  ListTyping.free_vars context'  ⊆ ListSubtyping.free_vars assums'
-:= by sorry
 
 
 lemma Expr.sub_sub_removal {ids eam0 eam1 e} :
@@ -1392,12 +1393,8 @@ mutual
       apply ListZone.tidy_soundness_alt p4 p11
       intros skolems' assums' t p12
       have ⟨assums_ext, p20, tr, p22⟩ := p2 p12
-      -- rw [p20] at p12
       rw [p22] at p12
       have p23 := p3 p12
-
-      -- have temp : assums_ext ++ assums0 ++ assums = assums_ext ++ (assums0 ++ assums) := by
-      --   apply List.append_assoc assums_ext assums0 assums
 
       have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p23
       have ⟨p24,p26,p28,p30,p32,p34⟩ := Typing.Static.attributes p23
@@ -1417,11 +1414,11 @@ mutual
       simp [*]
       rw [Expr.sub_sub_removal (pattern_match_ids_containment p48)]
       apply ih0r p40
+      apply MultiTyping.Dynamic.dom_reduction
+      { apply List.disjoint_preservation_left ih0l
+        apply List.disjoint_preservation_right p28 p32 }
+      { apply MultiTyping.Dynamic.dom_context_extension p50 }
 
-      sorry
-
-
-      -- sorry
     | inr p11 =>
       have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p0 p11
       have ⟨p20,p22,p24,p26⟩ := Typing.Function.Static.attributes p0 p11
