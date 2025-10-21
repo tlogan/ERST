@@ -1511,7 +1511,7 @@ mutual
   | .record r t p0 => by
     apply Typing.Record.Static.soundness p0
 
-  | .function f zones subtras t p0 p1 => by
+  | .function f zones t p0 p1 => by
       exists []
       simp [*, ListPair.dom]
       intros tam' p2
