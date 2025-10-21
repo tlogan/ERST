@@ -1728,11 +1728,11 @@ mutual
     find x context = .some t →
     Typing.Static skolems assums context (.var x) t skolems assums
 
-  | record {skolems assums context} r t :
+  | record {skolems assums context t} r :
     Typing.Record.Static skolems assums context r t skolems assums →
     Typing.Static skolems assums context (.record r) t skolems assums
 
-  | function {skolems assums context} f zones t :
+  | function {skolems assums context t} f zones :
     Typing.Function.Static skolems assums context [] f zones →
     ListZone.pack (ListSubtyping.free_vars assums) .true zones = t →
     Typing.Static skolems assums context (.function f) t skolems assums

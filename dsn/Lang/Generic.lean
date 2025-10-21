@@ -1508,10 +1508,10 @@ mutual
     have ⟨e,p3,p4⟩ := p2 p0
     simp [Expr.sub, p3, p4]
 
-  | .record r t p0 => by
+  | .record r p0 => by
     apply Typing.Record.Static.soundness p0
 
-  | .function f zones t p0 p1 => by
+  | .function f zones p0 p1 => by
       exists []
       simp [*, ListPair.dom]
       intros tam' p2
