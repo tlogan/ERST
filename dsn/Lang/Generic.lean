@@ -1271,17 +1271,17 @@ mutual
 end
 
 
-def Expr.Convergent (a b : Expr) :=
+def Expr.Convergence (a b : Expr) :=
   ∃ e , MultiProgression a e ∧ MultiProgression b e
 
-lemma Expr.Convergent.typing_left_to_right {a b am t} :
-  Expr.Convergent a b →
+lemma Expr.Convergence.typing_left_to_right {a b am t} :
+  Expr.Convergence a b →
   Typing.Dynamic am a t →
   Typing.Dynamic am b t
 := by sorry
 
-lemma Expr.Convergent.typing_right_to_left {a b am t} :
-  Expr.Convergent a b →
+lemma Expr.Convergence.typing_right_to_left {a b am t} :
+  Expr.Convergence a b →
   Typing.Dynamic am b t →
   Typing.Dynamic am a t
 := by sorry
@@ -1291,14 +1291,14 @@ lemma Typ.factor_expansion_soundness {am id t label t' e'} :
   Typ.factor id t label = some t' →
   Typing.Dynamic am e' (.lfp id t') →
   ∃ e ,
-    Expr.Convergent (Expr.proj e label) e' ∧
+    Expr.Convergence (Expr.proj e label) e' ∧
     Typing.Dynamic am e (.lfp id t)
 := by sorry
 
 lemma Typ.factor_reduction_soundness {am id t label t' e' e} :
   Typ.factor id t label = some t' →
   Typing.Dynamic am e (.lfp id t) →
-  Expr.Convergent (Expr.proj e label) e' →
+  Expr.Convergence (Expr.proj e label) e' →
   Typing.Dynamic am e' (.lfp id t')
 := by sorry
 
@@ -1316,9 +1316,10 @@ lemma ListZone.pack_positive_soundness {zones t am assums e} :
   Typing.Dynamic am e t
 := by sorry
 
-lemma ListZone.invert_soundness {id zones zones' am assums ef} :
+lemma ListZone.inversion_soundness {id zones zones' am assums} :
   ListZone.invert id zones = some zones' →
   MultiSubtyping.Dynamic am assums →
+  ∀ ef,
   (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
     (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
       (∀ {am'},
@@ -1334,7 +1335,7 @@ lemma ListZone.invert_soundness {id zones zones' am assums ef} :
           MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums' ∧
           Typing.Dynamic (am'' ++ am' ++ am) ef t' ) )
     ) →
-    Expr.Convergent er (.app ef ea)
+    Expr.Convergence er (.app ef ea)
   )
 := by sorry
 
@@ -1355,7 +1356,21 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
     unfold Typing.Dynamic
     intro ea
     intro p7
-    sorry
+    have p8 := ListZone.inversion_soundness p3 p1
+    rw [p8] at p2
+    apply Expr.Convergence.typing_left_to_right
+    {
+      apply p2
+      clear p8 p2
+      -- TODO: use pack negative soundness
+      sorry
+    }
+    {
+      -- TODO: use factor soundness
+      sorry
+    }
+    -- TODO: remove once type is implicitly inhabited
+    { sorry }
   | stream =>
     sorry
 
