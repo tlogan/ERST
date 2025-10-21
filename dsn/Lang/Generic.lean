@@ -1270,6 +1270,40 @@ mutual
 
 end
 
+
+def Expr.Convergent (a b : Expr) :=
+  ∃ e , MultiProgression a e ∧ MultiProgression b e
+
+lemma Expr.Convergent.typing_left_to_right {a b am t} :
+  Expr.Convergent a b →
+  Typing.Dynamic am a t →
+  Typing.Dynamic am b t
+:= by sorry
+
+lemma Expr.Convergent.typing_right_to_left {a b am t} :
+  Expr.Convergent a b →
+  Typing.Dynamic am b t →
+  Typing.Dynamic am a t
+:= by sorry
+
+
+lemma Typ.factor_expansion_soundness {am id t label t' e'} :
+  Typ.factor id t label = some t' →
+  Typing.Dynamic am e' (.lfp id t') →
+  ∃ e ,
+    Expr.Convergent (Expr.proj e label) e' ∧
+    Typing.Dynamic am e (.lfp id t)
+:= by sorry
+
+lemma Typ.factor_reduction_soundness {am id t label t' e' e} :
+  Typ.factor id t label = some t' →
+  Typing.Dynamic am e (.lfp id t) →
+  Expr.Convergent (Expr.proj e label) e' →
+  Typing.Dynamic am e' (.lfp id t')
+:= by sorry
+
+
+
 lemma ListZone.pack_positive_soundness {zones t am assums e} :
   ListZone.pack (ListSubtyping.free_vars assums) .true zones = t →
   MultiSubtyping.Dynamic am assums →
@@ -1282,8 +1316,30 @@ lemma ListZone.pack_positive_soundness {zones t am assums e} :
   Typing.Dynamic am e t
 := by sorry
 
+lemma ListZone.invert_soundness {id zones zones' am assums ef} :
+  ListZone.invert id zones = some zones' →
+  MultiSubtyping.Dynamic am assums →
+  (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
+    (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
+      (∀ {am'},
+        ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+        MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums' →
+        Typing.Dynamic (am'' ++ am' ++ am) ef t' ) ) )
+  ↔
+  (∀ ea er ,
+    (∃ skolems' assums' t', ⟨skolems', assums', t'⟩ ∈ zones ∧
+      (∀ am'', ListPair.dom am'' ⊆ skolems' →
+        (∃ am',
+          ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] ∧
+          MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums' ∧
+          Typing.Dynamic (am'' ++ am' ++ am) ef t' ) )
+    ) →
+    Expr.Convergent er (.app ef ea)
+  )
+:= by sorry
+
 lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
- Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums) id zones t →
+  Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums) id zones t →
   MultiSubtyping.Dynamic am assums →
   (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
     (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
@@ -1292,7 +1348,16 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
         MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums' →
         Typing.Dynamic (am'' ++ am' ++ am) e t' ) ) ) →
   Typing.Dynamic am e t
-:= by sorry
+:= by
+  intros p0 p1 p2
+  cases p0 with
+  | batch zones' t' left right p3 p4 p5 p6 =>
+    unfold Typing.Dynamic
+    intro ea
+    intro p7
+    sorry
+  | stream =>
+    sorry
 
 lemma ListZone.tidy_soundness {zones0 zones1 am assums e} :
   ListZone.tidy (ListSubtyping.free_vars assums) zones0 = .some zones1 →
@@ -1365,9 +1430,9 @@ lemma pattern_match_ids_containment {v p eam} :
 
 
 lemma Expr.sub_sub_removal {ids eam0 eam1 e} :
-ids ⊆ ListPair.dom eam0 →
-(Expr.sub eam0 (Expr.sub (remove_all eam1 ids) e)) =
-(Expr.sub (eam0 ++ eam1) e)
+  ids ⊆ ListPair.dom eam0 →
+  (Expr.sub eam0 (Expr.sub (remove_all eam1 ids) e)) =
+  (Expr.sub (eam0 ++ eam1) e)
 := by sorry
 
 

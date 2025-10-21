@@ -358,7 +358,7 @@ macro_rules
 
 
 
-
+-- TODO, could define as a structure or multi-And
 inductive Typ.UpperFounded (id : String) : Typ → Typ → Prop
 | intro quals id' cases t t' :
   ListSubtyping.bounds id .true quals = cases →
@@ -1659,14 +1659,14 @@ end
 
 
 inductive Subtyping.LoopListZone.Static : List String → String → List Zone → Typ → Prop
-| batch pids id zones zones' t' l r :
+| batch {pids id zones} zones' t' left right :
   ListZone.invert id zones = .some zones' →
   ListZone.pack (id :: pids) .false zones' = t' →
-  Typ.factor id t' "left" = .some l →
-  Typ.factor id t' "right" = .some r →
-  Subtyping.LoopListZone.Static pids id zones (.path (.lfp id l) (.lfp id r))
+  Typ.factor id t' "left" = .some left →
+  Typ.factor id t' "right" = .some right →
+  Subtyping.LoopListZone.Static pids id zones (.path (.lfp id left) (.lfp id right))
 
-| stream pids id skolems assums assums' idl r t' l r' l' r'' :
+| stream {pids id} skolems assums assums' idl r t' l r' l' r'' :
   id ≠ idl →
   ListSubtyping.invert id assums = .some assums' →
   Zone.pack (id :: idl :: pids) .false ⟨skolems, assums', .pair (.var idl) r⟩ = t' →
