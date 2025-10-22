@@ -210,11 +210,13 @@ lemma Typing.Dynamic.dom_extension {tam1 tam0 e t} :
   Typing.Dynamic (tam1 ++ tam0) e t
 := by sorry
 
+
 lemma MultiTyping.Dynamic.dom_reduction {tam1 tam0 eam cs} :
   (ListPair.dom tam1) ∩ ListTyping.free_vars cs = [] →
   MultiTyping.Dynamic (tam1 ++ tam0) eam cs →
   MultiTyping.Dynamic tam0 eam cs
 := by sorry
+
 
 lemma MultiTyping.Dynamic.dom_extension {tam1 tam0 eam cs} :
   (ListPair.dom tam1) ∩ ListTyping.free_vars cs = [] →
@@ -233,6 +235,12 @@ lemma Subtyping.Dynamic.dom_extension {am1 am0 lower upper} :
   (ListPair.dom am1) ∩ Typ.free_vars upper = [] →
   Subtyping.Dynamic am0 lower upper →
   Subtyping.Dynamic (am1 ++ am0) lower upper
+:= by sorry
+
+lemma MultiSubtyping.Dynamic.dom_single_extension {id tam0 cs} t :
+  id ∉ ListSubtyping.free_vars cs →
+  MultiSubtyping.Dynamic tam0 cs →
+  MultiSubtyping.Dynamic ((id,t) :: tam0) cs
 := by sorry
 
 lemma MultiSubtyping.Dynamic.dom_extension {am1 am0 cs} :
@@ -1368,9 +1376,47 @@ lemma ListZone.inversion_soundness {id zones zones' am assums} :
   )
 := by sorry
 
+
+lemma Typing.Dynamic.lfp_elim_top {am e id t} :
+  Typing.Dynamic am e (.lfp id t) →
+  Typing.Dynamic ((id, .top) :: am) e t
+:= by sorry
+
+lemma Typing.Dynamic.existential_top_drop {id am assums ep} {zones' : List Zone} :
+  id ∉ (ListSubtyping.free_vars assums) →
+  (∃ skolems' assums' t',
+      ⟨skolems',assums', t'⟩ ∈ zones' ∧
+      ∀ (am'' : List (String × Typ)),
+        ListPair.dom am'' ⊆ skolems' →
+        ∃ am',
+          ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] ∧
+          MultiSubtyping.Dynamic (am'' ++ am' ++ (id,.top)::am) assums' ∧
+          Typing.Dynamic (am'' ++ am' ++ (id,.top)::am) ep t'
+  ) →
+  ∃ skolems' assums' t',
+      ⟨skolems',assums', t'⟩ ∈ zones' ∧
+      ∀ (am'' : List (String × Typ)),
+        ListPair.dom am'' ⊆ skolems' →
+        ∃ am',
+          ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] ∧
+          MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums' ∧
+          Typing.Dynamic (am'' ++ am' ++ am) ep t'
+
+
+:= by sorry
+-- ∃ skolems' assums' t',
+--   { skolems := skolems', assums := assums', typ := t' } ∈ zones' ∧
+--     ∀ (am'' : List (String × Typ)),
+--       ListPair.dom am'' ⊆ skolems' →
+--         ∃ am',
+--           ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] ∧
+--             MultiSubtyping.Dynamic (am'' ++ am' ++ (id, Typ.top) :: am) assums' ∧
+--               Typing.Dynamic (am'' ++ am' ++ (id, Typ.top) :: am) ep t'
+
 lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
   Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums) id zones t →
   MultiSubtyping.Dynamic am assums →
+  id ∉ ListSubtyping.free_vars assums →
   (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
     (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
       (∀ {am'},
@@ -1379,25 +1425,23 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
         Typing.Dynamic (am'' ++ am' ++ am) e t' ) ) ) →
   Typing.Dynamic am e t
 := by
-  intros p0 p1 p2
+  intros p0 p1 p2 p3
   cases p0 with
-  | batch zones' t' left right p3 p4 p5 p6 =>
+  | batch zones' t' left right p4 p5 p6 p7=>
     unfold Typing.Dynamic
     intro ea
-    intro p7
-    rw [ListZone.inversion_soundness p3 p1] at p2
-    have ⟨ep,p8,p9⟩ := Typ.factor_expansion_soundness p5 p7
-    have p10 : Typing.Dynamic am ep t' := by
-      -- TODO: this would be true if am has TOP for id
-      -- and t' is monotonic wrt id
-      -- may need some additional requirements in definition
-      sorry
-    have p12 := ListZone.pack_negative_soundness p4 p1 p10
-    specialize p2 ep p12
-    clear p12
+    intro p8
+    rw [ListZone.inversion_soundness p4 p1] at p3
+    have ⟨ep,p9,p10⟩ := Typ.factor_expansion_soundness p6 p8
     apply Expr.Convergence.typing_left_to_right
-    { apply Expr.Convergence.app_arg_preservation p8 }
-    { apply Typ.factor_reduction_soundness p6 p9 p2 }
+    { apply Expr.Convergence.app_arg_preservation p9 }
+    { have p11 : Typing.Dynamic ((id, .top) :: am) ep t' := by
+        apply Typing.Dynamic.lfp_elim_top p10
+      have p12 : MultiSubtyping.Dynamic ((id,.top) :: am) assums := by
+        apply MultiSubtyping.Dynamic.dom_single_extension Typ.top p2 p1
+      have p13 := ListZone.pack_negative_soundness p5 p12 p11
+      apply Typ.factor_reduction_soundness p7 p10
+      apply p3 ep (Typing.Dynamic.existential_top_drop p2 p13) }
   | stream =>
     sorry
 
