@@ -1662,6 +1662,7 @@ inductive Subtyping.LoopListZone.Static : List String → String → List Zone �
 | batch {pids id zones} zones' t' left right :
   ListZone.invert id zones = .some zones' →
   ListZone.pack (id :: pids) .false zones' = t' →
+  Typ.Monotonic.Static id .true t' →
   Typ.factor id t' "left" = .some left →
   Typ.factor id t' "right" = .some right →
   Subtyping.LoopListZone.Static pids id zones (.path (.lfp id left) (.lfp id right))
@@ -1672,8 +1673,8 @@ inductive Subtyping.LoopListZone.Static : List String → String → List Zone �
   Zone.pack (id :: idl :: pids) .false ⟨skolems, assums', .pair (.var idl) r⟩ = t' →
   Typ.factor id t' "left" = .some l →
   Typ.factor id t' "right" = .some r' →
-  Typ.Monotonic.Static idl .true r' →
-  Typ.UpperFounded id l l' →
+  Typ.Monotonic.Static idl .true r' → -- TODO: rationale for the monotonic check with left id?
+  Typ.UpperFounded id l l' → -- TODO; this should imply Monotonic.Dynamic
   Typ.sub [(idl, .lfp id l')] r' = r'' →
   Subtyping.LoopListZone.Static
   pids id [⟨skolems, assums, .path (.var idl) r⟩]
