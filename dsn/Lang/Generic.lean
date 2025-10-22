@@ -1436,20 +1436,51 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
     unfold Typing.Dynamic
     intro ea
     intro p9
-    rw [ListZone.inversion_soundness p4 p1] at p3
+
     have ⟨ep,p10,p11⟩ := Typ.factor_expansion_soundness p7 p9
+
     apply Expr.Convergence.typing_left_to_right
-    { apply Expr.Convergence.app_arg_preservation p10 }
-    {
-      have p12 : Typing.Dynamic ((id, .top) :: am) ep t' := by
-        apply Typing.Dynamic.lfp_elim_top (Typ.Monotonic.Static.soundness am p6) p11
-      have p13 : MultiSubtyping.Dynamic ((id,.top) :: am) assums := by
-        apply MultiSubtyping.Dynamic.dom_single_extension Typ.top p2 p1
-      have p14 := ListZone.pack_negative_soundness p5
-        (List.subset_cons_of_subset id (fun _ x => x)) p13 p12
-      apply Typ.factor_reduction_soundness p8 p11
-      apply p3 ep (Typing.Dynamic.existential_top_drop p2 p14) }
-  | stream =>
+      (Expr.Convergence.app_arg_preservation p10)
+
+    apply Typ.factor_reduction_soundness p8 p11
+
+    rw [ListZone.inversion_soundness p4 p1] at p3
+
+    apply p3 ep
+
+    have p12 : Typing.Dynamic ((id, .top) :: am) ep t' := by
+      apply Typing.Dynamic.lfp_elim_top (Typ.Monotonic.Static.soundness am p6) p11
+    have p13 : MultiSubtyping.Dynamic ((id,.top) :: am) assums := by
+      apply MultiSubtyping.Dynamic.dom_single_extension Typ.top p2 p1
+
+    apply Typing.Dynamic.existential_top_drop p2
+    apply ListZone.pack_negative_soundness p5
+      (List.subset_cons_of_subset id (fun _ x => x)) p13 p12
+
+  | stream
+    skolems assums0 assums' idl r t' l r' l' r''
+    p4 p5 p6 p7 p8 p9 p10 p11
+  =>
+    unfold Typing.Dynamic
+    intro ea
+    intro p12
+
+    have myLemmaA : Subtyping.Dynamic am (Typ.var idl) (.lfp id l) := sorry
+    have myLemmaB : Subtyping.Dynamic am (.lfp id r') (.lfp id r'') := sorry
+
+    unfold Subtyping.Dynamic at myLemmaA
+    unfold Subtyping.Dynamic at myLemmaB
+
+    apply myLemmaA at p12
+    apply myLemmaB
+
+    have ⟨ep,p13,p14⟩ := Typ.factor_expansion_soundness p7 p12
+
+    apply Expr.Convergence.typing_left_to_right
+      (Expr.Convergence.app_arg_preservation p13)
+
+    apply Typ.factor_reduction_soundness p8 p14
+
     sorry
 
 lemma ListZone.tidy_soundness {zones0 zones1 am assums e} :

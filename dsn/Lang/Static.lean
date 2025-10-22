@@ -1662,6 +1662,7 @@ inductive Subtyping.LoopListZone.Static : List String → String → List Zone �
 | batch {pids id zones} zones' t' left right :
   ListZone.invert id zones = .some zones' →
   ListZone.pack (id :: pids) .false zones' = t' →
+  -- TODO; consider if monotonicity can be derived from invert and pack
   Typ.Monotonic.Static id .true t' →
   Typ.factor id t' "left" = .some left →
   Typ.factor id t' "right" = .some right →
