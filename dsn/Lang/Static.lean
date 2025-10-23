@@ -1672,6 +1672,7 @@ inductive Subtyping.LoopListZone.Static : List String → String → List Zone �
   id ≠ idl →
   ListSubtyping.invert id assums = .some assums' →
   Zone.pack (id :: idl :: pids) .false ⟨skolems, assums', .pair (.var idl) r⟩ = t' →
+  Typ.Monotonic.Static id .true t' →
   Typ.factor id t' "left" = .some l →
   Typ.factor id t' "right" = .some r' →
   Typ.Monotonic.Static idl .true r' → -- TODO: rationale for the monotonic check with left id?
