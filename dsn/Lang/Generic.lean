@@ -210,6 +210,12 @@ lemma Typing.Dynamic.dom_extension {tam1 tam0 e t} :
   Typing.Dynamic (tam1 ++ tam0) e t
 := by sorry
 
+lemma Typing.Dynamic.dom_single_extension {id am e t t'} :
+  id ∉ Typ.free_vars t →
+  Typing.Dynamic am e t' →
+  Typing.Dynamic ((id,t) :: am) e t'
+:= by sorry
+
 
 lemma MultiTyping.Dynamic.dom_reduction {tam1 tam0 eam cs} :
   (ListPair.dom tam1) ∩ ListTyping.free_vars cs = [] →
@@ -237,7 +243,7 @@ lemma Subtyping.Dynamic.dom_extension {am1 am0 lower upper} :
   Subtyping.Dynamic (am1 ++ am0) lower upper
 := by sorry
 
-lemma MultiSubtyping.Dynamic.dom_single_extension {id tam0 cs} t :
+lemma MultiSubtyping.Dynamic.dom_single_extension {id tam0 t cs} :
   id ∉ ListSubtyping.free_vars cs →
   MultiSubtyping.Dynamic tam0 cs →
   MultiSubtyping.Dynamic ((id,t) :: tam0) cs
@@ -1433,26 +1439,38 @@ lemma ListZone.inversion_soundness {id zones zones' am assums} :
 
 
 lemma ListSubtyping.inversion_soundness {id am assums assums0 assums0'} skolems tl tr :
-ListSubtyping.invert id assums0 = some assums0' →
-MultiSubtyping.Dynamic am assums →
-∀ ef,
-  (∃ am'',
-    ListPair.dom am'' ⊆ skolems ∧
-    ∀ {am' : List (String × Typ)},
-      ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
-        MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums0 →
-          Typing.Dynamic (am'' ++ am' ++ am) ef (.path tl tr))
-  →
-  (∀ ep,
-    (∀ am'', ListPair.dom am'' ⊆ skolems →
-      (∃ am',
-        ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] ∧
-        MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums0' ∧
-        Typing.Dynamic (am'' ++ am' ++ am) ep (.pair tl tr) )
-    ) →
-    Expr.Convergence (.proj ep "right") (.app ef (.proj ep "left"))
-  )
+  ListSubtyping.invert id assums0 = some assums0' →
+  MultiSubtyping.Dynamic am assums →
+  ∀ ef,
+    (∃ am'',
+      ListPair.dom am'' ⊆ skolems ∧
+      ∀ {am' : List (String × Typ)},
+        ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+          MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums0 →
+            Typing.Dynamic (am'' ++ am' ++ am) ef (.path tl tr))
+    →
+    (∀ ep,
+      (∀ am'', ListPair.dom am'' ⊆ skolems →
+        (∃ am',
+          ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] ∧
+          MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums0' ∧
+          Typing.Dynamic (am'' ++ am' ++ am) ep (.pair tl tr) )
+      ) →
+      Expr.Convergence (.proj ep "right") (.app ef (.proj ep "left"))
+    )
 := by sorry
+
+lemma ListSubtyping.inversion_top_extension {id am assums0 assums1} :
+  ListSubtyping.invert id assums0 = some assums1 →
+  MultiSubtyping.Dynamic am assums0 →
+  MultiSubtyping.Dynamic ((id,.top)::am) assums0
+:= by sorry
+
+lemma ListSubtyping.inversion_substance {id am assums0 assums1} :
+  ListSubtyping.invert id assums0 = some assums1 →
+  MultiSubtyping.Dynamic ((id,.top)::am) assums0 → MultiSubtyping.Dynamic ((id,.bot)::am) assums1
+:= by sorry
+
 
 
 lemma Typing.Dynamic.lfp_elim_top {am e id t} :
@@ -1513,13 +1531,23 @@ lemma Typing.ListZone.Dynamic.existential_top_drop {id am assums ep} {zones' : L
 
 
 
-lemma Subtyping.Dynamic.factor_preservation {am id label t0 t0' t1 t1'} :
-  Typ.Monotonic.Dynamic am id t0 →
+lemma Typ.factor_subtyping_soundness {am id label t0 t0' t1 t1'} :
   Typ.factor id t0 label = .some t0' →
-  Typ.Monotonic.Dynamic am id t1 →
   Typ.factor id t1 label = .some t1' →
   Subtyping.Dynamic am t0 t1 →
   Subtyping.Dynamic am t0' t1'
+:= by sorry
+
+lemma Typ.Monotonic.Dynamic.pair {am id t0 t1} :
+  Typ.Monotonic.Dynamic am id t0 →
+  Typ.Monotonic.Dynamic am id t1 →
+  Typ.Monotonic.Dynamic am id (.pair t0 t1)
+:= by sorry
+
+lemma Typ.factor_monotonic {am id label t t'} :
+  Typ.factor id t label = .some t' →
+  Typ.Monotonic.Dynamic am id t →
+  Typ.Monotonic.Dynamic am id t'
 := by sorry
 
 
@@ -1527,6 +1555,9 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
   Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums) id zones t →
   MultiSubtyping.Dynamic am assums →
   id ∉ ListSubtyping.free_vars assums →
+  (∀ {skolems' assums' t'},
+    ⟨skolems', assums', t'⟩ ∈ zones →
+    MultiSubtyping.Dynamic am assums') →
   (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
     (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
       (∀ {am'},
@@ -1535,7 +1566,7 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
         Typing.Dynamic (am'' ++ am' ++ am) e t' ) ) ) →
   Typing.Dynamic am e t
 := by
-  intros p0 p1 p2 p3
+  intros p0 p1 p2 typing_local_assums p3
   cases p0 with
   | batch zones' t' left right p4 p5 p6 p7 p8 =>
     unfold Typing.Dynamic
@@ -1556,7 +1587,7 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
     have p12 : Typing.Dynamic ((id, .top) :: am) ep t' := by
       apply Typing.Dynamic.lfp_elim_top (Typ.Monotonic.Static.soundness am p6) p11
     have p13 : MultiSubtyping.Dynamic ((id,.top) :: am) assums := by
-      apply MultiSubtyping.Dynamic.dom_single_extension Typ.top p2 p1
+      apply MultiSubtyping.Dynamic.dom_single_extension p2 p1
 
     apply Typing.ListZone.Dynamic.existential_top_drop p2
 
@@ -1572,19 +1603,17 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
     intro ea
     intro p13
 
+    simp [*] at typing_local_assums
+    specialize typing_local_assums rfl rfl rfl
 
     specialize p3 (Iff.mpr List.mem_singleton rfl)
 
     have subtyping_assums_bot : MultiSubtyping.Dynamic ((id,.bot)::am) assums := by
-      -- TODO: since id non in assums
-      sorry
+      exact MultiSubtyping.Dynamic.dom_single_extension p2 p1
 
     have subtyping_assums0'_bot : MultiSubtyping.Dynamic ((id,.bot)::am) assums0' := by
-      -- TODO: add assumption typing of assums0
-      -- give a name (not p-number)
-      -- TODO: state inversion_substance to preserve typing of assums0'
-      -- should follow from inversion, or some sort of substance requirement
-      sorry
+      apply ListSubtyping.inversion_substance p5
+      exact ListSubtyping.inversion_top_extension p5 typing_local_assums
 
     have subtyping_pair_to_packed :
       Subtyping.Dynamic ((id,.bot)::am) (Typ.pair (Typ.var idl) r) t'
@@ -1595,31 +1624,24 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
         (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
         subtyping_assums_bot e_pair subtyping_assums0'_bot typing_pair
 
-
-    have monotonic_pair :
-      Typ.Monotonic.Dynamic ((id, Typ.bot) :: am) id (.pair (.var idl) r)
-    := by sorry
-
     have factor_pair : Typ.factor id (.pair (.var idl) r) "left" = some (Typ.var idl) := by sorry
 
     have monotonic_packed : Typ.Monotonic.Dynamic ((id, Typ.bot) :: am) id t' := by
       exact Typ.Monotonic.Static.soundness ((id, Typ.bot) :: am) p7
 
     have subtyping_idl_left : Subtyping.Dynamic ((id,.bot)::am) (Typ.var idl) l := by
-      apply Subtyping.Dynamic.factor_preservation
-        monotonic_pair factor_pair
-        monotonic_packed p8
-        subtyping_pair_to_packed
+      apply Typ.factor_subtyping_soundness
+        factor_pair p8 subtyping_pair_to_packed
 
     have typing_idl_bot : Typing.Dynamic ((id,.bot)::am) ea (Typ.var idl) := by
-      sorry
+      apply Typing.Dynamic.dom_single_extension (Iff.mp List.count_eq_zero rfl) p13
 
     have typing_factor_left_bot : Typing.Dynamic ((id,.bot)::am) ea l := by
       unfold Subtyping.Dynamic at subtyping_idl_left
       exact subtyping_idl_left ea typing_idl_bot
 
     have monotonic_left : Typ.Monotonic.Dynamic am id l := by
-      sorry
+      apply Typ.factor_monotonic p8 (Typ.Monotonic.Static.soundness am p7)
 
     have typing_factor_left : Typing.Dynamic am ea (.lfp id l) :=
       Typing.Dynamic.lfp_intro_bot monotonic_left typing_factor_left_bot
@@ -1644,7 +1666,7 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
       apply Typing.Dynamic.lfp_elim_top (Typ.Monotonic.Static.soundness am p7) p15
 
     have p22 : MultiSubtyping.Dynamic ((id,.top) :: am) assums := by
-      apply MultiSubtyping.Dynamic.dom_single_extension Typ.top p2 p1
+      apply MultiSubtyping.Dynamic.dom_single_extension p2 p1
 
     apply Typing.Dynamic.existential_top_drop (Typ.var idl) r p2
 
