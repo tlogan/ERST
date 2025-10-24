@@ -1551,6 +1551,19 @@ lemma Typ.factor_monotonic {am id label t t'} :
 := by sorry
 
 
+lemma Typ.UpperFounded.soundness {id l l'} am :
+  Typ.UpperFounded id l l' →
+  Subtyping.Dynamic am (.lfp id l) (.lfp id l')
+:= by sorry
+
+lemma Typ.sub_weaken_soundness {am idl t0 t1 t2} :
+  Typ.sub [(idl, t0)] t1 = t2 →
+  Typ.Monotonic.Dynamic am idl t1 →
+  Subtyping.Dynamic am (.var idl) t0 →
+  Subtyping.Dynamic am t1 t2
+:= by sorry
+
+
 lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
   Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums) id zones t →
   MultiSubtyping.Dynamic am assums →
@@ -1597,7 +1610,7 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
 
   | stream
     skolems assums0 assums0' idl r t' l r' l' r''
-    p4 p5 p6 p7 p8 p9 p10 p11 p12
+    p4 p5 p6 p7 p8 p9 p10 upper_founded sub_eq
   =>
     unfold Typing.Dynamic
     intro ea
@@ -1646,9 +1659,23 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
     have typing_factor_left : Typing.Dynamic am ea (.lfp id l) :=
       Typing.Dynamic.lfp_intro_bot monotonic_left typing_factor_left_bot
 
-    have subtyping_right : Subtyping.Dynamic am (.lfp id r') (.lfp id r'') := by
-      -- TODO: from UpperFounded soundness
-      sorry
+
+    have subtyping_left_pre := Typ.UpperFounded.soundness am upper_founded
+    unfold Subtyping.Dynamic at subtyping_left_pre
+
+    have subtyping_left : Subtyping.Dynamic am (Typ.var idl) (Typ.lfp id l') := by
+      unfold Subtyping.Dynamic
+      intro el typing_idl
+      apply subtyping_left_pre
+      apply Typing.Dynamic.lfp_intro_bot monotonic_left
+      unfold Subtyping.Dynamic at subtyping_idl_left
+      apply subtyping_idl_left
+      apply Typing.Dynamic.dom_single_extension (Iff.mp List.count_eq_zero rfl)
+      exact typing_idl
+
+    have subtyping_right : Subtyping.Dynamic am (.lfp id r') r'' := by
+      apply Typ.sub_weaken_soundness sub_eq
+        (Typ.Monotonic.Static.soundness am p10) subtyping_left
 
     unfold Subtyping.Dynamic at subtyping_right
     apply subtyping_right

@@ -1675,12 +1675,12 @@ inductive Subtyping.LoopListZone.Static : List String → String → List Zone �
   Typ.Monotonic.Static id .true t' →
   Typ.factor id t' "left" = .some l →
   Typ.factor id t' "right" = .some r' →
-  Typ.Monotonic.Static idl .true r' → -- TODO: rationale for the monotonic check with left id?
+  Typ.Monotonic.Static idl .true (.lfp id r') →
   Typ.UpperFounded id l l' → -- TODO; this should imply Monotonic.Dynamic
-  Typ.sub [(idl, .lfp id l')] r' = r'' →
+  Typ.sub [(idl, .lfp id l')] (.lfp id r') = r'' →
   Subtyping.LoopListZone.Static
   pids id [⟨skolems, assums, .path (.var idl) r⟩]
-  (.path (.var idl) (.lfp id r''))
+  (.path (.var idl) r'')
 
 mutual
   inductive Typing.Function.Static :

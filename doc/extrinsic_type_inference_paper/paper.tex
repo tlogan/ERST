@@ -2003,14 +2003,14 @@ where the variables represent possible types of expressions.
       \\
       \textbf{factor}(\alpha \entails \tau' \cdot \J{right}) = \tau_r'
       \\\\
-      \alpha_l \wr^+ \tau_r'
+      \alpha_l \wr^+ \J{LFP[} \alpha \J{]}\tau_r'
       \\
       % founded upper bound
       \alpha \downarrow \tau_l \subtypes \tau_l'
       \\
-      \tau_r'[\alpha_l\slash \J{LFP[} \alpha \J{]} \tau_l'] = \tau_r''
+      (\J{LFP[} \alpha \J{]}\tau_r')[\alpha_l\slash \J{LFP[} \alpha \J{]} \tau_l'] = \tau_r''
     } {
-      \Theta^\dagger \entails \alpha \circlearrowleft (\Theta, \Delta, \alpha_l \J{->}\tau_r) \subtypes \alpha_l \J{->} \J{LFP[} \alpha \J{]} \tau_r''
+      \Theta^\dagger \entails \alpha \circlearrowleft (\Theta, \Delta, \alpha_l \J{->}\tau_r) \subtypes \alpha_l \J{->} \tau_r''
     }
   \end{mathpar}
 \end{definition}
