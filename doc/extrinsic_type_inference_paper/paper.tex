@@ -3171,8 +3171,7 @@ to construct least fixed point types does not violate soundness.
     \inferrule {
       \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
     } {
-      \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
-      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta
+      \delta \satisfies \Delta
       \implies
       \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta'
     }

@@ -1749,13 +1749,19 @@ mutual
 
   | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
     Typing.Static skolems assums context e t skolems' assums' →
+    -- (∀ {skolems'' assums'' t''},
+    --   ⟨skolems'', assums'', t''⟩ ∈ zones →
+    --   Subtyping.Static skolems assums t (.path (.var id) t'')
+    --     (skolems'' ++ skolems) (assums'' ++ assums)
+    -- ) →
     (∀ {skolems'' assums'' t''},
       ⟨skolems'', assums'', t''⟩ ∈ zones →
-      Subtyping.Static skolems assums t (.path (.var id) t'')
-        (skolems'' ++ skolems) (assums'' ++ assums)
+      Subtyping.Static skolems' assums' t (.path (.var id) t'')
+        (skolems'' ++ skolems') (assums'' ++ assums')
     ) →
     ListZone.tidy (ListSubtyping.free_vars assums') zones = .some zones' →
     Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums') id zones' t' →
+    id ∉ ListSubtyping.free_vars assums' →
     Typing.Static skolems assums context (.loop e) t' skolems' assums'
 
   | anno {skolems assums context skolems'' assums''} e ta te skolems' assums' :
