@@ -78,6 +78,8 @@ lemma mdiff_left_sub_refl_disjoint {xs ys : List String} :
   List.mdiff xs ys ∩ ys = []
 := by sorry
 
+
+
 lemma mdiff_concat_eq {xs ys zs : List String} :
   ys ⊆ zs →
   List.mdiff xs zs = List.mdiff xs (ys ++ zs)
@@ -282,10 +284,35 @@ lemma List.cons_containment {α} [BEq α] {x : α} {xs ys : List α} :
     simp [*]
   }
 
-#print List.inter
+-- #print List.inter
 
-set_option pp.notation false in
-#check (1 :: [1,2,3]) ∩ [4] = []
+#print decide
+
+example {α} [DecidableEq α] (x : α) (xs : List α) :
+  List.contains xs x =  decide (x ∈ xs)
+:= by exact List.contains_eq_mem x xs
+
+
+lemma List.not_mem_cons {α} [BEq α] {x x': α} {xs : List α} :
+  x ∉ (x' :: xs) →
+  x ≠ x' ∧ x ∉ xs
+:= by intro p ; exact ne_and_not_mem_of_not_mem_cons p
+
+-- set_option pp.notation false in
+lemma List.nonmem_to_disjoint_right {α} [DecidableEq α] (x : α) (xs : List α) :
+  x ∉ xs → xs ∩ [x] = []
+:= by
+  intro h
+  induction xs with
+  | nil => exact rfl
+  | cons y ys ih =>
+    simp [Inter.inter, List.inter]
+
+    have ⟨l,r⟩ := ne_and_not_mem_of_not_mem_cons h
+    apply And.intro
+    { exact id (Ne.symm l) }
+    { intros x'' p ; exact (ne_of_mem_of_not_mem p r) }
+
 
 lemma List.disjoint_preservation_left {α} [BEq α] {xs ys zs : List α} :
   xs ⊆ ys → ys ∩ zs = [] → xs ∩ zs = []
@@ -1459,15 +1486,16 @@ lemma ListSubtyping.inversion_soundness {id am assums assums0 assums0'} skolems 
     )
 := by sorry
 
-lemma ListSubtyping.inversion_top_extension {id am assums0 assums1} :
+lemma ListSubtyping.inversion_top_extension {id am assums0 assums1} am' :
   ListSubtyping.invert id assums0 = some assums1 →
-  MultiSubtyping.Dynamic am assums0 →
-  MultiSubtyping.Dynamic ((id,.top)::am) assums0
+  MultiSubtyping.Dynamic (am' ++ am) assums0 →
+  MultiSubtyping.Dynamic (am' ++ (id,.top)::am) assums0
 := by sorry
 
-lemma ListSubtyping.inversion_substance {id am assums0 assums1} :
+lemma ListSubtyping.inversion_substance {id am am' assums0 assums1} :
   ListSubtyping.invert id assums0 = some assums1 →
-  MultiSubtyping.Dynamic ((id,.top)::am) assums0 → MultiSubtyping.Dynamic ((id,.bot)::am) assums1
+  MultiSubtyping.Dynamic (am' ++ (id,.top)::am) assums0 →
+  MultiSubtyping.Dynamic (am' ++ (id,.bot)::am) assums1
 := by sorry
 
 
@@ -1574,9 +1602,10 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
   Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums) id zones t →
   MultiSubtyping.Dynamic am assums →
   id ∉ ListSubtyping.free_vars assums →
-  (∀ {skolems' assums' t'},
-    ⟨skolems', assums', t'⟩ ∈ zones →
-    ∃ am' , MultiSubtyping.Dynamic (am' ++ am) assums') →
+  (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
+    ∃ am' ,
+    ListPair.dom am' ⊆ ListSubtyping.free_vars assums' ∧
+    MultiSubtyping.Dynamic (am' ++ am) assums') →
   (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
     (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
       (∀ {am'},
@@ -1616,32 +1645,20 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
 
   | stream
     skolems assums0 assums0' idl r t' l r' l' r''
-    p4 p5 p6 p7 p8 p9 p10 upper_founded sub_eq
+    p4 idl_fresh p5 p6 p7 p8 p9 p10 upper_founded sub_eq
   =>
     unfold Typing.Dynamic
     intro ea
     intro p13
 
     simp [*] at subtyping_local_assums
-    have ⟨am', subtyping_local_assums⟩ := subtyping_local_assums rfl rfl rfl
+    have ⟨am', dom_local_assums, subtyping_local_assums⟩ := subtyping_local_assums rfl rfl rfl
 
     specialize p3 (Iff.mpr List.mem_singleton rfl)
 
-    -- have subtyping_assums_bot : MultiSubtyping.Dynamic ((id,.bot)::am) assums := by
-    --   exact MultiSubtyping.Dynamic.dom_single_extension p2 p1
-
-    -- have subtyping_assums0'_bot : MultiSubtyping.Dynamic (am' ++ (id,.bot)::am) assums0' := by
-    --   apply ListSubtyping.inversion_substance p5
-    --   exact ListSubtyping.inversion_top_extension p5 subtyping_local_assums
-
-    -- have subtyping_pair_to_packed :
-    --   Subtyping.Dynamic ((id,.bot)::am) (Typ.pair (Typ.var idl) r) t'
-    -- := by
-    --   unfold Subtyping.Dynamic
-    --   intros  e_pair typing_pair
-    --   apply Zone.pack_negative_right_to_left_soundness p6
-    --     (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
-    --     subtyping_assums_bot e_pair subtyping_assums0'_bot typing_pair
+    have subtyping_assums0'_bot : MultiSubtyping.Dynamic (am' ++ (id,.bot)::am) assums0' := by
+      apply ListSubtyping.inversion_substance p5
+      apply ListSubtyping.inversion_top_extension am' p5 subtyping_local_assums
 
     have factor_pair : Typ.factor id (.pair (.var idl) r) "left" = some (Typ.var idl) := by
       reduce; rfl
@@ -1649,31 +1666,35 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
     have monotonic_packed : Typ.Monotonic.Dynamic ((id, Typ.bot) :: am) id t' := by
       exact Typ.Monotonic.Static.soundness ((id, Typ.bot) :: am) p7
 
-
     have imp_typing_pair_to_packed :
       ∀ e ,
         Typing.Dynamic (am' ++ (id,.bot)::am) e (Typ.pair (Typ.var idl) r) →
         Typing.Dynamic ((id,.bot)::am) e t'
     := by
-      --  TODO: use Zone.pack_negative_right_to_left_soundness p6
-      sorry
+      intros e_pair typing_pair
+      apply Zone.pack_negative_right_to_left_soundness p6
+        (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
+        (MultiSubtyping.Dynamic.dom_single_extension p2 p1)
+        subtyping_assums0'_bot
+        typing_pair
 
     have imp_typing_factored_left :
       ∀ e ,
         Typing.Dynamic (am' ++ (id,.bot)::am) e (Typ.var idl) →
         Typing.Dynamic ((id,.bot)::am) e l
     := by
-      -- TODO: Typ.factor_imp_typing_covariant
-      sorry
+      exact fun e a ↦ Typ.factor_imp_typing_covariant factor_pair p8 imp_typing_pair_to_packed e a
 
 
     have subtyping_idl_left : Subtyping.Dynamic ((id,.bot)::am) (Typ.var idl) l := by
-      --  how to derive : (am' ++ (id,.bot)::am) ea (Typ.var idl) ?
-      --  requires FV(var idl) ∩  dom(am'') = []
-      -- need assumption that idl ∉ FV(assums0)
-      -- and restriction that domain of extension is exactly equal to FV(assums0)
-      -- and strengthen substance with guarantee of domain restriction
-      sorry
+      unfold Subtyping.Dynamic
+      intros el typing_idl
+      apply imp_typing_factored_left
+      apply Typing.Dynamic.dom_extension
+      { simp [Typ.free_vars]
+        apply List.disjoint_preservation_left dom_local_assums
+        exact List.nonmem_to_disjoint_right idl (ListSubtyping.free_vars assums0) idl_fresh }
+      { exact typing_idl }
 
     ------------------------------
 
@@ -1732,6 +1753,20 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
     apply Zone.pack_negative_soundness p6
       (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
       p22 ep p20
+
+lemma ListZone.tidy_substance {zones0 zones1 am assums} :
+  ListZone.tidy (ListSubtyping.free_vars assums) zones0 = .some zones1 →
+  (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
+      ∃ am'' ,
+        ListPair.dom am'' ⊆ ListSubtyping.free_vars assums0 ∧
+        MultiSubtyping.Dynamic (am'' ++ am) assums0)
+  →
+  (∀ {skolems assums1 t1}, ⟨skolems, assums1, t1⟩ ∈ zones1 →
+      ∃ am'' ,
+        ListPair.dom am'' ⊆ ListSubtyping.free_vars assums1 ∧
+        MultiSubtyping.Dynamic (am'' ++ am) assums1)
+:= by sorry
+
 
 lemma ListZone.tidy_soundness {zones0 zones1 am assums e} :
   ListZone.tidy (ListSubtyping.free_vars assums) zones0 = .some zones1 →
@@ -1829,9 +1864,11 @@ mutual
   theorem Subtyping.Static.substance {
     skolems assums lower upper skolems' assums' am
   } :
-    Subtyping.Static skolems assums lower upper skolems' assums' →
+    Subtyping.Static skolems assums lower upper skolems' (assums' ++ assums) →
     MultiSubtyping.Dynamic am assums →
-    (∃ am'' , MultiSubtyping.Dynamic (am'' ++ am) assums')
+    ∃ am'' ,
+    ListPair.dom am'' ⊆ ListSubtyping.free_vars assums' ∧
+    MultiSubtyping.Dynamic (am'' ++ am) assums'
   := by sorry
 end
 
@@ -2072,27 +2109,22 @@ mutual
     intros tam' p20
     intros eam p30
 
-
-    have typing_zones_concat : ∀ {skolems1 assums1 t1}, ⟨skolems1, assums1, t1⟩ ∈ zones →
-      ∃ am'', MultiSubtyping.Dynamic (am'' ++ (tam0 ++ tam')) (assums1 ++ assums')
-    := by
-      intros skolems1 assums1 t1 mem_zones
-      -- Subtyping.Static.substance
-      sorry
-
     have typing_zones : ∀ {skolems1 assums1 t1}, ⟨skolems1, assums1, t1⟩ ∈ zones →
-      ∃ am'' ,  MultiSubtyping.Dynamic (am'' ++ (tam0 ++ tam')) assums1
+      ∃ am'' ,
+        ListPair.dom am'' ⊆ ListSubtyping.free_vars assums1 ∧
+        MultiSubtyping.Dynamic (am'' ++ (tam0 ++ tam')) assums1
     := by
       intros skolems1 assums1 t1 mem_zones
-      have ⟨am'', subtyping_assums_concat⟩ := typing_zones_concat mem_zones
-      exists am''
-      apply MultiSubtyping.Dynamic.concat_elim_left subtyping_assums_concat
+      apply Subtyping.Static.substance (p1 mem_zones) p20
 
     have typing_zones' : ∀ {skolems1 assums1 t1}, ⟨skolems1, assums1, t1⟩ ∈ zones' →
-      ∃ am'' , MultiSubtyping.Dynamic (am'' ++ (tam0 ++ tam')) assums1
+      ∃ am'' ,
+        ListPair.dom am'' ⊆ ListSubtyping.free_vars assums1 ∧
+        MultiSubtyping.Dynamic (am'' ++ (tam0 ++ tam')) assums1
     := by
-      -- by tidy_substance
-      sorry
+      apply ListZone.tidy_substance p2
+      intros skolems1 assums1 t1 h
+      exact typing_zones h
 
     apply Subtyping.LoopListZone.Static.soundness p3 p20 id_fresh typing_zones'
     apply ListZone.tidy_soundness p2 p20

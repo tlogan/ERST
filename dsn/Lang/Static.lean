@@ -1670,6 +1670,7 @@ inductive Subtyping.LoopListZone.Static : List String → String → List Zone �
 
 | stream {pids id} skolems assums assums' idl r t' l r' l' r'' :
   id ≠ idl →
+  idl ∉ ListSubtyping.free_vars assums →
   ListSubtyping.invert id assums = .some assums' →
   Zone.pack (id :: idl :: pids) .false ⟨skolems, assums', .pair (.var idl) r⟩ = t' →
   Typ.Monotonic.Static id .true t' →
