@@ -496,9 +496,9 @@ lemma Subtyping.Dynamic.inter_entry {am t l left right} :
 
 
 
-lemma Subtyping.Dynamic.diff_elim {am left right t} :
-  Subtyping.Dynamic am left (Typ.unio t right) →
-  Subtyping.Dynamic am (Typ.diff left right) t
+lemma Subtyping.Dynamic.diff_elim {am lower sub upper} :
+  Subtyping.Dynamic am lower (Typ.unio sub upper) →
+  Subtyping.Dynamic am (Typ.diff lower sub) upper
 := by sorry
 
 
@@ -1218,22 +1218,14 @@ mutual
     apply Subtyping.Dynamic.lfp_drop_intro (ih0r p40)
   -------------------------------------------------------------------
 
-  | .diff_sub_elim lower sub upper p0  => by
+  | .diff_elim lower sub upper p0  => by
 
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
     have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
     exists am0
     simp [*]
     intros am' p10
-    apply Subtyping.Dynamic.diff_sub_elim sub (ih0r p10)
-
-  | .diff_upper_elim lower sub p0  => by
-    have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
-    exists am0
-    simp [*]
-    intros am' p10
-    apply Subtyping.Dynamic.diff_upper_elim sub (ih0r p10)
+    apply Subtyping.Dynamic.diff_elim (ih0r p10)
 
   | .unio_left_intro t l r p0  => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0

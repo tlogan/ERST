@@ -29,28 +29,28 @@ set_option pp.fieldNotation false
 #eval [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R) ]
 
 
-example : Typ.Monotonic "a" .true (.entry "uno" (.entry "dos" (.var "a"))) := by
-  Typ_Monotonic_prove
+example : Typ.Monotonic.Static "a" .true (.entry "uno" (.entry "dos" (.var "a"))) := by
+  Typ_Monotonic_Static_prove
 
-example : Typ.Monotonic "a" .true (.path .bot (.inter .bot (.var "a"))) := by
-  Typ_Monotonic_prove
+example : Typ.Monotonic.Static "a" .true (.path .bot (.inter .bot (.var "a"))) := by
+  Typ_Monotonic_Static_prove
 
 
-example : Typ.Monotonic "a" .true (.exi ["G"] [] (.var "G")) := by
-  Typ_Monotonic_prove
+example : Typ.Monotonic.Static "a" .true (.exi ["G"] [] (.var "G")) := by
+  Typ_Monotonic_Static_prove
 
-example : Typ.Monotonic "a" .true (.path .bot (.inter .top (.var "a"))) := by
-  Typ_Monotonic_prove
+example : Typ.Monotonic.Static "a" .true (.path .bot (.inter .top (.var "a"))) := by
+  Typ_Monotonic_Static_prove
   -- repeat (constructor; try simp)
 
--- example : Typ.Monotonic "a" .true (.path (.inter .unit (.var "a")) .bot) := by
---   Typ_Monotonic_prove
+-- example : Typ.Monotonic.Static "a" .true (.path (.inter .unit (.var "a")) .bot) := by
+--   Typ_Monotonic_Static_prove
 
-example : Typ.Monotonic "a" .false (.path (.inter .bot (.var "a")) .bot) := by
-  Typ_Monotonic_prove
+example : Typ.Monotonic.Static "a" .false (.path (.inter .bot (.var "a")) .bot) := by
+  Typ_Monotonic_Static_prove
 
-example : Typ.Monotonic "a" .false (.path (.inter .top (.var "a")) .top) := by
-  Typ_Monotonic_prove
+example : Typ.Monotonic.Static "a" .false (.path (.inter .top (.var "a")) .top) := by
+  Typ_Monotonic_Static_prove
 
 
 example : (if ("hello" == "hello") = true then 1 else 2) = 1 := by
@@ -78,8 +78,8 @@ example : Typ.UpperFounded "R"
 := by Typ_UpperFounded_prove
 
 
-example : ¬ Subtyping.check [] [] [typ| <dos/> ] [typ| <uno/>] := by
-  simp [Subtyping.check]; rfl
+example : ¬ Subtyping.check [typ| <dos/> ] [typ| <uno/>] := by
+  simp [Subtyping.check]
 
 example Δ Γ
 : PatLifting.Static Δ Γ [pattern| x]
@@ -477,7 +477,7 @@ example : Subtyping.Static
 := by Subtyping_Static_prove
 -- := by
 --   apply Subtyping.Static.lfp_induct_elim
---   · Typ_Monotonic_prove
+--   · Typ_Monotonic_Static_prove
 --   · reduce; Subtyping_Static_prove
 
 ---------------------------------------
@@ -504,6 +504,19 @@ example : Subtyping.Static
   [typ| TOP \ <succ> <succ> <succ> <zero/>]
   [ids| ] [subtypings| ]
 := by Subtyping_Static_prove
+-- := by
+--   apply Subtyping.Static.lfp_elim_diff_intro
+--   { rfl }
+--   { simp [Typ.struct_less_than]; reduce
+--     (first
+--     | apply Or.inl ; rfl
+--     | apply Or.inr ; rfl
+--     ) <;> fail }
+--   { rfl }
+--   { Typ_Monotonic_Static_prove }
+--   { Subtyping_Static_prove }
+--   { simp [Typ.subfold, Typ.sub, Subtyping.check, find] }
+--   { simp [Typ.subfold, Typ.sub, Subtyping.check, find] }
 
 ---------------------------------------
 ----- diff intro
@@ -551,7 +564,6 @@ example : Subtyping.Static
 ---------------------------------------
 ----- diff elim
 ---------------------------------------
-
 #eval Subtyping.Static.solve
   [ids| ] [subtypings| ]
   [typ| (<uno/> | <dos/>) \ <dos/>]

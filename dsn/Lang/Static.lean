@@ -158,9 +158,10 @@ mutual
   | [] => .true
   | id :: ids =>
     (
-      (ListSubtyping.Monotonic.Static.decide id .true cs && Typ.Monotonic.Static.decide id .true t) ||
-      (ListSubtyping.Monotonic.Static.decide id .false cs && Typ.Monotonic.Static.decide id .false t)
-    ) &&
+      (ListSubtyping.Monotonic.Static.decide id .true cs &&
+        Typ.Monotonic.Static.decide id .true t) ||
+      (ListSubtyping.Monotonic.Static.decide id .false cs &&
+        Typ.Monotonic.Static.decide id .false t)) &&
     ListSubtyping.Monotonic.Static.Either.decide cs t ids
 
   partial def ListSubtyping.Monotonic.Static.decide (id : String) (b : Bool) : ListSubtyping → Bool
@@ -1290,16 +1291,10 @@ mutual
       Subtyping.Static skolems assums lower (Typ.drop id body) skolems' assums' →
       Subtyping.Static skolems assums lower (.lfp id body) skolems' assums'
 
-    -- difference sub elimination
-    | diff_sub_elim {skolems assums skolems' assums'} lower sub upper :
-      Subtyping.Static skolems assums lower sub skolems' assums' →
+    -- difference elimination
+    | diff_elim {skolems assums skolems' assums'} lower sub upper :
+      Subtyping.Static skolems assums lower (.unio sub upper) skolems' assums' →
       Subtyping.Static skolems assums (.diff lower sub) upper skolems' assums'
-
-    -- difference upper elimination
-    | diff_upper_elim {skolems assums upper skolems' assums'} lower sub :
-      Subtyping.Static skolems assums lower upper skolems' assums' →
-      Subtyping.Static skolems assums (.diff lower sub) upper skolems' assums'
-
 
     -- expansion introduction
     | unio_left_intro {skolems assums skolems' assums'} t l r:
@@ -1363,16 +1358,20 @@ macro_rules
         · Subtyping_Static_prove
         · Subtyping_Static_prove
       | apply Subtyping.Static.exi_elim
-        · rfl
-        · ListSubtyping_Static_prove
-        · Subtyping_Static_prove
+        { rfl }
+        { rfl }
+        { simp [ListSubtyping.free_vars, Typ.free_vars] }
+        { ListSubtyping_Static_prove }
+        { Subtyping_Static_prove }
       | apply Subtyping.Static.inter_intro
         · Subtyping_Static_prove
         · Subtyping_Static_prove
       | apply Subtyping.Static.all_intro
-        · rfl
-        · ListSubtyping_Static_prove
-        · Subtyping_Static_prove
+        { rfl }
+        { rfl }
+        { simp [ListSubtyping.free_vars, Typ.free_vars] }
+        { ListSubtyping_Static_prove }
+        { Subtyping_Static_prove }
       | apply Subtyping.Static.placeholder_elim
         · simp
         · apply lower_bound_map
@@ -1426,13 +1425,16 @@ macro_rules
         · Subtyping_Static_prove
 
       | apply Subtyping.Static.unio_antec
-        · Subtyping_Static_prove
+        { Subtyping_Static_prove }
+        { Subtyping_Static_prove }
 
       | apply Subtyping.Static.inter_conseq
-        · Subtyping_Static_prove
+        { Subtyping_Static_prove }
+        { Subtyping_Static_prove }
 
       | apply Subtyping.Static.inter_entry
-        · Subtyping_Static_prove
+        { Subtyping_Static_prove }
+        { Subtyping_Static_prove }
 
       | apply Subtyping.Static.lfp_factor_elim
         · rfl
@@ -1447,43 +1449,29 @@ macro_rules
         · reduce; Subtyping_Static_prove
 
       | apply Subtyping.Static.lfp_elim_diff_intro
-        · reduce; rfl
-        · Typ_Monotonic_Static_prove
-        · simp [
-            Typ.struct_less_than, Typ.top, ListSubtyping.var_restricted,
-            ListSubtyping.bounds, ListTyp.struct_less_than,
-            Typ.refl_BEq_true
-          ]
-        · simp; reduce
-          simp [
-            Subtyping.check, Typ.toBruijn, ListSubtyping.toBruijn,
-            ListPairTyp.ordered_bound_vars, Typ.ordered_bound_vars,
-          ]; reduce
-          simp
-        · reduce; rfl
-        · simp; reduce
-          simp [
-            Subtyping.check, Typ.toBruijn, ListSubtyping.toBruijn,
-            ListPairTyp.ordered_bound_vars, Typ.ordered_bound_vars,
-          ]; reduce
-          simp
-        · Subtyping_Static_prove
+        { rfl }
+        { simp [Typ.struct_less_than]; reduce
+          (first
+          | apply Or.inl ; rfl
+          | apply Or.inr ; rfl
+          ) <;> fail }
+        { rfl }
+        { Typ_Monotonic_Static_prove }
+        { Subtyping_Static_prove }
+        { simp [Typ.subfold, Typ.sub, Subtyping.check, find] }
+        { simp [Typ.subfold, Typ.sub, Subtyping.check, find] }
 
       | apply Subtyping.Static.diff_intro
-        · rfl
-        · simp; reduce
-          simp [
+        { rfl }
+        { simp [
             Subtyping.check, Typ.toBruijn, ListSubtyping.toBruijn,
             ListPairTyp.ordered_bound_vars, Typ.ordered_bound_vars,
-          ]; reduce
-          simp
-        · simp; reduce
-          simp [
+          ] }
+        { simp [
             Subtyping.check, Typ.toBruijn, ListSubtyping.toBruijn,
             ListPairTyp.ordered_bound_vars, Typ.ordered_bound_vars,
-          ]; reduce
-          simp
-        · Subtyping_Static_prove
+          ] }
+        { Subtyping_Static_prove }
 
 
       | apply Subtyping.Static.lfp_peel_intro
@@ -1491,8 +1479,7 @@ macro_rules
         · simp [Typ.sub, find] ; Subtyping_Static_prove
 
       | apply Subtyping.Static.lfp_drop_intro
-        · rfl
-        · Subtyping_Static_prove
+        { Subtyping_Static_prove }
 
       | apply Subtyping.Static.diff_elim
         · Subtyping_Static_prove
