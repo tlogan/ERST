@@ -1638,12 +1638,17 @@ mutual
     | (.loop e) => do
       let id ← fresh_typ_id
       (← Typing.Static.infer Θ Δ Γ e).flatMapM (fun ⟨Θ', Δ', t⟩ => do
-        let zones ← Subtyping.GuardedListZone.Static.infer Θ' Δ' t (.var id)
-        let t' ← Subtyping.LoopListZone.Static.infer (ListSubtyping.free_vars Δ') id zones
-        return [⟨Θ', Δ', t'⟩]
+
+        let id_body ← fresh_typ_id
+        let zones := (← Subtyping.Static.solve Θ Δ t (.path (.var id) (.var id_body))).map (
+          fun (Θ', Δ') => ⟨List.diff Θ' Θ, List.diff Δ' Δ, (.var id_body)⟩ )
+
+        match (ListZone.tidy (ListSubtyping.free_vars Δ) zones) with
+        | .some zones' =>
+          let t' ← Subtyping.LoopListZone.Static.infer (ListSubtyping.free_vars Δ') id zones'
+          return [⟨Θ', Δ', t'⟩]
+        | .none => failure
       )
-
-
 
     | (.anno e ta) =>
       if Typ.free_vars ta == [] then do
@@ -1750,11 +1755,6 @@ mutual
 
   | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
     Typing.Static skolems assums context e t skolems' assums' →
-    -- (∀ {skolems'' assums'' t''},
-    --   ⟨skolems'', assums'', t''⟩ ∈ zones →
-    --   Subtyping.Static skolems assums t (.path (.var id) t'')
-    --     (skolems'' ++ skolems) (assums'' ++ assums)
-    -- ) →
     (∀ {skolems'' assums'' t''},
       ⟨skolems'', assums'', t''⟩ ∈ zones →
       Subtyping.Static skolems' assums' t (.path (.var id) t'')
