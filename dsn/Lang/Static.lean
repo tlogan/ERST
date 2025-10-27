@@ -1530,13 +1530,13 @@ macro_rules
 #check Option.mapM
 
 mutual
-  partial def Typing.ListPath.Static.infer
+  partial def Typing.Function.Static.infer
     (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) :
     List (Pat × Expr) → Lean.MetaM (List Zone × List Typ)
   | [] => return ([], [])
 
   | (p,e)::f => do
-    let (zones, subtras) ← Typing.ListPath.Static.infer Θ Δ Γ f
+    let (zones, subtras) ← Typing.Function.Static.infer Θ Δ Γ f
     let (tp, Δ', Γ') ←  PatLifting.Static.compute Δ Γ p
     let tl := ListTyp.diff tp subtras
     let zones' := (← Typing.Static.infer Θ Δ' Γ' e).map (fun ⟨Θ', Δ'', tr ⟩ =>
@@ -1546,20 +1546,6 @@ mutual
     | .some zones'' => return (zones'' ++ zones, subtra :: subtras)
     | .none => failure
 
-
-  partial def Subtyping.GuardedListZone.Static.infer
-    (Θ : List String) (Δ : List (Typ × Typ)) :
-    Typ → Typ → Lean.MetaM (List Zone)
-  | t, .var id => do
-    let id' ← fresh_typ_id
-    let t' := .var id'
-    let zones := (← Subtyping.Static.solve Θ Δ t (.path (.var id) t')).map (fun (Θ', Δ') =>
-      ⟨List.diff Θ' Θ, List.diff Δ' Δ, t'⟩
-    )
-    match (ListZone.tidy (ListSubtyping.free_vars Δ) zones) with
-      | .some zones' => return zones'
-      | .none => failure
-  | _, _ => failure
 
   partial def Typing.ListZone.Static.infer
     (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) (e : Expr) :
@@ -1604,30 +1590,33 @@ mutual
       | .some result => result
       | .none => failure
 
+    partial def Typing.Record.Static.infer
+      (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+    : List (String × Expr) → Lean.MetaM (List Zone)
+    | [] => return [⟨Θ, Δ, .top⟩]
+    | (l,e) :: r => do
+      (← (Typing.Static.infer Θ Δ Γ e)).flatMapM (fun ⟨Θ', Δ', t⟩ => do
+      (← (Typing.Record.Static.infer Θ' Δ' Γ r)).flatMapM (fun ⟨Θ'', Δ'',t'⟩ =>
+        return [⟨Θ'', Δ'', (.inter (.entry l t) (t'))⟩]
+      ))
 
     partial def Typing.Static.infer
-      (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) :
-      Expr → Lean.MetaM (List Zone)
+      (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
+    : Expr → Lean.MetaM (List Zone)
     | .unit => return [⟨Θ, Δ, .top⟩]
     | .var x =>  match find x Γ with
       | .some t => return [⟨Θ, Δ, t⟩]
       | .none => failure
 
-    | .record [] =>  return [⟨Θ, Δ, .top⟩]
+    | .record r =>  Typing.Record.Static.infer Θ Δ Γ r
 
-    | .record ((l,e) :: r) => do
-      (← (Typing.Static.infer Θ Δ Γ e)).flatMapM (fun ⟨Θ', Δ', t⟩ => do
-      (← (Typing.Static.infer Θ' Δ' Γ (.record r))).flatMapM (fun ⟨Θ'', Δ'',t'⟩ =>
-        return [⟨Θ'', Δ'', (.inter (.entry l t) (t'))⟩]
-      ))
-
-    | (.function f) => do
-      let (zones, _) ← (Typing.ListPath.Static.infer Θ Δ Γ f)
+    | .function f => do
+      let (zones, _) ← (Typing.Function.Static.infer Θ Δ Γ f)
       let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
       return [⟨Θ, Δ, t⟩]
 
 
-    | (.app ef ea) => do
+    | .app ef ea => do
       let α ← fresh_typ_id
       (← Typing.Static.infer Θ Δ Γ ef).flatMapM (fun ⟨Θ', Δ', tf⟩ => do
       (← Typing.Static.infer Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
@@ -1635,7 +1624,7 @@ mutual
         return [⟨Θ''', Δ''', (.var α)⟩]
         )))
 
-    | (.loop e) => do
+    | .loop e => do
       let id ← fresh_typ_id
       (← Typing.Static.infer Θ Δ Γ e).flatMapM (fun ⟨Θ', Δ', t⟩ => do
 
@@ -1650,7 +1639,7 @@ mutual
         | .none => failure
       )
 
-    | (.anno e ta) =>
+    | .anno e ta =>
       if Typ.free_vars ta == [] then do
         let zones ← Typing.ListZone.Static.infer Θ Δ Γ e
         let te := ListZone.pack (ListSubtyping.free_vars Δ) .false zones
@@ -1774,94 +1763,89 @@ mutual
 
 end
 
-syntax "Typing_ListPath_Static_prove" : tactic
+syntax "Typing_Function_Static_prove" : tactic
+syntax "Typing_Record_Static_prove" : tactic
 syntax "Subtyping_GuardedListZone_Static_prove" : tactic
 syntax "Subtyping_ListZone_Static_prove" : tactic
 syntax "Subtyping_LoopListZone_Static_prove" : tactic
 syntax "Typing_Static_prove" : tactic
 
 
-
 macro_rules
 
-  | `(tactic| Typing_ListPath_Static_prove) => `(tactic|
+  | `(tactic| Typing_Function_Static_prove) => `(tactic|
     (first
-      | apply Typing.ListPath.Static.nil
-      | apply Typing.ListPath.Static.cons
-        · Typing_ListPath_Static_prove
-        · PatLifting_Static_prove
-        · rfl
-        · intro
-          · Typing_Static_prove
-        · rfl
-        · rfl
+    | apply Typing.Function.Static.nil
+    | apply Typing.Function.Static.cons
+      · Typing_Function_Static_prove
+      · PatLifting_Static_prove
+      · rfl
+      · intro
+        · Typing_Static_prove
+      · rfl
+      · rfl
     ) <;> fail
   )
 
-  | `(tactic| Subtyping_GuardedListZone_Static_prove) => `(tactic|
-    (apply Subtyping.ListZone.Static.intro
-      · intro
-        · Subtyping_Static_prove
-      · rfl
-    )
-  )
+  | `(tactic| Typing_Record_Static_prove) => `(tactic|
+    (first
+    | apply Typing.Record.Static.nil
+    | apply Typing.Record.Static.cons
+      · Typing_Static_prove
+      · Typing_Record_Static_prove
+    ) <;> fail )
 
   | `(tactic| Subtyping_ListZone_Static_prove) => `(tactic|
     (apply Subtyping.ListZone.Static.intro
       · intro
         · Typing_Static_prove
-    )
-  )
+    ) )
 
   | `(tactic| Subtyping_LoopListZone_Static_prove) => `(tactic|
     (first
-      | apply Subtyping.LoopListZone.Static.batch
-        · rfl
-        · rfl
-        · rfl
-        · rfl
-      | apply Subtyping.LoopListZone.Static.stream
-        · simp
-        · rfl
-        · rfl
-        · rfl
-        · rfl
-        · Typ_Monotonic_Static_prove
-        · Typ_UpperFounded_prove
-        · rfl
-    ) <;> fail
-  )
+    | apply Subtyping.LoopListZone.Static.batch
+      · rfl
+      · rfl
+      · rfl
+      · rfl
+    | apply Subtyping.LoopListZone.Static.stream
+      · simp
+      · rfl
+      · rfl
+      · rfl
+      · rfl
+      · Typ_Monotonic_Static_prove
+      · Typ_UpperFounded_prove
+      · rfl
+    ) <;> fail )
 
   | `(tactic| Typing_Static_prove) => `(tactic|
     (first
-      | apply Typing.Static.unit
-      | apply Typing.Static.var
-        · rfl
-      | apply Typing.Static.record_nil
-      | apply Typing.Static.record_cons
-        · Typing_Static_prove
-        · Typing_Static_prove
+    | apply Typing.Static.unit
+    | apply Typing.Static.var
+      · rfl
+    | apply Typing.Static.record
+      · Typing_Record_Static_prove
 
+    | apply Typing.Static.function
+      · Typing_Function_Static_prove
+      · rfl
 
-      | apply Typing.Static.function
-        · Typing_ListPath_Static_prove
-        · rfl
+    | apply Typing.Static.app
+      · Typing_Static_prove
+      · Typing_Static_prove
+      · Subtyping_Static_prove
 
-      | apply Typing.Static.app
-        · Typing_Static_prove
-        · Typing_Static_prove
-        · Subtyping_Static_prove
+    | apply Typing.Static.loop
+      { Typing_Static_prove }
+      { apply Subtyping.ListZone.Static.intro
+        {intro; Subtyping_Static_prove}
+        {rfl} }
+      { Subtyping_LoopListZone_Static_prove }
 
-      | apply Typing.Static.loop
-        · Typing_Static_prove
-        · Subtyping_GuardedListZone_Static_prove
-        · Subtyping_LoopListZone_Static_prove
-
-      | apply Typing.Static.anno
-        · simp
-        · Subtyping_ListZone_Static_prove
-        · rfl
-        · Subtyping_Static_prove
-
-    ) <;> fail
-  )
+    | apply Typing.Static.anno
+      · simp
+      · Subtyping_ListZone_Static_prove
+      · rfl
+      · Subtyping_Static_prove
+    ) <;> fail )
