@@ -1506,16 +1506,16 @@ macro_rules
 #check Option.mapM
 
 mutual
-  partial def Typing.Function.Static.infer
+  partial def Typing.Function.Static.compute
     (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) :
     List (Pat × Expr) → Lean.MetaM (List Zone × List Typ)
   | [] => return ([], [])
 
   | (p,e)::f => do
-    let (zones, subtras) ← Typing.Function.Static.infer Θ Δ Γ f
+    let (zones, subtras) ← Typing.Function.Static.compute Θ Δ Γ f
     let (tp, Δ', Γ') ←  PatLifting.Static.compute Δ Γ p
     let tl := ListTyp.diff tp subtras
-    let zones' := (← Typing.Static.infer Θ Δ' Γ' e).map (fun ⟨Θ', Δ'', tr ⟩ =>
+    let zones' := (← Typing.Static.compute Θ Δ' Γ' e).map (fun ⟨Θ', Δ'', tr ⟩ =>
       ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ )
     let subtra := Typ.capture tp
     match ListZone.tidy (ListSubtyping.free_vars Δ) zones' with
@@ -1523,14 +1523,14 @@ mutual
     | .none => failure
 
 
-  partial def Typing.ListZone.Static.infer
+  partial def Typing.ListZone.Static.compute
     (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) (e : Expr) :
   Lean.MetaM (List Zone) := do
-    (← Typing.Static.infer Θ Δ Γ e).mapM (fun  ⟨Θ', Δ', t⟩ =>
+    (← Typing.Static.compute Θ Δ Γ e).mapM (fun  ⟨Θ', Δ', t⟩ =>
       return ⟨List.diff Θ' Θ, List.diff Δ' Δ, t⟩
     )
 
-    partial def Subtyping.LoopListZone.Static.infer
+    partial def Subtyping.LoopListZone.Static.compute
       (pids : List String) (id : String) :
       List Zone →
     Lean.MetaM Typ
@@ -1566,42 +1566,42 @@ mutual
       | .some result => result
       | .none => failure
 
-    partial def Typing.Record.Static.infer
+    partial def Typing.Record.Static.compute
       (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
     : List (String × Expr) → Lean.MetaM (List Zone)
     | [] => return [⟨Θ, Δ, .top⟩]
     | (l,e) :: r => do
-      (← (Typing.Static.infer Θ Δ Γ e)).flatMapM (fun ⟨Θ', Δ', t⟩ => do
-      (← (Typing.Record.Static.infer Θ' Δ' Γ r)).flatMapM (fun ⟨Θ'', Δ'',t'⟩ =>
+      (← (Typing.Static.compute Θ Δ Γ e)).flatMapM (fun ⟨Θ', Δ', t⟩ => do
+      (← (Typing.Record.Static.compute Θ' Δ' Γ r)).flatMapM (fun ⟨Θ'', Δ'',t'⟩ =>
         return [⟨Θ'', Δ'', (.inter (.entry l t) (t'))⟩]
       ))
 
-    partial def Typing.Static.infer
+    partial def Typing.Static.compute
       (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
     : Expr → Lean.MetaM (List Zone)
     | .var x =>  match find x Γ with
       | .some t => return [⟨Θ, Δ, t⟩]
       | .none => failure
 
-    | .record r =>  Typing.Record.Static.infer Θ Δ Γ r
+    | .record r =>  Typing.Record.Static.compute Θ Δ Γ r
 
     | .function f => do
-      let (zones, _) ← (Typing.Function.Static.infer Θ Δ Γ f)
+      let (zones, _) ← (Typing.Function.Static.compute Θ Δ Γ f)
       let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
       return [⟨Θ, Δ, t⟩]
 
 
     | .app ef ea => do
       let α ← fresh_typ_id
-      (← Typing.Static.infer Θ Δ Γ ef).flatMapM (fun ⟨Θ', Δ', tf⟩ => do
-      (← Typing.Static.infer Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
+      (← Typing.Static.compute Θ Δ Γ ef).flatMapM (fun ⟨Θ', Δ', tf⟩ => do
+      (← Typing.Static.compute Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
       (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ =>
         return [⟨Θ''', Δ''', (.var α)⟩]
         )))
 
     | .loop e => do
       let id ← fresh_typ_id
-      (← Typing.Static.infer Θ Δ Γ e).flatMapM (fun ⟨Θ', Δ', t⟩ => do
+      (← Typing.Static.compute Θ Δ Γ e).flatMapM (fun ⟨Θ', Δ', t⟩ => do
 
         let id_body ← fresh_typ_id
         let zones := (← Subtyping.Static.solve Θ Δ t (.path (.var id) (.var id_body))).map (
@@ -1609,14 +1609,14 @@ mutual
 
         match (ListZone.tidy (ListSubtyping.free_vars Δ) zones) with
         | .some zones' =>
-          let t' ← Subtyping.LoopListZone.Static.infer (ListSubtyping.free_vars Δ') id zones'
+          let t' ← Subtyping.LoopListZone.Static.compute (ListSubtyping.free_vars Δ') id zones'
           return [⟨Θ', Δ', t'⟩]
         | .none => failure
       )
 
     | .anno e ta =>
       if Typ.free_vars ta == [] then do
-        let zones ← Typing.ListZone.Static.infer Θ Δ Γ e
+        let zones ← Typing.ListZone.Static.compute Θ Δ Γ e
         let te := ListZone.pack (ListSubtyping.free_vars Δ) .false zones
         (← Subtyping.Static.solve Θ Δ te ta).flatMapM (fun (Θ', Δ') =>
           return [⟨Θ', Δ', ta⟩]
