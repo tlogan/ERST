@@ -204,14 +204,14 @@ instance Typ.instanceBEq : BEq Typ where
 
 
 mutual
-  lemma ListSubtyping.refl_beq_true : ∀ cs : ListSubtyping, ListSubtyping.beq cs cs = true
+  theorem ListSubtyping.refl_beq_true : ∀ cs : ListSubtyping, ListSubtyping.beq cs cs = true
   | .nil => rfl
   | (lower,upper) :: cs' => by
     simp [ListSubtyping.beq]
     simp [Typ.refl_beq_true]
     apply ListSubtyping.refl_beq_true
 
-  lemma Typ.refl_beq_true : ∀ t : Typ, Typ.beq t t = true
+  theorem Typ.refl_beq_true : ∀ t : Typ, Typ.beq t t = true
   | .var id => by
     unfold Typ.beq
     simp
@@ -273,7 +273,7 @@ end
 
 mutual
 
-  lemma ListSubtyping.beq_implies_eq : ∀ ls rs, ListSubtyping.beq ls rs = true → ls = rs
+  theorem ListSubtyping.beq_implies_eq : ∀ ls rs, ListSubtyping.beq ls rs = true → ls = rs
   | [], [] => by simp
   | l :: ls, [] => by
     simp [ListSubtyping.beq]
@@ -288,7 +288,7 @@ mutual
     simp [*]
 
   -- TODO: use mututual recursion
-  lemma Typ.beq_implies_eq : ∀ l r , (Typ.beq l r) = true → l = r :=
+  theorem Typ.beq_implies_eq : ∀ l r , (Typ.beq l r) = true → l = r :=
     fun left right => match left with
     | .var idl => by cases right with
       | var idr => unfold Typ.beq; simp
@@ -375,17 +375,17 @@ end
 
 
 
-lemma Typ.refl_BEq_true : ∀ t : Typ, (t == t) = true := by
+theorem Typ.refl_BEq_true : ∀ t : Typ, (t == t) = true := by
   apply Typ.refl_beq_true
 
-lemma Typ.eq_implies_BEq_true : ∀  l r : Typ, (l = r) → (l == r) = true := by
+theorem Typ.eq_implies_BEq_true : ∀  l r : Typ, (l = r) → (l == r) = true := by
   simp [Typ.refl_BEq_true]
 
 
-lemma Typ.BEq_true_implies_eq : ∀  l r : Typ, (l == r) = true → l = r := by
+theorem Typ.BEq_true_implies_eq : ∀  l r : Typ, (l == r) = true → l = r := by
   apply Typ.beq_implies_eq
 
-lemma Typ.neq_implies_BEq_false : ∀ l r : Typ, l ≠ r → (l == r) = false := by
+theorem Typ.neq_implies_BEq_false : ∀ l r : Typ, l ≠ r → (l == r) = false := by
   intros l r h
   contrapose h
   simp_all

@@ -11,6 +11,7 @@ structure Zone where
   skolems : List String
   assums : List (Typ × Typ)
   typ : Typ
+deriving Repr
 
 def Typ.base : Bool → Typ
 | .true => .top
@@ -930,7 +931,7 @@ end
 
 
 
-lemma lower_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
+theorem lower_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
       ListSubtyping.bounds id .true cs = ts →
       (∀ t', (t', Typ.var id) ∈ cs → (t', t) ∈ ts.map (fun t' => (t', t)))
 := by induction cs with
@@ -960,7 +961,7 @@ lemma lower_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
         assumption
 
 
-lemma upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
+theorem upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
       ListSubtyping.bounds id .false cs = ts →
       (∀ t', (Typ.var id, t') ∈ cs → (t, t') ∈ ts.map (fun t' => (t, t')))
 := by induction cs with
@@ -989,7 +990,7 @@ lemma upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
       apply ih
       assumption
 
-lemma skolem_lower_bound id (assums : ListSubtyping) (skolems : List String) :
+theorem skolem_lower_bound id (assums : ListSubtyping) (skolems : List String) :
   assums.exi (fun
   | (.var idl, .var idu) => idl == id && not (skolems.contains idu)
   | _ => .false
@@ -1013,7 +1014,7 @@ lemma skolem_lower_bound id (assums : ListSubtyping) (skolems : List String) :
   | _ => simp
 
 
-lemma skolem_upper_bound id (assums : ListSubtyping) (skolems : List String) :
+theorem skolem_upper_bound id (assums : ListSubtyping) (skolems : List String) :
   assums.exi (fun
   | (.var idl, .var idu) => idu == id && not (skolems.contains idl)
   | _ => .false
@@ -1041,7 +1042,7 @@ lemma skolem_upper_bound id (assums : ListSubtyping) (skolems : List String) :
       --   | _ => .false
       -- )) then
 
-lemma lower_bound_mem id cs t : ∀ ts,
+theorem lower_bound_mem id cs t : ∀ ts,
   ListSubtyping.bounds id .true cs = ts →
   t ∈ ts → (t, .var id) ∈ cs
 := by induction cs with
@@ -1072,7 +1073,7 @@ lemma lower_bound_mem id cs t : ∀ ts,
     apply List.mem_cons_of_mem
     assumption
 
-lemma upper_bound_mem id cs t : ∀ ts,
+theorem upper_bound_mem id cs t : ∀ ts,
   ListSubtyping.bounds id .false cs = ts →
   t ∈ ts → (.var id, t) ∈ cs
 := by induction cs with
@@ -1570,6 +1571,10 @@ mutual
       (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
     : List (String × Expr) → Lean.MetaM (List Zone)
     | [] => return [⟨Θ, Δ, .top⟩]
+    | (l,e) :: [] => do
+      (← (Typing.Static.compute Θ Δ Γ e)).flatMapM (fun ⟨Θ', Δ', t⟩ => do
+        return [⟨Θ', Δ', (.entry l t)⟩]
+      )
     | (l,e) :: r => do
       (← (Typing.Static.compute Θ Δ Γ e)).flatMapM (fun ⟨Θ', Δ', t⟩ => do
       (← (Typing.Record.Static.compute Θ' Δ' Γ r)).flatMapM (fun ⟨Θ'', Δ'',t'⟩ =>
@@ -1685,6 +1690,11 @@ mutual
   | nil {skolems assums context} :
     Typing.Record.Static skolems assums context [] .top skolems assums
 
+  | single {skolems assums context  skolems' assums'} l e body :
+    Typing.Static skolems assums context e body skolems' assums' →
+    Typing.Record.Static skolems assums context
+      ((l,e) :: []) (.entry l body) skolems' assums'
+
   | cons {skolems assums context  skolems'' assums''} l e r body t skolems' assums' :
     Typing.Static skolems assums context e body skolems' assums' →
     Typing.Record.Static skolems' assums' context r t skolems'' assums'' →
@@ -1763,6 +1773,8 @@ macro_rules
   | `(tactic| Typing_Record_Static_prove) => `(tactic|
     (first
     | apply Typing.Record.Static.nil
+    | apply Typing.Record.Static.single
+      · Typing_Static_prove
     | apply Typing.Record.Static.cons
       · Typing_Static_prove
       · Typing_Record_Static_prove

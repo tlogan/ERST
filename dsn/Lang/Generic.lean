@@ -12,7 +12,7 @@ set_option pp.fieldNotation false
 
 
 
-lemma ListPair.mem_concat_disj {β}
+theorem ListPair.mem_concat_disj {β}
   (x : String) (am0 am1 : List (String × β))
 :
   x ∈ ListPair.dom (am1 ++ am0) →
@@ -34,7 +34,7 @@ lemma ListPair.mem_concat_disj {β}
       | inr h' =>
         simp [*]
 
-lemma ListPair.mem_disj_concat_left {β}
+theorem ListPair.mem_disj_concat_left {β}
   (x : String) (am0 am1 : List (String × β))
 :
   x ∈ ListPair.dom am1 →
@@ -51,7 +51,7 @@ lemma ListPair.mem_disj_concat_left {β}
       apply ih at h
       simp [*]
 
-lemma ListPair.mem_disj_concat_right {β}
+theorem ListPair.mem_disj_concat_right {β}
   (x : String) (am0 am1 : List (String × β))
 :
   x ∈ ListPair.dom am0 →
@@ -65,22 +65,22 @@ lemma ListPair.mem_disj_concat_right {β}
     simp [*]
 
 
-lemma containment_mdiff_concat_elim {α} [BEq α] {xs ys : List α}:
+theorem containment_mdiff_concat_elim {α} [BEq α] {xs ys : List α}:
    List.mdiff (xs ++ ys) ys ⊆ xs
 := by sorry
 
 
-lemma mdiff_right_sub_cons_eq y {xs ys : List String} :
+theorem mdiff_right_sub_cons_eq y {xs ys : List String} :
   y ∈ ys → List.mdiff xs ys = List.mdiff xs (y :: ys)
 := by sorry
 
-lemma mdiff_left_sub_refl_disjoint {xs ys : List String} :
+theorem mdiff_left_sub_refl_disjoint {xs ys : List String} :
   List.mdiff xs ys ∩ ys = []
 := by sorry
 
 
 
-lemma mdiff_concat_eq {xs ys zs : List String} :
+theorem mdiff_concat_eq {xs ys zs : List String} :
   ys ⊆ zs →
   List.mdiff xs zs = List.mdiff xs (ys ++ zs)
 := by induction ys with
@@ -99,16 +99,16 @@ lemma mdiff_concat_eq {xs ys zs : List String} :
     apply mdiff_right_sub_cons_eq
     exact List.mem_append_right ys' p0
 
-lemma mdiff_concat_containment_left {xs ys zs : List String} :
+theorem mdiff_concat_containment_left {xs ys zs : List String} :
   List.mdiff xs (ys ++ zs) ⊆ List.mdiff xs ys
 := by sorry
 
-lemma mdiff_concat_containment_right {xs ys zs : List String} :
+theorem mdiff_concat_containment_right {xs ys zs : List String} :
   List.mdiff xs (ys ++ zs) ⊆ List.mdiff xs zs
 := by sorry
 
 
-lemma concat_right_containment {xs ys zs : List String} :
+theorem concat_right_containment {xs ys zs : List String} :
   (xs ++ ys) ⊆ zs → ys ⊆ zs
 := by
   intro p0
@@ -117,7 +117,7 @@ lemma concat_right_containment {xs ys zs : List String} :
   exact List.mem_append_right xs p1
 
 
-lemma mdiff_decreasing_containment {xs ys zs : List String} :
+theorem mdiff_decreasing_containment {xs ys zs : List String} :
 ys ⊆ zs → List.mdiff xs zs ⊆ List.mdiff xs ys
 := by
   intro ss
@@ -126,11 +126,11 @@ ys ⊆ zs → List.mdiff xs zs ⊆ List.mdiff xs ys
   rw [← mdiff_concat_eq] <;> assumption
 
 
-lemma merase_mem x y (zs : List String) :
+theorem merase_mem x y (zs : List String) :
 y ∈ zs → x ≠ y → y ∈ List.merase x zs
 := by sorry
 
-lemma merase_containment x {ys zs : List String} :
+theorem merase_containment x {ys zs : List String} :
  ys ⊆ zs → List.merase x ys ⊆ List.merase x zs
 := by
   induction ys with
@@ -153,7 +153,7 @@ lemma merase_containment x {ys zs : List String} :
       intro y' p2
       apply ih p1 p2
 
-lemma mdiff_increasing_containment {xs : List String} :
+theorem mdiff_increasing_containment {xs : List String} :
   ∀ ys zs, ys ⊆ zs → List.mdiff ys xs ⊆ List.mdiff zs xs
 := by induction xs with
   | nil =>
@@ -166,7 +166,7 @@ lemma mdiff_increasing_containment {xs : List String} :
     assumption
 
 
-lemma dom_concat_mdiff_containment {β} {am0 am1 : List (String × β)} {xs xs_im xs'} :
+theorem dom_concat_mdiff_containment {β} {am0 am1 : List (String × β)} {xs xs_im xs'} :
   xs ⊆ xs_im → ListPair.dom am0 ⊆ List.mdiff xs_im xs →
   xs_im ⊆ xs' → ListPair.dom am1 ⊆ List.mdiff xs' xs_im →
   ListPair.dom (am1 ++ am0) ⊆ List.mdiff xs' xs
@@ -200,76 +200,76 @@ lemma dom_concat_mdiff_containment {β} {am0 am1 : List (String × β)} {xs xs_i
     }
 
 
-lemma Typing.Dynamic.dom_reduction {tam1 tam0 e t} :
+theorem Typing.Dynamic.dom_reduction {tam1 tam0 e t} :
   (ListPair.dom tam1) ∩ Typ.free_vars t = [] →
   Typing.Dynamic (tam1 ++ tam0) e t →
   Typing.Dynamic tam0 e t
 := by sorry
 
-lemma Typing.Dynamic.dom_extension {tam1 tam0 e t} :
+theorem Typing.Dynamic.dom_extension {tam1 tam0 e t} :
   (ListPair.dom tam1) ∩ Typ.free_vars t = [] →
   Typing.Dynamic tam0 e t →
   Typing.Dynamic (tam1 ++ tam0) e t
 := by sorry
 
-lemma Typing.Dynamic.dom_single_extension {id am e t t'} :
+theorem Typing.Dynamic.dom_single_extension {id am e t t'} :
   id ∉ Typ.free_vars t →
   Typing.Dynamic am e t' →
   Typing.Dynamic ((id,t) :: am) e t'
 := by sorry
 
 
-lemma MultiTyping.Dynamic.dom_reduction {tam1 tam0 eam cs} :
+theorem MultiTyping.Dynamic.dom_reduction {tam1 tam0 eam cs} :
   (ListPair.dom tam1) ∩ ListTyping.free_vars cs = [] →
   MultiTyping.Dynamic (tam1 ++ tam0) eam cs →
   MultiTyping.Dynamic tam0 eam cs
 := by sorry
 
 
-lemma MultiTyping.Dynamic.dom_extension {tam1 tam0 eam cs} :
+theorem MultiTyping.Dynamic.dom_extension {tam1 tam0 eam cs} :
   (ListPair.dom tam1) ∩ ListTyping.free_vars cs = [] →
   MultiTyping.Dynamic tam0 eam cs →
   MultiTyping.Dynamic (tam1 ++ tam0) eam cs
 := by sorry
 
-lemma MultiTyping.Dynamic.dom_context_extension {tam eam cs} :
+theorem MultiTyping.Dynamic.dom_context_extension {tam eam cs} :
   MultiTyping.Dynamic tam eam cs →
   ∀ eam', MultiTyping.Dynamic tam (eam ++ eam') cs
 := by sorry
 
 
-lemma Subtyping.Dynamic.dom_extension {am1 am0 lower upper} :
+theorem Subtyping.Dynamic.dom_extension {am1 am0 lower upper} :
   (ListPair.dom am1) ∩ Typ.free_vars lower = [] →
   (ListPair.dom am1) ∩ Typ.free_vars upper = [] →
   Subtyping.Dynamic am0 lower upper →
   Subtyping.Dynamic (am1 ++ am0) lower upper
 := by sorry
 
-lemma MultiSubtyping.Dynamic.dom_single_extension {id tam0 t cs} :
+theorem MultiSubtyping.Dynamic.dom_single_extension {id tam0 t cs} :
   id ∉ ListSubtyping.free_vars cs →
   MultiSubtyping.Dynamic tam0 cs →
   MultiSubtyping.Dynamic ((id,t) :: tam0) cs
 := by sorry
 
-lemma MultiSubtyping.Dynamic.dom_extension {am1 am0 cs} :
+theorem MultiSubtyping.Dynamic.dom_extension {am1 am0 cs} :
   (ListPair.dom am1) ∩ ListSubtyping.free_vars cs = [] →
   MultiSubtyping.Dynamic am0 cs →
   MultiSubtyping.Dynamic (am1 ++ am0) cs
 := by sorry
 
-lemma MultiSubtyping.Dynamic.dom_reduction {am1 am0 cs} :
+theorem MultiSubtyping.Dynamic.dom_reduction {am1 am0 cs} :
   (ListPair.dom am1) ∩ ListSubtyping.free_vars cs = [] →
   MultiSubtyping.Dynamic (am1 ++ am0) cs →
   MultiSubtyping.Dynamic am0 cs
 := by sorry
 
-lemma MultiSubtyping.Dynamic.reduction {am cs cs'} :
+theorem MultiSubtyping.Dynamic.reduction {am cs cs'} :
   cs ⊆ cs' →
   MultiSubtyping.Dynamic am cs'  →
   MultiSubtyping.Dynamic am cs
 := by sorry
 
-lemma List.cons_containment {α} [BEq α] {x : α} {xs ys : List α} :
+theorem List.cons_containment {α} [BEq α] {x : α} {xs ys : List α} :
   x :: xs  ⊆ ys → x ∈ ys ∧ xs ⊆ ys
 := by
   intro p0
@@ -293,13 +293,13 @@ example {α} [DecidableEq α] (x : α) (xs : List α) :
 := by exact List.contains_eq_mem x xs
 
 
-lemma List.not_mem_cons {α} [BEq α] {x x': α} {xs : List α} :
+theorem List.not_mem_cons {α} [BEq α] {x x': α} {xs : List α} :
   x ∉ (x' :: xs) →
   x ≠ x' ∧ x ∉ xs
 := by intro p ; exact ne_and_not_mem_of_not_mem_cons p
 
 -- set_option pp.notation false in
-lemma List.nonmem_to_disjoint_right {α} [DecidableEq α] (x : α) (xs : List α) :
+theorem List.nonmem_to_disjoint_right {α} [DecidableEq α] (x : α) (xs : List α) :
   x ∉ xs → xs ∩ [x] = []
 := by
   intro h
@@ -314,7 +314,7 @@ lemma List.nonmem_to_disjoint_right {α} [DecidableEq α] (x : α) (xs : List α
     { intros x'' p ; exact (ne_of_mem_of_not_mem p r) }
 
 
-lemma List.disjoint_preservation_left {α} [BEq α] {xs ys zs : List α} :
+theorem List.disjoint_preservation_left {α} [BEq α] {xs ys zs : List α} :
   xs ⊆ ys → ys ∩ zs = [] → xs ∩ zs = []
 := by
   simp [Inter.inter, List.inter]
@@ -336,7 +336,7 @@ lemma List.disjoint_preservation_left {α} [BEq α] {xs ys zs : List α} :
       apply ih p3 p1
       exact p5
 
-lemma List.disjoint_preservation_right {α} [BEq α] {xs ys zs : List α} :
+theorem List.disjoint_preservation_right {α} [BEq α] {xs ys zs : List α} :
   ys ⊆ zs → xs ∩ zs = [] → xs ∩ ys = []
 := by
   simp [Inter.inter, List.inter]
@@ -350,13 +350,13 @@ lemma List.disjoint_preservation_right {α} [BEq α] {xs ys zs : List α} :
     intro p1
     sorry
 
-lemma List.disjoint_concat_right {α} [BEq α] {xs ys zs : List α} :
+theorem List.disjoint_concat_right {α} [BEq α] {xs ys zs : List α} :
   xs ∩ (ys ++ zs) = [] → xs ∩ ys = [] ∧ xs ∩ zs = []
 := by sorry
 
 
 
-lemma ListSubtyping.Static.attributes {skolems assums cs skolems' assums'} :
+theorem ListSubtyping.Static.attributes {skolems assums cs skolems' assums'} :
   ListSubtyping.Static skolems assums cs skolems' assums' →
   skolems ⊆ skolems' ∧
   assums ⊆ assums' ∧
@@ -365,7 +365,7 @@ lemma ListSubtyping.Static.attributes {skolems assums cs skolems' assums'} :
   (List.mdiff skolems' skolems) ∩ ListSubtyping.free_vars cs = []
 := by sorry
 
-lemma Subtyping.Static.attributes {skolems assums lower upper skolems' assums'} :
+theorem Subtyping.Static.attributes {skolems assums lower upper skolems' assums'} :
   Subtyping.Static skolems assums lower upper skolems' assums' →
   skolems ⊆ skolems' ∧
   assums ⊆ assums' ∧
@@ -376,7 +376,7 @@ lemma Subtyping.Static.attributes {skolems assums lower upper skolems' assums'} 
   (List.mdiff skolems' skolems) ∩ Typ.free_vars upper = []
 := by sorry
 
-lemma Typing.Static.attributes {skolems assums context e t skolems' assums'} :
+theorem Typing.Static.attributes {skolems assums context e t skolems' assums'} :
   Typing.Static skolems assums context e t skolems' assums' →
   skolems ⊆ skolems' ∧
   assums ⊆ assums' ∧
@@ -387,7 +387,7 @@ lemma Typing.Static.attributes {skolems assums context e t skolems' assums'} :
 := by sorry
 
 
-lemma Typing.Function.Static.attributes
+theorem Typing.Function.Static.attributes
   {skolems assums context f zones subtras skolems' assums' t}
 :
   Typing.Function.Static skolems assums context subtras f zones →
@@ -398,7 +398,7 @@ lemma Typing.Function.Static.attributes
   ListTyping.free_vars context ⊆ ListSubtyping.free_vars assums
 := by sorry
 
-lemma Typing.Record.Static.attributes
+theorem Typing.Record.Static.attributes
   {skolems assums context r t skolems' assums'}
 :
   Typing.Record.Static skolems assums context r t skolems' assums' →
@@ -411,11 +411,11 @@ lemma Typing.Record.Static.attributes
 := by sorry
 
 
-lemma ListSubtyping.free_vars_containment {xs ys : List (Typ × Typ)} :
+theorem ListSubtyping.free_vars_containment {xs ys : List (Typ × Typ)} :
   xs ⊆ ys → ListSubtyping.free_vars xs ⊆ ListSubtyping.free_vars ys
 := by sorry
 
-lemma Subtyping.Static.upper_containment {skolems assums lower upper skolems' assums'} :
+theorem Subtyping.Static.upper_containment {skolems assums lower upper skolems' assums'} :
   Subtyping.Static skolems assums lower upper skolems' assums' →
   Typ.free_vars upper ⊆ ListSubtyping.free_vars assums'
 := by
@@ -424,70 +424,70 @@ lemma Subtyping.Static.upper_containment {skolems assums lower upper skolems' as
   apply p3
 
 
-lemma Subtyping.Dynamic.refl am t :
+theorem Subtyping.Dynamic.refl am t :
   Subtyping.Dynamic am t t
 := by sorry
 
-lemma Subtyping.Dynamic.unio_left_intro {am t l r} :
+theorem Subtyping.Dynamic.unio_left_intro {am t l r} :
   Subtyping.Dynamic am t l →
   Subtyping.Dynamic am t (Typ.unio l r)
 := by sorry
 
 
-lemma Subtyping.Dynamic.unio_right_intro {am t l r} :
+theorem Subtyping.Dynamic.unio_right_intro {am t l r} :
   Subtyping.Dynamic am t r →
   Subtyping.Dynamic am t (Typ.unio l r)
 := by sorry
 
-lemma Subtyping.Dynamic.inter_left_elim {am l r t} :
+theorem Subtyping.Dynamic.inter_left_elim {am l r t} :
   Subtyping.Dynamic am l t →
   Subtyping.Dynamic am (Typ.inter l r) t
 := by sorry
 
-lemma Subtyping.Dynamic.inter_right_elim {am l r t} :
+theorem Subtyping.Dynamic.inter_right_elim {am l r t} :
   Subtyping.Dynamic am r t →
   Subtyping.Dynamic am (Typ.inter l r) t
 := by sorry
 
 
-lemma Subtyping.Dynamic.entry_pres {am bodyl bodyu} l :
+theorem Subtyping.Dynamic.entry_pres {am bodyl bodyu} l :
   Subtyping.Dynamic am bodyl bodyu →
   Subtyping.Dynamic am (Typ.entry l bodyl) (Typ.entry l bodyu)
 := by sorry
 
-lemma Subtyping.Dynamic.path_pres {am p q x y} :
+theorem Subtyping.Dynamic.path_pres {am p q x y} :
   Subtyping.Dynamic am x p →
   Subtyping.Dynamic am q y →
   Subtyping.Dynamic am (Typ.path p q) (Typ.path x y)
 := by sorry
 
 
-lemma Subtyping.Dynamic.unio_elim {am left right t} :
+theorem Subtyping.Dynamic.unio_elim {am left right t} :
   Subtyping.Dynamic am left t →
   Subtyping.Dynamic am right t →
   Subtyping.Dynamic am (Typ.unio left right) t
 := by sorry
 
 
-lemma Subtyping.Dynamic.inter_intro {am t left right} :
+theorem Subtyping.Dynamic.inter_intro {am t left right} :
   Subtyping.Dynamic am t left →
   Subtyping.Dynamic am t right →
   Subtyping.Dynamic am t (Typ.inter left right)
 := by sorry
 
-lemma Subtyping.Dynamic.unio_antec {am t left right upper} :
+theorem Subtyping.Dynamic.unio_antec {am t left right upper} :
   Subtyping.Dynamic am t (Typ.path left upper) →
   Subtyping.Dynamic am t (Typ.path right upper) →
   Subtyping.Dynamic am t (Typ.path (Typ.unio left right) upper)
 := by sorry
 
-lemma Subtyping.Dynamic.inter_conseq {am t upper left right} :
+theorem Subtyping.Dynamic.inter_conseq {am t upper left right} :
   Subtyping.Dynamic am t (Typ.path upper left) →
   Subtyping.Dynamic am t (Typ.path upper right) →
   Subtyping.Dynamic am t (Typ.path upper (Typ.inter left right))
 := by sorry
 
-lemma Subtyping.Dynamic.inter_entry {am t l left right} :
+theorem Subtyping.Dynamic.inter_entry {am t l left right} :
   Subtyping.Dynamic am t (Typ.entry l left) →
   Subtyping.Dynamic am t (Typ.entry l right) →
   Subtyping.Dynamic am t (Typ.entry l (Typ.inter left right))
@@ -496,62 +496,62 @@ lemma Subtyping.Dynamic.inter_entry {am t l left right} :
 
 
 
-lemma Subtyping.Dynamic.diff_elim {am lower sub upper} :
+theorem Subtyping.Dynamic.diff_elim {am lower sub upper} :
   Subtyping.Dynamic am lower (Typ.unio sub upper) →
   Subtyping.Dynamic am (Typ.diff lower sub) upper
 := by sorry
 
 
-lemma Subtyping.Dynamic.not_diff_elim {am t0 t1 t2} :
+theorem Subtyping.Dynamic.not_diff_elim {am t0 t1 t2} :
   Typ.toBruijn [] t1 = Typ.toBruijn [] t2 →
   ¬ Dynamic am (Typ.diff t0 t1) t2
 := by sorry
 
-lemma Subtyping.Dynamic.not_diff_intro {am t0 t1 t2} :
+theorem Subtyping.Dynamic.not_diff_intro {am t0 t1 t2} :
   Typ.toBruijn [] t0 = Typ.toBruijn [] t2 →
   ¬ Dynamic am t0 (Typ.diff t1 t2)
 := by sorry
 
 
 
-lemma Subtyping.Dynamic.diff_sub_elim {am lower upper} sub:
+theorem Subtyping.Dynamic.diff_sub_elim {am lower upper} sub:
   Subtyping.Dynamic am lower sub →
   Subtyping.Dynamic am (Typ.diff lower sub) upper
 := by sorry
 
-lemma Subtyping.Dynamic.diff_upper_elim {am lower upper} sub:
+theorem Subtyping.Dynamic.diff_upper_elim {am lower upper} sub:
   Subtyping.Dynamic am lower upper →
   Subtyping.Dynamic am (Typ.diff lower sub) upper
 := by sorry
 
 
--- lemma Subtyping.Dynamic.exi_intro {am am' t ids quals body} :
+-- theorem Subtyping.Dynamic.exi_intro {am am' t ids quals body} :
 --   ListPair.dom am' ⊆ ids →
 --   MultiSubtyping.Dynamic (am' ++ am) quals →
 --   Subtyping.Dynamic (am' ++ am) t body →
 --   Subtyping.Dynamic am t (Typ.exi ids quals body)
 -- := by sorry
 
-lemma Subtyping.Dynamic.lfp_skip_elim {am id body t} :
+theorem Subtyping.Dynamic.lfp_skip_elim {am id body t} :
   id ∉ Typ.free_vars body →
   Subtyping.Dynamic am body t →
   Subtyping.Dynamic am (Typ.lfp id body) t
 := by sorry
 
-lemma Subtyping.Dynamic.lfp_induct_elim {am id body t} :
+theorem Subtyping.Dynamic.lfp_induct_elim {am id body t} :
   Typ.Monotonic.Dynamic am id body →
   Subtyping.Dynamic am (Typ.sub [(id, t)] body) t →
   Subtyping.Dynamic am (Typ.lfp id body) t
 := by sorry
 
-lemma Subtyping.Dynamic.lfp_factor_elim {am id lower upper l fac} :
+theorem Subtyping.Dynamic.lfp_factor_elim {am id lower upper l fac} :
   Typ.factor id lower l = .some fac →
   Subtyping.Dynamic am fac upper →
   Subtyping.Dynamic am (Typ.lfp id lower) (.entry l upper)
 := by sorry
 
 
-lemma Subtyping.Dynamic.lfp_elim_diff_intro {am id lower upper sub n} :
+theorem Subtyping.Dynamic.lfp_elim_diff_intro {am id lower upper sub n} :
   Typ.Monotonic.Dynamic am id lower →
   Subtyping.Dynamic am (Typ.lfp id lower) upper →
   ¬ Subtyping.Dynamic am (Typ.subfold id lower 1) sub →
@@ -559,7 +559,7 @@ lemma Subtyping.Dynamic.lfp_elim_diff_intro {am id lower upper sub n} :
   Subtyping.Dynamic am (Typ.lfp id lower) (.diff upper sub)
 := by sorry
 
-lemma Subtyping.Dynamic.diff_intro {am t left right} :
+theorem Subtyping.Dynamic.diff_intro {am t left right} :
   Subtyping.Dynamic am t left →
   ¬ (Subtyping.Dynamic am t right) →
   ¬ (Subtyping.Dynamic am right t) →
@@ -567,23 +567,23 @@ lemma Subtyping.Dynamic.diff_intro {am t left right} :
 := by sorry
 
 
-lemma Subtyping.Dynamic.lfp_peel_intro {am t id body} :
+theorem Subtyping.Dynamic.lfp_peel_intro {am t id body} :
   Subtyping.Dynamic am t (Typ.sub [(id, .lfp id body)] body) →
   Subtyping.Dynamic am t (Typ.lfp id body)
 := by sorry
 
-lemma Subtyping.Dynamic.lfp_drop_intro {am t id body} :
+theorem Subtyping.Dynamic.lfp_drop_intro {am t id body} :
   Subtyping.Dynamic am t (Typ.drop id body) →
   Subtyping.Dynamic am t (Typ.lfp id body)
 := by sorry
 
-lemma Subtyping.Dynamic.exi_intro {am t ids quals body} :
+theorem Subtyping.Dynamic.exi_intro {am t ids quals body} :
   MultiSubtyping.Dynamic am quals →
   Subtyping.Dynamic am t body →
   Subtyping.Dynamic am t (Typ.exi ids quals body)
 := by sorry
 
-lemma Subtyping.Dynamic.exi_elim {am ids quals body t} :
+theorem Subtyping.Dynamic.exi_elim {am ids quals body t} :
   ids ∩ Typ.free_vars t = [] →
   (∀ am',
     ListPair.dom am' ⊆ ids →
@@ -593,20 +593,20 @@ lemma Subtyping.Dynamic.exi_elim {am ids quals body t} :
   Subtyping.Dynamic am (Typ.exi ids quals body) t
 := by sorry
 
--- lemma Subtyping.Dynamic.all_elim {am am' ids quals body t} :
+-- theorem Subtyping.Dynamic.all_elim {am am' ids quals body t} :
 --   ListPair.dom am' ⊆ ids →
 --   MultiSubtyping.Dynamic (am' ++ am) quals →
 --   Subtyping.Dynamic (am' ++ am) body t →
 --   Subtyping.Dynamic am (Typ.all ids quals body) t
 -- := by sorry
 
-lemma Subtyping.Dynamic.all_elim {am ids quals body t} :
+theorem Subtyping.Dynamic.all_elim {am ids quals body t} :
   MultiSubtyping.Dynamic am quals →
   Subtyping.Dynamic am body t →
   Subtyping.Dynamic am (Typ.all ids quals body) t
 := by sorry
 
-lemma Subtyping.Dynamic.all_intro {am t ids quals body} :
+theorem Subtyping.Dynamic.all_intro {am t ids quals body} :
   ids ∩ Typ.free_vars t = [] →
   (∀ am',
     ListPair.dom am' ⊆ ids →
@@ -616,13 +616,13 @@ lemma Subtyping.Dynamic.all_intro {am t ids quals body} :
   Subtyping.Dynamic am t (Typ.all ids quals body)
 := by sorry
 
-lemma Subtyping.Dynamic.lfp_intro {am t id body} :
+theorem Subtyping.Dynamic.lfp_intro {am t id body} :
   Typ.Monotonic.Dynamic am id body →
   Subtyping.Dynamic ((id, (Typ.lfp id body)) :: am) t body →
   Subtyping.Dynamic am t (Typ.lfp id body)
 := by sorry
 
-lemma Subtyping.Dynamic.lfp_elim {am id body t} :
+theorem Subtyping.Dynamic.lfp_elim {am id body t} :
   Typ.Monotonic.Dynamic am id body →
   id ∉ Typ.free_vars t →
   Subtyping.Dynamic ((id, t) :: am) t body →
@@ -630,38 +630,43 @@ lemma Subtyping.Dynamic.lfp_elim {am id body t} :
 := by sorry
 
 
-lemma Subtyping.Dynamic.rename_lower {am lower lower' upper} :
+theorem Subtyping.Dynamic.rename_lower {am lower lower' upper} :
   Typ.toBruijn [] lower = Typ.toBruijn [] lower' →
   Subtyping.Dynamic am lower upper →
   Subtyping.Dynamic am lower' upper
 := by sorry
 
-lemma Subtyping.Dynamic.rename_upper {am lower upper upper'} :
+theorem Subtyping.Dynamic.rename_upper {am lower upper upper'} :
   Typ.toBruijn [] upper = Typ.toBruijn [] upper' →
   Subtyping.Dynamic am lower upper →
   Subtyping.Dynamic am lower upper'
 := by sorry
 
-lemma Subtyping.Dynamic.bot_elim {am upper} :
+theorem Subtyping.Dynamic.bot_elim {am upper} :
   Subtyping.Dynamic am Typ.bot upper
 := by sorry
 
-lemma Subtyping.Dynamic.top_intro {am lower} :
+theorem Subtyping.Dynamic.top_intro {am lower} :
   Subtyping.Dynamic am lower Typ.top
 := by sorry
 
 
-lemma Typing.Dynamic.empty_record_top am :
+theorem Typing.Dynamic.empty_record_top am :
   Typing.Dynamic am (Expr.record []) Typ.top
 := by sorry
 
-lemma Typing.Dynamic.inter_entry_intro {am l e r body t} :
+theorem Typing.Dynamic.inter_entry_intro {am l e r body t} :
   Typing.Dynamic am e body →
   Typing.Dynamic am (.record r) t  →
   Typing.Dynamic am (Expr.record ((l, e) :: r)) (Typ.inter (Typ.entry l body) t)
 := by sorry
 
-lemma Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
+theorem Typing.Dynamic.entry_intro {am l e t} :
+  Typing.Dynamic am e t →
+  Typing.Dynamic am (Expr.record ((l, e) :: [])) (Typ.entry l t)
+:= by sorry
+
+theorem Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
   (∀ {v} ,
     IsValue v → Typing.Dynamic am v tp →
     ∃ eam , pattern_match v p = .some eam ∧ Typing.Dynamic am (Expr.sub eam e) tr
@@ -669,7 +674,7 @@ lemma Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
   Typing.Dynamic am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
 := by sorry
 
-lemma Typing.Dynamic.function_tail_elim {am p tp e f t } :
+theorem Typing.Dynamic.function_tail_elim {am p tp e f t } :
   (∀ {v} , IsValue v → Typing.Dynamic am v tp → ∃ eam , pattern_match v p = .some eam) →
   ¬ Subtyping.Dynamic am t (.path tp .top) →
   Typing.Dynamic am (.function f) t →
@@ -677,60 +682,60 @@ lemma Typing.Dynamic.function_tail_elim {am p tp e f t } :
 := by sorry
 
 
-lemma Typing.Dynamic.path_elim {am ef ea t t'} :
+theorem Typing.Dynamic.path_elim {am ef ea t t'} :
   Typing.Dynamic am ef (.path t t') →
   Typing.Dynamic am ea t →
   Typing.Dynamic am (.app ef ea) t'
 := by sorry
 
-lemma Typing.Dynamic.loop_path_elim {am e t} id :
+theorem Typing.Dynamic.loop_path_elim {am e t} id :
   Typing.Dynamic am e (.path (.var id) t) →
   Typing.Dynamic am (.loop e) t
 := by sorry
 
-lemma Typing.Dynamic.anno_intro {am e t ta} :
+theorem Typing.Dynamic.anno_intro {am e t ta} :
   Subtyping.Dynamic am t ta →
   Typing.Dynamic am e t →
   Typing.Dynamic am (.anno e ta) ta
 := by sorry
 
 
-lemma fresh_ids n (ignore : List String) :
+theorem fresh_ids n (ignore : List String) :
   ∃ ids , ids.length = n ∧ ids ∩ ignore = []
 := by sorry
 -- TODO: concat all the existing strings together and add numbers
 
-lemma fresh_id (ignore : List String) :
+theorem fresh_id (ignore : List String) :
   ∃ id ,id ∉ ignore
 := by sorry
 
 
-lemma Typ.all_rename {ids' ids} quals body :
+theorem Typ.all_rename {ids' ids} quals body :
   ids'.length = ids.length →
   ∃ quals' body',
   Typ.toBruijn [] (Typ.all ids' quals' body') = Typ.toBruijn [] (Typ.all ids quals body)
 := by sorry
 -- TODO: construct subbing map and sub in
 
-lemma Typ.exi_rename {ids' ids} quals body :
+theorem Typ.exi_rename {ids' ids} quals body :
   ids'.length = ids.length →
   ∃ quals' body',
   Typ.toBruijn [] (Typ.exi ids' quals' body') = Typ.toBruijn [] (Typ.exi ids quals body)
 := by sorry
 
-lemma Typ.lfp_rename id' id body :
+theorem Typ.lfp_rename id' id body :
   ∃ body',
   Typ.toBruijn [] (Typ.lfp id' body') = Typ.toBruijn [] (Typ.lfp id body)
 := by sorry
 
-  -- lemma ListSubtyping.bruijn_eq_imp_dynamic {am} :
+  -- theorem ListSubtyping.bruijn_eq_imp_dynamic {am} :
   --   ∀ {lower upper},
   --   ListSubtyping.toBruijn 0 [] lower = ListSubtyping.toBruijn 0 [] upper →
   --   MultiSubtyping.Dynamic am lower →
   --   MultiSubtyping.Dynamic am upper
   -- := by sorry
 
-lemma Subtyping.Dynamic.bruijn_eq {lower upper} am :
+theorem Subtyping.Dynamic.bruijn_eq {lower upper} am :
   Typ.toBruijn [] lower = Typ.toBruijn [] upper →
   Subtyping.Dynamic am lower upper
 := by
@@ -740,25 +745,25 @@ lemma Subtyping.Dynamic.bruijn_eq {lower upper} am :
 
 
 
-lemma ListSubtyping.toBruijn_exi_injection {ids' quals' body' ids quals body} :
+theorem ListSubtyping.toBruijn_exi_injection {ids' quals' body' ids quals body} :
   Typ.toBruijn [] (.exi ids' quals' body') = Typ.toBruijn [] (.exi ids quals body) →
   ListSubtyping.toBruijn ids' quals' = ListSubtyping.toBruijn ids quals
 := by sorry
 
-lemma Typ.toBruijn_exi_injection {ids' quals' body' ids quals body} :
+theorem Typ.toBruijn_exi_injection {ids' quals' body' ids quals body} :
   Typ.toBruijn [] (.exi ids' quals' body') = Typ.toBruijn [] (.exi ids quals body) →
   Typ.toBruijn ids' body' = Typ.toBruijn ids body
 := by sorry
 
 
-lemma ListSubtyping.restricted_rename {skolems assums ids quals ids' quals'} :
+theorem ListSubtyping.restricted_rename {skolems assums ids quals ids' quals'} :
   ListSubtyping.toBruijn ids quals = ListSubtyping.toBruijn ids' quals' →
   ListSubtyping.restricted skolems assums quals →
   ListSubtyping.restricted skolems assums quals'
 := by sorry
 
 
-lemma ListSubtyping.solution_completeness {skolems assums cs skolems' assums' am am'} :
+theorem ListSubtyping.solution_completeness {skolems assums cs skolems' assums' am am'} :
   ListSubtyping.restricted skolems assums cs →
   ListSubtyping.Static skolems assums cs skolems' assums' →
   MultiSubtyping.Dynamic am assums' →
@@ -767,23 +772,23 @@ lemma ListSubtyping.solution_completeness {skolems assums cs skolems' assums' am
 := by sorry
 
 
-lemma List.disjoint_swap {α} [BEq α] {xs ys : List α} :
+theorem List.disjoint_swap {α} [BEq α] {xs ys : List α} :
   xs ∩ ys = [] → ys ∩ xs = []
 := by sorry
 
-lemma ListSubtyping.Dynamic.dom_disjoint_concat_reorder {am am' am'' cs} :
+theorem ListSubtyping.Dynamic.dom_disjoint_concat_reorder {am am' am'' cs} :
   ListPair.dom am ∩ ListPair.dom am' = [] →
   MultiSubtyping.Dynamic (am ++ (am' ++ am'')) cs →
   MultiSubtyping.Dynamic (am' ++ (am ++ am'')) cs
 := by sorry
 
-lemma Subtyping.Dynamic.dom_disjoint_concat_reorder {am am' am'' lower upper} :
+theorem Subtyping.Dynamic.dom_disjoint_concat_reorder {am am' am'' lower upper} :
   ListPair.dom am ∩ ListPair.dom am' = [] →
   Subtyping.Dynamic (am ++ (am' ++ am'')) lower upper →
   Subtyping.Dynamic (am' ++ (am ++ am'')) lower upper
 := by sorry
 
-lemma Subtyping.assumptions_independence
+theorem Subtyping.assumptions_independence
   {skolems assums lower upper skolems' assums' am am'}
 :
   Subtyping.Static skolems assums lower upper skolems' assums' →
@@ -793,13 +798,13 @@ lemma Subtyping.assumptions_independence
   MultiSubtyping.Dynamic (am' ++ am) assums'
 := by sorry
 
-lemma Subtyping.Dynamic.pluck {am cs lower upper} :
+theorem Subtyping.Dynamic.pluck {am cs lower upper} :
   MultiSubtyping.Dynamic am cs →
   (lower, upper) ∈ cs →
   Subtyping.Dynamic am lower upper
 := by sorry
 
-lemma Subtyping.Dynamic.trans {am lower upper} t :
+theorem Subtyping.Dynamic.trans {am lower upper} t :
   Subtyping.Dynamic am lower t → Subtyping.Dynamic am t upper →
   Subtyping.Dynamic am lower upper
 := by
@@ -810,7 +815,7 @@ lemma Subtyping.Dynamic.trans {am lower upper} t :
   apply p0
   assumption
 
-lemma Subtyping.check_completeness {am lower upper} :
+theorem Subtyping.check_completeness {am lower upper} :
   Subtyping.Dynamic am lower upper →
   Subtyping.check lower upper
 := by sorry
@@ -1307,20 +1312,20 @@ end
 def Expr.Convergence (a b : Expr) :=
   ∃ e , MultiProgression a e ∧ MultiProgression b e
 
-lemma Expr.Convergence.typing_left_to_right {a b am t} :
+theorem Expr.Convergence.typing_left_to_right {a b am t} :
   Expr.Convergence a b →
   Typing.Dynamic am a t →
   Typing.Dynamic am b t
 := by sorry
 
-lemma Expr.Convergence.typing_right_to_left {a b am t} :
+theorem Expr.Convergence.typing_right_to_left {a b am t} :
   Expr.Convergence a b →
   Typing.Dynamic am b t →
   Typing.Dynamic am a t
 := by sorry
 
 
-lemma Typ.factor_expansion_soundness {am id t label t' e'} :
+theorem Typ.factor_expansion_soundness {am id t label t' e'} :
   Typ.factor id t label = some t' →
   Typing.Dynamic am e' (.lfp id t') →
   ∃ e ,
@@ -1328,7 +1333,7 @@ lemma Typ.factor_expansion_soundness {am id t label t' e'} :
     Typing.Dynamic am e (.lfp id t)
 := by sorry
 
-lemma Typ.factor_reduction_soundness {am id t label t' e' e} :
+theorem Typ.factor_reduction_soundness {am id t label t' e' e} :
   Typ.factor id t label = some t' →
   Typing.Dynamic am e (.lfp id t) →
   Expr.Convergence (Expr.proj e label) e' →
@@ -1337,7 +1342,7 @@ lemma Typ.factor_reduction_soundness {am id t label t' e' e} :
 
 
 
-lemma ListZone.pack_positive_soundness {pids zones t am assums e} :
+theorem ListZone.pack_positive_soundness {pids zones t am assums e} :
   ListZone.pack pids .true zones = t →
   -- ListZone.pack (ListSubtyping.free_vars assums) .true zones = t →
   ListSubtyping.free_vars assums ⊆ pids →
@@ -1352,23 +1357,23 @@ lemma ListZone.pack_positive_soundness {pids zones t am assums e} :
 := by sorry
 
 
-lemma Expr.Convergence.transitivity {a b c} :
+theorem Expr.Convergence.transitivity {a b c} :
   Expr.Convergence a b →
   Expr.Convergence b c →
   Expr.Convergence a c
 := by sorry
 
-lemma Expr.Convergence.swap {a b} :
+theorem Expr.Convergence.swap {a b} :
   Expr.Convergence a b →
   Expr.Convergence b a
 := by sorry
 
-lemma Expr.Convergence.app_arg_preservation {a b} f :
+theorem Expr.Convergence.app_arg_preservation {a b} f :
   Expr.Convergence a b →
   Expr.Convergence (.app f a) (.app f b)
 := by sorry
 
-lemma ListZone.pack_negative_soundness {pids zones t am assums e} :
+theorem ListZone.pack_negative_soundness {pids zones t am assums e} :
   ListZone.pack pids .false zones = t →
   ListSubtyping.free_vars assums ⊆ pids →
   -- ListZone.pack (id :: ListSubtyping.free_vars assums) .false zones = t →
@@ -1382,7 +1387,7 @@ lemma ListZone.pack_negative_soundness {pids zones t am assums e} :
         Typing.Dynamic (am'' ++ am' ++ am) e t' ) ) )
 := by sorry
 
-lemma Zone.pack_negative_soundness {pids t am assums skolems' assums' t'} :
+theorem Zone.pack_negative_soundness {pids t am assums skolems' assums' t'} :
   Zone.pack pids .false ⟨skolems', assums', t'⟩ = t →
   ListSubtyping.free_vars assums ⊆ pids →
   MultiSubtyping.Dynamic am assums →
@@ -1412,7 +1417,7 @@ example {P Q R} :
 
 
 
-lemma Zone.pack_negative_right_to_left_soundness {pids t am assums skolems' assums' t' e am'} :
+theorem Zone.pack_negative_right_to_left_soundness {pids t am assums skolems' assums' t' e am'} :
   Zone.pack pids .false ⟨skolems', assums', t'⟩ = t →
   ListSubtyping.free_vars assums ⊆ pids →
   MultiSubtyping.Dynamic am assums →
@@ -1432,7 +1437,7 @@ lemma Zone.pack_negative_right_to_left_soundness {pids t am assums skolems' assu
 --     Typing.Dynamic am e t
 -- := by sorry
 
-lemma ListZone.inversion_soundness {id zones zones' am assums} :
+theorem ListZone.inversion_soundness {id zones zones' am assums} :
   ListZone.invert id zones = some zones' →
   MultiSubtyping.Dynamic am assums →
   ∀ ef,
@@ -1456,7 +1461,7 @@ lemma ListZone.inversion_soundness {id zones zones' am assums} :
 := by sorry
 
 
-lemma ListSubtyping.inversion_soundness {id am assums assums0 assums0'} skolems tl tr :
+theorem ListSubtyping.inversion_soundness {id am assums assums0 assums0'} skolems tl tr :
   ListSubtyping.invert id assums0 = some assums0' →
   MultiSubtyping.Dynamic am assums →
   ∀ ef,
@@ -1478,13 +1483,13 @@ lemma ListSubtyping.inversion_soundness {id am assums assums0 assums0'} skolems 
     )
 := by sorry
 
-lemma ListSubtyping.inversion_top_extension {id am assums0 assums1} am' :
+theorem ListSubtyping.inversion_top_extension {id am assums0 assums1} am' :
   ListSubtyping.invert id assums0 = some assums1 →
   MultiSubtyping.Dynamic (am' ++ am) assums0 →
   MultiSubtyping.Dynamic (am' ++ (id,.top)::am) assums0
 := by sorry
 
-lemma ListSubtyping.inversion_substance {id am am' assums0 assums1} :
+theorem ListSubtyping.inversion_substance {id am am' assums0 assums1} :
   ListSubtyping.invert id assums0 = some assums1 →
   MultiSubtyping.Dynamic (am' ++ (id,.top)::am) assums0 →
   MultiSubtyping.Dynamic (am' ++ (id,.bot)::am) assums1
@@ -1492,19 +1497,19 @@ lemma ListSubtyping.inversion_substance {id am am' assums0 assums1} :
 
 
 
-lemma Typing.Dynamic.lfp_elim_top {am e id t} :
+theorem Typing.Dynamic.lfp_elim_top {am e id t} :
   Typ.Monotonic.Dynamic am id t →
   Typing.Dynamic am e (.lfp id t) →
   Typing.Dynamic ((id, .top) :: am) e t
 := by sorry
 
-lemma Typing.Dynamic.lfp_intro_bot {am e id t} :
+theorem Typing.Dynamic.lfp_intro_bot {am e id t} :
   Typ.Monotonic.Dynamic am id t →
   Typing.Dynamic ((id, .bot) :: am) e t →
   Typing.Dynamic am e (.lfp id t)
 := by sorry
 
-lemma Typing.Dynamic.existential_top_drop
+theorem Typing.Dynamic.existential_top_drop
   {id am skolems' assums assums0 ep}
   tl tr
 :
@@ -1525,7 +1530,7 @@ lemma Typing.Dynamic.existential_top_drop
 
 := by sorry
 
-lemma Typing.ListZone.Dynamic.existential_top_drop {id am assums ep} {zones' : List Zone} :
+theorem Typing.ListZone.Dynamic.existential_top_drop {id am assums ep} {zones' : List Zone} :
   id ∉ (ListSubtyping.free_vars assums) →
   (∃ skolems' assums' t',
       ⟨skolems',assums', t'⟩ ∈ zones' ∧
@@ -1550,39 +1555,39 @@ lemma Typing.ListZone.Dynamic.existential_top_drop {id am assums ep} {zones' : L
 
 
 
-lemma Typ.factor_imp_typing_covariant {am0 am1 id label t0 t0' t1 t1'} :
+theorem Typ.factor_imp_typing_covariant {am0 am1 id label t0 t0' t1 t1'} :
   Typ.factor id t0 label = .some t0' →
   Typ.factor id t1 label = .some t1' →
   (∀ e , Typing.Dynamic am0 e t0 → Typing.Dynamic am1 e t1) →
   (∀ e , Typing.Dynamic am0 e t0' → Typing.Dynamic am1 e t1')
 := by sorry
 
--- lemma Typ.factor_subtyping_soundness {am id label t0 t0' t1 t1'} :
+-- theorem Typ.factor_subtyping_soundness {am id label t0 t0' t1 t1'} :
 --   Typ.factor id t0 label = .some t0' →
 --   Typ.factor id t1 label = .some t1' →
 --   Subtyping.Dynamic am t0 t1 →
 --   Subtyping.Dynamic am t0' t1'
 -- := by sorry
 
-lemma Typ.Monotonic.Dynamic.pair {am id t0 t1} :
+theorem Typ.Monotonic.Dynamic.pair {am id t0 t1} :
   Typ.Monotonic.Dynamic am id t0 →
   Typ.Monotonic.Dynamic am id t1 →
   Typ.Monotonic.Dynamic am id (.pair t0 t1)
 := by sorry
 
-lemma Typ.factor_monotonic {am id label t t'} :
+theorem Typ.factor_monotonic {am id label t t'} :
   Typ.factor id t label = .some t' →
   Typ.Monotonic.Dynamic am id t →
   Typ.Monotonic.Dynamic am id t'
 := by sorry
 
 
-lemma Typ.UpperFounded.soundness {id l l'} am :
+theorem Typ.UpperFounded.soundness {id l l'} am :
   Typ.UpperFounded id l l' →
   Subtyping.Dynamic am (.lfp id l) (.lfp id l')
 := by sorry
 
-lemma Typ.sub_weaken_soundness {am idl t0 t1 t2} :
+theorem Typ.sub_weaken_soundness {am idl t0 t1 t2} :
   Typ.sub [(idl, t0)] t1 = t2 →
   Typ.Monotonic.Dynamic am idl t1 →
   Subtyping.Dynamic am (.var idl) t0 →
@@ -1590,7 +1595,7 @@ lemma Typ.sub_weaken_soundness {am idl t0 t1 t2} :
 := by sorry
 
 
-lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
+theorem Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
   Subtyping.LoopListZone.Static (ListSubtyping.free_vars assums) id zones t →
   MultiSubtyping.Dynamic am assums →
   id ∉ ListSubtyping.free_vars assums →
@@ -1746,7 +1751,7 @@ lemma Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
       (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
       p22 ep p20
 
-lemma ListZone.tidy_substance {zones0 zones1 am assums} :
+theorem ListZone.tidy_substance {zones0 zones1 am assums} :
   ListZone.tidy (ListSubtyping.free_vars assums) zones0 = .some zones1 →
   (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
       ∃ am'' ,
@@ -1760,7 +1765,7 @@ lemma ListZone.tidy_substance {zones0 zones1 am assums} :
 := by sorry
 
 
-lemma ListZone.tidy_soundness {zones0 zones1 am assums e} :
+theorem ListZone.tidy_soundness {zones0 zones1 am assums e} :
   ListZone.tidy (ListSubtyping.free_vars assums) zones0 = .some zones1 →
   MultiSubtyping.Dynamic am assums →
   (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
@@ -1778,7 +1783,7 @@ lemma ListZone.tidy_soundness {zones0 zones1 am assums e} :
         Typing.Dynamic (am'' ++ am' ++ am) e t1 ) ) )
 := by sorry
 
-lemma ListZone.tidy_soundness_alt
+theorem ListZone.tidy_soundness_alt
   {zones0 zones1 e context skolems assums1 t1}
   {assums : List (Typ × Typ)}
 :
@@ -1800,34 +1805,34 @@ lemma ListZone.tidy_soundness_alt
 := by sorry
 
 
-lemma MultiSubtyping.Dynamic.concat {am cs cs'} :
+theorem MultiSubtyping.Dynamic.concat {am cs cs'} :
   MultiSubtyping.Dynamic am cs →
   MultiSubtyping.Dynamic am cs' →
   MultiSubtyping.Dynamic am (cs ++ cs')
 := by sorry
 
-lemma MultiSubtyping.Dynamic.concat_elim_left {am cs cs'} :
+theorem MultiSubtyping.Dynamic.concat_elim_left {am cs cs'} :
   MultiSubtyping.Dynamic am (cs ++ cs') →
   MultiSubtyping.Dynamic am cs
 := by sorry
 
 
 
-lemma PatLifting.Static.soundness {assums context p t assums' context'} :
+theorem PatLifting.Static.soundness {assums context p t assums' context'} :
   PatLifting.Static assums context p t assums' context' →
   ∀ tam v, IsValue v → Typing.Dynamic tam v t →
     ∃ eam , pattern_match v p = .some eam ∧ MultiTyping.Dynamic tam eam context'
 := by sorry
 
 
-lemma pattern_match_ids_containment {v p eam} :
+theorem pattern_match_ids_containment {v p eam} :
   pattern_match v p = .some eam →
   ids_pattern p ⊆ ListPair.dom eam
 := by sorry
 
 
 
--- lemma PatLifting.Static.attributes {assums context p t assums' context'} :
+-- theorem PatLifting.Static.attributes {assums context p t assums' context'} :
 --   PatLifting.Static assums context p t assums' context' →
 --   assums ⊆ assums' ∧
 --   Typ.free_vars t ⊆ ListTyping.free_vars context' ∧
@@ -1835,7 +1840,7 @@ lemma pattern_match_ids_containment {v p eam} :
 -- := by sorry
 
 
-lemma Expr.sub_sub_removal {ids eam0 eam1 e} :
+theorem Expr.sub_sub_removal {ids eam0 eam1 e} :
   ids ⊆ ListPair.dom eam0 →
   (Expr.sub eam0 (Expr.sub (remove_all eam1 ids) e)) =
   (Expr.sub (eam0 ++ eam1) e)
@@ -1843,7 +1848,7 @@ lemma Expr.sub_sub_removal {ids eam0 eam1 e} :
 
 
 
-lemma Typing.Function.Static.subtra_soundness {
+theorem Typing.Function.Static.subtra_soundness {
   skolems assums context f zones subtra subtras skolems' assums' t
 } :
   Typing.Function.Static skolems assums context  subtras f zones →
@@ -1945,6 +1950,14 @@ mutual
     intros eam p20
     simp [Expr.sub, Expr.Record.sub]
     apply Typing.Dynamic.empty_record_top
+
+  | .single l e body p0 => by
+    have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
+    exists tam0
+    simp [*]
+    intros tam' p40
+    intros eam p50
+    apply Typing.Dynamic.entry_intro (ih0r p40 p50)
 
   | .cons l e r body t skolems0 assums0 p0 p1 => by
 

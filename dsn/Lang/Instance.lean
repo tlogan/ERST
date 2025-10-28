@@ -674,4 +674,38 @@ example : Subtyping.Static
 
 --------------------------------------------
 
--- TODO: more subtyping instances
+
+------------------------------------------------------------------------
+-----<<<< TYPING BASICS >>>>--------------------------------------------
+------------------------------------------------------------------------
+
+
+---------------------------------------
+----- empty record
+---------------------------------------
+
+#eval Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr| @ ]
+
+example : Typing.Static
+  [ids| ] [subtypings| ] []
+  [expr| @ ]
+  [typ| TOP ]
+  [ids| ] [subtypings| ]
+:= by Typing_Static_prove
+
+---------------------------------------
+----- pair record
+---------------------------------------
+
+#eval Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr| <uno/> , <dos/>]
+
+example : Typing.Static
+  [ids| ] [subtypings| ] []
+  [expr| <uno/> , <dos/>]
+  [typ| <uno/> * <dos/> ]
+  [ids| ] [subtypings| ]
+:= by Typing_Static_prove
