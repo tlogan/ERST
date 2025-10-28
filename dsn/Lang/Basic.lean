@@ -15,7 +15,6 @@ def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.an
 
 inductive Typ
 | var : String → Typ
-| unit : Typ
 | entry : String → Typ → Typ
 | path : Typ → Typ → Typ
 | bot :  Typ
@@ -57,9 +56,6 @@ mutual
         cases d with
         | isFalse => apply isFalse ; simp [*]
         | isTrue => apply isTrue; simp [*]
-      | _ => apply isFalse ; simp
-    | .unit => by cases right with
-      | unit => apply isTrue; simp
       | _ => apply isFalse ; simp
     | .entry ll bodyl => by cases right with
       | entry lr bodyr =>
@@ -177,7 +173,6 @@ mutual
 
   def Typ.beq : Typ → Typ → Bool
   | .var idl, .var idr => idl == idr
-  | .unit, .unit => .true
   | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.beq bodyl bodyr
   | .path x y, .path p q => Typ.beq x p && Typ.beq y q
   | .bot, .bot => .true
@@ -218,9 +213,6 @@ mutual
 
   lemma Typ.refl_beq_true : ∀ t : Typ, Typ.beq t t = true
   | .var id => by
-    unfold Typ.beq
-    simp
-  | .unit => by
     unfold Typ.beq
     simp
   | .entry l body => by
@@ -300,9 +292,6 @@ mutual
     fun left right => match left with
     | .var idl => by cases right with
       | var idr => unfold Typ.beq; simp
-      | _ => unfold Typ.beq; simp
-    | .unit => by cases right with
-      | unit => unfold Typ.beq; simp
       | _ => unfold Typ.beq; simp
     | .entry ll bodyl => by cases right with
       | entry lr bodyr =>
@@ -464,8 +453,7 @@ mutual
 
   partial def Typ.reprPrec : Typ → Nat → Std.Format
   | .var id, _ => id
-  | .unit, _ => "@"
-  | .entry l .unit, _  => "<" ++ l ++ "/>"
+  | .entry l .top, _  => "<" ++ l ++ "/>"
   | .entry l body, _  =>
     "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 90)
   | .path left right, p =>
@@ -571,7 +559,6 @@ instance : BEq (Typ × Typ) where
 inductive Typ.Bruijn
 | bvar : Nat → Typ.Bruijn
 | fvar : String → Typ.Bruijn
-| unit : Typ.Bruijn
 | entry : String → Typ.Bruijn → Typ.Bruijn
 | path : Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
 | bot : Typ.Bruijn
@@ -598,7 +585,6 @@ mutual
   def Typ.Bruijn.beq : Typ.Bruijn → Typ.Bruijn → Bool
   | .bvar il, .bvar ir => il == ir
   | .fvar idl, .fvar idr => idl == idr
-  | .unit, .unit => .true
   | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.Bruijn.beq bodyl bodyr
   | .path x y, .path p q => Typ.Bruijn.beq x p && Typ.Bruijn.beq y q
   | .top, .top => .true
@@ -656,8 +642,6 @@ mutual
   def Typ.ordered_bound_vars (bounds : List String) : Typ → List String
   | .var id =>
     if id ∈ bounds then [id] else []
-  | .unit =>
-    []
   | .entry _ t =>
     Typ.ordered_bound_vars bounds t
   | .path left right =>
@@ -712,7 +696,6 @@ mutual
 
   def Typ.free_vars : Typ → List String
   | .var id => [id]
-  | .unit => []
   | .entry _ body => Typ.free_vars body
   | .path p q => Typ.free_vars p ++ Typ.free_vars q
   | .bot => []
@@ -764,7 +747,6 @@ mutual
     match List.firstIndexOf id bids with
     | .none => .fvar id
     | .some i => .bvar (bids.length + i)
-  | .unit => .unit
   | .entry l body => .entry l (Typ.toBruijn bids body)
   | .path left right =>
     .path
@@ -811,7 +793,6 @@ mutual
 
   def Typ.size : Typ → Nat
   | .var id => 1
-  | .unit => 1
   | .entry l body => Typ.size body + 1
   | .path left right => Typ.size left + Typ.size right + 1
   | .bot => 1
@@ -866,7 +847,6 @@ mutual
   | .var id => match find id δ with
     | .none => .var id
     | .some t => t
-  | .unit => .unit
   | .entry l body => .entry l (Typ.sub δ body)
   | .path left right => .path (Typ.sub δ left) (Typ.sub δ right)
   | .bot => .bot
@@ -893,7 +873,6 @@ def Typ.subfold (id : String) (t : Typ) : Nat → Typ
 
 inductive Pat
 | var : String → Pat
-| unit
 | record : List (String × Pat) → Pat
 deriving Repr
 
@@ -905,7 +884,6 @@ mutual
 
   def Pat.free_vars : Pat → List String
   | .var id => [id]
-  | .unit => []
   | .record ps => ListPat.free_vars ps
 end
 
@@ -913,7 +891,6 @@ end
 
 inductive Expr
 | var : String → Expr
-| unit
 | record : List (String × Expr) → Expr
 | function : List (Pat × Expr) → Expr
 | app : Expr → Expr → Expr
@@ -1000,7 +977,7 @@ syntax:90 typ:91 "*" typ:90 : typ
 
 syntax "<" ident ">" typ:90 : typ
 syntax "<" ident "/>" : typ
-syntax "@" : typ
+-- syntax "@" : typ
 syntax typ "\\" typ : typ
 syntax "ALL" "[" ids "]" "[" subtypings "]" typ : typ
 syntax "EXI" "[" ids "]" "[" subtypings "]" typ : typ
@@ -1157,8 +1134,7 @@ macro_rules
 
 macro_rules
 | `([typ| $i:ident ]) => `(Typ.var [id| $i])
-| `([typ| @ ]) => `(Typ.unit)
-| `([typ| < $i:ident /> ]) => `(Typ.entry [id| $i] [typ| @])
+| `([typ| < $i:ident /> ]) => `(Typ.entry [id| $i] .top)
 | `([typ| < $i:ident > $t:typ  ]) => `(Typ.entry [id| $i] [typ| $t])
 | `([typ| $x:typ -> $y:typ ]) => `(Typ.path [typ| $x] [typ| $y])
 | `([typ| $x:typ | $y:typ ]) => `(Typ.unio [typ| $x] [typ| $y])
@@ -1202,7 +1178,7 @@ macro_rules
 
 macro_rules
 | `([pattern| $i:ident ]) => `(Pat.var [id| $i])
-| `([pattern| @ ]) => `(Pat.unit)
+| `([pattern| @ ]) => `(Pat.record [])
 | `([pattern| $pr:frame ]) => `(Pat.record [frame| $pr])
 | `([pattern| $i:ident ; $p:pat ]) => `(Pat.record ([id| $i], [pattern| $p]) :: [])
 
@@ -1219,7 +1195,7 @@ macro_rules
 
 
 macro_rules
-| `([expr| @ ]) => `(Expr.unit)
+| `([expr| @ ]) => `(Expr.record [])
 | `([expr| $i:ident ]) => `([eid| $i])
 | `([expr| $er:record ]) => `(Expr.record [record| $er])
 | `([expr| $i:ident ; $e:expr ]) => `(Expr.record [([id| $i], [expr| $e])])
@@ -1245,9 +1221,6 @@ class PatternOf (_ : Expr) where
 
 instance (id : String) : PatternOf (Expr.var id) where
   default := Pat.var id
-
-instance : PatternOf (Expr.unit) where
-  default := Pat.unit
 
 instance (entries : List (String × Expr)) [d : RecordPatternOf entries]
 : PatternOf (Expr.record entries) where
@@ -1275,7 +1248,6 @@ mutual
 
   def Pat.toExpr : Pat → Expr
   | .var id => .var id
-  | .unit => .unit
   | .record r => .record (toRecordExpr r)
 end
 

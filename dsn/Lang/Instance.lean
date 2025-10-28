@@ -41,10 +41,7 @@ example : Typ.Monotonic.Static "a" .true (.exi ["G"] [] (.var "G")) := by
 
 example : Typ.Monotonic.Static "a" .true (.path .bot (.inter .top (.var "a"))) := by
   Typ_Monotonic_Static_prove
-  -- repeat (constructor; try simp)
 
--- example : Typ.Monotonic.Static "a" .true (.path (.inter .unit (.var "a")) .bot) := by
---   Typ_Monotonic_Static_prove
 
 example : Typ.Monotonic.Static "a" .false (.path (.inter .bot (.var "a")) .bot) := by
   Typ_Monotonic_Static_prove
@@ -90,7 +87,7 @@ example Δ Γ
   PatLifting_Static_prove
 
 example Δ Γ
-: PatLifting.Static Δ Γ .unit .unit Δ Γ
+: PatLifting.Static Δ Γ [pattern| @] .top Δ Γ
 := by
   PatLifting_Static_prove
 

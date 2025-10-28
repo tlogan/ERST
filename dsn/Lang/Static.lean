@@ -178,7 +178,6 @@ mutual
       b == .true
     else
       .true
-  | .unit => .true
   | .entry _ body =>
     Typ.Monotonic.Static.decide id b body
   | .path left right =>
@@ -234,7 +233,6 @@ mutual
   inductive Typ.Monotonic.Static : String → Bool → Typ → Prop
   | var id : Typ.Monotonic.Static id true (.var id)
   | varskip id b id' : id ≠ id' → Typ.Monotonic.Static id b (.var id')
-    | unit id b : Typ.Monotonic.Static id b .unit
   | entry id b l body : Typ.Monotonic.Static id b body →  Typ.Monotonic.Static id b (.entry l body)
   | path id b left right :
     Typ.Monotonic.Static id (not b) left →
@@ -319,7 +317,6 @@ macro_rules
   (first
   | apply Typ.Monotonic.Static.var
   | apply Typ.Monotonic.Static.varskip; simp
-  | apply Typ.Monotonic.Static.unit
   | apply Typ.Monotonic.Static.entry; Typ_Monotonic_Static_prove
 
   | apply Typ.Monotonic.Static.path
@@ -402,7 +399,6 @@ macro_rules
 
 -- NOTE: P means pattern type; if not (T <: P) and not (P <: T) then T and P are disjoint
 def Typ.is_pattern (tops : List String) : Typ → Bool
-  | .unit => true
   | .top => true
   | .exi ids [] body => Typ.is_pattern (tops ++ ids) body
   | .var id => id ∈ tops
@@ -412,7 +408,6 @@ def Typ.is_pattern (tops : List String) : Typ → Bool
 
 def Typ.height : Typ → Option Nat
   | .top => return 1
-  | .unit => return 1
   | .exi _ [] body => Typ.height body
   | .var _ => return 1
   | .entry _ body => do
@@ -455,7 +450,6 @@ mutual
       ListSubtyping.var_restricted id qs &&
       ListTyp.struct_less_than bs body
     | (.var _), .top => .true
-    | (.var _), .unit => .true
     | _, _ => .false
 end
 
@@ -643,9 +637,6 @@ inductive PatLifting.Static
   Δ Γ (.var id) (.var tid)
   ((.var tid, Typ.top) :: Δ)  ((id, .var tid) :: (remove id Γ))
 
-| unit Δ Γ :
-  PatLifting.Static Δ Γ .unit .unit Δ Γ
-
 | record_nil Δ Γ :
   PatLifting.Static Δ Γ (.record []) .top Δ Γ
 
@@ -683,7 +674,6 @@ mutual
     let Δ' := (t, Typ.top) :: Δ
     let Γ' := ((id, t) :: (remove id Γ))
     return (t, Δ', Γ')
-  | .unit => return (Typ.top, Δ, Γ)
   | .record items => ListPatLifting.Static.compute Δ Γ items
 end
 
@@ -692,7 +682,6 @@ macro_rules
 | `(tactic| PatLifting_Static_prove) => `(tactic|
   (first
     | apply PatLifting.Static.var
-    | apply PatLifting.Static.unit
     | apply PatLifting.Static.record_nil
     | apply PatLifting.Static.record_single
       · PatLifting_Static_prove
@@ -1590,7 +1579,6 @@ mutual
     partial def Typing.Static.infer
       (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ))
     : Expr → Lean.MetaM (List Zone)
-    | .unit => return [⟨Θ, Δ, .top⟩]
     | .var x =>  match find x Γ with
       | .some t => return [⟨Θ, Δ, t⟩]
       | .none => failure
@@ -1707,8 +1695,6 @@ mutual
   inductive Typing.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
     Expr → Typ → List String → List (Typ × Typ) → Prop
-  -- | unit {skolems assums context} :
-  --   Typing.Static skolems assums context .unit .unit skolems assums
   | var {t} skolems assums context x :
     find x context = .some t →
     Typing.Static skolems assums context (.var x) t skolems assums
@@ -1808,7 +1794,6 @@ macro_rules
 
   | `(tactic| Typing_Static_prove) => `(tactic|
     (first
-    | apply Typing.Static.unit
     | apply Typing.Static.var
       · rfl
     | apply Typing.Static.record

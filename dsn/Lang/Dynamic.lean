@@ -20,7 +20,6 @@ mutual
     IsRecordValue ((l,e)::r)
 
   inductive IsValue : Expr → Prop
-  | unit : IsValue (.unit)
   | record : ∀ {r}, IsRecordValue r → IsValue (.record r)
   | function : ∀ {f}, IsValue (.function f)
 end
@@ -50,7 +49,6 @@ mutual
 
   def pattern_match : Expr → Pat → Option (List (String × Expr))
   | e, (.var id) => some [(id, e)]
-  | .unit, .unit => some []
   | (.record r), (.record p) => pattern_match_record r p
   | _, _ => none
 end
@@ -63,7 +61,6 @@ mutual
 
   def ids_pattern : Pat → List String
   | .var id => [id]
-  | .unit => []
   | .record r => ids_record_pattern r
 end
 
@@ -83,7 +80,6 @@ mutual
   | .var id => match (find id m) with
     | .none => (.var id)
     | .some e => e
-  | .unit => .unit
   | .record r => .record (Expr.Record.sub m r)
   | .function f => .function (Expr.Function.sub m f)
   | .app ef ea => .app (Expr.sub m ef) (Expr.sub m ea)
@@ -168,7 +164,6 @@ def Typ.Monotonic.Dynamic (am : List (String × Typ)) (id : String) (body : Typ)
   def Typing.Dynamic (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
   | .top => ∃ e',  Expr.is_value e' ∧ MultiProgression e e'
-  | .unit => Progression e .unit
   | .entry l τ => Typing.Dynamic am (.proj e l) τ
   | .path left right => ∀ e' , Typing.Dynamic am e' left → Typing.Dynamic am (.app e e') right
   | .unio left right => Typing.Dynamic am e left ∨ Typing.Dynamic am e right

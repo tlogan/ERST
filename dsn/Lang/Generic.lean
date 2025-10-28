@@ -2162,5 +2162,4 @@ mutual
         { apply MultiSubtyping.Dynamic.reduction p16 p40 } }
       { apply p42 } }
 
-  -- TODO: consider removing unit and using @ syntax to mean empty record.
 end
