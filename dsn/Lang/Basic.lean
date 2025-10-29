@@ -1098,10 +1098,14 @@ elab_rules : term
     Lean.Elab.Term.elabTerm s none
 
 
+syntax "{" term "}"  : ids
+
 macro_rules
 | `([ids| ]) => `([])
 | `([ids| $i:ident ]) => `([id| $i] :: [])
 | `([ids| $i:ident $ps:ids ]) => `([id| $i] :: [ids| $ps])
+
+| `([ids| { $t:term } ]) => pure t
 
 -- | `([box_ids| [] ]) => `([])
 -- | `([box_ids| [ $ps:ids ] ]) => `([ids| $ps])
@@ -1131,6 +1135,9 @@ macro_rules
 -- | `([box_typings| [] ]) => `([])
 -- | `([box_typings| [ $ts:typings] ]) => `([ [typings| $ts]])
 
+
+syntax "{" term "}"  : typ
+
 macro_rules
 | `([typ| $i:ident ]) => `(Typ.var [id| $i])
 | `([typ| < $i:ident /> ]) => `(Typ.entry [id| $i] .top)
@@ -1156,6 +1163,8 @@ macro_rules
 | `([typ| BOT ]) => `(Typ.bot)
 | `([typ| TOP ]) => `(Typ.top)
 | `([typ| ( $t:typ ) ]) => `([typ| $t])
+| `([typ| { $t:term } ]) => pure t
+
 
 macro_rules
 | `([typs| ]) => `([])
@@ -1193,6 +1202,7 @@ macro_rules
   `(([pattern| $p], [expr| $e]) :: [function| $f])
 
 
+
 macro_rules
 | `([expr| @ ]) => `(Expr.record [])
 | `([expr| $i:ident ]) => `([eid| $i])
@@ -1209,6 +1219,9 @@ macro_rules
   `(Expr.def [id| $i] .none [expr| $a] [expr| $c])
 | `([expr| loop ( $e:expr ) ]) => `(Expr.loop [expr| $e])
 | `([expr| ( $e:expr ) ]) => `([expr| $e])
+
+
+
 
 
 

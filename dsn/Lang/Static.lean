@@ -121,6 +121,10 @@ def ListZone.tidy (pids : List String) : List Zone → Option (List Zone)
     let zs ← (ListZone.tidy pids zones)
     return z :: zs
 
+theorem ListZone.tidy_refl {pids zones} :
+  ListZone.tidy pids zones = .some zones
+:= by sorry
+
 
 def ListSubtyping.invert (id : String) : List (Typ × Typ) → Option (List (Typ × Typ))
 | .nil => return []
@@ -1535,7 +1539,7 @@ mutual
     let nested_zones ← Typing.Function.Static.compute Θ Δ Γ (tp::subtras) f
     let tl := ListTyp.diff tp subtras
     let zones := (← Typing.Static.compute Θ Δ' Γ' e).map (fun ⟨Θ', Δ'', tr ⟩ =>
-      ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ )
+      ⟨List.diff Θ' Θ, List.diff Δ'' Δ, (.path tl tr)⟩ )
     match ListZone.tidy (ListSubtyping.free_vars Δ) zones with
     | .some zones_tidy => return zones_tidy :: nested_zones
     | .none => failure
@@ -1677,29 +1681,27 @@ inductive Subtyping.LoopListZone.Static : List String → String → List Zone �
 mutual
   inductive Typing.Function.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
-    List Typ →  -- subtras
+    List Typ → -- subtras
     List (Pat × Expr) → List (List Zone) → Prop
   | nil {skolems assums context subtras} :
     Typing.Function.Static skolems assums context subtras [] []
 
-  | cons {skolems assums context }
+  | cons {skolems context } {assums : List (Typ × Typ)}
     p e f assums' context' tp zones_tidied nested_zones zones subtras
   :
-    Typing.Function.Static skolems assums context (tp :: subtras) f nested_zones →
-    PatLifting.Static assums context p tp assums' context' →
+    ListZone.tidy (ListSubtyping.free_vars assums) zones = .some zones_tidied →
     (∀ {skolems' assums'' t},
       ⟨skolems', assums'', t⟩ ∈ zones →
       ∃ assums_ext, assums'' = assums_ext ++ assums' ∧
       ∃ tr , t = (.path (ListTyp.diff tp subtras) tr)
     ) →
+    Typing.Function.Static skolems assums context (tp :: subtras) f nested_zones →
+    PatLifting.Static assums context p tp assums' context' →
     (∀ {skolems' assums'' tr},
       ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ∈ zones →
       Typing.Static skolems assums' context' e tr (skolems' ++ skolems) (assums'' ++ assums)
     ) →
-    ListZone.tidy (ListSubtyping.free_vars assums) zones = .some zones_tidied →
-    Typing.Function.Static skolems assums context
-      subtras
-      ((p,e)::f) (zones_tidied :: nested_zones)
+    Typing.Function.Static skolems assums context subtras ((p,e)::f) (zones_tidied :: nested_zones)
 
   inductive Typing.Record.Static :
     List String → List (Typ × Typ) → List (String × Typ) →

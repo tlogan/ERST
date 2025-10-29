@@ -729,32 +729,40 @@ example : Typing.Static
 ----- identity function
 ---------------------------------------
 
+
+#eval Typing.Function.Static.compute [] [] [] [] [(Pat.var "x", Expr.var "x")]
+
 #eval Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr| [x => x]]
 
-example : Typing.Static
+example : ∃ T , Typing.Static
   [ids| ] [subtypings| ] []
   [expr| [x => x]]
-  [typ| ALL [T40] T40 -> T40]
+  [typ| ALL [{[T]}] [({.var T} <: TOP)] ({.var T}) -> {.var T}]
   [ids| ] [subtypings| ]
 -- := by Typing_Static_prove
 := by
+  use ?_
   apply Typing.Static.function
   {
+    Typing_Function_Static_assign
     apply Typing.Function.Static.cons
-    { Typing_Function_Static_prove }
-    { apply PatLifting.Static.var ; sorry }
-    { sorry }
-    { sorry }
-    { sorry }
-    { sorry }
-    { sorry }
-    -- · PatLifting_Static_prove
-    -- · rfl
-    -- · intro
-    --   · Typing_Static_prove
-    -- · rfl
-    -- · rfl
+    { apply ListZone.tidy_refl }
+    { simp ; intros _ _ _ _ assums_eq t_eq
+      simp [*, ListTyp.diff]
+      apply And.intro
+      { rw [← assums_eq]; exists [] }
+      { rfl }
+      }
+    { apply Typing.Function.Static.nil }
+    { PatLifting_Static_prove }
+    { simp
+      intros
+      simp [*]
+      Typing_Static_prove
+      }
   }
-  { rfl }
+  { reduce; simp_all ;
+    -- TODO: need tactic to assign eq rhs placeholder
+    rfl }
