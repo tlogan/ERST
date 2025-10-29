@@ -531,16 +531,21 @@ def ListSubtyping.partition (pids : List String) (Θ : List String)
     else
       (outer, (l,r) :: inner)
 
+
+#eval ["a"] ∪ ["a"]
+
 def Zone.pack (pids : List String) (b : Bool) : Zone → Typ
 | ⟨Θ, Δ, t⟩ =>
   let fids := Typ.free_vars t
   let (outer, inner) := ListSubtyping.partition pids Θ Δ
-  let outer_ids := (ListSubtyping.free_vars Δ ∪ fids) ∩ Θ
+  let outer_ids := [] -- (ListSubtyping.free_vars Δ ∪ fids) ∩ Θ
   let inner_ids := List.diff (ListSubtyping.free_vars inner ∪ fids) (Θ ∪ pids)
   BiZone.wrap b outer_ids outer inner_ids inner t
 
 def ListZone.pack (pids : List String) (b : Bool) : List Zone → Typ
 | .nil => Typ.base b
+| .cons zone [] =>
+  Zone.pack pids .true zone
 | .cons zone zones =>
   let l := Zone.pack pids .true zone
   let r := ListZone.pack pids .true zones
@@ -962,8 +967,8 @@ theorem lower_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
 
 
 theorem upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
-      ListSubtyping.bounds id .false cs = ts →
-      (∀ t', (Typ.var id, t') ∈ cs → (t, t') ∈ ts.map (fun t' => (t, t')))
+  ListSubtyping.bounds id .false cs = ts →
+  (∀ t', (Typ.var id, t') ∈ cs → (t, t') ∈ ts.map (fun t' => (t, t')))
 := by induction cs with
 | nil =>
   simp [ListSubtyping.bounds]
@@ -1104,6 +1109,20 @@ theorem upper_bound_mem id cs t : ∀ ts,
     apply List.mem_cons_of_mem
     assumption
 
+-- theorem zones_todo_uno :
+--   (∀ {skolems' assums'' t},
+--     ⟨skolems', assums'', t⟩ ∈ zones' →
+--     ∃ assums_ext, assums'' = assums_ext ++ assums' ∧
+--     ∃ tr , t = (.path (ListTyp.diff tp subtras) tr)
+--   )
+-- := by sorry
+
+-- theorem zones_todo_dos :
+--   (∀ {skolems' assums'' tr},
+--     ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ∈ zones' →
+--     Typing.Static skolems assums' context' e tr (skolems' ++ skolems) (assums'' ++ assums)
+--   )
+-- := by sorry
 
 mutual
   inductive ListSubtyping.Static
@@ -1350,7 +1369,7 @@ macro_rules
       | apply Subtyping.Static.exi_elim
         { rfl }
         { rfl }
-        { simp [ListSubtyping.free_vars, Typ.free_vars] }
+        { simp [ListSubtyping.free_vars, Typ.free_vars, Union.union, List.union] }
         { ListSubtyping_Static_prove }
         { Subtyping_Static_prove }
       | apply Subtyping.Static.inter_intro
@@ -1359,7 +1378,7 @@ macro_rules
       | apply Subtyping.Static.all_intro
         { rfl }
         { rfl }
-        { simp [ListSubtyping.free_vars, Typ.free_vars] }
+        { simp [ListSubtyping.free_vars, Typ.free_vars, Union.union, List.union] }
         { ListSubtyping_Static_prove }
         { Subtyping_Static_prove }
       | apply Subtyping.Static.placeholder_elim
@@ -1508,19 +1527,18 @@ macro_rules
 
 mutual
   partial def Typing.Function.Static.compute
-    (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) :
-    List (Pat × Expr) → Lean.MetaM (List Zone × List Typ)
-  | [] => return ([], [])
+    (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) (subtras : List Typ) :
+    List (Pat × Expr) → Lean.MetaM (List Zone)
+  | [] => return []
 
   | (p,e)::f => do
-    let (zones, subtras) ← Typing.Function.Static.compute Θ Δ Γ f
     let (tp, Δ', Γ') ←  PatLifting.Static.compute Δ Γ p
+    let zones ← Typing.Function.Static.compute Θ Δ Γ (tp::subtras) f
     let tl := ListTyp.diff tp subtras
     let zones' := (← Typing.Static.compute Θ Δ' Γ' e).map (fun ⟨Θ', Δ'', tr ⟩ =>
       ⟨List.diff Θ' Θ, List.diff Δ'' Δ', (.path tl tr)⟩ )
-    let subtra := Typ.capture tp
     match ListZone.tidy (ListSubtyping.free_vars Δ) zones' with
-    | .some zones'' => return (zones'' ++ zones, subtra :: subtras)
+    | .some zones'' => return zones'' ++ zones
     | .none => failure
 
 
@@ -1591,7 +1609,7 @@ mutual
     | .record r =>  Typing.Record.Static.compute Θ Δ Γ r
 
     | .function f => do
-      let (zones, _) ← (Typing.Function.Static.compute Θ Δ Γ f)
+      let zones ← (Typing.Function.Static.compute Θ Δ Γ [] f)
       let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
       return [⟨Θ, Δ, t⟩]
 

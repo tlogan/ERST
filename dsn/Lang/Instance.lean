@@ -681,6 +681,21 @@ example : Subtyping.Static
 
 
 ---------------------------------------
+----- variable
+---------------------------------------
+
+#eval Typing.Static.compute
+  [ids| ] [subtypings| ] [typings| (x : <uno/>)]
+  [expr| x ]
+
+example : Typing.Static
+  [ids| ] [subtypings| ] [typings| (x : <uno/>)]
+  [expr| x ]
+  [typ| <uno/> ]
+  [ids| ] [subtypings| ]
+:= by Typing_Static_prove
+
+---------------------------------------
 ----- empty record
 ---------------------------------------
 
@@ -709,3 +724,138 @@ example : Typing.Static
   [typ| <uno/> * <dos/> ]
   [ids| ] [subtypings| ]
 := by Typing_Static_prove
+
+---------------------------------------
+----- identity function
+---------------------------------------
+
+#eval Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr| [x => x]]
+
+example : Typing.Static
+  [ids| ] [subtypings| ] []
+  [expr| [x => x]]
+  [typ| ALL [T40] T40 -> T40]
+  [ids| ] [subtypings| ]
+-- := by Typing_Static_prove
+:= by
+  apply Typing.Static.function
+  {
+    apply Typing.Function.Static.cons
+    { Typing_Function_Static_prove }
+    { apply PatLifting.Static.var ; sorry }
+    { sorry }
+    { sorry }
+    { sorry }
+    { sorry }
+    { sorry }
+    -- · PatLifting_Static_prove
+    -- · rfl
+    -- · intro
+    --   · Typing_Static_prove
+    -- · rfl
+    -- · rfl
+  }
+  { rfl }
+
+---------------------------------------
+--------------------------------------------
+---------------------------------------
+---------<<< ELAB DEBUG >>>------------------------------
+--------------------------------------------------
+-------------------------------------------------------
+--------------------------------------------------
+
+
+-- #eval Lean.toExpr [expr| [x => x]]
+
+    -- let goal ← Lean.Elab.Tactic.getMainGoal
+    -- let goalDecl ← goal.getDecl
+    -- let goalType := goalDecl.type
+    -- let inputs := extract_inputs goalType
+
+syntax "Typing_Function_Static_provey" : tactic
+
+
+def delab := Lean.PrettyPrinter.delab
+-- open Lean Meta Elab Tactic
+
+
+def Typing.Function.Static.extract_info : Lean.Expr → Lean.MetaM Lean.Expr
+| .app x y => return x
+| _ => failure
+
+def Typing.Function.Static.extract_applicands :
+  Lean.Expr → Lean.MetaM (Lean.Expr × Lean.Expr × Lean.Expr × Lean.Expr × Lean.Expr)
+| Lean.Expr.app (Lean.Expr.app (Lean.Expr.app (Lean.Expr.app (Lean.Expr.app _ a ) b) c) d) e =>
+    return (a,b,c,d,e)
+| _ => failure
+
+elab_rules : tactic
+| `(tactic| Typing_Function_Static_provey) => Lean.Elab.Tactic.withMainContext do
+  let goal ← Lean.Elab.Tactic.getMainGoal
+  let goalDecl ← goal.getDecl
+  let goalType := goalDecl.type
+  let goalInfo ← Typing.Function.Static.extract_info (← Lean.instantiateMVars goalType)
+
+  -- Lean.logInfo m!"Goal: {goalInfo}"
+  -- Lean.logInfo m!"Goal Repr: {repr goalInfo}"
+
+  let parts ← Typing.Function.Static.extract_applicands goalInfo
+
+  Lean.logInfo m!"Parts: {parts}"
+  let (uno, dos, tres, cuatro, cinco) := parts
+  let listStringTypeExpr := Lean.mkApp (Lean.mkConst ``List [Lean.levelZero]) (Lean.mkConst ``String)
+  let uno' ← unsafe Lean.Meta.evalExpr (List String) listStringTypeExpr uno
+
+  Lean.logInfo m!"uno': {uno'}"
+
+
+  -- let uno_whnf ← Lean.Meta.whnf uno
+  -- let uno_inst ← Lean.instantiateMVars uno_whnf
+  -- if uno_inst.hasMVar then
+  --   throwError "Expression to be evaluated still contains metavariables: {uno_inst}"
+
+  -- match goalType with
+  -- | x =>
+  --   dbg_trace f!"OUTPUT::: {repr x}"
+  -- let input := Typing.Function.Static.extract_applicands goalType
+  return
+
+  -- let pre_result ← compute_uno 0
+  -- let result := mkNatLit pre_result
+  -- Lean.Elab.Tactic.evalTactic (← `(tactic| exists $(← delab result)))
+    -- return
+
+
+#eval Typing.Function.Static.compute [] [] [] [] [(Pat.var "x", Expr.var "x")]
+
+example  : ∃ zones , Typing.Function.Static [] [] [] [] [(Pat.var "x", Expr.var "x")] zones
+:= by
+  use ?zones
+  {
+    Typing_Function_Static_provey
+  }
+  { sorry }
+
+
+-- partial def compute_uno (x : Nat) :Lean.MetaM Nat := return 1
+
+-- syntax "silly" : tactic
+
+-- def delab := Lean.PrettyPrinter.delab
+-- open Lean Meta Elab Tactic in
+-- elab_rules : tactic
+-- | `(tactic| silly) => Lean.Elab.Tactic.withMainContext do
+--   let pre_result ← compute_uno 0
+--   let result := mkNatLit pre_result
+--   Lean.Elab.Tactic.evalTactic (← `(tactic| exists $(← delab result)))
+
+-- def myprop {x : Nat} : Prop := x + 1 = 2
+
+
+-- example : ∃ x : Nat, x + 1 = 2
+-- := by
+--   skip
+--   silly

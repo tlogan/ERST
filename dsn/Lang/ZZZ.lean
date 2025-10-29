@@ -323,7 +323,15 @@ inductive Beep : Nat → Prop
 --   -- simp [forever_eq]
 --   apply Beep.intro
 
+-- import Lean
+open Lean
 
+inductive Foo where
+  | mk (x : Nat) (y : Bool)
+deriving Lean.ToExpr, Repr
+
+
+#eval Lean.toExpr (Foo.mk 1 .true)
 
 
 syntax "dumb" : tactic
