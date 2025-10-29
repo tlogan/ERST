@@ -25,6 +25,7 @@ inductive Typ
 | all :  List String → List (Typ × Typ) → Typ → Typ
 | exi :  List String → List (Typ × Typ) → Typ → Typ
 | lfp :  String → Typ → Typ
+deriving Repr, Lean.ToExpr
 
 def ListSubtyping := List (Typ × Typ)
 
