@@ -1765,6 +1765,40 @@ mutual
 
 end
 
+syntax "eq_rhs_assign" : tactic
+
+elab_rules : tactic
+| `(tactic| eq_rhs_assign) => Lean.Elab.Tactic.withMainContext do
+  let goal ← Lean.Elab.Tactic.getMainGoal
+  let goalDecl ← goal.getDecl
+  let goalType := goalDecl.type
+
+  Lean.logInfo m!"goalType: {goalType}"
+
+  let mvar ← (match goalType with
+  | .app _ right => return right
+  | _ => failure
+  )
+
+  let left ← (match (← Lean.Meta.whnf goalType) with
+  | .app (.app _ left) _ => return left
+  | _ => failure
+  )
+  -- let goalInfo ← Typing.Function.Static.extract_info (← Lean.Meta.whnf goalType)
+
+  Lean.logInfo m!"left: {left}"
+  Lean.logInfo m!"mvar: {mvar}"
+
+  Lean.MVarId.assign mvar.mvarId! left
+  let goalType_instantiated ← (Lean.instantiateMVars goalType)
+
+example : ∃ t, "thing" = t
+:= by
+  use ?t
+  eq_rhs_assign
+  { rfl  }
+  { exact "" }
+
 
 
 
@@ -1848,81 +1882,85 @@ syntax "Typing_Static_prove" : tactic
 
 
 macro_rules
+| `(tactic| Typing_Function_Static_prove) => `(tactic|
+  (try Typing_Function_Static_assign) ;
+  (first
+  | apply Typing.Function.Static.nil
+  | apply Typing.Function.Static.cons
+    { apply ListZone.tidy_refl }
+    { simp ; intros _ _ _ _ assums_eq t_eq
+      simp [*, ListTyp.diff]
+      apply And.intro
+      { rw [← assums_eq]; exists [] }
+      { rfl }
+      }
+    { Typing_Function_Static_prove }
+    { PatLifting_Static_prove }
+    { simp; intros; simp [*];
+      Typing_Static_prove }
+  ) <;> fail
+)
 
-  | `(tactic| Typing_Function_Static_prove) => `(tactic|
-    (first
-    | apply Typing.Function.Static.nil
-    | apply Typing.Function.Static.cons
-      · Typing_Function_Static_prove
-      · PatLifting_Static_prove
-      · rfl
-      · intro
-        · Typing_Static_prove
-      · rfl
-      · rfl
-    ) <;> fail
-  )
+| `(tactic| Typing_Record_Static_prove) => `(tactic|
+  (first
+  | apply Typing.Record.Static.nil
+  | apply Typing.Record.Static.single
+    · Typing_Static_prove
+  | apply Typing.Record.Static.cons
+    · Typing_Static_prove
+    · Typing_Record_Static_prove
+  ) <;> fail )
 
-  | `(tactic| Typing_Record_Static_prove) => `(tactic|
-    (first
-    | apply Typing.Record.Static.nil
-    | apply Typing.Record.Static.single
+| `(tactic| Subtyping_ListZone_Static_prove) => `(tactic|
+  (apply Subtyping.ListZone.Static.intro
+    · intro
       · Typing_Static_prove
-    | apply Typing.Record.Static.cons
-      · Typing_Static_prove
-      · Typing_Record_Static_prove
-    ) <;> fail )
+  ) )
 
-  | `(tactic| Subtyping_ListZone_Static_prove) => `(tactic|
-    (apply Subtyping.ListZone.Static.intro
-      · intro
-        · Typing_Static_prove
-    ) )
+| `(tactic| Subtyping_LoopListZone_Static_prove) => `(tactic|
+  (first
+  | apply Subtyping.LoopListZone.Static.batch
+    · rfl
+    · rfl
+    · rfl
+    · rfl
+  | apply Subtyping.LoopListZone.Static.stream
+    · simp
+    · rfl
+    · rfl
+    · rfl
+    · rfl
+    · Typ_Monotonic_Static_prove
+    · Typ_UpperFounded_prove
+    · rfl
+  ) <;> fail )
 
-  | `(tactic| Subtyping_LoopListZone_Static_prove) => `(tactic|
-    (first
-    | apply Subtyping.LoopListZone.Static.batch
-      · rfl
-      · rfl
-      · rfl
-      · rfl
-    | apply Subtyping.LoopListZone.Static.stream
-      · simp
-      · rfl
-      · rfl
-      · rfl
-      · rfl
-      · Typ_Monotonic_Static_prove
-      · Typ_UpperFounded_prove
-      · rfl
-    ) <;> fail )
+| `(tactic| Typing_Static_prove) => `(tactic|
+  (first
+  | apply Typing.Static.var
+    · rfl
+  | apply Typing.Static.record
+    · Typing_Record_Static_prove
 
-  | `(tactic| Typing_Static_prove) => `(tactic|
-    (first
-    | apply Typing.Static.var
-      · rfl
-    | apply Typing.Static.record
-      · Typing_Record_Static_prove
+  | apply Typing.Static.function
+    { Typing_Function_Static_prove }
+    { reduce; simp_all ; try (eq_rhs_assign ; rfl) }
 
-    | apply Typing.Static.function
-      · Typing_Function_Static_prove
-      · rfl
+  | apply Typing.Static.app
+    · Typing_Static_prove
+    · Typing_Static_prove
+    · Subtyping_Static_prove
 
-    | apply Typing.Static.app
-      · Typing_Static_prove
-      · Typing_Static_prove
-      · Subtyping_Static_prove
+  | apply Typing.Static.loop
+    { Typing_Static_prove }
+    { apply Subtyping.ListZone.Static.intro
+      {intro; Subtyping_Static_prove}
+      {rfl} }
+    { Subtyping_LoopListZone_Static_prove }
 
-    | apply Typing.Static.loop
-      { Typing_Static_prove }
-      { apply Subtyping.ListZone.Static.intro
-        {intro; Subtyping_Static_prove}
-        {rfl} }
-      { Subtyping_LoopListZone_Static_prove }
-
-    | apply Typing.Static.anno
-      · simp
-      · Subtyping_ListZone_Static_prove
-      · rfl
-      · Subtyping_Static_prove
-    ) <;> fail )
+  | apply Typing.Static.anno
+    · simp
+    · Subtyping_ListZone_Static_prove
+    · rfl
+    · Subtyping_Static_prove
+  ) <;> fail )
