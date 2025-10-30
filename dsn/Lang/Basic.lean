@@ -25,7 +25,10 @@ inductive Typ
 | all :  List String → List (Typ × Typ) → Typ → Typ
 | exi :  List String → List (Typ × Typ) → Typ → Typ
 | lfp :  String → Typ → Typ
-deriving Repr, Lean.ToExpr
+deriving Lean.ToExpr
+
+
+
 
 def ListSubtyping := List (Typ × Typ)
 
@@ -510,11 +513,10 @@ mutual
 end
 
 instance : Repr ListSubtyping where
-  reprPrec t _ := group ("[subtypings|" ++ line ++ nest 2 (ListSubtyping.repr t) ++ " ]")
+  reprPrec cs _ := group ("[subtypings|" ++ line ++ nest 2 (ListSubtyping.repr cs) ++ " ]")
 
 instance : Repr Typ where
   reprPrec t n := group ("[typ|" ++ line ++ nest 2 (Typ.reprPrec t n) ++ " ]")
-
 
 def ListTyp := List Typ
 def ListTyp.repr : ListTyp → Std.Format
@@ -1138,6 +1140,7 @@ macro_rules
 
 syntax "{" term "}"  : typ
 
+
 macro_rules
 | `([typ| $i:ident ]) => `(Typ.var [id| $i])
 | `([typ| < $i:ident /> ]) => `(Typ.entry [id| $i] .top)
@@ -1269,8 +1272,34 @@ instance : Coe Pat Expr where
 
 def Typ.capture (t : Typ) : Typ :=
     let ids := Typ.free_vars t
-    .exi ids .nil t
+    if List.isEmpty ids then
+      t
+    else
+      .exi ids .nil t
+
+def Typ.do_diff : Typ → Typ → Typ
+| (.entry l body), (.entry l_subtra body_subtra) =>
+  if l != l_subtra then
+    (.entry l body)
+  else
+    (.entry l (Typ.do_diff body body_subtra))
+| t, subtra => .diff t subtra
 
 def ListTyp.diff (t : Typ) : List Typ → Typ
 | .nil => t
-| .cons x xs => ListTyp.diff (Typ.diff t (Typ.capture x)) xs
+| .cons x xs => ListTyp.diff (Typ.do_diff t (Typ.capture x)) xs
+
+
+#eval (Typ.free_vars [typ| X * <uno/>]).map (fun typ => (typ, Typ.top)) -- .map(fun typ => (typ, .top))
+
+
+@[reducible]
+def Typ.enrich : Typ → Typ
+| .all ids cs t =>
+  .all ids ((List.map (fun id => (Typ.var id, Typ.top)) (Typ.free_vars t ∩ ids)) ∪ cs) t
+| .exi ids cs t =>
+  .exi ids ((List.map (fun id => (Typ.var id, Typ.top)) (Typ.free_vars t ∩ ids)) ∪ cs) t
+| t => t
+
+
+#eval [typ| <uno/>]

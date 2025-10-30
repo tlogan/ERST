@@ -2,6 +2,7 @@ import Lang.Util
 import Lang.Basic
 import Lang.Static
 
+set_option eval.pp false
 set_option pp.fieldNotation false
 
 #check [expr| @]
@@ -21,7 +22,6 @@ set_option pp.fieldNotation false
 #check [expr| def x = @ in x]
 
 #check [expr| [<uno> x => x]]
-
 
 
 #eval [typ| <uno/> & <dos/>]
@@ -767,3 +767,15 @@ example : ∃ T , Typing.Static
 --   }
 --   { reduce; simp_all ;
 --     try (eq_rhs_assign ; rfl) }
+
+---------------------------------------
+----- finite path function
+---------------------------------------
+
+#eval Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [<uno/> => <dos/>]
+    [<thank/> => <you/>]
+    [<hello/> => <goodbye/>]
+  ]
