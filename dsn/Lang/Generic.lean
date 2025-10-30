@@ -356,7 +356,7 @@ theorem List.disjoint_concat_right {α} [BEq α] {xs ys zs : List α} :
 
 
 
-theorem ListSubtyping.Static.attributes {skolems assums cs skolems' assums'} :
+theorem ListSubtyping.Static.aux {skolems assums cs skolems' assums'} :
   ListSubtyping.Static skolems assums cs skolems' assums' →
   skolems ⊆ skolems' ∧
   assums ⊆ assums' ∧
@@ -365,7 +365,7 @@ theorem ListSubtyping.Static.attributes {skolems assums cs skolems' assums'} :
   (List.mdiff skolems' skolems) ∩ ListSubtyping.free_vars cs = []
 := by sorry
 
-theorem Subtyping.Static.attributes {skolems assums lower upper skolems' assums'} :
+theorem Subtyping.Static.aux {skolems assums lower upper skolems' assums'} :
   Subtyping.Static skolems assums lower upper skolems' assums' →
   skolems ⊆ skolems' ∧
   assums ⊆ assums' ∧
@@ -376,7 +376,7 @@ theorem Subtyping.Static.attributes {skolems assums lower upper skolems' assums'
   (List.mdiff skolems' skolems) ∩ Typ.free_vars upper = []
 := by sorry
 
-theorem Typing.Static.attributes {skolems assums context e t skolems' assums'} :
+theorem Typing.Static.aux {skolems assums context e t skolems' assums'} :
   Typing.Static skolems assums context e t skolems' assums' →
   skolems ⊆ skolems' ∧
   assums ⊆ assums' ∧
@@ -387,18 +387,18 @@ theorem Typing.Static.attributes {skolems assums context e t skolems' assums'} :
 := by sorry
 
 
-theorem Typing.Function.Static.attributes
-  {skolems assums context f zones subtras skolems' assums' t}
+theorem Typing.Function.Static.aux
+  {skolems assums context f nested_zones subtras skolems' assums' t}
 :
-  Typing.Function.Static skolems assums context subtras f zones →
-  ⟨skolems',assums',t⟩ ∈ zones →
+  Typing.Function.Static skolems assums context subtras f nested_zones →
+  ⟨skolems',assums',t⟩ ∈ nested_zones.flatten →
   skolems' ∩ skolems = [] ∧
   skolems' ∩ ListSubtyping.free_vars assums = [] ∧
   skolems' ∩ ListTyping.free_vars context = [] ∧
   ListTyping.free_vars context ⊆ ListSubtyping.free_vars assums
 := by sorry
 
-theorem Typing.Record.Static.attributes
+theorem Typing.Record.Static.aux
   {skolems assums context r t skolems' assums'}
 :
   Typing.Record.Static skolems assums context r t skolems' assums' →
@@ -420,7 +420,7 @@ theorem Subtyping.Static.upper_containment {skolems assums lower upper skolems' 
   Typ.free_vars upper ⊆ ListSubtyping.free_vars assums'
 := by
   intro h
-  have ⟨p0, p1, p2, p3,_,_,_⟩ := Subtyping.Static.attributes h
+  have ⟨p0, p1, p2, p3,_,_,_⟩ := Subtyping.Static.aux h
   apply p3
 
 
@@ -847,8 +847,8 @@ mutual
   | .cons l r cs' skolems_im assums_im ss lss => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness ss
     have ⟨am1,ih1l,ih1r⟩ := ListSubtyping.Static.soundness lss
-    have ⟨p0,p1,p2,p3,p4,p5,p6⟩ := Subtyping.Static.attributes ss
-    have ⟨p7,p8,p9,p10,p11⟩ := ListSubtyping.Static.attributes lss
+    have ⟨p0,p1,p2,p3,p4,p5,p6⟩ := Subtyping.Static.aux ss
+    have ⟨p7,p8,p9,p10,p11⟩ := ListSubtyping.Static.aux lss
     exists (am1 ++ am0)
     simp [*]
     apply And.intro
@@ -886,7 +886,7 @@ mutual
 
   | .entry_pres l lower0 upper0 p0 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     exists am0
     simp [*]
     intros am' p9
@@ -894,9 +894,9 @@ mutual
 
   | .path_pres lower0 lower1 upper0 upper1 skolems0 assums0 p0 p1 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     have ⟨am1, ih1l, ih1r⟩ := Subtyping.Static.soundness p1
-    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.attributes p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.aux p1
     exists (am1 ++ am0)
     simp [*]
     apply And.intro (by exact dom_concat_mdiff_containment p2 ih0l p9 ih1l)
@@ -928,9 +928,9 @@ mutual
 
   | .unio_elim left right t skolems0 assums0 p0 p1 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     have ⟨am1, ih1l, ih1r⟩ := Subtyping.Static.soundness p1
-    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.attributes p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.aux p1
     exists (am1 ++ am0)
     simp [*]
     apply And.intro (by exact dom_concat_mdiff_containment p2 ih0l p9 ih1l)
@@ -952,9 +952,9 @@ mutual
     have ⟨am0,ih0l,ih0r⟩ := ListSubtyping.Static.soundness p1
     have ⟨am1,ih1l,ih1r⟩ := Subtyping.Static.soundness p2
 
-    have ⟨p12,p13,p14,p15,p16⟩ := ListSubtyping.Static.attributes p1
+    have ⟨p12,p13,p14,p15,p16⟩ := ListSubtyping.Static.aux p1
 
-    have ⟨p17,p18,p19,p20,p21,p22,p23⟩ := Subtyping.Static.attributes p2
+    have ⟨p17,p18,p19,p20,p21,p22,p23⟩ := Subtyping.Static.aux p2
 
     exists (am1 ++ am0)
     simp [*]
@@ -986,9 +986,9 @@ mutual
 
   | .inter_intro t left right skolems0 assums0 p0 p1 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     have ⟨am1, ih1l, ih1r⟩ := Subtyping.Static.soundness p1
-    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.attributes p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.aux p1
     exists (am1 ++ am0)
     simp [*]
     apply And.intro (dom_concat_mdiff_containment p2 ih0l p9 ih1l)
@@ -1009,9 +1009,9 @@ mutual
     have ⟨am0,ih0l,ih0r⟩ := ListSubtyping.Static.soundness p1
     have ⟨am1,ih1l,ih1r⟩ := Subtyping.Static.soundness p2
 
-    have ⟨p12,p13,p14,p15,p16⟩ := ListSubtyping.Static.attributes p1
+    have ⟨p12,p13,p14,p15,p16⟩ := ListSubtyping.Static.aux p1
 
-    have ⟨p17,p18,p19,p20,p21,p22,p23⟩ := Subtyping.Static.attributes p2
+    have ⟨p17,p18,p19,p20,p21,p22,p23⟩ := Subtyping.Static.aux p2
 
     exists (am1 ++ am0)
     simp [*]
@@ -1071,7 +1071,7 @@ mutual
 
   | .skolem_intro t' id p0 p1 p2 p3 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p3
-    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p3
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.aux p3
     exists am0
     simp [*]
     intros am' p40
@@ -1079,7 +1079,7 @@ mutual
 
   | .skolem_elim t' id p0 p1 p2 p3 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p3
-    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p3
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.aux p3
     exists am0
     simp [*]
     intros am' p40
@@ -1088,9 +1088,9 @@ mutual
   -------------------------------------------------------------------
   | .unio_antec a b r skolems0 assums0 p0 p1 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     have ⟨am1, ih1l, ih1r⟩ := Subtyping.Static.soundness p1
-    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.attributes p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.aux p1
     exists (am1 ++ am0)
     simp [*]
     apply And.intro (dom_concat_mdiff_containment p2 ih0l p9 ih1l)
@@ -1110,9 +1110,9 @@ mutual
 
   | .inter_conseq upper a b skolems0 assums0 p0 p1 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     have ⟨am1, ih1l, ih1r⟩ := Subtyping.Static.soundness p1
-    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.attributes p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.aux p1
     exists (am1 ++ am0)
     simp [*]
     apply And.intro (dom_concat_mdiff_containment p2 ih0l p9 ih1l)
@@ -1132,9 +1132,9 @@ mutual
 
   | .inter_entry l a b skolems0 assums0 p0 p1 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     have ⟨am1, ih1l, ih1r⟩ := Subtyping.Static.soundness p1
-    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.attributes p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := Subtyping.Static.aux p1
     exists (am1 ++ am0)
     simp [*]
     apply And.intro (dom_concat_mdiff_containment p2 ih0l p9 ih1l)
@@ -1155,7 +1155,7 @@ mutual
   -------------------------------------------------------------------
   | .lfp_skip_elim id body p0 p1 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p1
-    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.aux p1
     exists am0
     simp [*]
     intros am' p40
@@ -1163,7 +1163,7 @@ mutual
 
   | .lfp_induct_elim id lower p0 p1 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p1
-    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.aux p1
     exists am0
     simp [*]
     intros am' p40
@@ -1171,7 +1171,7 @@ mutual
 
   | .lfp_factor_elim id lower upper fac p0 p1 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p1
-    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.aux p1
     exists am0
     simp [*]
     intros am' p40
@@ -1179,7 +1179,7 @@ mutual
 
   | .lfp_elim_diff_intro id lower upper sub h p0 p1 p2 p3 p4 p5 p6 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p4
-    have ⟨p10,p15,p20,p25,p30,p35,p40⟩ := Subtyping.Static.attributes p4
+    have ⟨p10,p15,p20,p25,p30,p35,p40⟩ := Subtyping.Static.aux p4
     exists am0
     simp [*]
     intros am' p45
@@ -1193,7 +1193,7 @@ mutual
 
   | .diff_intro upper sub p0 p1 p2 p3 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p3
-    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p3
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.aux p3
     exists am0
     simp [*]
     intro am' p40
@@ -1208,7 +1208,7 @@ mutual
   -------------------------------------------------------------------
   | .lfp_peel_intro id body p0 p1 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p1
-    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.aux p1
     exists am0
     simp [*]
     intros am' p40
@@ -1216,7 +1216,7 @@ mutual
 
   | .lfp_drop_intro id body p0 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p0
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.aux p0
     exists am0
     simp [*]
     intros am' p40
@@ -1226,7 +1226,7 @@ mutual
   | .diff_elim lower sub upper p0  => by
 
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     exists am0
     simp [*]
     intros am' p10
@@ -1234,7 +1234,7 @@ mutual
 
   | .unio_left_intro t l r p0  => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     exists am0
     simp [*]
     intros am' p9
@@ -1242,7 +1242,7 @@ mutual
 
   | .unio_right_intro t l r p0  => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     exists am0
     simp [*]
     intros am' p9
@@ -1250,9 +1250,9 @@ mutual
 
   | .exi_intro ids quals upper skolems0 assums0 p0 p1 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p0
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.aux p0
     have ⟨am1,ih1l,ih1r⟩ := ListSubtyping.Static.soundness p1
-    have ⟨p6,p11,p16,p21,p26⟩ := ListSubtyping.Static.attributes p1
+    have ⟨p6,p11,p16,p21,p26⟩ := ListSubtyping.Static.aux p1
     exists (am1 ++ am0)
     simp [*]
     apply And.intro (dom_concat_mdiff_containment p5 ih0l p6 ih1l)
@@ -1271,7 +1271,7 @@ mutual
 
   | .inter_left_elim l r t p0 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     exists am0
     simp[*]
     intros am' p9
@@ -1279,7 +1279,7 @@ mutual
 
   | .inter_right_elim l r t p0 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.attributes p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
     exists am0
     simp [*]
     intros am' p9
@@ -1287,9 +1287,9 @@ mutual
 
   | .all_elim ids quals lower skolems0 assums0 p0 p1 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p0
-    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.attributes p0
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := Subtyping.Static.aux p0
     have ⟨am1,ih1l,ih1r⟩ := ListSubtyping.Static.soundness p1
-    have ⟨p6,p11,p16,p21,p26⟩ := ListSubtyping.Static.attributes p1
+    have ⟨p6,p11,p16,p21,p26⟩ := ListSubtyping.Static.aux p1
     exists (am1 ++ am0)
     simp [*]
     apply And.intro (dom_concat_mdiff_containment p5 ih0l p6 ih1l)
@@ -1832,7 +1832,7 @@ theorem pattern_match_ids_containment {v p eam} :
 
 
 
--- theorem PatLifting.Static.attributes {assums context p t assums' context'} :
+-- theorem PatLifting.Static.aux {assums context p t assums' context'} :
 --   PatLifting.Static assums context p t assums' context' →
 --   assums ⊆ assums' ∧
 --   Typ.free_vars t ⊆ ListTyping.free_vars context' ∧
@@ -1849,11 +1849,11 @@ theorem Expr.sub_sub_removal {ids eam0 eam1 e} :
 
 
 theorem Typing.Function.Static.subtra_soundness {
-  skolems assums context f zones subtra subtras skolems' assums' t
+  skolems assums context f nested_zones subtra subtras skolems' assums' t
 } :
-  Typing.Function.Static skolems assums context  subtras f zones →
+  Typing.Function.Static skolems assums context  subtras f nested_zones →
   subtra ∈ subtras →
-  ⟨skolems', assums', t⟩ ∈ zones →
+  ⟨skolems', assums', t⟩ ∈ nested_zones.flatten →
   ∀ am , ¬ Subtyping.Dynamic am t (.path subtra .top)
 := by sorry
 
@@ -1873,32 +1873,32 @@ end
 mutual
 
   theorem Typing.Function.Static.soundness {
-    skolems assums context f zones subtras skolems' assums' t
+    skolems assums context f nested_zones subtras skolems' assums' t
   } :
-    Typing.Function.Static skolems assums context subtras f zones →
-    ⟨skolems', assums', t⟩ ∈ zones →
+    Typing.Function.Static skolems assums context subtras f nested_zones →
+    ⟨skolems', assums', t⟩ ∈ nested_zones.flatten →
     ∃ tam, ListPair.dom tam ⊆ skolems' ∧
     (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') (assums' ++ assums) →
       (∀ {eam}, MultiTyping.Dynamic tam' eam context →
         Typing.Dynamic (tam ++ tam') (Expr.sub eam (.function f)) t ) )
   | .nil => by intros ; contradiction
   | .cons
-      p e f assums0 context0 tp zones zones' zones'' subtras
+      p e f assums0 context0 tp zones nested_zones' zones'' subtras
       p0 p1 p2 p3 p4
   => by
     intro p10
     apply Iff.mp List.mem_append at p10
     cases p10 with
     | inl p11 =>
-      clear p0
-      apply ListZone.tidy_soundness_alt p4 p11
+      apply ListZone.tidy_soundness_alt p0 p11
       intros skolems' assums' t p12
-      have ⟨assums_ext, p20, tr, p22⟩ := p2 p12
+
+      have ⟨assums_ext, p20, tr, p22⟩ := p1 p12
       rw [p22] at p12
-      have p23 := p3 p12
+      have p23 := p4 p12
 
       have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p23
-      have ⟨p24,p26,p28,p30,p32,p34⟩ := Typing.Static.attributes p23
+      have ⟨p24,p26,p28,p30,p32,p34⟩ := Typing.Static.aux p23
 
       exists tam0
       apply And.intro (fun _ p38 => containment_mdiff_concat_elim (ih0l p38))
@@ -1910,7 +1910,7 @@ mutual
       simp [Expr.sub, Expr.Function.sub]
       apply Typing.Dynamic.function_head_elim
       intros v p44 p46
-      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p1 (tam0 ++ tam') v p44 p46
+      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p3 (tam0 ++ tam') v p44 p46
       exists eam0
       simp [*]
       rw [Expr.sub_sub_removal (pattern_match_ids_containment p48)]
@@ -1921,8 +1921,8 @@ mutual
       { apply MultiTyping.Dynamic.dom_context_extension p50 }
 
     | inr p11 =>
-      have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p0 p11
-      have ⟨p20,p22,p24,p26⟩ := Typing.Function.Static.attributes p0 p11
+      have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p2 p11
+      have ⟨p20,p22,p24,p26⟩ := Typing.Function.Static.aux p2 p11
 
       exists tam0
       simp [*]
@@ -1931,9 +1931,9 @@ mutual
 
       apply Typing.Dynamic.function_tail_elim
       { intros v p40 p42
-        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p1 (tam0 ++ tam') v p40 p42
+        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p3 (tam0 ++ tam') v p40 p42
         apply Exists.intro eam0 p48 }
-      { apply Typing.Function.Static.subtra_soundness p0 List.mem_cons_self p11 }
+      { apply Typing.Function.Static.subtra_soundness p2 List.mem_cons_self p11 }
       { apply ih0r p30 p32 }
 
 
@@ -1962,9 +1962,9 @@ mutual
   | .cons l e r body t skolems0 assums0 p0 p1 => by
 
     have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
-    have ⟨p5,p10,p15,p20,p25,p30⟩ := Typing.Static.attributes p0
+    have ⟨p5,p10,p15,p20,p25,p30⟩ := Typing.Static.aux p0
     have ⟨tam1,ih1l,ih1r⟩ := Typing.Record.Static.soundness p1
-    have ⟨p6,p11,p16,p21,p26,p31⟩ := Typing.Record.Static.attributes p1
+    have ⟨p6,p11,p16,p21,p26,p31⟩ := Typing.Record.Static.aux p1
 
     exists (tam1 ++ tam0)
     simp [*]
@@ -2016,7 +2016,7 @@ mutual
       apply ListZone.pack_positive_soundness p1 (fun _ x => x) p2
       intros skolesm0 assums0 t0 p4
       have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p0 p4
-      have ⟨p10,p11,p12,p13⟩ := Typing.Function.Static.attributes p0 p4
+      have ⟨p10,p11,p12,p13⟩ := Typing.Function.Static.aux p0 p4
       exists tam0
       simp [*]
       intro tam''
@@ -2032,11 +2032,11 @@ mutual
 
   | .app ef ea id tf skolems0 assums0 ta skolems1 assums1 p0 p1 p2 => by
     have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
-    have ⟨p5,p6,p105,p7,p8,p9⟩ := Typing.Static.attributes p0
+    have ⟨p5,p6,p105,p7,p8,p9⟩ := Typing.Static.aux p0
     have ⟨tam1,ih1l,ih1r⟩ := Typing.Static.soundness p1
-    have ⟨p10,p11,p107,p12,p13,p14⟩ := Typing.Static.attributes p1
+    have ⟨p10,p11,p107,p12,p13,p14⟩ := Typing.Static.aux p1
     have ⟨tam2,ih2l,ih2r⟩ := Subtyping.Static.soundness p2
-    have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := Subtyping.Static.attributes p2
+    have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := Subtyping.Static.aux p2
     exists tam2 ++ (tam1 ++ tam0)
     simp [*]
     apply And.intro
@@ -2107,7 +2107,7 @@ mutual
 
   | .loop body t0 id zones zones' p0 p1 p2 p3 id_fresh => by
     have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
-    have ⟨p5,p6,p7,p8,p9,p10⟩ := Typing.Static.attributes p0
+    have ⟨p5,p6,p7,p8,p9,p10⟩ := Typing.Static.aux p0
     exists tam0
     simp [*]
 
@@ -2137,7 +2137,7 @@ mutual
 
     apply p1 at p40
     have ⟨tam1, h33l, h33r⟩ := Subtyping.Static.soundness p40
-    have ⟨p41,p42,p43,p44,p45,p46,p47⟩ := Subtyping.Static.attributes p40
+    have ⟨p41,p42,p43,p44,p45,p46,p47⟩ := Subtyping.Static.aux p40
     exists tam1
     simp [*]
     apply And.intro (fun _ p50 => containment_mdiff_concat_elim (h33l p50))
@@ -2158,9 +2158,9 @@ mutual
 
   | .anno e ta te skolems0 assums0 p0 p1 p2 => by
     have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p1
-    have ⟨p5,p6,p7,p8,p9,p10⟩ := Typing.Static.attributes p1
+    have ⟨p5,p6,p7,p8,p9,p10⟩ := Typing.Static.aux p1
     have ⟨tam1,ih1l,ih1r⟩ := Subtyping.Static.soundness p2
-    have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := Subtyping.Static.attributes p2
+    have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := Subtyping.Static.aux p2
     exists (tam1 ++ tam0)
     simp [*]
     apply And.intro (dom_concat_mdiff_containment p5 ih0l p15 ih1l)
