@@ -879,6 +879,9 @@ inductive Pat
 | record : List (String × Pat) → Pat
 deriving Repr
 
+def Pat.pair (left : Pat) (right : Pat) : Pat :=
+    .record [("left", left), ("right", right)]
+
 mutual
   def ListPat.free_vars : List (String × Pat) → List String
   | .nil => []
@@ -1004,10 +1007,12 @@ syntax "<" ident "/>" frame : frame
 syntax "<" ident ">" pat : frame
 syntax "<" ident ">" pat frame : frame
 
-syntax:20 ident : pat
+syntax ident : pat
 syntax "@" : pat
 syntax frame : pat
 syntax ident ";" pat : pat
+syntax "(" pat ")" : pat
+syntax:60 pat:61 "," pat:60 :pat
 
 
 syntax "<" ident "/>" : record
@@ -1018,7 +1023,7 @@ syntax "<" ident ">" expr record : record
 syntax "[" pat "=>" expr "]" : function
 syntax "[" pat "=>" expr "]" function : function
 
-syntax:20 ident : expr
+syntax ident : expr
 syntax "@" : expr
 syntax record : expr
 syntax ident ";" expr : expr
@@ -1192,6 +1197,7 @@ macro_rules
 | `([pattern| @ ]) => `(Pat.record [])
 | `([pattern| $pr:frame ]) => `(Pat.record [frame| $pr])
 | `([pattern| $i:ident ; $p:pat ]) => `(Pat.record ([id| $i], [pattern| $p]) :: [])
+| `([pattern| $l:pat , $r:pat ]) => `(Pat.pair [pattern| $l] [pattern| $r])
 
 macro_rules
 | `([record| <$i:ident/> ]) => `(([id| $i], [expr| @]) :: [])

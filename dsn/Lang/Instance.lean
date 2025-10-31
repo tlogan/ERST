@@ -746,7 +746,7 @@ example : ∃ T , Typing.Static
   Typing_Static_prove
 
 ---------------------------------------
------ finite branching path functions
+----- finite isomorphism
 ---------------------------------------
 
 #eval Typing.Static.compute
@@ -797,6 +797,74 @@ example : Typing.Static
 := by Typing_Static_prove
 
 
+---------------------------------------------------------------------------------------------
+-- NOTE: using tactic to prove the following example may
+-- require many extra definitions to compute inputs of functions
+---------------------------------------------------------------------------------------------
+
 ---------------------------------------
------ TODO more examples
+----- annotated variable
 ---------------------------------------
+
+#eval [expr| x as <uno/>]
+
+#eval Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr| [ x => x as <uno/> ] ]
+
+---------------------------------------
+----- definition
+---------------------------------------
+
+#eval Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def talky =
+      [<uno/> => <dos/>]
+      [<thank/> => <you/>]
+      [<hello/> => <goodbye/>]
+    in @
+  ]
+
+---------------------------------------
+----- pair pattern
+---------------------------------------
+
+#eval [expr|
+  [ f, x => f(x) ]
+]
+
+---------------------------------------
+----- application
+---------------------------------------
+#eval [expr|
+  [ <left> f <right> x => f(x) ]
+]
+
+---------------------------------------
+----- projection (columns) and selection (rows) (i.e. cropping)
+---------------------------------------
+
+#eval [expr|
+  def talky =
+    [<uno/> => <dos/>]
+    [<thank/> => <you/>]
+    [<hello/> => <goodbye/>]
+  in [ x =>
+    def y : <uno/> | <thank/> = x in
+    talky(y)
+  ]
+]
+
+#eval Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def talky =
+      [<uno/> => <dos/>]
+      [<thank/> => <you/>]
+      [<hello/> => <goodbye/>]
+    in [ x =>
+      def y : <uno/> | <thank/> = x in
+      talky(y)
+    ]
+  ]

@@ -71,7 +71,15 @@ def Typ.break : Bool → Typ → List Typ
 def Typ.combine (b : Bool) : List Typ → Typ
 | .nil => Typ.base b
 | [t] => t
-| t :: ts => Typ.rator b t (Typ.combine b ts)
+
+| t :: ts =>
+  let t' := (Typ.combine b ts)
+  if t == Typ.base b then
+    t'
+  else if t' == Typ.base b then
+    t
+  else
+    Typ.rator b t t'
 
 def Typ.interpret_one (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
   let bds := ListSubtyping.bounds id b Δ
@@ -121,8 +129,13 @@ def ListZone.tidy (pids : List String) : List Zone → Option (List Zone)
     let zs ← (ListZone.tidy pids zones)
     return z :: zs
 
-theorem ListZone.tidy_refl {pids zones} :
-  ListZone.tidy pids zones = .some zones
+def ListZone.undo_tidy (pids : List String) : List Zone → List Zone
+-- TODO: only needed to prove instances of Static predicates
+| zs => zs
+
+
+theorem ListZone.tidy_undo_tidy {pids zones} :
+  ListZone.tidy pids (ListZone.undo_tidy pids zones) = .some zones
 := by sorry
 
 
@@ -1888,8 +1901,9 @@ macro_rules
   (first
   | apply Typing.Function.Static.nil
   | apply Typing.Function.Static.cons
-    { apply ListZone.tidy_refl }
-    { simp ; intros _ _ _ _ assums_eq t_eq
+    { apply ListZone.tidy_undo_tidy }
+    { simp [ListZone.undo_tidy]
+      intros _ _ _ _ assums_eq t_eq
       simp [*, ListTyp.diff]
       apply And.intro
       { exact? }
@@ -1900,7 +1914,8 @@ macro_rules
     }
     { Typing_Function_Static_prove }
     { PatLifting_Static_prove }
-    { simp; intros; simp [*]; Typing_Static_prove }
+    { simp; intros _ _ _ p ; simp [ListZone.undo_tidy] at p ;
+      simp [*]; Typing_Static_prove }
   ) <;> fail
 )
 
