@@ -1890,12 +1890,12 @@ mutual
     apply Iff.mp List.mem_append at p10
     cases p10 with
     | inl p11 =>
-      apply ListZone.tidy_soundness_alt p0 p11
+      apply ListZone.tidy_soundness_alt p2 p11
       intros skolems' assums' t p12
 
       have ⟨assums_ext, p20, tr, p22⟩ := p1 p12
       rw [p22] at p12
-      have p23 := p4 p12
+      have p23 := p0 p12
 
       have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p23
       have ⟨p24,p26,p28,p30,p32,p34⟩ := Typing.Static.aux p23
@@ -1910,7 +1910,7 @@ mutual
       simp [Expr.sub, Expr.Function.sub]
       apply Typing.Dynamic.function_head_elim
       intros v p44 p46
-      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p3 (tam0 ++ tam') v p44 p46
+      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p4 (tam0 ++ tam') v p44 p46
       exists eam0
       simp [*]
       rw [Expr.sub_sub_removal (pattern_match_ids_containment p48)]
@@ -1921,8 +1921,8 @@ mutual
       { apply MultiTyping.Dynamic.dom_context_extension p50 }
 
     | inr p11 =>
-      have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p2 p11
-      have ⟨p20,p22,p24,p26⟩ := Typing.Function.Static.aux p2 p11
+      have ⟨tam0,ih0l,ih0r⟩ := Typing.Function.Static.soundness p3 p11
+      have ⟨p20,p22,p24,p26⟩ := Typing.Function.Static.aux p3 p11
 
       exists tam0
       simp [*]
@@ -1931,9 +1931,9 @@ mutual
 
       apply Typing.Dynamic.function_tail_elim
       { intros v p40 p42
-        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p3 (tam0 ++ tam') v p40 p42
+        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p4 (tam0 ++ tam') v p40 p42
         apply Exists.intro eam0 p48 }
-      { apply Typing.Function.Static.subtra_soundness p2 List.mem_cons_self p11 }
+      { apply Typing.Function.Static.subtra_soundness p3 List.mem_cons_self p11 }
       { apply ih0r p30 p32 }
 
 

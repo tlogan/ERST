@@ -736,14 +736,14 @@ example : Typing.Static
   [ids| ] [subtypings| ] []
   [expr| [x => x]]
 
-example : ∃ T , Typing.Static
-  [ids| ] [subtypings| ] []
-  [expr| [x => x]]
-  [typ| ALL [{[T]}] [({.var T} <: TOP)] ({.var T}) -> {.var T}]
-  [ids| ] [subtypings| ]
-:= by
-  use ?_
-  Typing_Static_prove
+-- example : ∃ T , Typing.Static
+--   [ids| ] [subtypings| ] []
+--   [expr| [x => x]]
+--   [typ| ALL [{[T]}] [({.var T} <: TOP)] ({.var T}) -> {.var T}]
+--   [ids| ] [subtypings| ]
+-- := by
+--   use ?_
+--   Typing_Static_prove
 
 ---------------------------------------
 ----- finite isomorphism
@@ -757,50 +757,45 @@ example : ∃ T , Typing.Static
     [<hello/> => <goodbye/>]
   ]
 
-example : Typing.Static
-  [ids| ] [subtypings| ] []
-  [expr|
-    [<uno/> => <dos/>]
-  ]
-  [typ|
-    (<uno/> -> <dos/>)
-  ]
-  [ids| ] [subtypings| ]
-:= by Typing_Static_prove
+-- example : Typing.Static
+--   [ids| ] [subtypings| ] []
+--   [expr|
+--     [<uno/> => <dos/>]
+--   ]
+--   [typ|
+--     (<uno/> -> <dos/>)
+--   ]
+--   [ids| ] [subtypings| ]
+-- := by Typing_Static_prove
 
-example : Typing.Static
-  [ids| ] [subtypings| ] []
-  [expr|
-    [<uno/> => <dos/>]
-    [<thank/> => <you/>]
-  ]
-  [typ|
-    (<uno/> -> <dos/>) &
-    (<thank/> -> <you/>)
-  ]
-  [ids| ] [subtypings| ]
-:= by Typing_Static_prove
+-- example : Typing.Static
+--   [ids| ] [subtypings| ] []
+--   [expr|
+--     [<uno/> => <dos/>]
+--     [<thank/> => <you/>]
+--   ]
+--   [typ|
+--     (<uno/> -> <dos/>) &
+--     (<thank/> -> <you/>)
+--   ]
+--   [ids| ] [subtypings| ]
+-- := by Typing_Static_prove
 
-example : Typing.Static
-  [ids| ] [subtypings| ] []
-  [expr|
-    [<uno/> => <dos/>]
-    [<thank/> => <you/>]
-    [<hello/> => <goodbye/>]
-  ]
-  [typ|
-    (<uno/> -> <dos/>) &
-    (<thank/> -> <you/>) &
-    (<hello/> -> <goodbye/>)
-  ]
-  [ids| ] [subtypings| ]
-:= by Typing_Static_prove
+-- example : Typing.Static
+--   [ids| ] [subtypings| ] []
+--   [expr|
+--     [<uno/> => <dos/>]
+--     [<thank/> => <you/>]
+--     [<hello/> => <goodbye/>]
+--   ]
+--   [typ|
+--     (<uno/> -> <dos/>) &
+--     (<thank/> -> <you/>) &
+--     (<hello/> -> <goodbye/>)
+--   ]
+--   [ids| ] [subtypings| ]
+-- := by Typing_Static_prove
 
-
----------------------------------------------------------------------------------------------
--- NOTE: using tactic to prove the following example may
--- require many extra definitions to compute inputs of functions
----------------------------------------------------------------------------------------------
 
 ---------------------------------------
 ----- annotated variable

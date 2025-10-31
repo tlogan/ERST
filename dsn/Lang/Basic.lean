@@ -490,7 +490,6 @@ mutual
     else
       group (
         "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++
-          nest 2 (ListSubtyping.repr subtypings) ++
           "[" ++ line ++ nest 2 (ListSubtyping.repr subtypings) ++ line ++ "]" ++ line ++
           nest 2 (Typ.reprPrec body 0)
       )

@@ -129,16 +129,6 @@ def ListZone.tidy (pids : List String) : List Zone → Option (List Zone)
     let zs ← (ListZone.tidy pids zones)
     return z :: zs
 
-def ListZone.undo_tidy (pids : List String) : List Zone → List Zone
--- TODO: only needed to prove instances of Static predicates
-| zs => zs
-
-
-theorem ListZone.tidy_undo_tidy {pids zones} :
-  ListZone.tidy pids (ListZone.undo_tidy pids zones) = .some zones
-:= by sorry
-
-
 def ListSubtyping.invert (id : String) : List (Typ × Typ) → Option (List (Typ × Typ))
 | .nil => return []
 | .cons (.var id', .path l r) sts =>
@@ -1702,18 +1692,18 @@ mutual
   | cons {skolems context } {assums : List (Typ × Typ)}
     p e f assums' context' tp zones_tidied nested_zones zones subtras
   :
-    ListZone.tidy (ListSubtyping.free_vars assums) zones = .some zones_tidied →
+    (∀ {skolems' assums'' tr},
+      ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ∈ zones →
+      Typing.Static skolems assums' context' e tr (skolems' ++ skolems) (assums'' ++ assums)
+    ) →
     (∀ {skolems' assums'' t},
       ⟨skolems', assums'', t⟩ ∈ zones →
       ∃ assums_ext, assums'' = assums_ext ++ assums' ∧
       ∃ tr , t = (.path (ListTyp.diff tp subtras) tr)
     ) →
+    ListZone.tidy (ListSubtyping.free_vars assums) zones = .some zones_tidied →
     Typing.Function.Static skolems assums context (tp :: subtras) f nested_zones →
     PatLifting.Static assums context p tp assums' context' →
-    (∀ {skolems' assums'' tr},
-      ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ∈ zones →
-      Typing.Static skolems assums' context' e tr (skolems' ++ skolems) (assums'' ++ assums)
-    ) →
     Typing.Function.Static skolems assums context subtras ((p,e)::f) (zones_tidied :: nested_zones)
 
   inductive Typing.Record.Static :
@@ -1900,22 +1890,23 @@ macro_rules
   (try Typing_Function_Static_assign) ;
   (first
   | apply Typing.Function.Static.nil
-  | apply Typing.Function.Static.cons
-    { apply ListZone.tidy_undo_tidy }
-    { simp [ListZone.undo_tidy]
-      intros _ _ _ _ assums_eq t_eq
-      simp [*, ListTyp.diff]
-      apply And.intro
-      { exact? }
-      {
-        repeat (apply Typ.diff_drop (not_eq_of_beq_eq_false rfl))
-        rfl
-      }
-    }
-    { Typing_Function_Static_prove }
-    { PatLifting_Static_prove }
-    { simp; intros _ _ _ p ; simp [ListZone.undo_tidy] at p ;
-      simp [*]; Typing_Static_prove }
+  | apply Typing.Function.Static.cons <;> fail
+    -- TODO: to compute and assign zones
+    -- { apply ListZone.tidy_undo_tidy }
+    -- { simp [ListZone.undo_tidy]
+    --   intros _ _ _ _ assums_eq t_eq
+    --   simp [*, ListTyp.diff]
+    --   apply And.intro
+    --   { exact? }
+    --   {
+    --     repeat (apply Typ.diff_drop (not_eq_of_beq_eq_false rfl))
+    --     rfl
+    --   }
+    -- }
+    -- { Typing_Function_Static_prove }
+    -- { PatLifting_Static_prove }
+    -- { simp; intros _ _ _ p ; simp [ListZone.undo_tidy] at p ;
+    --   simp [*]; Typing_Static_prove }
   ) <;> fail
 )
 
