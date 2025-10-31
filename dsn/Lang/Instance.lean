@@ -744,32 +744,9 @@ example : ∃ T , Typing.Static
 := by
   use ?_
   Typing_Static_prove
--- := by
---   use ?_
---   apply Typing.Static.function
---   {
---     Typing_Function_Static_assign
---     apply Typing.Function.Static.cons
---     { apply ListZone.tidy_refl }
---     { simp ; intros _ _ _ _ assums_eq t_eq
---       simp [*, ListTyp.diff]
---       apply And.intro
---       { rw [← assums_eq]; exists [] }
---       { rfl }
---       }
---     { apply Typing.Function.Static.nil }
---     { PatLifting_Static_prove }
---     { simp
---       intros
---       simp [*]
---       Typing_Static_prove
---       }
---   }
---   { reduce; simp_all ;
---     try (eq_rhs_assign ; rfl) }
 
 ---------------------------------------
------ finite path function
+----- finite branching path functions
 ---------------------------------------
 
 #eval Typing.Static.compute
@@ -779,3 +756,47 @@ example : ∃ T , Typing.Static
     [<thank/> => <you/>]
     [<hello/> => <goodbye/>]
   ]
+
+example : Typing.Static
+  [ids| ] [subtypings| ] []
+  [expr|
+    [<uno/> => <dos/>]
+  ]
+  [typ|
+    (<uno/> -> <dos/>)
+  ]
+  [ids| ] [subtypings| ]
+:= by Typing_Static_prove
+
+example : Typing.Static
+  [ids| ] [subtypings| ] []
+  [expr|
+    [<uno/> => <dos/>]
+    [<thank/> => <you/>]
+  ]
+  [typ|
+    (<uno/> -> <dos/>) &
+    (<thank/> -> <you/>)
+  ]
+  [ids| ] [subtypings| ]
+:= by Typing_Static_prove
+
+example : Typing.Static
+  [ids| ] [subtypings| ] []
+  [expr|
+    [<uno/> => <dos/>]
+    [<thank/> => <you/>]
+    [<hello/> => <goodbye/>]
+  ]
+  [typ|
+    (<uno/> -> <dos/>) &
+    (<thank/> -> <you/>) &
+    (<hello/> -> <goodbye/>)
+  ]
+  [ids| ] [subtypings| ]
+:= by Typing_Static_prove
+
+
+---------------------------------------
+----- TODO more examples
+---------------------------------------

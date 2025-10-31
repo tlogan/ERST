@@ -1278,12 +1278,26 @@ def Typ.capture (t : Typ) : Typ :=
       .exi ids .nil t
 
 def Typ.do_diff : Typ → Typ → Typ
+
 | (.entry l body), (.entry l_subtra body_subtra) =>
   if l != l_subtra then
     (.entry l body)
   else
     (.entry l (Typ.do_diff body body_subtra))
+
+| (.entry l body), (.exi _ [] (.entry l_subtra body_subtra)) =>
+  if l != l_subtra then
+    (.entry l body)
+  else
+    (.entry l (Typ.do_diff body body_subtra))
+
 | t, subtra => .diff t subtra
+
+theorem Typ.diff_drop {l body t l_sub body_sub} :
+  l ≠ l_sub →
+  (.entry l body) = t →
+  (.entry l body) = Typ.do_diff t (Typ.capture (Typ.entry l_sub body_sub))
+:= by sorry
 
 def ListTyp.diff (t : Typ) : List Typ → Typ
 | .nil => t

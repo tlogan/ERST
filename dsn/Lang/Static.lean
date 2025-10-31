@@ -1765,6 +1765,7 @@ mutual
 
 end
 
+
 syntax "eq_rhs_assign" : tactic
 
 elab_rules : tactic
@@ -1891,13 +1892,15 @@ macro_rules
     { simp ; intros _ _ _ _ assums_eq t_eq
       simp [*, ListTyp.diff]
       apply And.intro
-      { rw [← assums_eq]; exists [] }
-      { rfl }
+      { exact? }
+      {
+        repeat (apply Typ.diff_drop (not_eq_of_beq_eq_false rfl))
+        rfl
       }
+    }
     { Typing_Function_Static_prove }
     { PatLifting_Static_prove }
-    { simp; intros; simp [*];
-      Typing_Static_prove }
+    { simp; intros; simp [*]; Typing_Static_prove }
   ) <;> fail
 )
 
