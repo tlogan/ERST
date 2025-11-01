@@ -723,7 +723,7 @@ example : Expr.Typing.Static
   [expr| <uno/> , <dos/>]
   [typ| <uno/> * <dos/> ]
   [ids| ] [subtypings| ]
-:= by Expr.Typing_Static_prove
+:= by Expr_Typing_Static_prove
 
 ---------------------------------------
 ----- identity function
