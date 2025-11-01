@@ -843,7 +843,7 @@ example : Expr.Typing.Static
 ]
 
 ---------------------------------------
------ projection (columns) and selection (rows) (i.e. cropping)
+----- selection
 ---------------------------------------
 
 #eval [expr|
@@ -869,3 +869,40 @@ example : Expr.Typing.Static
       talky(y)
     ]
   ]
+
+---------------------------------------
+----- learning
+---------------------------------------
+
+#eval [expr| [f => f(<uno/>), f(<dos/>) ] ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [f => f(<uno/>), f(<dos/>) ]
+  ]
+
+---------------------------------------
+----- factorization
+---------------------------------------
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    loop([self =>
+      [<zero/> => <nil/>]
+      [<succ> n => <cons> (self(n))]
+    ])
+  ]
+
+
+def repeat_expr := [expr|
+  [x => loop([self =>
+    [<zero/> => <nil/>]
+    [<succ> n => <cons> (x,self(n))]
+  ])]
+]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  repeat_expr

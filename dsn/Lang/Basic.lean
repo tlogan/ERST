@@ -457,9 +457,9 @@ mutual
 
   partial def Typ.reprPrec : Typ → Nat → Std.Format
   | .var id, _ => id
-  | .entry l .top, _  => "<" ++ l ++ "/>"
-  | .entry l body, _  =>
-    "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 90)
+  | .entry l .top, _ => "<" ++ l ++ "/>"
+  | .entry l body, _ =>
+    "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 100)
   | .path left right, p =>
     let content := Typ.reprPrec left 51 ++ " ->" ++ line ++ Typ.reprPrec right 50
     group (wrap content p 50)
@@ -978,7 +978,7 @@ syntax:60 typ:61 "|" typ:60 : typ
 syntax:80 typ:81 "&" typ:80 : typ
 syntax:90 typ:91 "*" typ:90 : typ
 
-syntax "<" ident ">" typ:90 : typ
+syntax "<" ident ">" typ:100 : typ
 syntax "<" ident "/>" : typ
 -- syntax "@" : typ
 syntax typ "\\" typ : typ
