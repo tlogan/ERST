@@ -1823,10 +1823,12 @@ mutual
     Subtyping.Static skolems'' assums'' tf (.path ta (.var id)) skolems''' assums''' →
     Expr.Typing.Static skolems assums context (.app ef ea) (.var id) skolems''' assums'''
 
-  | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
+  | loop {skolems assums context t' skolems' assums'} e t id zones zones' id_body :
     Expr.Typing.Static skolems assums context e t skolems' assums' →
-    (∀ {skolems'' assums'' id_body},
-      ⟨skolems'', assums'', (Typ.interpret_one id_body .true assums'')⟩ ∈ zones →
+    (∀ {skolems'' assums'' t''},
+      ⟨skolems'', assums'', t''⟩ ∈ zones →
+      t'' = (Typ.interpret_one id_body .true (assums'' ++ assums')) ∧
+      id_body ∉ skolems'' ∧
       Subtyping.Static skolems' assums' t (.path (.var id) (.var id_body))
         (skolems'' ++ skolems') (assums'' ++ assums')
     ) →
