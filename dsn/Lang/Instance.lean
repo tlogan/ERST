@@ -684,72 +684,78 @@ example : Subtyping.Static
 ----- variable
 ---------------------------------------
 
-#eval Typing.Static.compute
+#eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] [typings| (x : <uno/>)]
   [expr| x ]
 
-example : Typing.Static
+example : Expr.Typing.Static
   [ids| ] [subtypings| ] [typings| (x : <uno/>)]
   [expr| x ]
   [typ| <uno/> ]
   [ids| ] [subtypings| ]
-:= by Typing_Static_prove
+:= by Expr_Typing_Static_prove
 
 ---------------------------------------
 ----- empty record
 ---------------------------------------
 
-#eval Typing.Static.compute
+#eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr| @ ]
 
-example : Typing.Static
+example : Expr.Typing.Static
   [ids| ] [subtypings| ] []
   [expr| @ ]
   [typ| TOP ]
   [ids| ] [subtypings| ]
-:= by Typing_Static_prove
+:= by Expr_Typing_Static_prove
 
 ---------------------------------------
 ----- pair record
 ---------------------------------------
 
-#eval Typing.Static.compute
+#eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr| <uno/> , <dos/>]
 
-example : Typing.Static
+example : Expr.Typing.Static
   [ids| ] [subtypings| ] []
   [expr| <uno/> , <dos/>]
   [typ| <uno/> * <dos/> ]
   [ids| ] [subtypings| ]
-:= by Typing_Static_prove
+:= by Expr.Typing_Static_prove
 
 ---------------------------------------
 ----- identity function
 ---------------------------------------
 
 
-#eval Typing.Function.Static.compute [] [] [] [] [(Pat.var "x", Expr.var "x")]
+#eval Function.Typing.Static.compute [] [] [] [] [(Pat.var "x", Expr.var "x")]
 
-#eval Typing.Static.compute
+#eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr| [x => x]]
 
--- example : ∃ T , Typing.Static
+-- example : ∃ T , Expr.Typing.Static
 --   [ids| ] [subtypings| ] []
 --   [expr| [x => x]]
 --   [typ| ALL [{[T]}] [({.var T} <: TOP)] ({.var T}) -> {.var T}]
 --   [ids| ] [subtypings| ]
 -- := by
 --   use ?_
---   Typing_Static_prove
+--   apply Expr.Typing.Static.function
+--   (try Function_Typing_Static_assign)
+--   apply Function.Typing.Static.cons
+--   { sorry }
+--   { ListZone_Typing_Static_assign
+--     intros
+--     sorry }
 
 ---------------------------------------
 ----- finite isomorphism
 ---------------------------------------
 
-#eval Typing.Static.compute
+#eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
     [<uno/> => <dos/>]
@@ -757,7 +763,7 @@ example : Typing.Static
     [<hello/> => <goodbye/>]
   ]
 
--- example : Typing.Static
+-- example : Expr.Typing.Static
 --   [ids| ] [subtypings| ] []
 --   [expr|
 --     [<uno/> => <dos/>]
@@ -766,9 +772,9 @@ example : Typing.Static
 --     (<uno/> -> <dos/>)
 --   ]
 --   [ids| ] [subtypings| ]
--- := by Typing_Static_prove
+-- := by Expr.Typing_Static_prove
 
--- example : Typing.Static
+-- example : Expr.Typing.Static
 --   [ids| ] [subtypings| ] []
 --   [expr|
 --     [<uno/> => <dos/>]
@@ -779,9 +785,9 @@ example : Typing.Static
 --     (<thank/> -> <you/>)
 --   ]
 --   [ids| ] [subtypings| ]
--- := by Typing_Static_prove
+-- := by Expr.Typing_Static_prove
 
--- example : Typing.Static
+-- example : Expr.Typing.Static
 --   [ids| ] [subtypings| ] []
 --   [expr|
 --     [<uno/> => <dos/>]
@@ -794,7 +800,7 @@ example : Typing.Static
 --     (<hello/> -> <goodbye/>)
 --   ]
 --   [ids| ] [subtypings| ]
--- := by Typing_Static_prove
+-- := by Expr.Typing_Static_prove
 
 
 ---------------------------------------
@@ -803,7 +809,7 @@ example : Typing.Static
 
 #eval [expr| x as <uno/>]
 
-#eval Typing.Static.compute
+#eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr| [ x => x as <uno/> ] ]
 
@@ -811,7 +817,7 @@ example : Typing.Static
 ----- definition
 ---------------------------------------
 
-#eval Typing.Static.compute
+#eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
     def talky =
@@ -851,7 +857,7 @@ example : Typing.Static
   ]
 ]
 
-#eval Typing.Static.compute
+#eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
     def talky =

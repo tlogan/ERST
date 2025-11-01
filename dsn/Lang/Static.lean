@@ -1692,9 +1692,10 @@ mutual
   | cons {skolems context } {assums : List (Typ × Typ)}
     p e f assums' context' tp zones_tidied nested_zones zones subtras
   :
+    PatLifting.Static assums context p tp assums' context' →
     (∀ {skolems' assums'' tr},
       ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ∈ zones →
-      Typing.Static skolems assums' context' e tr (skolems' ++ skolems) (assums'' ++ assums)
+      Expr.Typing.Static skolems assums' context' e tr (skolems' ++ skolems) (assums'' ++ assums)
     ) →
     (∀ {skolems' assums'' t},
       ⟨skolems', assums'', t⟩ ∈ zones →
@@ -1703,7 +1704,6 @@ mutual
     ) →
     ListZone.tidy (ListSubtyping.free_vars assums) zones = .some zones_tidied →
     Function.Typing.Static skolems assums context (tp :: subtras) f nested_zones →
-    PatLifting.Static assums context p tp assums' context' →
     Function.Typing.Static skolems assums context subtras ((p,e)::f) (zones_tidied :: nested_zones)
 
   inductive Record.Typing.Static :
@@ -1713,42 +1713,42 @@ mutual
     Record.Typing.Static skolems assums context [] .top skolems assums
 
   | single {skolems assums context  skolems' assums'} l e body :
-    Typing.Static skolems assums context e body skolems' assums' →
+    Expr.Typing.Static skolems assums context e body skolems' assums' →
     Record.Typing.Static skolems assums context
       ((l,e) :: []) (.entry l body) skolems' assums'
 
   | cons {skolems assums context  skolems'' assums''} l e r body t skolems' assums' :
-    Typing.Static skolems assums context e body skolems' assums' →
+    Expr.Typing.Static skolems assums context e body skolems' assums' →
     Record.Typing.Static skolems' assums' context r t skolems'' assums'' →
     Record.Typing.Static skolems assums context
       ((l,e) :: r) (.inter (.entry l body) (t))
       skolems'' assums''
 
-  inductive Typing.Static :
+  inductive Expr.Typing.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
     Expr → Typ → List String → List (Typ × Typ) → Prop
   | var {t} skolems assums context x :
     find x context = .some t →
-    Typing.Static skolems assums context (.var x) t skolems assums
+    Expr.Typing.Static skolems assums context (.var x) t skolems assums
 
   | record {skolems assums context t} r :
     Record.Typing.Static skolems assums context r t skolems assums →
-    Typing.Static skolems assums context (.record r) t skolems assums
+    Expr.Typing.Static skolems assums context (.record r) t skolems assums
 
   | function {skolems assums context t} f nested_zones :
     Function.Typing.Static skolems assums context [] f nested_zones →
     ListZone.pack (ListSubtyping.free_vars assums) .true (nested_zones.flatten) = t →
-    Typing.Static skolems assums context (.function f) t skolems assums
+    Expr.Typing.Static skolems assums context (.function f) t skolems assums
 
   | app {skolems assums context skolems''' assums'''}
     ef ea id tf skolems' assums' ta skolems'' assums'' :
-    Typing.Static skolems assums context ef tf skolems' assums' →
-    Typing.Static skolems' assums' context ea ta skolems'' assums'' →
+    Expr.Typing.Static skolems assums context ef tf skolems' assums' →
+    Expr.Typing.Static skolems' assums' context ea ta skolems'' assums'' →
     Subtyping.Static skolems'' assums'' tf (.path ta (.var id)) skolems''' assums''' →
-    Typing.Static skolems assums context (.app ef ea) (.var id) skolems''' assums'''
+    Expr.Typing.Static skolems assums context (.app ef ea) (.var id) skolems''' assums'''
 
   | loop {skolems assums context t' skolems' assums'} e t id zones zones' :
-    Typing.Static skolems assums context e t skolems' assums' →
+    Expr.Typing.Static skolems assums context e t skolems' assums' →
     (∀ {skolems'' assums'' t''},
       ⟨skolems'', assums'', t''⟩ ∈ zones →
       Subtyping.Static skolems' assums' t (.path (.var id) t'')
@@ -1757,13 +1757,13 @@ mutual
     ListZone.tidy (ListSubtyping.free_vars assums') zones = .some zones' →
     LoopListZone.Subtyping.Static (ListSubtyping.free_vars assums') id zones' t' →
     id ∉ ListSubtyping.free_vars assums' →
-    Typing.Static skolems assums context (.loop e) t' skolems' assums'
+    Expr.Typing.Static skolems assums context (.loop e) t' skolems' assums'
 
   | anno {skolems assums context skolems'' assums''} e ta te skolems' assums' :
     Typ.free_vars ta ⊆ [] →
-    Typing.Static skolems assums context e te skolems' assums' →
+    Expr.Typing.Static skolems assums context e te skolems' assums' →
     Subtyping.Static skolems' assums' te ta skolems'' assums'' →
-    Typing.Static skolems assums context (.anno e ta) ta skolems'' assums''
+    Expr.Typing.Static skolems assums context (.anno e ta) ta skolems'' assums''
 
 
 end
@@ -1843,11 +1843,11 @@ elab_rules : tactic
   let mvar ← Function.Typing.Static.extract_mvar goalType
   let goalInfo ← Function.Typing.Static.extract_info (← Lean.Meta.whnf goalType)
 
-  Lean.logInfo m!"mvar: {mvar}"
-  Lean.logInfo m!"GoalInfo: {goalInfo}"
+  -- Lean.logInfo m!"mvar: {mvar}"
+  -- Lean.logInfo m!"GoalInfo: {goalInfo}"
   let computation ← Function.Typing.Static.to_computation goalInfo
 
-  Lean.logInfo m!"Computation: {computation}"
+  -- Lean.logInfo m!"Computation: {computation}"
 
   let ListListZoneTypeExpr := Lean.mkApp
     (Lean.mkConst ``Lean.MetaM)
@@ -1859,10 +1859,9 @@ elab_rules : tactic
     (Lean.MetaM (List (List Zone)))
     ListListZoneTypeExpr computation
   let result ← metaM_result
-  Lean.logInfo ("<<<result>>> " ++ (repr result))
+  -- Lean.logInfo ("<<<result>>> " ++ (repr result))
   let lean_expr_result := Lean.toExpr result
-  let x := mvar.mvarId!
-  Lean.MVarId.assign x lean_expr_result
+  Lean.MVarId.assign mvar.mvarId! lean_expr_result
   let goalType_instantiated ← (Lean.instantiateMVars goalType)
   -- Lean.Elab.Tactic.replaceMainGoal [goal]
 
@@ -1875,6 +1874,78 @@ example  : ∃ nested_zones , Function.Typing.Static [] [] [] [] [(Pat.var "x", 
   use ?nested_zones
   { Function_Typing_Static_assign <;> sorry}
   { sorry }
+
+
+syntax "ListZone_Typing_Static_assign" : tactic
+
+elab_rules : tactic
+| `(tactic| ListZone_Typing_Static_assign) => Lean.Elab.Tactic.withMainContext do
+  let goal ← Lean.Elab.Tactic.getMainGoal
+  let goalDecl ← goal.getDecl
+  let goalType := goalDecl.type
+
+  let whnf ← Lean.Meta.whnf goalType
+  let (antec, conseq) ← (match whnf with
+  | Lean.Expr.forallE _ _ (
+      Lean.Expr.forallE _ _ (
+        Lean.Expr.forallE _ _ (
+          Lean.Expr.forallE _ antec conseq _
+        ) _
+      ) _
+    ) _ => return (antec, conseq)
+  | _ => failure
+  )
+
+
+  Lean.logInfo m!"antec: {antec}"
+  Lean.logInfo m!"conseq: {conseq}"
+
+  let mvar  ← (match antec with
+  | Lean.Expr.app (Lean.Expr.app _ a) _ => return a
+  | _ => failure
+  )
+
+  -- Lean.logInfo m!"mvar: {mvar}"
+
+  let pred  ← (match conseq with
+  | Lean.Expr.app (Lean.Expr.app (Lean.Expr.app a _) _ ) _ => return a
+  | _ => failure
+  )
+
+  let computation ← (match pred with
+  | (Lean.Expr.app (Lean.Expr.app (Lean.Expr.app (Lean.Expr.app
+    (Lean.Expr.const `Expr.Typing.Static []) a) b) c) d
+  ) => return Lean.Expr.app (Lean.Expr.app (Lean.Expr.app (Lean.Expr.app
+    (Lean.Expr.const `Expr.Typing.Static.compute []) a) b) c) d
+  | _ => failure
+  )
+
+  -- Lean.logInfo m!"computation: {computation}"
+
+  let ListZoneTypeExpr := Lean.mkApp
+    (Lean.mkConst ``Lean.MetaM)
+    (Lean.mkApp (Lean.mkConst ``List [Lean.levelZero]) (Lean.mkConst ``Zone))
+
+  -- Lean.logInfo m!"ListZoneTypeExpr: {ListZoneTypeExpr}"
+
+  let metaM_result ← unsafe Lean.Meta.evalExpr
+    (Lean.MetaM (List Zone)) ListZoneTypeExpr computation
+  let result ← metaM_result
+  -- Lean.logInfo ("<<<result>>> " ++ (repr result))
+  let lean_expr_result := Lean.toExpr result
+  Lean.MVarId.assign mvar.mvarId! lean_expr_result
+  let goalType_instantiated ← (Lean.instantiateMVars goalType)
+  -- Lean.Elab.Tactic.replaceMainGoal [goal]
+
+example t : ∃ zones : List Zone ,
+∀ {skolems' : List String} {assums'' : List (Typ × Typ)} {tr : Typ},
+  { skolems := skolems', assums := assums'', typ := Typ.path (ListTyp.diff t []) tr } ∈ zones →
+    Expr.Typing.Static [] [] [] (Expr.record []) tr (skolems' ++ []) (assums'' ++ [])
+:= by
+  use ?_
+  ListZone_Typing_Static_assign
+  sorry
+  sorry
 
 
 syntax "Function_Typing_Static_prove" : tactic
@@ -1892,6 +1963,8 @@ macro_rules
   | apply Function.Typing.Static.nil
   | apply Function.Typing.Static.cons <;> fail
     -- TODO: to compute and assign zones
+    -- NOTE: needs tactics to extract inputs run computation and assign results
+    -- NOTE: such tactics are extremely tedious
     -- { apply ListZone.tidy_undo_tidy }
     -- { simp [ListZone.undo_tidy]
     --   intros _ _ _ _ assums_eq t_eq
@@ -1946,28 +2019,28 @@ macro_rules
 
 | `(tactic| Expr_Typing_Static_prove) => `(tactic|
   (first
-  | apply Typing.Static.var
+  | apply Expr.Typing.Static.var
     · rfl
-  | apply Typing.Static.record
+  | apply Expr.Typing.Static.record
     · Record_Typing_Static_prove
 
-  | apply Typing.Static.function
+  | apply Expr.Typing.Static.function
     { Function_Typing_Static_prove }
     { reduce; simp_all ; try (eq_rhs_assign ; rfl) }
 
-  | apply Typing.Static.app
+  | apply Expr.Typing.Static.app
     · Expr_Typing_Static_prove
     · Expr_Typing_Static_prove
     · Subtyping_Static_prove
 
-  | apply Typing.Static.loop
+  | apply Expr.Typing.Static.loop
     { Expr_Typing_Static_prove }
     { apply Subtyping.ListZone.Static.intro
       {intro; Subtyping_Static_prove}
       {rfl} }
     { LoopListZone_Subtyping_Static_prove }
 
-  | apply Typing.Static.anno
+  | apply Expr.Typing.Static.anno
     · simp
     · ListZone_Typing_Static_prove
     · rfl

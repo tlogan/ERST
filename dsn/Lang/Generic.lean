@@ -376,8 +376,8 @@ theorem Subtyping.Static.aux {skolems assums lower upper skolems' assums'} :
   (List.mdiff skolems' skolems) ∩ Typ.free_vars upper = []
 := by sorry
 
-theorem Typing.Static.aux {skolems assums context e t skolems' assums'} :
-  Typing.Static skolems assums context e t skolems' assums' →
+theorem Expr.Typing.Static.aux {skolems assums context e t skolems' assums'} :
+  Expr.Typing.Static skolems assums context e t skolems' assums' →
   skolems ⊆ skolems' ∧
   assums ⊆ assums' ∧
   ListTyping.free_vars context ⊆ ListSubtyping.free_vars assums ∧
@@ -1890,15 +1890,15 @@ mutual
     apply Iff.mp List.mem_append at p10
     cases p10 with
     | inl p11 =>
-      apply ListZone.tidy_soundness_alt p2 p11
+      apply ListZone.tidy_soundness_alt p3 p11
       intros skolems' assums' t p12
 
-      have ⟨assums_ext, p20, tr, p22⟩ := p1 p12
+      have ⟨assums_ext, p20, tr, p22⟩ := p2 p12
       rw [p22] at p12
-      have p23 := p0 p12
+      have p23 := p1 p12
 
-      have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p23
-      have ⟨p24,p26,p28,p30,p32,p34⟩ := Typing.Static.aux p23
+      have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness p23
+      have ⟨p24,p26,p28,p30,p32,p34⟩ := Expr.Typing.Static.aux p23
 
       exists tam0
       apply And.intro (fun _ p38 => containment_mdiff_concat_elim (ih0l p38))
@@ -1910,7 +1910,7 @@ mutual
       simp [Expr.sub, Expr.Function.sub]
       apply Typing.Dynamic.function_head_elim
       intros v p44 p46
-      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p4 (tam0 ++ tam') v p44 p46
+      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p0 (tam0 ++ tam') v p44 p46
       exists eam0
       simp [*]
       rw [Expr.sub_sub_removal (pattern_match_ids_containment p48)]
@@ -1921,8 +1921,8 @@ mutual
       { apply MultiTyping.Dynamic.dom_context_extension p50 }
 
     | inr p11 =>
-      have ⟨tam0,ih0l,ih0r⟩ := Function.Typing.Static.soundness p3 p11
-      have ⟨p20,p22,p24,p26⟩ := Function.Typing.Static.aux p3 p11
+      have ⟨tam0,ih0l,ih0r⟩ := Function.Typing.Static.soundness p4 p11
+      have ⟨p20,p22,p24,p26⟩ := Function.Typing.Static.aux p4 p11
 
       exists tam0
       simp [*]
@@ -1931,9 +1931,9 @@ mutual
 
       apply Typing.Dynamic.function_tail_elim
       { intros v p40 p42
-        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p4 (tam0 ++ tam') v p40 p42
+        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p0 (tam0 ++ tam') v p40 p42
         apply Exists.intro eam0 p48 }
-      { apply Function.Typing.Static.subtra_soundness p3 List.mem_cons_self p11 }
+      { apply Function.Typing.Static.subtra_soundness p4 List.mem_cons_self p11 }
       { apply ih0r p30 p32 }
 
 
@@ -1952,7 +1952,7 @@ mutual
     apply Typing.Dynamic.empty_record_top
 
   | .single l e body p0 => by
-    have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
+    have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness p0
     exists tam0
     simp [*]
     intros tam' p40
@@ -1961,8 +1961,8 @@ mutual
 
   | .cons l e r body t skolems0 assums0 p0 p1 => by
 
-    have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
-    have ⟨p5,p10,p15,p20,p25,p30⟩ := Typing.Static.aux p0
+    have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness p0
+    have ⟨p5,p10,p15,p20,p25,p30⟩ := Expr.Typing.Static.aux p0
     have ⟨tam1,ih1l,ih1r⟩ := Record.Typing.Static.soundness p1
     have ⟨p6,p11,p16,p21,p26,p31⟩ := Record.Typing.Static.aux p1
 
@@ -1988,8 +1988,8 @@ mutual
       { apply p50 } }
 
 
-  theorem Typing.Static.soundness {skolems assums context e t skolems' assums'} :
-    Typing.Static skolems assums context e t skolems' assums' →
+  theorem Expr.Typing.Static.soundness {skolems assums context e t skolems' assums'} :
+    Expr.Typing.Static skolems assums context e t skolems' assums' →
     ∃ tam, ListPair.dom tam ⊆ (List.mdiff skolems' skolems) ∧
     (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') assums' →
       (∀ {eam}, MultiTyping.Dynamic tam' eam context →
@@ -2031,10 +2031,10 @@ mutual
         { apply p3 } }
 
   | .app ef ea id tf skolems0 assums0 ta skolems1 assums1 p0 p1 p2 => by
-    have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
-    have ⟨p5,p6,p105,p7,p8,p9⟩ := Typing.Static.aux p0
-    have ⟨tam1,ih1l,ih1r⟩ := Typing.Static.soundness p1
-    have ⟨p10,p11,p107,p12,p13,p14⟩ := Typing.Static.aux p1
+    have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness p0
+    have ⟨p5,p6,p105,p7,p8,p9⟩ := Expr.Typing.Static.aux p0
+    have ⟨tam1,ih1l,ih1r⟩ := Expr.Typing.Static.soundness p1
+    have ⟨p10,p11,p107,p12,p13,p14⟩ := Expr.Typing.Static.aux p1
     have ⟨tam2,ih2l,ih2r⟩ := Subtyping.Static.soundness p2
     have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := Subtyping.Static.aux p2
     exists tam2 ++ (tam1 ++ tam0)
@@ -2106,8 +2106,8 @@ mutual
     }
 
   | .loop body t0 id zones zones' p0 p1 p2 p3 id_fresh => by
-    have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p0
-    have ⟨p5,p6,p7,p8,p9,p10⟩ := Typing.Static.aux p0
+    have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness p0
+    have ⟨p5,p6,p7,p8,p9,p10⟩ := Expr.Typing.Static.aux p0
     exists tam0
     simp [*]
 
@@ -2157,8 +2157,8 @@ mutual
     }
 
   | .anno e ta te skolems0 assums0 p0 p1 p2 => by
-    have ⟨tam0,ih0l,ih0r⟩ := Typing.Static.soundness p1
-    have ⟨p5,p6,p7,p8,p9,p10⟩ := Typing.Static.aux p1
+    have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness p1
+    have ⟨p5,p6,p7,p8,p9,p10⟩ := Expr.Typing.Static.aux p1
     have ⟨tam1,ih1l,ih1r⟩ := Subtyping.Static.soundness p2
     have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := Subtyping.Static.aux p2
     exists (tam1 ++ tam0)
