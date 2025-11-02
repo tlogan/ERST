@@ -55,14 +55,60 @@ def ListSubtyping.bounds (id : String) (b : Bool) : ListSubtyping → List Typ
 #eval (ListSubtyping.bounds "R" .true [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ])
 
 
+def ListSubtyping.complex_vars : List (Typ × Typ) → List String
+| [] => []
+| (.var _ , .var _ ) :: sts => ListSubtyping.complex_vars sts
+| (lower , .var _ ) :: sts => (Typ.free_vars lower) ++ (ListSubtyping.complex_vars sts)
+| (.var _, upper) :: sts => (Typ.free_vars upper) ++ (ListSubtyping.complex_vars sts)
+| (lower, upper) :: sts =>
+  (Typ.free_vars lower) ++ (Typ.free_vars upper) ++ (ListSubtyping.complex_vars sts)
 
-def ListSubtyping.prune (pids : List String) : List (Typ × Typ) → List (Typ × Typ)
+
+def ListSubtyping.prune_rec (pids : List String) : List (Typ × Typ) → List (Typ × Typ)
 | .nil => []
 | .cons (l,r) sts =>
   if (Typ.free_vars l) ∪ (Typ.free_vars r) ⊆ pids then
-    (l,r) :: ListSubtyping.prune pids sts
+    (l,r) :: ListSubtyping.prune_rec pids sts
   else
-    ListSubtyping.prune pids sts
+    ListSubtyping.prune_rec pids sts
+
+def ListSubtyping.prune (pids : List String) (sts : List (Typ × Typ)) : List (Typ × Typ) :=
+  -- ListSubtyping.prune_rec ((ListSubtyping.complex_vars sts) ++ pids) sts
+  ListSubtyping.prune_rec (pids) sts
+
+  ----------------------------------
+  -- if List.mdiff ((Typ.free_vars l) ∪ (Typ.free_vars r)) pids != [] then
+  --   match (l,r) with
+  --   | (.var _, .var _) => ListSubtyping.prune pids sts
+  --   | _ => (l,r) :: ListSubtyping.prune pids sts
+  -- else
+  --   (l,r) :: ListSubtyping.prune pids sts
+-- | .cons (.var id_lower, .var id_upper) sts =>
+--   if pids.contains id_lower && pids.contains id_upper then
+--     (.var id_lower, .var id_upper) :: ListSubtyping.prune pids sts
+--   else
+--     ListSubtyping.prune pids sts
+-- | .cons (.var id_lower, upper) sts =>
+--   if pids.contains id_lower then
+--     (.var id_lower, upper) :: ListSubtyping.prune ((Typ.free_vars upper) ∪ pids) sts
+--   else
+--     ListSubtyping.prune pids sts
+-- | .cons (lower, .var id_upper) sts =>
+--   if pids.contains id_upper then
+--     (lower, .var id_upper) :: ListSubtyping.prune pids sts
+--   else
+--     ListSubtyping.prune pids sts
+-- | st :: sts =>
+--   st :: ListSubtyping.prune pids sts
+
+-- prune if there is an uninfluential var, otherwise keep
+
+
+#eval ListSubtyping.prune ["T175"]
+    [([typ| T179 -> T178 ], [typ| T175 ]), ([typ| <uno/> ], [typ| T178 ])]
+
+#eval ListSubtyping.prune ["T886"]
+  [([typ| T886 ], [typ| T884 ]), ([typ| <uno/> ], [typ| T884 ]), ([typ| <uno/> ], [typ| T886 ])]
 
 def Typ.break : Bool → Typ → List Typ
 | .false, .unio l r => Typ.break .false l ++ Typ.break .false r
@@ -82,8 +128,9 @@ def Typ.combine (b : Bool) : List Typ → Typ
   else
     Typ.rator b t t'
 
+
 def Typ.interpret_one (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
-  let bds := ListSubtyping.bounds id b Δ
+  let bds := (ListSubtyping.bounds id b Δ).eraseDups
   if bds == [] then
     Typ.base (not b)
   else
@@ -121,7 +168,12 @@ def Zone.tidy (pids : List String) : Zone → Option Zone
   let r' := Typ.sub (δl ∪ δr) r
   let assums' := ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars (.path l' r'))) assums
   .some ⟨skolems, assums', .path l' r'⟩
-| _ => .none
+| ⟨skolems, assums, .var id⟩ =>
+  let assums' := ListSubtyping.prune (id :: pids ∪ skolems) assums
+  let t := Typ.interpret_one id .true  assums'
+  let assums'' := ListSubtyping.prune ((Typ.free_vars t) ∪ pids ∪ skolems) assums'
+  .some ⟨skolems, assums'', t⟩
+| _ => failure
 
 #eval Zone.tidy  []
   {
@@ -1657,7 +1709,21 @@ mutual
     (← Expr.Typing.Static.compute Θ Δ Γ ef).flatMapM (fun ⟨Θ', Δ', tf⟩ => do
     (← Expr.Typing.Static.compute Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
     (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ =>
-      return [⟨Θ''', Δ''', (.var α)⟩]
+      -- return [⟨Θ''', Δ''', (Typ.interpret_one α .true Δ''')⟩]
+      return [⟨Θ''', Δ''', (.var α )⟩]
+      -- return [⟨Θ''', ListSubtyping.prune (α :: ListSubtyping.free_vars Δ'') Δ''', (.var α)⟩]
+      -- return [⟨Θ''', Δ''', (Typ.interpret_one α .true Δ''')⟩]
+      ------------------
+      -- match Zone.tidy (ListSubtyping.free_vars Δ'') ⟨Θ''', Δ''', (.var α)⟩ with
+      -- | .some zone => return [zone]
+      -- | .none => return []
+      ------------------
+      -- match Zone.tidy (ListSubtyping.free_vars Δ'') ⟨Θ''', Δ''', (Typ.interpret_one α .true Δ''')⟩ with
+      -- | .some zone => return [zone]
+      -- | .none => return [⟨Θ''', Δ''', (Typ.interpret_one α .true Δ''')⟩]
+      ------------------
+      -- return [⟨Θ''', Δ''', (.var α)⟩]
+      -- return [⟨Θ''', Δ''', (Typ.interpret_one α .true Δ''')⟩]
       )))
 
   | .loop e => do
@@ -1698,6 +1764,23 @@ mutual
       return []
 
 end
+
+-- TODO: need a way to prune before interpretation
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    -- [u =>
+      [x => x](<uno/>)
+    -- ]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [u =>
+      [x => u]
+    ](<uno/>)
+  ]
 
 #eval ListZone.invert "T970" [
   { skolems := [ids| ], assums := [], typ := [typ| <zero/> -> <nil/> ] }

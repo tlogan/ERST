@@ -906,3 +906,229 @@ def repeat_expr := [expr|
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   repeat_expr
+
+
+---------------------------------------
+----- scalar peeling (i.e. inflation) ; peeling open the least fixed point
+---------------------------------------
+
+#eval [expr|
+  <succ> <succ> <zero/> as LFP[R] <zero/> | <succ> R
+]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    <succ> <succ> <zero/> as LFP[R] <zero/> | <succ> R
+  ]
+
+
+---------------------------------------
+----- identity application
+---------------------------------------
+
+
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    <uno/>
+  ]
+
+-- TODO: what is creating the union to the variable
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [x => x](<uno/>)
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [u =>
+      [x => u]
+    ](<uno/>)
+  ]
+
+#eval ListSubtyping.prune ["T175"]
+    [([typ| T179 -> T178 ], [typ| T175 ]), ([typ| <uno/> ], [typ| T178 ])]
+
+
+#eval ListSubtyping.prune ["T886"]
+  [([typ| T886 ], [typ| T884 ]), ([typ| <uno/> ], [typ| T884 ]), ([typ| <uno/> ], [typ| T886 ])]
+
+
+----------------------------------------
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [ x =>
+      [<zero/> => <uno/>]
+    ]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [g => g]([<zero/> => <uno/>])
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [ x =>
+      [g => g]([<zero/> => <uno/>])
+    ]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [g =>
+      [x => g]
+    ]([<zero/> => <uno/>])
+  ]
+
+
+---------------------------------------
+----- double application
+---------------------------------------
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [<one/> => <zero/>]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [x =>
+      [<zero/> => <uno/>]([<one/> => <zero/>](x))
+    ]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [ x =>
+      [<zero/> => <uno/>](x)
+    ]
+  ]
+
+
+---------------------------------------
+---------------------------------------
+---------------------------------------
+---------------------------------------
+---------------------------------------
+-- TODO: debug the  <zero/> -> BOT type
+-- where did the <uno/> disappear to?
+-- Could be due to over pruning
+-- what's the optimal pruning
+---------------------------------------
+---------------------------------------
+---------------------------------------
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [ x =>
+      def g = [<zero/> => <uno/>] in
+      g(x)
+    ]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [ x =>
+      [g => g(x)]([<zero/> => <uno/>])
+    ]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [ x =>
+      def g = [<zero/> => <uno/>] in
+      g
+    ]
+  ]
+
+
+
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def g = [<zero/> => <uno/>] in
+    [ x => g(x) ]
+  ]
+
+#eval Zone.tidy []
+  { skolems := [ids| ],
+    assums := [([typ| T226 ], [typ| T227 -> T228 ]),
+              ([typ| <uno/> ], [typ| T228 ]),
+              ([typ| T227 ], [typ| <zero/> ]),
+              ([typ| T227 -> T228 ], [typ| T222 ]),
+              ([typ| <zero/> -> <uno/> ], [typ| T226 ])],
+    typ := [typ| T222 ] }
+
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def f = [<one/> => <zero/>] in
+    def g = [<zero/> => <uno/>] in
+    g
+  ]
+
+---------------------------------------
+----- scalar induction
+---------------------------------------
+
+-- NOTE: that it gives the input the stronger type
+-- NOTE: and it gives the output the weaker type
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr| [x =>
+    x as (
+      LFP[R] <zero/> | <succ> <succ> R
+    ) as (
+      LFP[R] <zero/> | <succ> R
+    )
+  ] ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def f = [x => x as LFP[R] <zero/> | <succ> <succ> R ] in
+    def g = [x => x as LFP[R] <zero/> | <succ> R ] in
+    [x => g(f(x))]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def g = loop ([self =>
+      [<zero/> => <uno/>]
+      [<succ> n => self(n) ]
+    ]) in
+    [x => g(x)]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def f = loop ([self =>
+      [<zero/> => <zero/>]
+      [<succ> <succ> n => <succ> <succ> (self(n)) ]
+    ]) in
+    def g = loop ([self =>
+      [<zero/> => <uno/>]
+      [<succ> n => <uno/> ]
+    ]) in
+    [x => g(f(x))]
+  ]
