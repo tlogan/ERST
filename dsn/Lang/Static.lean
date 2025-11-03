@@ -121,6 +121,21 @@ def Typ.try_interpret (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
   else
     t
 
+-- def Zone.try_prune_interpret (pids : List String) (b : Bool) : Zone → Zone
+-- | ⟨skolems, assums, .var id⟩ =>
+--   let t := Typ.interpret_one id b assums
+--   if (b == .true && t == .bot) then
+--     ⟨skolems, assums, .var id⟩
+--   else if (b == .false && t == .top) then
+--     ⟨skolems, assums, .var id⟩
+--   else
+--     let pids' := Typ.free_vars t ∪ pids
+--     let assums' := ListSubtyping.prune pids' assums
+--     ⟨skolems, assums', t⟩
+-- | z => z
+
+
+
 
 def ListSubtyping.interpret_all (b : Bool) (Δ : List (Typ × Typ))
 : (ids : List String) → List (String × Typ)
@@ -197,9 +212,23 @@ def Zone.tidy (pids : List String) : Zone → Option Zone
     (List.diff (List.diff (Typ.free_vars r) params) pids)
   let l' := Typ.simp (Typ.sub δl l)
   let r' := Typ.simp (Typ.sub (δl ∪ δr) r)
-  let assums' := ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars (.path l' r'))) assums
+  let assums' := (
+    if Typ.free_vars l' ∪ Typ.free_vars r' == [] then
+      -- assums
+      ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars (.path l' r'))) assums
+    else
+      assums
+  )
   .some ⟨skolems, assums', .path l' r'⟩
 | _ => failure
+
+def Zone.try_prune_interpret (pids : List String) (b : Bool) : Zone → Zone
+| ⟨skolems, assums, .var id⟩ =>
+  let t := (Typ.try_interpret id b assums)
+  match Zone.tidy pids ⟨skolems, assums, t⟩ with
+  | .some zone => zone
+  |.none => ⟨skolems, assums, t⟩
+| zone => zone
 
 
 def ListZone.tidy (pids : List String) : List Zone → Option (List Zone)
@@ -1724,7 +1753,18 @@ mutual
     (← Expr.Typing.Static.compute Θ Δ Γ ef).flatMapM (fun ⟨Θ', Δ', tf⟩ => do
     (← Expr.Typing.Static.compute Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
     (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ =>
-      return [⟨Θ''', Δ''', (Typ.try_interpret α .true Δ''')⟩]
+      return [
+        Zone.try_prune_interpret (ListSubtyping.free_vars Δ'') .true ⟨Θ''', Δ''', .var α ⟩
+      ]
+      -- return [⟨Θ''', Δ''', (.var α)⟩]
+      -- return [
+      --   Zone.try_prune_interpret (ListSubtyping.free_vars Δ'') .true ⟨Θ''', Δ''', (.var α)⟩
+      -- ]
+      -- with
+      -- | .some zone => return [zone]
+      -- | .none => failure
+      -- let pids := ListSubtyping.free_vars Δ''
+      -- return [⟨Θ''', ListSubtyping.prune pids  Δ''', (Typ.try_interpret α .true Δ''')⟩]
     )))
 
   | .loop e => do
@@ -1765,6 +1805,66 @@ mutual
       return []
 
 end
+
+
+--------------------------------
+--------------------------------
+--------------------------------
+
+-- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    -- Even -> Even
+    [ x =>
+      (
+        [<zero/> => <uno/>]
+        [<succ/> => <dos/> ]
+      ) (
+        (
+          [<nil/> => <zero/>]
+          [<cons/> => <succ/>]
+        ) (x)
+      )
+    ]
+  ]
+
+-- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    -- Even -> Even
+    def f = (
+      [<nil/> => <zero/>]
+      [<cons/> => <succ/>]
+    ) in
+    def g = (
+      [<zero/> => <uno/>]
+      [<succ/> => <dos/> ]
+    ) in
+    [x => g(f(x))]
+  ]
+
+--------------------------------
+--------------------------------
+--------------------------------
+
+-- RESULT: Even -> Uno
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    -- Even -> Even
+    def f = loop ([self =>
+      [<nil/> => <zero/>]
+      [<cons> n => <succ> (self(n)) ]
+    ]) in
+    def g = (
+      [<zero/> => <uno/>]
+      [<succ> n => <dos/> ]
+    ) in
+    -- Even -> Uno
+    [x => g(f(x))]
+  ]
 
 --------------------------------
 ------- BOT ERROR ------------------

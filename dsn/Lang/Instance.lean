@@ -1009,18 +1009,7 @@ def repeat_expr := [expr|
 
 ---------------------------------------
 ---------------------------------------
----------------------------------------
----------------------------------------
----------------------------------------
--- TODO: debug the  <zero/> -> BOT type
--- where did the <uno/> disappear to?
--- Could be due to over pruning
--- what's the optimal pruning
--- maybe need to prune/interpret var in function or pack
--- separate concerns; only use tidy in loop case
----------------------------------------
----------------------------------------
----------------------------------------
+
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
@@ -1071,6 +1060,7 @@ def repeat_expr := [expr|
 -- NOTE: that it gives the input the stronger type
 -- NOTE: and it gives the output the weaker type
 
+-- RESULT: Even -> Nat
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr| [x =>
@@ -1081,6 +1071,7 @@ def repeat_expr := [expr|
     )
   ] ]
 
+-- RESULT: Even -> Even
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
@@ -1099,16 +1090,20 @@ def repeat_expr := [expr|
     [x => g(x)]
   ]
 
+-- RESULT: Even -> Uno
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
+    -- Even -> Even
     def f = loop ([self =>
       [<zero/> => <zero/>]
       [<succ> <succ> n => <succ> <succ> (self(n)) ]
     ]) in
+    -- Nat -> Uno
     def g = loop ([self =>
       [<zero/> => <uno/>]
       [<succ> n => <uno/> ]
     ]) in
+    -- Even -> Uno
     [x => g(f(x))]
   ]

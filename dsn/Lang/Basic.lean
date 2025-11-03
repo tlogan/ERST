@@ -506,8 +506,10 @@ mutual
       )
   | .lfp id body, _ =>
     group (
+      "(" ++
       "LFP[" ++ id ++ "]" ++ line ++
-        nest 2 (Typ.reprPrec body 0)
+        nest 2 (Typ.reprPrec body 0) ++
+      ")"
     )
 end
 
