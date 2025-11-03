@@ -108,10 +108,19 @@ def Typ.combine (b : Bool) : List Typ → Typ
 def Typ.interpret_one (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
   let bds := (ListSubtyping.bounds id b Δ).eraseDups
   if bds == [] then
-    (.var id)
-    -- Typ.base (not b)
+    Typ.base (not b)
   else
     Typ.combine (not b) bds
+
+def Typ.try_interpret (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
+  let t := interpret_one id b Δ
+  if (b == .true && t == .bot) then
+    (.var id)
+  else if (b == .false && t == .top) then
+    (.var id)
+  else
+    t
+
 
 def ListSubtyping.interpret_all (b : Bool) (Δ : List (Typ × Typ))
 : (ids : List String) → List (String × Typ)
@@ -1715,7 +1724,7 @@ mutual
     (← Expr.Typing.Static.compute Θ Δ Γ ef).flatMapM (fun ⟨Θ', Δ', tf⟩ => do
     (← Expr.Typing.Static.compute Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
     (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ =>
-      return [⟨Θ''', Δ''', (Typ.interpret_one α .true Δ''')⟩]
+      return [⟨Θ''', Δ''', (Typ.try_interpret α .true Δ''')⟩]
     )))
 
   | .loop e => do

@@ -927,15 +927,12 @@ def repeat_expr := [expr|
 ----- identity application
 ---------------------------------------
 
-
-
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
     <uno/>
   ]
 
--- TODO: what is creating the union to the variable
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
@@ -949,14 +946,6 @@ def repeat_expr := [expr|
       [x => u]
     ](<uno/>)
   ]
-
-#eval ListSubtyping.prune ["T175"]
-    [([typ| T179 -> T178 ], [typ| T175 ]), ([typ| <uno/> ], [typ| T178 ])]
-
-
-#eval ListSubtyping.prune ["T886"]
-  [([typ| T886 ], [typ| T884 ]), ([typ| <uno/> ], [typ| T884 ]), ([typ| <uno/> ], [typ| T886 ])]
-
 
 ----------------------------------------
 
