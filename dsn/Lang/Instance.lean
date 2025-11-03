@@ -1027,6 +1027,8 @@ def repeat_expr := [expr|
 -- where did the <uno/> disappear to?
 -- Could be due to over pruning
 -- what's the optimal pruning
+-- maybe need to prune/interpret var in function or pack
+-- separate concerns; only use tidy in loop case
 ---------------------------------------
 ---------------------------------------
 ---------------------------------------
@@ -1057,23 +1059,12 @@ def repeat_expr := [expr|
   ]
 
 
-
-
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
     def g = [<zero/> => <uno/>] in
     [ x => g(x) ]
   ]
-
-#eval Zone.tidy []
-  { skolems := [ids| ],
-    assums := [([typ| T226 ], [typ| T227 -> T228 ]),
-              ([typ| <uno/> ], [typ| T228 ]),
-              ([typ| T227 ], [typ| <zero/> ]),
-              ([typ| T227 -> T228 ], [typ| T222 ]),
-              ([typ| <zero/> -> <uno/> ], [typ| T226 ])],
-    typ := [typ| T222 ] }
 
 
 #eval Expr.Typing.Static.compute

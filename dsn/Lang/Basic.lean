@@ -807,11 +807,20 @@ mutual
   | .lfp id body => (Typ.size body) * 600 + 1
 end
 
+def ListTyp.size : List Typ → Nat
+| [] => 1
+| t :: ts => Typ.size t + ListTyp.size ts
+
+
+
 theorem Typ.zero_lt_size {t : Typ} : 0 < Typ.size t := by
 cases t <;> simp [Typ.size]
 
 theorem ListPairTyp.zero_lt_size {cs} : 0 < ListSubtyping.size cs := by
 cases cs <;> simp [ListSubtyping.size, Typ.zero_lt_size]
+
+theorem ListTyp.zero_lt_size {ts : List Typ} : 0 < ListTyp.size ts := by
+cases ts <;> simp [ListTyp.size, Typ.zero_lt_size]
 
 
 def ListPair.dom {α} {β} : List (α × β) → List α
