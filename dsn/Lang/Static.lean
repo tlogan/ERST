@@ -181,26 +181,39 @@ def Typ.interpret_path (pids : List String) (assums : List (Typ × Typ)) : Typ �
   .path l' r'
 | t => t
 
-def Typ.try_interpret (pids : List String) (Δ : List (Typ × Typ)) (id : String) : Typ :=
+def Typ.interpret_id_then_path (pids : List String) (Δ : List (Typ × Typ)) (id : String) : Typ :=
   let t := interpret_one id .true Δ
   if (t == .bot) then
     (.var id)
   else
     Typ.interpret_path pids Δ t
 
+def Typ.try_interpret_new (b : Bool) (Δ : List (Typ × Typ)) : Typ → Typ
+| .var id =>
+  let t := interpret_one id b Δ
+  if (t == .top || t == .bot) then
+    (.var id)
+  else
+    t
+| t => t
+
 -- TODO: test out the effect of interpretation in previous implementation
 def Zone.tidy (pids : List String) : Zone → Option Zone
-| ⟨skolems, assums, .path l r⟩ =>
-  let t' := Typ.interpret_path pids assums (.path l r)
-  -- let assums' := (
-  --   if Typ.free_vars l' ∪ Typ.free_vars r' == [] then
-  --     ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars t')) assums
-  --   else
-  --     assums
-  -- )
-  let assums' := ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars t')) assums
-  .some ⟨skolems, assums', t'⟩
-| _ => failure
+-- | ⟨skolems, assums, .path l r⟩ =>
+--   let t' := Typ.interpret_path pids assums (.path l r)
+--   -- let assums' := (
+--   --   if Typ.free_vars l' ∪ Typ.free_vars r' == [] then
+--   --     ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars t')) assums
+--   --   else
+--   --     assums
+--   -- )
+--   let assums' := ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars t')) assums
+--   .some ⟨skolems, assums', t'⟩
+| ⟨skolems, assums, t⟩ =>
+  -- let assums' := ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars t)) assums
+  let assums' := assums
+  .some ⟨skolems, assums', t⟩
+-- | _ => failure
 
 -- def Zone.try_prune_interpret (pids : List String) (b : Bool) : Zone → Zone
 -- | ⟨skolems, assums, t⟩ =>
@@ -1739,13 +1752,15 @@ mutual
     let nested_zones ← (Function.Typing.Static.compute Θ Δ Γ [] f)
     -- Lean.logInfo ("<<< Nested Zones >>>\n" ++ (repr nested_zones))
     let zones := (nested_zones.flatten)
-    if zones.length == 1 then
-      return zones.map (fun ⟨Θ', Δ', t⟩ =>
-        ⟨Θ' ++ Θ, Δ' ++ Δ, t⟩
-      )
-    else
-      let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
-      return [⟨Θ, Δ, t⟩]
+    let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
+    return [⟨Θ, Δ, t⟩]
+    -- if zones.length == 1 then
+    --   return zones.map (fun ⟨Θ', Δ', t⟩ =>
+    --     ⟨Θ' ++ Θ, Δ' ++ Δ, t⟩
+    --   )
+    -- else
+    --   let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
+    --   return [⟨Θ, Δ, t⟩]
 
 
   | .app ef ea => do
@@ -1754,7 +1769,7 @@ mutual
     (← Expr.Typing.Static.compute Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
     (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ =>
       return [
-        ⟨Θ''', Δ''', (Typ.try_interpret [] Δ''' α)⟩
+        ⟨Θ''', Δ''', (Typ.try_interpret_new .true Δ''' (.var α))⟩
       ]
     )))
 
@@ -1769,7 +1784,10 @@ mutual
       -- NOTE: we expect the body of each zone to be a Typ.path
       let zones : List Zone :=
         (← Subtyping.Static.solve Θ Δ t (.path (.var id) (.path (.var id_antec) (.var id_consq)))).map (
-          fun (Θ', Δ') => ⟨List.diff Θ' Θ, List.diff Δ' Δ, (.path (.var id_antec) (.var id_consq))⟩
+          fun (Θ', Δ') => ⟨List.diff Θ' Θ, List.diff Δ' Δ, (.path
+            (Typ.try_interpret_new .false Δ' (.var id_antec))
+            (Typ.try_interpret_new .true Δ' (.var id_consq))
+          )⟩
         )
       -- Lean.logInfo ("<<< ID >>>\n" ++ id)
       -- Lean.logInfo ("<<< BEFORE TIDY >>>\n" ++ (repr zones))
@@ -1832,16 +1850,35 @@ end
   ]
 
 -------------------------
----- NOTE : weakening of function type
----- this could be better
----- TODO: need a safe way to prune during application
+---- NOTE: packaged constraint
+---- this requires a new mechanism to solve constraints with foreign variables inside of ALL type
+---- this mechanism would be run the application result,
+---- since that is where constraints on foreign constraints could be added
+---- it should check if the result is an interseciont, and if so,
+---- see if there is an universal inside with constraints on foreign variables
+---- resolve the constraints under the new assumptions, and repackage
+---- infact, this procedure can be called repack
+-------------------------
+---- TODO: implement repack procedure, which depends on solve
 -------------------------
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
     def f = (
       [<nil/> => <zero/>]
-      -- [<cons/> => <succ/>]
+    ) in
+    [x => f(x)]
+  ]
+
+-------------------------
+---- NOTE: packaged constraint
+-------------------------
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def f = (
+      [<nil/> => <zero/>]
+      [<cons/> => <succ/>]
     ) in
     [x => f(x)]
   ]
@@ -2074,7 +2111,6 @@ mutual
 
   | function {skolems assums context t} f nested_zones :
     Function.Typing.Static skolems assums context [] f nested_zones →
-    -- TODO: update match procedure with case where len(zones) = 1
     ListZone.pack (ListSubtyping.free_vars assums) .true (nested_zones.flatten) = t →
     Expr.Typing.Static skolems assums context (.function f) t skolems assums
 
@@ -2083,8 +2119,7 @@ mutual
     Expr.Typing.Static skolems assums context ef tf skolems' assums' →
     Expr.Typing.Static skolems' assums' context ea ta skolems'' assums'' →
     Subtyping.Static skolems'' assums'' tf (.path ta (.var id)) skolems''' assums''' →
-    -- TODO: update to match procedure
-    -- return [⟨Θ''', Δ''', (Typ.interpret_one id .true assums''')⟩]
+    -- TODO: update to match procedure with interp and repack
     Expr.Typing.Static skolems assums context (.app ef ea) (.var id) skolems''' assums'''
 
   | loop {skolems assums context t' skolems' assums'} e t id zones zones' id_body :

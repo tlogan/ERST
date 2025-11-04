@@ -1125,18 +1125,23 @@ LFP [R] <nil> @ | <succ> R
     )
     assert bool(worlds)
 
-def test_extrusion():
-#   [expr|
-#     def f = (
-#       [<nil/> => <zero/>]
-#       -- [<cons/> => <succ/>]
-#     ) in
-#     [x => f(x)]
-#   ]
+def test_param_function_app():
     code = (f"""
 [f =>
     [x => f(x)]
 ] ([nil;@ => zero;@])
+    """)
+    print(code)
+    assert infer_typ(code)
+
+def test_param_branching_app():
+    code = (f"""
+[f =>
+    [x => f(x)]
+] (
+    [nil;@ => zero;@]
+    [cons;@ => succ;@]
+)
     """)
     print(code)
     assert infer_typ(code)
@@ -1146,7 +1151,8 @@ def test_extrusion():
 
 if __name__ == '__main__':
     pass
-    test_extrusion()
+    # test_param_function_app()
+    test_param_branching_app()
     ##########################
     # test_max()
     # test_max_app()
