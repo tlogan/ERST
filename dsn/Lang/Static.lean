@@ -635,7 +635,10 @@ def ListSubtyping.partition (pids : List String) (Θ : List String)
 | .cons (l,r) remainder =>
     let (outer, inner) := ListSubtyping.partition pids Θ remainder
     let fids := Typ.free_vars l ∪  Typ.free_vars r
-    if fids ∩ Θ ≠ [] && fids ⊆ (pids ∪ Θ) then
+    if fids ∩ Θ != [] && fids ⊆ (pids ∪ Θ) then
+      -- to be an outer constraints
+      -- must have at least one skolem variable
+      -- and all variables must either be skolem or foreign
       ((l,r) :: outer, inner)
     else
       (outer, (l,r) :: inner)
@@ -1651,6 +1654,30 @@ macro_rules
 
 #check Option.mapM
 
+  partial def Typ.repack
+    (skolems : List String) (assums : List (Typ × Typ)) :
+    Typ → Lean.MetaM Typ
+  | .inter l r => do
+    let l' ← Typ.repack skolems assums l
+    let r' ← Typ.repack skolems assums r
+    return Typ.simp (
+      .inter l' r'
+    )
+  | .exi ids_exi quals_exi (.all _ quals body) => do
+    let constraints := quals_exi ++ quals
+    let zones := (← ListSubtyping.Static.solve (ids_exi ∪ skolems) assums constraints).map (
+      fun (skolems', assums') => ⟨skolems', assums', body⟩
+    )
+    return ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones
+
+  | (.all _ quals body) => do
+    let constraints := quals
+    let zones := (← ListSubtyping.Static.solve skolems assums constraints).map (
+      fun (skolems', assums') => ⟨skolems', assums', body⟩
+    )
+    return ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones
+  | t => return t
+
 def Typ.try_extrude (lower : Typ) (antec : Typ) (consq : Typ)
 : Lean.MetaM (List (Typ × Typ) × Typ)
 := do
@@ -1767,9 +1794,21 @@ mutual
     let α ← fresh_typ_id
     (← Expr.Typing.Static.compute Θ Δ Γ ef).flatMapM (fun ⟨Θ', Δ', tf⟩ => do
     (← Expr.Typing.Static.compute Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
-    (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ =>
+    (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ => do
+
+      Lean.logInfo ("<<< APP VAR  >>>\n" ++ (repr α))
+
+      let t_interp := (Typ.try_interpret_new .true Δ''' (.var α))
+
+
+      Lean.logInfo ("<<< APP ASSUMS  >>>\n" ++ (repr Δ'''))
+
+      Lean.logInfo ("<<< APP INTERP  >>>\n" ++ (repr t_interp))
+
+      let t ← Typ.repack Θ''' Δ''' (Typ.try_interpret_new .true Δ''' (.var α))
       return [
-        ⟨Θ''', Δ''', (Typ.try_interpret_new .true Δ''' (.var α))⟩
+        ⟨Θ''', Δ''', t⟩
+        -- ⟨Θ''', Δ''', (Typ.try_interpret_new .true Δ''' (.var α))⟩
       ]
     )))
 
