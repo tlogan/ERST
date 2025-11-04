@@ -1125,11 +1125,28 @@ LFP [R] <nil> @ | <succ> R
     )
     assert bool(worlds)
 
+def test_extrusion():
+#   [expr|
+#     def f = (
+#       [<nil/> => <zero/>]
+#       -- [<cons/> => <succ/>]
+#     ) in
+#     [x => f(x)]
+#   ]
+    code = (f"""
+[f =>
+    [x => f(x)]
+] ([nil;@ => zero;@])
+    """)
+    print(code)
+    assert infer_typ(code)
+
 ###############################################################
 ###############################################################
 
 if __name__ == '__main__':
     pass
+    test_extrusion()
     ##########################
     # test_max()
     # test_max_app()
@@ -1143,7 +1160,7 @@ if __name__ == '__main__':
     # test_inf_loop()
     # test_succ_stream()
     # test_induction_even_is_nat_not_three()
-    test_succ_stream()
+    # test_succ_stream()
 
 
 #######################################################################

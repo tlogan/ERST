@@ -104,60 +104,6 @@ def Typ.combine (b : Bool) : List Typ → Typ
   else
     Typ.rator b t t'
 
-
-def Typ.interpret_one (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
-  let bds := (ListSubtyping.bounds id b Δ).eraseDups
-  if bds == [] then
-    Typ.base (not b)
-  else
-    Typ.combine (not b) bds
-
-def Typ.try_interpret (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
-  let t := interpret_one id b Δ
-  if (b == .true && t == .bot) then
-    (.var id)
-  else if (b == .false && t == .top) then
-    (.var id)
-  else
-    t
-
--- def Zone.try_prune_interpret (pids : List String) (b : Bool) : Zone → Zone
--- | ⟨skolems, assums, .var id⟩ =>
---   let t := Typ.interpret_one id b assums
---   if (b == .true && t == .bot) then
---     ⟨skolems, assums, .var id⟩
---   else if (b == .false && t == .top) then
---     ⟨skolems, assums, .var id⟩
---   else
---     let pids' := Typ.free_vars t ∪ pids
---     let assums' := ListSubtyping.prune pids' assums
---     ⟨skolems, assums', t⟩
--- | z => z
-
-
-
-
-def ListSubtyping.interpret_all (b : Bool) (Δ : List (Typ × Typ))
-: (ids : List String) → List (String × Typ)
-| .nil => []
-| .cons id ids =>
-  let i := Typ.interpret_one id b Δ
-  if not b && (Typ.toBruijn [] i) == (Typ.toBruijn [] .top) then
-    ListSubtyping.interpret_all b Δ ids
-  else if b && (Typ.toBruijn [] i) == (Typ.toBruijn [] .bot) then
-    ListSubtyping.interpret_all b Δ ids
-  else
-    (id, i) :: ListSubtyping.interpret_all b Δ ids
-
-
--- def Zone.tidy (pids : List String) : Zone → Zone
--- | ⟨Θ, Δ, t⟩ =>
---   let δ := ListSubtyping.interpret_all .true Δ (List.diff (ListPairTyp.free_vars Δ) pids)
---   let t' := Typ.sub δ t
---   let pids' := pids ∪ (Typ.free_vars t')
---   let Δ' := ListSubtyping.prune pids' Δ
---   ⟨Θ, Δ', t'⟩
-
 theorem Typ.break_false_left_size_lt {l r} :
   ListTyp.size (Typ.break false l) < Typ.size l + Typ.size r + 1
 := by sorry
@@ -203,32 +149,65 @@ mutual
     · exact Typ.break_true_right_size_lt
 end
 
--- TODO: test out the effect of interpretation in previous implementation
-def Zone.tidy (pids : List String) : Zone → Option Zone
-| ⟨skolems, assums, .path l r⟩ =>
+
+def Typ.interpret_one (id : String) (b : Bool) (Δ : List (Typ × Typ)) : Typ :=
+  let bds := (ListSubtyping.bounds id b Δ).eraseDups
+  if bds == [] then
+    Typ.base (not b)
+  else
+    Typ.combine (not b) bds
+
+def ListSubtyping.interpret_all (b : Bool) (Δ : List (Typ × Typ))
+: (ids : List String) → List (String × Typ)
+| .nil => []
+| .cons id ids =>
+  let i := Typ.interpret_one id b Δ
+  if not b && i == .top then
+    ListSubtyping.interpret_all b Δ ids
+  else if b && i == .bot then
+    ListSubtyping.interpret_all b Δ ids
+  else
+    (id, i) :: ListSubtyping.interpret_all b Δ ids
+
+
+def Typ.interpret_path (pids : List String) (assums : List (Typ × Typ)) : Typ → Typ
+| .path l r =>
   let params := Typ.free_vars l
   let δl := ListSubtyping.interpret_all .false assums (List.diff params pids)
   let δr := ListSubtyping.interpret_all .true assums
     (List.diff (List.diff (Typ.free_vars r) params) pids)
   let l' := Typ.simp (Typ.sub δl l)
   let r' := Typ.simp (Typ.sub (δl ∪ δr) r)
-  let assums' := (
-    if Typ.free_vars l' ∪ Typ.free_vars r' == [] then
-      -- assums
-      ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars (.path l' r'))) assums
-    else
-      assums
-  )
-  .some ⟨skolems, assums', .path l' r'⟩
+  .path l' r'
+| t => t
+
+def Typ.try_interpret (pids : List String) (Δ : List (Typ × Typ)) (id : String) : Typ :=
+  let t := interpret_one id .true Δ
+  if (t == .bot) then
+    (.var id)
+  else
+    Typ.interpret_path pids Δ t
+
+-- TODO: test out the effect of interpretation in previous implementation
+def Zone.tidy (pids : List String) : Zone → Option Zone
+| ⟨skolems, assums, .path l r⟩ =>
+  let t' := Typ.interpret_path pids assums (.path l r)
+  -- let assums' := (
+  --   if Typ.free_vars l' ∪ Typ.free_vars r' == [] then
+  --     ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars t')) assums
+  --   else
+  --     assums
+  -- )
+  let assums' := ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars t')) assums
+  .some ⟨skolems, assums', t'⟩
 | _ => failure
 
-def Zone.try_prune_interpret (pids : List String) (b : Bool) : Zone → Zone
-| ⟨skolems, assums, .var id⟩ =>
-  let t := (Typ.try_interpret id b assums)
-  match Zone.tidy pids ⟨skolems, assums, t⟩ with
-  | .some zone => zone
-  |.none => ⟨skolems, assums, t⟩
-| zone => zone
+-- def Zone.try_prune_interpret (pids : List String) (b : Bool) : Zone → Zone
+-- | ⟨skolems, assums, t⟩ =>
+--   let t := (Typ.try_interpret b assums t)
+--   match Zone.tidy pids ⟨skolems, assums, t⟩ with
+--   | .some zone => zone
+--   |.none => ⟨skolems, assums, t⟩
 
 
 def ListZone.tidy (pids : List String) : List Zone → Option (List Zone)
@@ -922,21 +901,6 @@ mutual
           )
         ))
 
-    | (.inter l r), t => do
-      return (
-        (← Subtyping.Static.solve skolems assums l t) ++
-        (← Subtyping.Static.solve skolems assums r t)
-      )
-
-    | (.all ids quals l), r  => do
-      let pairs : List (String × String) ← ids.mapM (fun id => do return (id, (← fresh_typ_id)))
-      let subs : List (String × Typ) := pairs.map (fun (id, id') => (id, .var id'))
-      let l' := Typ.sub subs l
-      let quals' := ListSubtyping.sub subs quals
-      (← Subtyping.Static.solve skolems assums l' r).flatMapM (fun (θ',assums') =>
-        ListSubtyping.Static.solve θ' assums' quals'
-      )
-
     | t, (.var id) => do
       if not (skolems.contains id) then
         let uppers_id := ListSubtyping.bounds id .false assums
@@ -1041,6 +1005,22 @@ mutual
       (← Subtyping.Static.solve skolems assums l r').flatMapM (fun (θ',assums') =>
         ListSubtyping.Static.solve θ' assums' quals'
       )
+
+    | (.inter l r), t => do
+      return (
+        (← Subtyping.Static.solve skolems assums l t) ++
+        (← Subtyping.Static.solve skolems assums r t)
+      )
+
+    | (.all ids quals l), r  => do
+      let pairs : List (String × String) ← ids.mapM (fun id => do return (id, (← fresh_typ_id)))
+      let subs : List (String × Typ) := pairs.map (fun (id, id') => (id, .var id'))
+      let l' := Typ.sub subs l
+      let quals' := ListSubtyping.sub subs quals
+      (← Subtyping.Static.solve skolems assums l' r).flatMapM (fun (θ',assums') =>
+        ListSubtyping.Static.solve θ' assums' quals'
+      )
+
 
 
     -- TODO: consider removing path merging. union antecedent rule should be sufficient
@@ -1658,6 +1638,18 @@ macro_rules
 
 #check Option.mapM
 
+def Typ.try_extrude (lower : Typ) (antec : Typ) (consq : Typ)
+: Lean.MetaM (List (Typ × Typ) × Typ)
+:= do
+  match lower with
+  | .var _ =>
+    let id_antec ← fresh_typ_id
+    let id_consq ← fresh_typ_id
+    let assums := [(antec, .var id_antec), (.var id_consq, consq)]
+    return (assums, .path (.var id_antec) (.var id_consq))
+  | _ =>
+    return ([], .path antec consq)
+
 mutual
   partial def Function.Typing.Static.compute
     (Θ : List String) (Δ : List (Typ × Typ)) (Γ : List (String × Typ)) (subtras : List Typ) :
@@ -1743,9 +1735,17 @@ mutual
   | .record r =>  Record.Typing.Static.compute Θ Δ Γ r
 
   | .function f => do
+    -- Lean.logInfo ("<<< assums >>>\n" ++ (repr Δ))
     let nested_zones ← (Function.Typing.Static.compute Θ Δ Γ [] f)
-    let t := ListZone.pack (ListSubtyping.free_vars Δ) .true (nested_zones.flatten)
-    return [⟨Θ, Δ, t⟩]
+    -- Lean.logInfo ("<<< Nested Zones >>>\n" ++ (repr nested_zones))
+    let zones := (nested_zones.flatten)
+    if zones.length == 1 then
+      return zones.map (fun ⟨Θ', Δ', t⟩ =>
+        ⟨Θ' ++ Θ, Δ' ++ Δ, t⟩
+      )
+    else
+      let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
+      return [⟨Θ, Δ, t⟩]
 
 
   | .app ef ea => do
@@ -1754,30 +1754,22 @@ mutual
     (← Expr.Typing.Static.compute Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
     (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ =>
       return [
-        Zone.try_prune_interpret (ListSubtyping.free_vars Δ'') .true ⟨Θ''', Δ''', .var α ⟩
+        ⟨Θ''', Δ''', (Typ.try_interpret [] Δ''' α)⟩
       ]
-      -- return [⟨Θ''', Δ''', (.var α)⟩]
-      -- return [
-      --   Zone.try_prune_interpret (ListSubtyping.free_vars Δ'') .true ⟨Θ''', Δ''', (.var α)⟩
-      -- ]
-      -- with
-      -- | .some zone => return [zone]
-      -- | .none => failure
-      -- let pids := ListSubtyping.free_vars Δ''
-      -- return [⟨Θ''', ListSubtyping.prune pids  Δ''', (Typ.try_interpret α .true Δ''')⟩]
     )))
 
   | .loop e => do
     let id ← fresh_typ_id
     (← Expr.Typing.Static.compute Θ Δ Γ e).flatMapM (fun ⟨Θ', Δ', t⟩ => do
-      let id_body ← fresh_typ_id
+      let id_antec ← fresh_typ_id
+      let id_consq ← fresh_typ_id
 
       -- Lean.logInfo ("<<< INPUT t >>>\n" ++ (repr t))
 
       -- NOTE: we expect the body of each zone to be a Typ.path
       let zones : List Zone :=
-        (← Subtyping.Static.solve Θ Δ t (.path (.var id) (.var id_body))).map (
-          fun (Θ', Δ') => ⟨List.diff Θ' Θ, List.diff Δ' Δ, (Typ.interpret_one id_body .true Δ')⟩
+        (← Subtyping.Static.solve Θ Δ t (.path (.var id) (.path (.var id_antec) (.var id_consq)))).map (
+          fun (Θ', Δ') => ⟨List.diff Θ' Θ, List.diff Δ' Δ, (.path (.var id_antec) (.var id_consq))⟩
         )
       -- Lean.logInfo ("<<< ID >>>\n" ++ id)
       -- Lean.logInfo ("<<< BEFORE TIDY >>>\n" ++ (repr zones))
@@ -1815,7 +1807,6 @@ end
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
-    -- Even -> Even
     [ x =>
       (
         [<zero/> => <uno/>]
@@ -1829,11 +1820,39 @@ end
     ]
   ]
 
+
 -- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
-    -- Even -> Even
+    [f => f ](
+      [<nil/> => <zero/>]
+      [<cons/> => <succ/>]
+    )
+  ]
+
+-------------------------
+---- NOTE : weakening of function type
+---- this could be better
+---- TODO: need a safe way to prune during application
+-------------------------
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def f = (
+      [<nil/> => <zero/>]
+      -- [<cons/> => <succ/>]
+    ) in
+    [x => f(x)]
+  ]
+
+-- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
+-- TODO: should be an intersection, not a union of cases
+-- ERROR: result type is dissconnected from constraint
+-- ERROR: pruning unsafe
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
     def f = (
       [<nil/> => <zero/>]
       [<cons/> => <succ/>]
@@ -1849,7 +1868,25 @@ end
 --------------------------------
 --------------------------------
 
--- RESULT: Even -> Uno
+
+#eval ListSubtyping.invert "T175" [
+      -- ([typ| T180 ], [typ| T181 -> T182 ]),
+      ([typ| T175 ], [typ| T181 -> T182 ]),
+      -- ([typ| <cons> T181 -> <succ> T182 ], [typ| T179 ]),
+      -- ([typ| T175 ], [typ| T180 ])
+]
+
+-- TODO: need a more precise pruning strategy in Zone.tidy
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    loop ([self =>
+      [<nil/> => <zero/>]
+      [<cons> n => <succ> (self(n)) ]
+    ])
+  ]
+
+-- RESULT: Even -> Uno | Dos
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
@@ -1862,7 +1899,6 @@ end
       [<zero/> => <uno/>]
       [<succ> n => <dos/> ]
     ) in
-    -- Even -> Uno
     [x => g(f(x))]
   ]
 
@@ -2038,6 +2074,7 @@ mutual
 
   | function {skolems assums context t} f nested_zones :
     Function.Typing.Static skolems assums context [] f nested_zones →
+    -- TODO: update match procedure with case where len(zones) = 1
     ListZone.pack (ListSubtyping.free_vars assums) .true (nested_zones.flatten) = t →
     Expr.Typing.Static skolems assums context (.function f) t skolems assums
 
@@ -2046,10 +2083,14 @@ mutual
     Expr.Typing.Static skolems assums context ef tf skolems' assums' →
     Expr.Typing.Static skolems' assums' context ea ta skolems'' assums'' →
     Subtyping.Static skolems'' assums'' tf (.path ta (.var id)) skolems''' assums''' →
+    -- TODO: update to match procedure
     -- return [⟨Θ''', Δ''', (Typ.interpret_one id .true assums''')⟩]
     Expr.Typing.Static skolems assums context (.app ef ea) (.var id) skolems''' assums'''
 
   | loop {skolems assums context t' skolems' assums'} e t id zones zones' id_body :
+    -- TODO: update to match procedure
+    -- let id_antec ← fresh_typ_id
+    -- let id_consq ← fresh_typ_id
     Expr.Typing.Static skolems assums context e t skolems' assums' →
     (∀ {skolems'' assums'' t''},
       ⟨skolems'', assums'', t''⟩ ∈ zones →
