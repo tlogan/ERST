@@ -1716,35 +1716,111 @@ macro_rules
 
 #check Option.mapM
 
-  partial def Typ.repack
-    (skolems : List String) (assums : List (Typ × Typ)) :
-    Typ → Lean.MetaM Typ
-  | .inter l r => do
-    let l' ← Typ.repack skolems assums l
-    let r' ← Typ.repack skolems assums r
-    return Typ.simp (
-      .inter l' r'
-    )
-  | .exi ids_exi quals_exi (.all _ quals body) => do
-    let constraints := quals_exi ++ quals
-    let zones := (← ListSubtyping.Static.solve (ids_exi ∪ skolems) assums constraints).map (
-      fun (skolems', assums') =>
-        let (interp, id_map) := Typ.try_interpret_path_var skolems' assums' body
-        let assums'' := ListSubtyping.remove_by_bounds id_map assums'
-        ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, interp⟩
-    )
-    return ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones
+partial def Typ.repack
+  (skolems : List String) (assums : List (Typ × Typ)) :
+  Typ → Lean.MetaM Typ
+| .inter l r => do
+  let l' ← Typ.repack skolems assums l
+  let r' ← Typ.repack skolems assums r
+  return Typ.simp (
+    .inter l' r'
+  )
+| .exi ids_exi quals_exi (.all _ quals body) => do
+  let constraints := quals_exi ++ quals
+  let zones := (← ListSubtyping.Static.solve (ids_exi ∪ skolems) assums constraints).map (
+    fun (skolems', assums') =>
+      let (interp, id_map) := Typ.try_interpret_path_var skolems' assums' body
+      let assums'' := ListSubtyping.remove_by_bounds id_map assums'
+      ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, interp⟩
+  )
+  return ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones
 
-  | (.all _ quals body) => do
-    let constraints := quals
-    let zones := (← ListSubtyping.Static.solve skolems assums constraints).map (
-      fun (skolems', assums') =>
-        let (interp, id_map) := Typ.try_interpret_path_var skolems' assums' body
-        let assums'' := ListSubtyping.remove_by_bounds id_map assums'
-        ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, interp⟩
+| (.all _ quals body) => do
+  let constraints := quals
+  let zones := (← ListSubtyping.Static.solve skolems assums constraints).map (
+    fun (skolems', assums') =>
+      let (interp, id_map) := Typ.try_interpret_path_var skolems' assums' body
+      let assums'' := ListSubtyping.remove_by_bounds id_map assums'
+      ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, interp⟩
+  )
+  return ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones
+| t => return t
+
+
+
+def flip_bool_map : List (String × Bool) → List (String × Bool)
+| [] => []
+| (id, b) :: m => (id, not b) :: m
+
+-- | .path (.var idl) (.var idr) =>
+--   let (l', id_map_l) := Typ.try_interpret_new .false skolems assums idl
+--   let (r', id_map_r) := Typ.try_interpret_new .true skolems assums idr
+--   (.path l' r', id_map_l ++ id_map_r)
+-- NOTE: if interpretation happens any (at least one) of the branches, then it can be removed
+
+
+mutual
+  partial def ListZone.interpret (ignore : List String) (b : Bool) (body : Typ)
+  : List ((List String) × (List (Typ × Typ))) → Lean.MetaM (List Zone × List (String × Bool))
+  | [] => return ([], [])
+  | (skolems, assums) :: rest => do
+    let (rest', id_map_rest) ← ListZone.interpret ignore b body rest
+    let (interp, id_map) ← Typ.interpret ignore skolems assums body b
+    return (⟨skolems, assums, interp⟩ :: rest', (id_map ++ id_map_rest))
+
+  partial def Typ.interpret (ignore : List String) (skolems : List String) (assums : List (Typ × Typ)) :
+    Typ → Bool → Lean.MetaM (Typ × List (String × Bool))
+  | .var id, b => do
+    if ignore.contains id then
+      return (.var id, [])
+    else
+      return Typ.try_interpret_new b skolems assums id
+  | .entry label body, b => do
+    let (body', idm_body) ← Typ.interpret ignore skolems assums body b
+    return (.entry label body', idm_body)
+
+  | .inter l r, b => do
+    let (l', idm_l) ← Typ.interpret ignore skolems assums l b
+    let (r', idm_r) ← Typ.interpret ignore skolems assums r b
+    return (Typ.simp (Typ.inter l' r'), idm_l ∪ idm_r)
+
+  | .unio l r, b => do
+    let (l', idm_l) ← Typ.interpret ignore skolems assums l b
+    let (r', idm_r) ← Typ.interpret ignore skolems assums r b
+    return (Typ.simp (Typ.unio l' r'), idm_l ∪ idm_r)
+
+  | .path antec consq, b => do
+    let (antec', idm_antec) ← Typ.interpret ignore skolems assums antec b
+    let (consq', idm_consq) ← Typ.interpret ignore skolems assums consq b
+    return (Typ.simp (Typ.path antec' consq'), (flip_bool_map idm_antec) ∪ idm_consq)
+
+  | .exi ids_exi quals_exi (.all _ quals body), .true => do
+    let constraints := quals_exi ++ quals
+    let (zones_full, id_map) ← ListZone.interpret ignore .true body
+      (← ListSubtyping.Static.solve (ids_exi ∪ skolems) assums constraints)
+
+    let zones_trim : List Zone := zones_full.map (fun ⟨skolems', assums', body'⟩ =>
+      let assums'' := ListSubtyping.remove_by_bounds id_map assums'
+      ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, body'⟩
     )
-    return ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones
-  | t => return t
+
+    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_trim
+    return (t, id_map)
+
+  -- | (.all _ quals body) => do
+  --   let constraints := quals
+  --   let zones := (← ListSubtyping.Static.solve skolems assums constraints).map (
+  --     fun (skolems', assums') =>
+  --       let (interp, id_map) := Typ.try_interpret_path_var skolems' assums' body
+  --       let assums'' := ListSubtyping.remove_by_bounds id_map assums'
+  --       ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, interp⟩
+  --   )
+  --   return ⟨skolems, assums,
+  --     ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones
+  --   ⟩
+  | t, _ => return (t, [])
+end
+
 
 def Typ.try_extrude (lower : Typ) (antec : Typ) (consq : Typ)
 : Lean.MetaM (List (Typ × Typ) × Typ)
@@ -1954,6 +2030,13 @@ end
 
 -------------------------
 ---- NOTE: repacks packaged constraints
+---- TODO: once we do the application, it's safe to remove interpreted variables
+---- that were generated from applying the function
+---- perhaps it's always safe to remove constraints on interpreted variables
+---- whether global or local
+---- TODO: generalize repack into a type interpreation that depends on solve
+---- Should take a Zone as input and return a Zone
+---- Both the assumptions and type should be simplified
 -------------------------
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
@@ -1961,23 +2044,8 @@ end
     def f = (
       [<nil/> => <zero/>]
     ) in
-    [x => f(x)]
+    ([x => f(x)], f)
   ]
-
-
-#eval ListSubtyping.Static.solve [] [
-  ([typ| ALL[T720 T721] [ (T722 <: T720 -> T721) (T720 <: TOP) ] T720 -> T721 ], [typ| T718 ]),
-  ([typ| <nil/> -> <zero/> ], [typ| T722 ])
-] [subtypings|
- (T722 <: T720 -> T721)
-]
-
-#eval  [subtypings|
-  (T722 <: T720 -> T721)
-  (<zero/> <: T721)
-  (T720 <: <nil/>)
-  (ALL[T720 T721] [ (T722 <: T720 -> T721) (T720 <: TOP) ] T720 -> T721 <: T718) (<nil/> -> <zero/> <: T722)
-]
 
 -------------------------
 ---- NOTE: packaged constraint
