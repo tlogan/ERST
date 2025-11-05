@@ -1013,7 +1013,7 @@ syntax typ typs : typs
 
 
 syntax "<" ident "/>" : frame
-syntax "<" ident "/>" frame : frame
+-- syntax "<" ident "/>" frame : frame
 syntax "<" ident ">" pat : frame
 syntax "<" ident ">" pat frame : frame
 
@@ -1024,9 +1024,8 @@ syntax ident ";" pat : pat
 syntax "(" pat ")" : pat
 syntax:60 pat:61 "," pat:60 :pat
 
-
 syntax "<" ident "/>" : record
-syntax "<" ident "/>" record : record
+-- syntax "<" ident "/>" record : record
 syntax "<" ident ">" expr : record
 syntax "<" ident ">" expr record : record
 
@@ -1198,7 +1197,6 @@ macro_rules
 
 macro_rules
 | `([frame| <$i:ident/> ]) => `(([id| $i], [pattern| @]) :: [])
-| `([frame| <$i:ident/> $pr:frame ]) => `(([id| $i], [pattern| @]) :: [frame| $pr])
 | `([frame| <$i:ident> $p:pat ]) => `(([id| $i], [pattern| $p]) :: [])
 | `([frame| <$i:ident> $p:pat $pr:frame ]) => `(([id| $i], [pattern| $p]) :: [frame| $pr])
 
@@ -1211,7 +1209,6 @@ macro_rules
 
 macro_rules
 | `([record| <$i:ident/> ]) => `(([id| $i], [expr| @]) :: [])
-| `([record| <$i:ident/> $er:record ]) => `(([id| $i], [expr| @]) :: [record| $er])
 | `([record| <$i:ident> $e:expr ]) => `(([id| $i], [expr| $e]) :: [])
 | `([record| <$i:ident> $e:expr $er:record ]) => `(([id| $i], [expr| $e]) :: [record| $er])
 
