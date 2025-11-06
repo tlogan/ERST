@@ -1929,10 +1929,35 @@ mutual
       let id_antec ← fresh_typ_id
       let id_consq ← fresh_typ_id
 
+      -----------------------------------------------------
+      ---- NEW
+      -----------------------------------------------------
+      -- let body := Typ.path (.var id) (.path (.var id_antec) (.var id_consq))
+      -- let zones := (
+      --   ← Subtyping.Static.solve Θ Δ t body
+      -- ).map (fun (skolems, assums) => Zone.mk skolems assums body)
+
+      -- let (zones_full, id_map) ← ListZone.interpret .true zones
+
+      -- let zones_local : List Zone := zones_full.map (fun ⟨skolems', assums', body'⟩ =>
+      --   ⟨List.mdiff skolems' Θ', List.mdiff assums' Δ', body'⟩
+      -- )
+
+      -- Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
+
+      -- let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_local
+
+      -- let Δ'' := ListSubtyping.remove_by_bounds id_map Δ'
+      -- return [⟨Θ', Δ'', t'⟩]
+
+      -----------------------------------------------------
+      -----------------------------------------------------
+      -----------------------------------------------------
+
       ----------------------------------------------------------------
       ---- TODO: update with ZONE interpret
       ----------------------------------------------------------------
-      -- let zones : List Zone ← (
+      -- let zones_test : List Zone ← (
       --   ← Subtyping.Static.solve Θ Δ t (.path (.var id) (.path (.var id_antec) (.var id_consq)))
       -- ).mapM (fun (Θ', Δ') => do
       --   let (zone, id_map) ← (Zone.interpret .true
@@ -1941,12 +1966,16 @@ mutual
       --   return zone
       -- )
 
+      -- Lean.logInfo ("<<< ZONES TEST >>>\n" ++ (repr zones_test))
+
       -- let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones
       -- -- Lean.logInfo ("<<< t' >>>\n" ++ (repr t'))
       -- return [⟨Θ', Δ', t'⟩]
       ----------------------------------------------------------------
 
       -- Lean.logInfo ("<<< INPUT t >>>\n" ++ (repr t))
+
+      -- Lean.logInfo ("<<< ID >>>\n" ++ id)
 
       -- NOTE: we expect the body of each zone to be a Typ.path
       let zones : List Zone :=
@@ -1958,6 +1987,8 @@ mutual
         )
       -- Lean.logInfo ("<<< ID >>>\n" ++ id)
       -- Lean.logInfo ("<<< BEFORE TIDY >>>\n" ++ (repr zones))
+
+      -- Lean.logInfo ("<<< ZONES ORIG >>>\n" ++ (repr zones))
 
       match (ListZone.tidy (id :: (ListSubtyping.free_vars Δ)) zones) with
       | .some zones' =>
