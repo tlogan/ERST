@@ -211,7 +211,8 @@ def Subtyping.removable_upper (id_map : List (String × Bool)) : Typ → Bool
   | _,_ => .false
 | _ => .false
 
-def ListSubtyping.remove_by_bounds (id_map : List (String × Bool)) : List (Typ × Typ) → List (Typ × Typ)
+def ListSubtyping.remove_by_bounds
+  (id_map : List (String × Bool)) : List (Typ × Typ) → List (Typ × Typ)
 | [] => []
 | (lower, upper) :: cs =>
   if (
@@ -222,23 +223,6 @@ def ListSubtyping.remove_by_bounds (id_map : List (String × Bool)) : List (Typ 
   else
     (lower, upper) :: ListSubtyping.remove_by_bounds id_map cs
 
--- def ListSubtyping.remove_by_bound (id : String) : Bool → List (Typ × Typ) → List (Typ × Typ)
--- | .false, [] => []
--- | .false, (.var id', t) :: cs =>
---     if id == id' then
---       ListSubtyping.remove_by_bound id .false cs
---     else
---       (.var id', t) :: (ListSubtyping.remove_by_bound id .false cs)
--- | .false, c :: cs =>
---       c :: (ListSubtyping.remove_by_bound id .false cs)
--- | .true, [] => []
--- | .true, (t, .var id') :: cs =>
---     if id == id' then
---       ListSubtyping.remove_by_bound id .true cs
---     else
---       (t, .var id') :: (ListSubtyping.remove_by_bound id .true cs)
--- | .true, c :: cs =>
---       c :: (ListSubtyping.remove_by_bound id .true cs)
 
 def Typ.try_interpret_new
   (b : Bool) (skolems : List String) (assums : List (Typ × Typ)) (id : String)
@@ -260,29 +244,11 @@ def Typ.try_interpret_path_var (skolems : List String) (assums : List (Typ × Ty
 
 -- TODO: test out the effect of interpretation in previous implementation
 def Zone.tidy (pids : List String) : Zone → Option Zone
--- | ⟨skolems, assums, .path l r⟩ =>
---   let t' := Typ.interpret_path pids assums (.path l r)
---   -- let assums' := (
---   --   if Typ.free_vars l' ∪ Typ.free_vars r' == [] then
---   --     ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars t')) assums
---   --   else
---   --     assums
---   -- )
---   let assums' := ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars t')) assums
---   .some ⟨skolems, assums', t'⟩
-| ⟨skolems, assums, t⟩ =>
-  -- let assums' := ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars t)) assums
-  let assums' := assums
-  .some ⟨skolems, assums', t⟩
--- | _ => failure
-
--- def Zone.try_prune_interpret (pids : List String) (b : Bool) : Zone → Zone
--- | ⟨skolems, assums, t⟩ =>
---   let t := (Typ.try_interpret b assums t)
---   match Zone.tidy pids ⟨skolems, assums, t⟩ with
---   | .some zone => zone
---   |.none => ⟨skolems, assums, t⟩
-
+| ⟨skolems, assums, .path l r⟩ =>
+  let t' := Typ.interpret_path pids assums (.path l r)
+  let assums' := ListSubtyping.prune (pids ∪ skolems ∪ (Typ.free_vars t')) assums
+  .some ⟨skolems, assums', t'⟩
+| _ => failure
 
 def ListZone.tidy (pids : List String) : List Zone → Option (List Zone)
 | .nil => .some []
@@ -310,17 +276,6 @@ def ListZone.invert (id : String) : List Zone → Option (List Zone)
     return ⟨Θ, Δ', .pair l r⟩ :: zones'
 | _ => failure
 
-
--- def ListSubtyping.flows_into (id : String) : List (Typ × Typ) → Option (List Typ)
--- | .nil => return []
--- | .cons (l,r) sts =>
---   if (r == .var id) then do
---     let ls ← ListSubtyping.flows_into id sts
---     return l::ls
---   else
---     failure
-
--- ListSubtyping.flows_into id quals = .some cases →
 
 
 mutual
@@ -1717,38 +1672,6 @@ macro_rules
 
 #check Option.mapM
 
-partial def Typ.repack
-  (skolems : List String) (assums : List (Typ × Typ)) :
-  Typ → Lean.MetaM Typ
-| .inter l r => do
-  let l' ← Typ.repack skolems assums l
-  let r' ← Typ.repack skolems assums r
-  return Typ.simp (
-    .inter l' r'
-  )
-| .exi ids_exi quals_exi (.all _ quals body) => do
-  let constraints := quals_exi ++ quals
-  let zones := (← ListSubtyping.Static.solve (ids_exi ∪ skolems) assums constraints).map (
-    fun (skolems', assums') =>
-      let (interp, id_map) := Typ.try_interpret_path_var skolems' assums' body
-      let assums'' := ListSubtyping.remove_by_bounds id_map assums'
-      ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, interp⟩
-  )
-  return ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones
-
-| (.all _ quals body) => do
-  let constraints := quals
-  let zones := (← ListSubtyping.Static.solve skolems assums constraints).map (
-    fun (skolems', assums') =>
-      let (interp, id_map) := Typ.try_interpret_path_var skolems' assums' body
-      let assums'' := ListSubtyping.remove_by_bounds id_map assums'
-      ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, interp⟩
-  )
-  return ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones
-| t => return t
-
-
-
 mutual
 
   partial def Zone.interpret (b : Bool) : Zone → Lean.MetaM (Zone × List (String × Bool))
@@ -1757,8 +1680,8 @@ mutual
     let assums' := ListSubtyping.remove_by_bounds id_map assums
     return (⟨skolems, assums', t'⟩, id_map)
 
-
-  partial def ListZone.interpret (b : Bool) : List Zone → Lean.MetaM (List Zone × List (String × Bool))
+  partial def ListZone.interpret (b : Bool)
+  : List Zone → Lean.MetaM (List Zone × List (String × Bool))
   | .nil => return ([], [])
   | .cons zone zones => do
     let (z, id_map) ← (Zone.interpret b zone)
@@ -2006,6 +1929,23 @@ mutual
       let id_antec ← fresh_typ_id
       let id_consq ← fresh_typ_id
 
+      ----------------------------------------------------------------
+      ---- TODO: update with ZONE interpret
+      ----------------------------------------------------------------
+      -- let zones : List Zone ← (
+      --   ← Subtyping.Static.solve Θ Δ t (.path (.var id) (.path (.var id_antec) (.var id_consq)))
+      -- ).mapM (fun (Θ', Δ') => do
+      --   let (zone, id_map) ← (Zone.interpret .true
+      --     ⟨List.diff Θ' Θ, List.diff Δ' Δ,(Typ.path (.var id_antec) (.var id_consq))⟩
+      --   )
+      --   return zone
+      -- )
+
+      -- let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones
+      -- -- Lean.logInfo ("<<< t' >>>\n" ++ (repr t'))
+      -- return [⟨Θ', Δ', t'⟩]
+      ----------------------------------------------------------------
+
       -- Lean.logInfo ("<<< INPUT t >>>\n" ++ (repr t))
 
       -- NOTE: we expect the body of each zone to be a Typ.path
@@ -2029,7 +1969,10 @@ mutual
         return [⟨Θ', Δ', t'⟩]
       | .none =>
         failure
+      ----------------------------------------------------------------
+      ----------------------------------------------------------------
     )
+
 
   | .anno e ta =>
     if Typ.free_vars ta == [] then do
