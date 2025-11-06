@@ -291,6 +291,7 @@ def ListZone.tidy (pids : List String) : List Zone → Option (List Zone)
     let zs ← (ListZone.tidy pids zones)
     return z :: zs
 
+
 def ListSubtyping.invert (id : String) : List (Typ × Typ) → Option (List (Typ × Typ))
 | .nil => return []
 | .cons (.var id', .path l r) sts =>
@@ -1749,15 +1750,21 @@ partial def Typ.repack
 
 
 mutual
-  partial def ListZone.interpret (ignore : List String) (b : Bool) (body : Typ)
-  : List ((List String) × (List (Typ × Typ))) → Lean.MetaM (List Zone × List (String × Bool))
-  | [] => return ([], [])
-  | (skolems, assums) :: rest => do
 
-    -- TODO: might need to call it n times
-    let (rest', id_map_rest) ← ListZone.interpret ignore b body rest
-    let (interp, id_map) ← Typ.interpret ignore skolems assums body b
-    return (⟨skolems, assums, interp⟩ :: rest', (id_map ++ id_map_rest))
+  partial def Zone.interpret (b : Bool) : Zone → Lean.MetaM (Zone × List (String × Bool))
+  | ⟨skolems, assums, t⟩ => do
+    let (t', id_map) ← Typ.repeat_interpret [] skolems assums t b 3
+    let assums' := ListSubtyping.remove_by_bounds id_map assums
+    return (⟨skolems, assums', t'⟩, id_map)
+
+
+  partial def ListZone.interpret (b : Bool) : List Zone → Lean.MetaM (List Zone × List (String × Bool))
+  | .nil => return ([], [])
+  | .cons zone zones => do
+    let (z, id_map) ← (Zone.interpret b zone)
+    let (zs, id_map') ← (ListZone.interpret b zones)
+    return (z :: zs, id_map ∪ id_map')
+
 
   partial def Typ.repeat_interpret
     (ignore : List String) (skolems : List String) (assums : List (Typ × Typ))
@@ -1783,7 +1790,10 @@ mutual
         return (.var id, [])
       else
         let t := Typ.combine (not b) bds
-        return (t, [(id, b)])
+        if (t == .bot || t == .top) then
+          return (.var id, [])
+        else
+          return (t, [(id, b)])
 
 
   | .entry label body, b => do
@@ -1802,65 +1812,76 @@ mutual
 
   | .path antec consq, b => do
     let (antec', idm_antec) ← Typ.interpret ignore skolems assums antec (not b)
-    let (consq', idm_consq) ← Typ.interpret ignore skolems assums consq b
+    let ignore' := (Typ.free_vars antec' ∩ Typ.free_vars consq) ∪ ignore
+    let (consq', idm_consq) ← Typ.interpret ignore' skolems assums consq b
     return (Typ.simp (Typ.path antec' consq'), idm_antec ∪ idm_consq)
 
   | .exi ids_exi quals_exi (.all _ quals body), .true => do
     let constraints := quals_exi ++ quals
-    let (zones_full, id_map) ← ListZone.interpret ignore .true body
-      (← ListSubtyping.Static.solve (ids_exi ∪ skolems) assums constraints)
+    let zones := (
+      ← ListSubtyping.Static.solve (ids_exi ∪ skolems) assums constraints
+    ).map (fun (skolems, assums) => Zone.mk skolems assums body)
 
-    let zones_trim : List Zone := zones_full.map (fun ⟨skolems', assums', body'⟩ =>
-      let assums'' := ListSubtyping.remove_by_bounds id_map assums'
-      ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, body'⟩
+    let (zones_full, id_map) ← ListZone.interpret .true zones
+
+    let zones_local : List Zone := zones_full.map (fun ⟨skolems', assums', body'⟩ =>
+      ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
     )
 
-    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_trim
+    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_local
     return (t, id_map)
 
   | (.all _ quals body), .true => do
     let constraints := quals
+    let zones := (
+      ← ListSubtyping.Static.solve skolems assums constraints
+    ).map (fun (skolems, assums) => Zone.mk skolems assums body)
 
-    let (zones_full, id_map) ← ListZone.interpret ignore .true body
-      (← ListSubtyping.Static.solve skolems assums constraints)
+    let (zones_full, id_map) ← ListZone.interpret .true zones
 
-    let zones_trim : List Zone := zones_full.map (fun ⟨skolems', assums', body'⟩ =>
-      let assums'' := ListSubtyping.remove_by_bounds id_map assums'
-      ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, body'⟩
+    let zones_local : List Zone := zones_full.map (fun ⟨skolems', assums', body'⟩ =>
+      ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
     )
 
-    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_trim
+    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_local
     return (t, id_map)
 
   | .all ids_all quals_all (.exi _ quals body), .false => do
     let constraints := quals_all ++ quals
-    let (zones_full, id_map) ← ListZone.interpret ignore .false body
-      (← ListSubtyping.Static.solve (ids_all ∪ skolems) assums constraints)
+    let zones := (
+      ← ListSubtyping.Static.solve (ids_all ∪ skolems) assums constraints
+    ).map (fun (skolems, assums) => Zone.mk skolems assums body)
 
-    let zones_trim : List Zone := zones_full.map (fun ⟨skolems', assums', body'⟩ =>
-      let assums'' := ListSubtyping.remove_by_bounds id_map assums'
-      ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, body'⟩
+    let (zones_full, id_map) ← ListZone.interpret .false zones
+
+    let zones_local : List Zone := zones_full.map (fun ⟨skolems', assums', body'⟩ =>
+      ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
     )
 
-    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_trim
+    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_local
     return (t, id_map)
 
   | (.exi _ quals body), .false => do
     let constraints := quals
-    let (zones_full, id_map) ← ListZone.interpret ignore .false body
-      (← ListSubtyping.Static.solve skolems assums constraints)
+    let zones := (
+      ← ListSubtyping.Static.solve skolems assums constraints
+    ).map (fun (skolems, assums) => Zone.mk skolems assums body)
 
-    let zones_trim : List Zone := zones_full.map (fun ⟨skolems', assums', body'⟩ =>
-      let assums'' := ListSubtyping.remove_by_bounds id_map assums'
-      ⟨List.mdiff skolems' skolems, List.mdiff assums'' assums, body'⟩
+    let (zones_full, id_map) ← ListZone.interpret .false zones
+
+    let zones_local : List Zone := zones_full.map (fun ⟨skolems', assums', body'⟩ =>
+      ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
     )
 
-    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_trim
+    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_local
     return (t, id_map)
 
   | t, _ => do
     return (t, [])
 end
+
+
+
 
 
 def Typ.try_extrude (lower : Typ) (antec : Typ) (consq : Typ)
@@ -1885,12 +1906,11 @@ mutual
     let (tp, Δ', Γ') ←  PatLifting.Static.compute Δ Γ p
     let nested_zones ← Function.Typing.Static.compute Θ Δ Γ (tp::subtras) f
     let tl := ListTyp.diff tp subtras
-    let zones := (← Expr.Typing.Static.compute Θ Δ' Γ' e).map (fun ⟨Θ', Δ'', tr ⟩ =>
-      ⟨List.diff Θ' Θ, List.diff Δ'' Δ, (.path tl tr)⟩ )
-    match ListZone.tidy (ListSubtyping.free_vars Δ) zones with
-    -- match Option.some zones with
-    | .some zones_tidy => return zones_tidy :: nested_zones
-    | .none => failure
+    let zones ← (← Expr.Typing.Static.compute Θ Δ' Γ' e).mapM (fun ⟨Θ', Δ'', tr ⟩ => do
+      let (zone, _) ← Zone.interpret .true ⟨List.diff Θ' Θ, List.diff Δ'' Δ, (.path tl tr)⟩
+      return zone
+    )
+    return zones :: nested_zones
 
 
   partial def ListZone.Typing.Static.compute
@@ -1966,14 +1986,6 @@ mutual
     let zones := (nested_zones.flatten)
     let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
     return [⟨Θ, Δ, t⟩]
-    -- if zones.length == 1 then
-    --   return zones.map (fun ⟨Θ', Δ', t⟩ =>
-    --     ⟨Θ' ++ Θ, Δ' ++ Δ, t⟩
-    --   )
-    -- else
-    --   let t := ListZone.pack (ListSubtyping.free_vars Δ) .true zones
-    --   return [⟨Θ, Δ, t⟩]
-
 
   | .app ef ea => do
     let α ← fresh_typ_id
@@ -2092,15 +2104,13 @@ end
 
 ---------------------------------------
 
--- TODO: need to update the interpretation in function
--- TODO: need to update Zone.tidy to interpret and remove constraints
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
     [z =>
       (
         [<uno> y => y]
-        -- [<dos> y => y]
+        [<dos> y => y]
       )(z)
     ]
   ]
