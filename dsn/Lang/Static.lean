@@ -211,56 +211,56 @@ def Subtyping.removable_upper (id_map : List (String × Bool)) : Typ → Bool
   | _,_ => .false
 | _ => .false
 
-def Typ.mk_id_map (b : Bool) : Typ → Nat → List (String × Bool)
-| _, 0 => []
-| .var id, _ => [(id, b)]
-| .path l r, n + 1 =>
-  (Typ.mk_id_map (not b) l n) ∪ (Typ.mk_id_map b r n)
-| _, _ => []
+-- def Typ.mk_id_map (b : Bool) : Typ → Nat → List (String × Bool)
+-- | _, 0 => []
+-- | .var id, _ => [(id, b)]
+-- | .path l r, n + 1 =>
+--   (Typ.mk_id_map (not b) l n) ∪ (Typ.mk_id_map b r n)
+-- | _, _ => []
 
-def ListSubtyping.expand_id_map (id_map : List (String × Bool))
-: List (Typ × Typ) → List (String × Bool)
-| [] => id_map
-| (lower, upper) :: cs =>
-  let id_map' := ListSubtyping.expand_id_map id_map cs
-  if (
-    Subtyping.removable_lower id_map lower &&
-    Subtyping.removable_lower id_map upper
-  ) then
-    (Typ.mk_id_map .false upper 2) ∪ (Typ.mk_id_map .true lower 2) ∪ id_map'
-  else if (Subtyping.removable_lower id_map lower) then
-    (Typ.mk_id_map .false upper 2) ∪ id_map'
-  else if (Subtyping.removable_upper id_map upper) then
-    (Typ.mk_id_map .true lower 2) ∪ id_map'
-  else
-    id_map'
-
-def ListSubtyping.remove_by_bounds
-  (id_map : List (String × Bool)) (cs : List (Typ × Typ))
-: List (Typ × Typ) :=
-  let id_map := ListSubtyping.expand_id_map id_map cs
-  match cs with
-  | [] => []
-  | (lower, upper) :: cs' =>
-    if (
-      Subtyping.removable_lower id_map lower ||
-      Subtyping.removable_upper id_map upper
-    ) then
-      ListSubtyping.remove_by_bounds id_map cs'
-    else
-      (lower, upper) :: ListSubtyping.remove_by_bounds id_map cs'
-
--- def ListSubtyping.remove_by_bounds (id_map : List (String × Bool)) : List (Typ × Typ) →
---  List (Typ × Typ)
--- | [] => []
--- | (lower, upper) :: cs' =>
+-- def ListSubtyping.expand_id_map (id_map : List (String × Bool))
+-- : List (Typ × Typ) → List (String × Bool)
+-- | [] => id_map
+-- | (lower, upper) :: cs =>
+--   let id_map' := ListSubtyping.expand_id_map id_map cs
 --   if (
---     Subtyping.removable_lower id_map lower ||
---     Subtyping.removable_upper id_map upper
+--     Subtyping.removable_lower id_map lower &&
+--     Subtyping.removable_lower id_map upper
 --   ) then
---     ListSubtyping.remove_by_bounds id_map cs'
+--     (Typ.mk_id_map .false upper 2) ∪ (Typ.mk_id_map .true lower 2) ∪ id_map'
+--   else if (Subtyping.removable_lower id_map lower) then
+--     (Typ.mk_id_map .false upper 2) ∪ id_map'
+--   else if (Subtyping.removable_upper id_map upper) then
+--     (Typ.mk_id_map .true lower 2) ∪ id_map'
 --   else
---     (lower, upper) :: ListSubtyping.remove_by_bounds id_map cs'
+--     id_map'
+
+-- def ListSubtyping.remove_by_bounds
+--   (id_map : List (String × Bool)) (cs : List (Typ × Typ))
+-- : List (Typ × Typ) :=
+--   let id_map := ListSubtyping.expand_id_map id_map cs
+--   match cs with
+--   | [] => []
+--   | (lower, upper) :: cs' =>
+--     if (
+--       Subtyping.removable_lower id_map lower ||
+--       Subtyping.removable_upper id_map upper
+--     ) then
+--       ListSubtyping.remove_by_bounds id_map cs'
+--     else
+--       (lower, upper) :: ListSubtyping.remove_by_bounds id_map cs'
+
+def ListSubtyping.remove_by_bounds (id_map : List (String × Bool)) : List (Typ × Typ) →
+ List (Typ × Typ)
+| [] => []
+| (lower, upper) :: cs' =>
+  if (
+    Subtyping.removable_lower id_map lower ||
+    Subtyping.removable_upper id_map upper
+  ) then
+    ListSubtyping.remove_by_bounds id_map cs'
+  else
+    (lower, upper) :: ListSubtyping.remove_by_bounds id_map cs'
 
 
 def Typ.try_interpret_new
@@ -1842,9 +1842,58 @@ mutual
     return (t, [])
 end
 
+def ListSubtyping.recursion_split : List Typ → (List String) × (List Typ)
+| [] => ([], [])
+| (.var id) :: ts =>
+    let (ids, ts') := ListSubtyping.recursion_split ts
+    (id :: ids, ts')
+| t :: ts =>
+    let (ids, ts') := ListSubtyping.recursion_split ts
+    (ids, t :: ts')
+
+def List.to_option {α} : List α → Option α
+| [] => .none
+| x :: [] => .some x
+| _ => .none
+
+def ListSubtyping.remove_by_var (id :String)
+: List (Typ × Typ) → List (Typ × Typ)
+| [] => []
+| (.var idl, .var idu) :: cs =>
+  if idl == id || idu == id then
+    ListSubtyping.remove_by_var id cs
+  else
+    (.var idl, .var idu) :: ListSubtyping.remove_by_var id cs
+| (.var idl, upper) :: cs =>
+  if idl == id  then
+    ListSubtyping.remove_by_var id cs
+  else
+    (.var idl, upper) :: ListSubtyping.remove_by_var id cs
+
+| (lower, .var idu) :: cs =>
+  if idu == id then
+    ListSubtyping.remove_by_var id cs
+  else
+    (lower, .var idu) :: ListSubtyping.remove_by_var id cs
+| c :: cs =>
+    c :: ListSubtyping.remove_by_var id cs
 
 
-
+def ListSubtyping.recursion_wellformed (assums : List (Typ × Typ)) (id : String)
+: Option (List (Typ × Typ)) :=
+  let bds :=  ListSubtyping.bounds id .false assums
+  let (ids, ts) := ListSubtyping.recursion_split bds
+  let all_are_paths := ts.all (fun t =>
+    match t with
+    | Typ.path _ _ => true
+    | _ => true
+  )
+  if all_are_paths then
+    match List.to_option ids with
+    | some id => .some (ListSubtyping.remove_by_var id assums)
+    | none => .none
+  else
+    Option.none
 
 def Typ.try_extrude (lower : Typ) (antec : Typ) (consq : Typ)
 : Lean.MetaM (List (Typ × Typ) × Typ)
@@ -1973,50 +2022,27 @@ mutual
       -----------------------------------------------------
       ---- NEW
       -----------------------------------------------------
-      -- let body := (Typ.path (.var id_antec) (.var id_consq))
-      -- let zones := (
-      --   ← Subtyping.Static.solve Θ' Δ' t (Typ.path (.var id) body)
-      -- ).map (fun (skolems, assums) => Zone.mk skolems assums body)
+      let body := (Typ.path (.var id_antec) (.var id_consq))
+      let zones_local : List Zone ← (
+        ← Subtyping.Static.solve Θ' Δ' t (Typ.path (.var id) body)
+      ).flatMapM (fun (skolems'', assums'') => do
+        let zone := Zone.mk (List.mdiff skolems'' Θ) (List.mdiff assums'' Δ) body
+        let (⟨skolems''', assums''', body'⟩, _) ← Zone.interpret .true zone
 
-      -- Lean.logInfo ("<<< ZONES PLAIN >>>\n" ++ (repr zones))
+        match ListSubtyping.recursion_wellformed assums''' id with
+        | .some assums'''' =>
+          return [⟨skolems''', assums'''', body'⟩]
+        | .none => return []
+      )
 
-      -- let (zones_full, id_map) ← ListZone.interpret .true zones
+      Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
 
+      let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_local
+      return [⟨Θ', Δ', t'⟩]
 
-      -- let zones_local : List Zone := zones_full.map (fun ⟨skolems', assums', body'⟩ =>
-      --   ⟨List.mdiff skolems' Θ, List.mdiff assums' Δ, body'⟩
-      -- )
-
-      -- Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
-
-      -- let Δ'' := ListSubtyping.remove_by_bounds id_map Δ'
-
-      -- let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_local
-
-      -- let Δ'' := ListSubtyping.remove_by_bounds id_map Δ'
-      -- return [⟨Θ', Δ'', t'⟩]
 
       -----------------------------------------------------
       -----------------------------------------------------
-      -----------------------------------------------------
-
-      ----------------------------------------------------------------
-      ---- TODO: update with ZONE interpret
-      ----------------------------------------------------------------
-      -- let zones_test : List Zone ← (
-      --   ← Subtyping.Static.solve Θ Δ t (.path (.var id) (.path (.var id_antec) (.var id_consq)))
-      -- ).mapM (fun (Θ', Δ') => do
-      --   let (zone, id_map) ← (Zone.interpret .true
-      --     ⟨List.diff Θ' Θ, List.diff Δ' Δ,(Typ.path (.var id_antec) (.var id_consq))⟩
-      --   )
-      --   return zone
-      -- )
-
-      -- Lean.logInfo ("<<< ZONES TEST >>>\n" ++ (repr zones_test))
-
-      -- let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones
-      -- -- Lean.logInfo ("<<< t' >>>\n" ++ (repr t'))
-      -- return [⟨Θ', Δ', t'⟩]
       ----------------------------------------------------------------
 
       -- Lean.logInfo ("<<< INPUT t >>>\n" ++ (repr t))
@@ -2024,30 +2050,28 @@ mutual
       -- Lean.logInfo ("<<< ID >>>\n" ++ id)
 
       -- NOTE: we expect the body of each zone to be a Typ.path
-      let zones : List Zone :=
-        (← Subtyping.Static.solve Θ' Δ' t (.path (.var id) (.path (.var id_antec) (.var id_consq)))).map (
-          fun (Θ', Δ') =>
-            let (interp, id_map) := Typ.try_interpret_path_var Θ' Δ' (Typ.path (.var id_antec) (.var id_consq))
-            let Δ'' := ListSubtyping.remove_by_bounds id_map Δ'
-            ⟨List.diff Θ' Θ, List.diff Δ'' Δ, interp⟩
-        )
-      -- Lean.logInfo ("<<< ID >>>\n" ++ id)
-      Lean.logInfo ("<<< BEFORE TIDY >>>\n" ++ (repr zones))
-
+      -- let zones : List Zone :=
+      --   (← Subtyping.Static.solve Θ' Δ' t (.path (.var id) (.path (.var id_antec) (.var id_consq)))).map (
+      --     fun (Θ'', Δ'') =>
+      --       let (interp, id_map) := Typ.try_interpret_path_var Θ'' Δ'' (Typ.path (.var id_antec) (.var id_consq))
+      --       let Δ''' := ListSubtyping.remove_by_bounds id_map Δ''
+      --       ⟨List.diff Θ'' Θ, List.diff Δ''' Δ, interp⟩
+      --   )
+      -- -- Lean.logInfo ("<<< ID >>>\n" ++ id)
       -- Lean.logInfo ("<<< ZONES ORIG >>>\n" ++ (repr zones))
 
-      match (ListZone.tidy (id :: (ListSubtyping.free_vars Δ)) zones) with
-      | .some zones' =>
+      -- match (ListZone.tidy (id :: (ListSubtyping.free_vars Δ)) zones) with
+      -- | .some zones' =>
 
-        Lean.logInfo ("<<< ZONES TIDIED >>>\n" ++ (repr zones'))
-        -- Lean.logInfo ("<<< ID >>>\n" ++ id)
-        -- Lean.logInfo ("<<< BEFORE LOOP LIST ZONE >>>\n" ++ (repr zones'))
-        -- Lean.logInfo ("<<< free vars >>>\n" ++ (repr (ListSubtyping.free_vars Δ')))
-        let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones'
-        -- Lean.logInfo ("<<< t' >>>\n" ++ (repr t'))
-        return [⟨Θ', Δ', t'⟩]
-      | .none =>
-        failure
+      --   Lean.logInfo ("<<< ZONES TIDIED >>>\n" ++ (repr zones'))
+      --   -- Lean.logInfo ("<<< ID >>>\n" ++ id)
+      --   -- Lean.logInfo ("<<< BEFORE LOOP LIST ZONE >>>\n" ++ (repr zones'))
+      --   -- Lean.logInfo ("<<< free vars >>>\n" ++ (repr (ListSubtyping.free_vars Δ')))
+      --   let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones'
+      --   -- Lean.logInfo ("<<< t' >>>\n" ++ (repr t'))
+      --   return [⟨Θ', Δ', t'⟩]
+      -- | .none =>
+      --   failure
       ----------------------------------------------------------------
       ----------------------------------------------------------------
     )
@@ -2211,6 +2235,26 @@ end
       [<nil/> => <zero/>]
       [<cons> n => <succ> (self(n)) ]
     ])
+  ]
+
+-- SHOULD FAIL
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    loop ([<guard> self =>
+      [<nil/> => <zero/>]
+      [<cons> n => <succ> (self(n)) ]
+    ])
+  ]
+
+-- SHOULD FAIL
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    loop ([<guard> self => <guard> (
+      [<nil/> => <zero/>]
+      [<cons> n => <succ> (self(n)) ]
+    )])
   ]
 
 -- RESULT: Even -> Uno | Dos
