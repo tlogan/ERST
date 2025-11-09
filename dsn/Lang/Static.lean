@@ -1879,7 +1879,20 @@ def ListSubtyping.remove_by_var (id :String)
     c :: ListSubtyping.remove_by_var id cs
 
 
-def ListSubtyping.recursion_wellformed (assums : List (Typ × Typ)) (id : String)
+-- def Typ.try_extrude (lower : Typ) (antec : Typ) (consq : Typ)
+-- : Lean.MetaM (List (Typ × Typ) × Typ)
+-- := do
+--   match lower with
+--   | .var _ =>
+--     let id_antec ← fresh_typ_id
+--     let id_consq ← fresh_typ_id
+--     let assums := [(antec, .var id_antec), (.var id_consq, consq)]
+--     return (assums, .path (.var id_antec) (.var id_consq))
+--   | _ =>
+--     return ([], .path antec consq)
+
+
+def ListSubtyping.loop_normal_form (assums : List (Typ × Typ)) (id : String)
 : Option (List (Typ × Typ)) :=
   let bds :=  ListSubtyping.bounds id .false assums
   let (ids, ts) := ListSubtyping.recursion_split bds
@@ -1895,17 +1908,17 @@ def ListSubtyping.recursion_wellformed (assums : List (Typ × Typ)) (id : String
   else
     Option.none
 
-def Typ.try_extrude (lower : Typ) (antec : Typ) (consq : Typ)
-: Lean.MetaM (List (Typ × Typ) × Typ)
-:= do
-  match lower with
-  | .var _ =>
-    let id_antec ← fresh_typ_id
-    let id_consq ← fresh_typ_id
-    let assums := [(antec, .var id_antec), (.var id_consq, consq)]
-    return (assums, .path (.var id_antec) (.var id_consq))
-  | _ =>
-    return ([], .path antec consq)
+def ListZone.loop_normal_form (id : String) :
+List Zone → Lean.MetaM (List Zone)
+| [] => return []
+| zone :: zones => do
+  let (⟨skolems, assums, body⟩, _) ← Zone.interpret .true zone
+  let zones_normal ← ListZone.loop_normal_form id zones
+  match ListSubtyping.loop_normal_form assums id with
+  | .some assums' =>
+    return ⟨skolems, assums', body⟩ :: zones_normal
+  | .none => return zones_normal
+
 
 mutual
   partial def Function.Typing.Static.compute
@@ -2023,21 +2036,20 @@ mutual
       ---- NEW
       -----------------------------------------------------
       let body := (Typ.path (.var id_antec) (.var id_consq))
-      let zones_local : List Zone ← (
-        ← Subtyping.Static.solve Θ' Δ' t (Typ.path (.var id) body)
-      ).flatMapM (fun (skolems'', assums'') => do
-        let zone := Zone.mk (List.mdiff skolems'' Θ) (List.mdiff assums'' Δ) body
-        let (⟨skolems''', assums''', body'⟩, _) ← Zone.interpret .true zone
 
-        match ListSubtyping.recursion_wellformed assums''' id with
-        | .some assums'''' =>
-          return [⟨skolems''', assums'''', body'⟩]
-        | .none => return []
+      let zones_local := (
+        ← Subtyping.Static.solve Θ' Δ' t (Typ.path (.var id) body)
+      ).map (fun (skolems'', assums'') =>
+        Zone.mk (List.mdiff skolems'' Θ) (List.mdiff assums'' Δ) body
       )
 
       Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
 
-      let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_local
+      let zones_normal ← ListZone.loop_normal_form id zones_local
+
+      Lean.logInfo ("<<< ZONES NORMAL >>>\n" ++ (repr zones_normal))
+
+      let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_normal
       return [⟨Θ', Δ', t'⟩]
 
 
@@ -2226,8 +2238,7 @@ end
       -- ([typ| T175 ], [typ| T180 ])
 ]
 
--- TODO: need a more precise pruning strategy in Zone.tidy
--- perhaps, generate the id_map for bounds removal along with inversion
+-- TODO: interpret further to simplify type
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
