@@ -1292,17 +1292,17 @@ def Typ.capture (t : Typ) : Typ :=
 
 def Typ.do_diff : Typ → Typ → Typ
 
-| (.entry l body), (.entry l_subtra body_subtra) =>
-  if l != l_subtra then
-    (.entry l body)
-  else
-    (.entry l (Typ.do_diff body body_subtra))
+-- | (.entry l body), (.entry l_subtra body_subtra) =>
+--   if l != l_subtra then
+--     (.entry l body)
+--   else
+--     (.entry l (Typ.do_diff body body_subtra))
 
-| (.entry l body), (.exi _ [] (.entry l_subtra body_subtra)) =>
-  if l != l_subtra then
-    (.entry l body)
-  else
-    (.entry l (Typ.do_diff body body_subtra))
+-- | (.entry l body), (.exi _ [] (.entry l_subtra body_subtra)) =>
+--   if l != l_subtra then
+--     (.entry l body)
+--   else
+--     (.entry l (Typ.do_diff body body_subtra))
 
 | t, subtra => .diff t subtra
 

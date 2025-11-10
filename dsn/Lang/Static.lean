@@ -2021,9 +2021,9 @@ mutual
       -- return [ ⟨Θ''', Δ''', (.var α)⟩ ]
       ------------------------------------
       -- Lean.logInfo ("<<< APP TF  >>>\n" ++ (repr tf))
-      -- Lean.logInfo ("<<< APP VAR  >>>\n" ++ (repr α))
+      Lean.logInfo ("<<< APP VAR  >>>\n" ++ (repr α))
       let (t, id_map) ← Typ.repeat_interpret [] Θ''' Δ''' (.var α) .true 3
-      -- Lean.logInfo ("<<< APP RESULT  >>>\n" ++ (repr t))
+      Lean.logInfo ("<<< APP RESULT  >>>\n" ++ (repr t))
       let Δ'''' := ListSubtyping.remove_by_bounds id_map Δ'''
       return [ ⟨Θ''', Δ'''', t⟩ ]
     )))
@@ -2103,6 +2103,26 @@ mutual
 
 end
 
+--------------------------------
+--------------------------------
+--------------------------------
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] [typings| (x : <uno/> & <dos/>)]
+  [expr|
+    (
+    [<uno/> => <one/>]
+    [<dos/> => <two/>]
+    ) (x)
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] [typings| (x : <uno/> & <dos/>)]
+  [expr|
+    (
+    [<uno/> => <one/>(@)]
+    [<dos/> => <two/>]
+    ) (x)
+  ]
 
 --------------------------------
 --------------------------------
