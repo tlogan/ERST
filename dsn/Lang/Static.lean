@@ -1790,7 +1790,7 @@ mutual
       ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
     )
 
-    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_local
+    let t := ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones_local
     return (t, id_map)
 
   | (.all _ quals body), .true => do
@@ -1805,7 +1805,7 @@ mutual
       ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
     )
 
-    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_local
+    let t := ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones_local
     return (t, id_map)
 
   | .all ids_all quals_all (.exi _ quals body), .false => do
@@ -1820,7 +1820,7 @@ mutual
       ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
     )
 
-    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_local
+    let t := ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones_local
     return (t, id_map)
 
   | (.exi _ quals body), .false => do
@@ -1835,7 +1835,7 @@ mutual
       ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
     )
 
-    let t := ListZone.pack (skolems ∪ ListSubtyping.free_vars assums) .true zones_local
+    let t := ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones_local
     return (t, id_map)
 
   | t, _ => do
@@ -1968,16 +1968,18 @@ mutual
         | .none => failure
     else failure
 
-  | zones =>
-    match ((ListZone.invert id zones).bind (fun zones' =>
+  | zones => do
+    let op_result ← (ListZone.invert id zones).bindM (fun zones' => do
       let t' := ListZone.pack (id :: pids) .false zones'
-      (Typ.factor id t' "left").bind (fun l =>
-      (Typ.factor id t' "right").map (fun r =>
-        return (.path (.lfp id l) (.lfp id r))
+      (Typ.factor id t' "left").bindM (fun l => do
+      (Typ.factor id t' "right").bindM (fun r => do
+        let (l', _) ← Typ.repeat_interpret [id] [] [] l .false 3
+        let (r', _) ← Typ.repeat_interpret [id] [] [] r .false 3
+        return Option.some (Typ.path (.lfp id l') (.lfp id r'))
       ))
     )
-  ) with
-    | .some result => result
+    match op_result with
+    | .some result => return result
     | .none => failure
 
   partial def Record.Typing.Static.compute
@@ -2106,6 +2108,40 @@ end
 --------------------------------
 --------------------------------
 
+-- TODO: interpret further to simplify type
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    loop ([self =>
+      [<nil/> => <zero/>]
+      [<cons> n => <succ> (self(n)) ]
+    ])
+  ]
+
+-- SHOULD FAIL
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    loop ([<guard> self =>
+      [<nil/> => <zero/>]
+      [<cons> n => <succ> (self(n)) ]
+    ])
+  ]
+
+-- SHOULD FAIL
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    loop ([<guard> self => <guard> (
+      [<nil/> => <zero/>]
+      [<cons> n => <succ> (self(n)) ]
+    )])
+  ]
+
+--------------------------------
+--------------------------------
+--------------------------------
+
 -- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
@@ -2229,44 +2265,6 @@ end
 --------------------------------
 --------------------------------
 --------------------------------
-
-
-#eval ListSubtyping.invert "T175" [
-      -- ([typ| T180 ], [typ| T181 -> T182 ]),
-      ([typ| T175 ], [typ| T181 -> T182 ]),
-      -- ([typ| <cons> T181 -> <succ> T182 ], [typ| T179 ]),
-      -- ([typ| T175 ], [typ| T180 ])
-]
-
--- TODO: interpret further to simplify type
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    loop ([self =>
-      [<nil/> => <zero/>]
-      [<cons> n => <succ> (self(n)) ]
-    ])
-  ]
-
--- SHOULD FAIL
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    loop ([<guard> self =>
-      [<nil/> => <zero/>]
-      [<cons> n => <succ> (self(n)) ]
-    ])
-  ]
-
--- SHOULD FAIL
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    loop ([<guard> self => <guard> (
-      [<nil/> => <zero/>]
-      [<cons> n => <succ> (self(n)) ]
-    )])
-  ]
 
 -- RESULT: Even -> Uno | Dos
 #eval Expr.Typing.Static.compute
