@@ -61,6 +61,7 @@ mutual
 
   def ids_pattern : Pat → List String
   | .var id => [id]
+  | .iso l body => ids_pattern body
   | .record r => ids_record_pattern r
 end
 
@@ -80,6 +81,7 @@ mutual
   | .var id => match (find id m) with
     | .none => (.var id)
     | .some e => e
+  | .iso l body => .iso l (Expr.sub m body)
   | .record r => .record (Expr.Record.sub m r)
   | .function f => .function (Expr.Function.sub m f)
   | .app ef ea => .app (Expr.sub m ef) (Expr.sub m ea)
@@ -164,7 +166,8 @@ def Typ.Monotonic.Dynamic (am : List (String × Typ)) (id : String) (body : Typ)
   def Typing.Dynamic (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
   | .top => ∃ e',  Expr.is_value e' ∧ MultiProgression e e'
-  | .entry l τ => Typing.Dynamic am (.proj e l) τ
+  | .iso l τ => Typing.Dynamic am (.proj_iso e l) τ
+  | .entry l τ => Typing.Dynamic am (.proj_entry e l) τ
   | .path left right => ∀ e' , Typing.Dynamic am e' left → Typing.Dynamic am (.app e e') right
   | .unio left right => Typing.Dynamic am e left ∨ Typing.Dynamic am e right
   | .inter left right => Typing.Dynamic am e left ∧ Typing.Dynamic am e right

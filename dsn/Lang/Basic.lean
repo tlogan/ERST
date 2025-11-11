@@ -15,6 +15,7 @@ def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.an
 
 inductive Typ
 | var : String → Typ
+| iso : String → Typ → Typ
 | entry : String → Typ → Typ
 | path : Typ → Typ → Typ
 | bot :  Typ
@@ -26,6 +27,13 @@ inductive Typ
 | exi :  List String → List (Typ × Typ) → Typ → Typ
 | lfp :  String → Typ → Typ
 deriving Lean.ToExpr
+
+-- <uno> thing <dos> thing
+-- {uno} thing  or {dos}thing
+-- [uno] thing  or [dos] hing or [tres/]
+-- uno: @  ::dos hing or [tres/]
+
+
 
 
 
@@ -60,6 +68,17 @@ mutual
         cases d with
         | isFalse => apply isFalse ; simp [*]
         | isTrue => apply isTrue; simp [*]
+      | _ => apply isFalse ; simp
+    | .iso ll bodyl => by cases right with
+      | iso lr bodyr =>
+          have dl : Decidable (ll = lr) := inferInstance
+          have dbody := Typ.decidable_eq bodyl bodyr
+          cases dl with
+          | isFalse => apply isFalse; simp [*]
+          | isTrue =>
+            cases dbody with
+            | isFalse => apply isFalse; simp [*]
+            | isTrue => apply isTrue; simp [*]
       | _ => apply isFalse ; simp
     | .entry ll bodyl => by cases right with
       | entry lr bodyr =>
@@ -177,6 +196,7 @@ mutual
 
   def Typ.beq : Typ → Typ → Bool
   | .var idl, .var idr => idl == idr
+  | .iso ll bodyl, .iso lr bodyr => ll == lr && Typ.beq bodyl bodyr
   | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.beq bodyl bodyr
   | .path x y, .path p q => Typ.beq x p && Typ.beq y q
   | .bot, .bot => .true
@@ -219,6 +239,10 @@ mutual
   | .var id => by
     unfold Typ.beq
     simp
+  | .iso l body => by
+    unfold Typ.beq
+    simp
+    apply Typ.refl_beq_true
   | .entry l body => by
     unfold Typ.beq
     simp
@@ -296,6 +320,14 @@ mutual
     fun left right => match left with
     | .var idl => by cases right with
       | var idr => unfold Typ.beq; simp
+      | _ => unfold Typ.beq; simp
+    | .iso ll bodyl => by cases right with
+      | iso lr bodyr =>
+        unfold Typ.beq; simp
+        intro uno
+        intro dos
+        apply Typ.beq_implies_eq at dos
+        simp [*]
       | _ => unfold Typ.beq; simp
     | .entry ll bodyl => by cases right with
       | entry lr bodyr =>
@@ -457,7 +489,10 @@ mutual
 
   partial def Typ.reprPrec : Typ → Nat → Std.Format
   | .var id, _ => id
-  | .entry l .top, _ => "<" ++ l ++ "/>"
+  | .iso l .top, _ =>
+    "<" ++ l ++ "//>"
+  | .iso l body, _ =>
+    "<" ++ l ++ "/>"  ++ line ++ nest 2 (Typ.reprPrec body 100)
   | .entry l body, _ =>
     "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 100)
   | .path left right, p =>
@@ -563,6 +598,7 @@ instance : BEq (Typ × Typ) where
 inductive Typ.Bruijn
 | bvar : Nat → Typ.Bruijn
 | fvar : String → Typ.Bruijn
+| iso : String → Typ.Bruijn → Typ.Bruijn
 | entry : String → Typ.Bruijn → Typ.Bruijn
 | path : Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
 | bot : Typ.Bruijn
@@ -589,6 +625,7 @@ mutual
   def Typ.Bruijn.beq : Typ.Bruijn → Typ.Bruijn → Bool
   | .bvar il, .bvar ir => il == ir
   | .fvar idl, .fvar idr => idl == idr
+  | .iso ll bodyl, .iso lr bodyr => ll == lr && Typ.Bruijn.beq bodyl bodyr
   | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.Bruijn.beq bodyl bodyr
   | .path x y, .path p q => Typ.Bruijn.beq x p && Typ.Bruijn.beq y q
   | .top, .top => .true
@@ -646,6 +683,8 @@ mutual
   def Typ.ordered_bound_vars (bounds : List String) : Typ → List String
   | .var id =>
     if id ∈ bounds then [id] else []
+  | .iso _ t =>
+    Typ.ordered_bound_vars bounds t
   | .entry _ t =>
     Typ.ordered_bound_vars bounds t
   | .path left right =>
@@ -700,6 +739,7 @@ mutual
 
   def Typ.free_vars : Typ → List String
   | .var id => [id]
+  | .iso _ body => Typ.free_vars body
   | .entry _ body => Typ.free_vars body
   | .path p q => Typ.free_vars p ∪ Typ.free_vars q
   | .bot => []
@@ -751,6 +791,7 @@ mutual
     match List.firstIndexOf id bids with
     | .none => .fvar id
     | .some i => .bvar (bids.length + i)
+  | .iso l body => .iso l (Typ.toBruijn bids body)
   | .entry l body => .entry l (Typ.toBruijn bids body)
   | .path left right =>
     .path
@@ -797,6 +838,7 @@ mutual
 
   def Typ.size : Typ → Nat
   | .var id => 1
+  | .iso l body => Typ.size body + 1
   | .entry l body => Typ.size body + 1
   | .path left right => Typ.size left + Typ.size right + 1
   | .bot => 1
@@ -860,6 +902,7 @@ mutual
   | .var id => match find id δ with
     | .none => .var id
     | .some t => t
+  | .iso l body => .iso l (Typ.sub δ body)
   | .entry l body => .entry l (Typ.sub δ body)
   | .path left right => .path (Typ.sub δ left) (Typ.sub δ right)
   | .bot => .bot
@@ -886,6 +929,7 @@ def Typ.subfold (id : String) (t : Typ) : Nat → Typ
 
 inductive Pat
 | var : String → Pat
+| iso : String → Pat → Pat
 | record : List (String × Pat) → Pat
 deriving Repr
 
@@ -900,11 +944,13 @@ mutual
 
   def Pat.free_vars : Pat → List String
   | .var id => [id]
+  | .iso label body => Pat.free_vars body
   | .record ps => ListPat.free_vars ps
 end
 
 inductive Expr
 | var : String → Expr
+| iso : String → Expr → Expr
 | record : List (String × Expr) → Expr
 | function : List (Pat × Expr) → Expr
 | app : Expr → Expr → Expr
@@ -933,7 +979,10 @@ mutual
 end
 
 
-def Expr.proj (e : Expr) (l : String) : Expr :=
+def Expr.proj_iso (e : Expr) (l : String) : Expr :=
+  .app (.function [(Pat.iso l (Pat.var "x"), .var "x")]) e
+
+def Expr.proj_entry (e : Expr) (l : String) : Expr :=
   .app (.function [(.record [(l, .var "x")], .var "x")]) e
 
 def Expr.def (id : String) (top : Option Typ) (target : Expr) (contin : Expr) : Expr :=
@@ -989,9 +1038,10 @@ syntax:60 typ:61 "|" typ:60 : typ
 syntax:80 typ:81 "&" typ:80 : typ
 syntax:90 typ:91 "*" typ:90 : typ
 
+
+syntax "<" ident "/>" typ:100 : typ
+syntax "<" ident "//>" : typ
 syntax "<" ident ">" typ:100 : typ
-syntax "<" ident "/>" : typ
--- syntax "@" : typ
 syntax typ "\\" typ : typ
 syntax "ALL" "[" ids "]" "[" subtypings "]" typ : typ
 syntax "EXI" "[" ids "]" "[" subtypings "]" typ : typ
@@ -1012,19 +1062,21 @@ syntax typ typs : typs
 
 
 
-syntax "<" ident "/>" : frame
+-- syntax "<" ident "/>" : frame
 -- syntax "<" ident "/>" frame : frame
 syntax "<" ident ">" pat : frame
 syntax "<" ident ">" pat frame : frame
 
 syntax ident : pat
 syntax "@" : pat
+syntax "<" ident "/>" pat : pat
+syntax "<" ident "//>" : pat
 syntax frame : pat
 syntax ident ";" pat : pat
 syntax "(" pat ")" : pat
 syntax:60 pat:61 "," pat:60 :pat
 
-syntax "<" ident "/>" : record
+-- syntax "<" ident "/>" : record
 -- syntax "<" ident "/>" record : record
 syntax "<" ident ">" expr : record
 syntax "<" ident ">" expr record : record
@@ -1034,6 +1086,8 @@ syntax "[" pat "=>" expr "]" function : function
 
 syntax ident : expr
 syntax "@" : expr
+syntax "<" ident "/>" expr : expr
+syntax "<" ident "//>" : expr
 syntax record : expr
 syntax ident ";" expr : expr
 syntax:60 expr:61 "," expr:60 : expr
@@ -1157,7 +1211,8 @@ syntax "{" term "}"  : typ
 
 macro_rules
 | `([typ| $i:ident ]) => `(Typ.var [id| $i])
-| `([typ| < $i:ident /> ]) => `(Typ.entry [id| $i] .top)
+| `([typ| < $i:ident /> $t:typ  ]) => `(Typ.iso [id| $i] [typ| $t])
+| `([typ| < $i:ident //> ]) => `(Typ.iso [id| $i] .top)
 | `([typ| < $i:ident > $t:typ  ]) => `(Typ.entry [id| $i] [typ| $t])
 | `([typ| $x:typ -> $y:typ ]) => `(Typ.path [typ| $x] [typ| $y])
 | `([typ| $x:typ | $y:typ ]) => `(Typ.unio [typ| $x] [typ| $y])
@@ -1196,19 +1251,21 @@ macro_rules
 
 
 macro_rules
-| `([frame| <$i:ident/> ]) => `(([id| $i], [pattern| @]) :: [])
+-- | `([frame| <$i:ident/> ]) => `(([id| $i], [pattern| @]) :: [])
 | `([frame| <$i:ident> $p:pat ]) => `(([id| $i], [pattern| $p]) :: [])
 | `([frame| <$i:ident> $p:pat $pr:frame ]) => `(([id| $i], [pattern| $p]) :: [frame| $pr])
 
 macro_rules
 | `([pattern| $i:ident ]) => `(Pat.var [id| $i])
 | `([pattern| @ ]) => `(Pat.record [])
+| `([pattern| < $i:ident /> $p:pat ]) => `(Pat.iso [id| $i] [pattern| $p])
+| `([pattern| < $i:ident //> ]) => `(Pat.iso [id| $i] .top )
 | `([pattern| $pr:frame ]) => `(Pat.record [frame| $pr])
 | `([pattern| $i:ident ; $p:pat ]) => `(Pat.record ([id| $i], [pattern| $p]) :: [])
 | `([pattern| $l:pat , $r:pat ]) => `(Pat.pair [pattern| $l] [pattern| $r])
 
 macro_rules
-| `([record| <$i:ident/> ]) => `(([id| $i], [expr| @]) :: [])
+-- | `([record| <$i:ident/> ]) => `(([id| $i], [expr| @]) :: [])
 | `([record| <$i:ident> $e:expr ]) => `(([id| $i], [expr| $e]) :: [])
 | `([record| <$i:ident> $e:expr $er:record ]) => `(([id| $i], [expr| $e]) :: [record| $er])
 
@@ -1220,8 +1277,10 @@ macro_rules
 
 
 macro_rules
-| `([expr| @ ]) => `(Expr.record [])
 | `([expr| $i:ident ]) => `([eid| $i])
+| `([expr| @ ]) => `(Expr.record [])
+| `([expr| < $i:ident /> $e:expr ]) => `(Expr.iso [id| $i] [expr| $e])
+| `([expr| < $i:ident //> ]) => `(Expr.iso [id| $i] [expr| @])
 | `([expr| $er:record ]) => `(Expr.record [record| $er])
 | `([expr| $i:ident ; $e:expr ]) => `(Expr.record [([id| $i], [expr| $e])])
 | `([expr| $l:expr , $r:expr ]) => `(Expr.pair [expr| $l] [expr| $r])
@@ -1276,6 +1335,7 @@ mutual
 
   def Pat.toExpr : Pat → Expr
   | .var id => .var id
+  | .iso label body => .iso label (Pat.toExpr body)
   | .record r => .record (toRecordExpr r)
 end
 
@@ -1291,19 +1351,17 @@ def Typ.capture (t : Typ) : Typ :=
       .exi ids .nil t
 
 def Typ.do_diff : Typ → Typ → Typ
+| (.iso l body), (.iso l_subtra body_subtra) =>
+  if l != l_subtra then
+    (.iso l body)
+  else
+    (.iso l (Typ.do_diff body body_subtra))
 
--- | (.entry l body), (.entry l_subtra body_subtra) =>
---   if l != l_subtra then
---     (.entry l body)
---   else
---     (.entry l (Typ.do_diff body body_subtra))
-
--- | (.entry l body), (.exi _ [] (.entry l_subtra body_subtra)) =>
---   if l != l_subtra then
---     (.entry l body)
---   else
---     (.entry l (Typ.do_diff body body_subtra))
-
+| (.iso l body), (.exi ids [] (.iso l_subtra body_subtra)) =>
+  if l != l_subtra then
+    (.iso l body)
+  else
+    (.iso l (Typ.do_diff body (.exi ids [] body_subtra)))
 | t, subtra => .diff t subtra
 
 theorem Typ.diff_drop {l body t l_sub body_sub} :
@@ -1317,7 +1375,7 @@ def ListTyp.diff (t : Typ) : List Typ → Typ
 | .cons x xs => ListTyp.diff (Typ.do_diff t (Typ.capture x)) xs
 
 
-#eval (Typ.free_vars [typ| X * <uno/>]).map (fun typ => (typ, Typ.top)) -- .map(fun typ => (typ, .top))
+#eval (Typ.free_vars [typ| X * <uno//>]).map (fun typ => (typ, Typ.top)) -- .map(fun typ => (typ, .top))
 
 
 @[reducible]
@@ -1329,4 +1387,4 @@ def Typ.enrich : Typ → Typ
 | t => t
 
 
-#eval [typ| <uno/>]
+#eval [typ| <uno//> ]
