@@ -490,11 +490,11 @@ mutual
   partial def Typ.reprPrec : Typ → Nat → Std.Format
   | .var id, _ => id
   | .iso l .top, _ =>
-    "<" ++ l ++ "//>"
+    "<" ++ l ++ "/>"
   | .iso l body, _ =>
-    "<" ++ l ++ "/>"  ++ line ++ nest 2 (Typ.reprPrec body 100)
-  | .entry l body, _ =>
     "<" ++ l ++ ">"  ++ line ++ nest 2 (Typ.reprPrec body 100)
+  | .entry l body, _ =>
+    l ++ " :"  ++ line ++ nest 2 (Typ.reprPrec body 100)
   | .path left right, p =>
     let content := Typ.reprPrec left 51 ++ " ->" ++ line ++ Typ.reprPrec right 50
     group (wrap content p 50)
@@ -1008,6 +1008,7 @@ declare_syntax_cat typs
 -- declare_syntax_cat box_typs
 
 declare_syntax_cat frame
+declare_syntax_cat brief
 declare_syntax_cat pat
 declare_syntax_cat record
 declare_syntax_cat function
@@ -1039,9 +1040,15 @@ syntax:80 typ:81 "&" typ:80 : typ
 syntax:90 typ:91 "*" typ:90 : typ
 
 
-syntax "<" ident "/>" typ:100 : typ
-syntax "<" ident "//>" : typ
+-- syntax "nil :: " typ:100 : typ
+-- syntax "//" typ:100 : typ
+-- {}
+-- {uno := _, }
+-- {uno := _, dos := _,} : (uno : _ & dos : _ )
+-- syntax "<" ident "/>" typ:100 : typ
+syntax "<" ident "/>" : typ
 syntax "<" ident ">" typ:100 : typ
+syntax ident ":" typ:100 : typ
 syntax typ "\\" typ : typ
 syntax "ALL" "[" ids "]" "[" subtypings "]" typ : typ
 syntax "EXI" "[" ids "]" "[" subtypings "]" typ : typ
@@ -1064,30 +1071,51 @@ syntax typ typs : typs
 
 -- syntax "<" ident "/>" : frame
 -- syntax "<" ident "/>" frame : frame
-syntax "<" ident ">" pat : frame
-syntax "<" ident ">" pat frame : frame
+-- syntax "<" ident ">" pat : frame
+-- syntax "<" ident ">" pat frame : frame
+
+syntax ident ":=" pat : frame
+syntax ident ":=" pat ";" : frame
+syntax ident ":=" pat ";" frame : frame
+
+syntax ":" ident : brief
+syntax ":" ident brief : brief
 
 syntax ident : pat
 syntax "@" : pat
-syntax "<" ident "/>" pat : pat
-syntax "<" ident "//>" : pat
+syntax "<" ident ">" pat : pat
+syntax "<" ident "/>" : pat
+syntax brief : pat
 syntax frame : pat
-syntax ident ";" pat : pat
+-- syntax ident ";" pat : pat
 syntax "(" pat ")" : pat
 syntax:60 pat:61 "," pat:60 :pat
 
 -- syntax "<" ident "/>" : record
 -- syntax "<" ident "/>" record : record
-syntax "<" ident ">" expr : record
-syntax "<" ident ">" expr record : record
+-- syntax "<" ident ">" expr : record
+-- syntax "<" ident ">" expr record : record
+
+-- syntax "}" : record
+-- syntax ident ":=" expr "}" : record
+-- syntax ident ":=" expr "," record : record
+
+syntax ident ":=" expr : record
+syntax ident ":=" expr ";" : record
+syntax ident ":=" expr ";" record : record
+
+-- syntax ident ":=" expr ";" : record
+-- syntax ident ":=" expr : record
+-- syntax ident ":=" expr ";" record : record
+
+
 
 syntax "[" pat "=>" expr "]" : function
 syntax "[" pat "=>" expr "]" function : function
 
 syntax ident : expr
-syntax "@" : expr
-syntax "<" ident "/>" expr : expr
-syntax "<" ident "//>" : expr
+syntax "<" ident ">" expr : expr
+syntax "<" ident "/>" : expr
 syntax record : expr
 syntax ident ";" expr : expr
 syntax:60 expr:61 "," expr:60 : expr
@@ -1128,6 +1156,7 @@ syntax "[typs|" typs "]" : term
 -- syntax "[box_typs|" "[""]" "]" : term
 -- syntax "[box_typs|" "[" typs "]" "]" : term
 
+syntax "[brief|" brief "]" : term
 syntax "[frame|" frame "]" : term
 syntax "[pattern|" pat "]" : term
 syntax "[record|" record "]" : term
@@ -1168,14 +1197,14 @@ elab_rules : term
     Lean.Elab.Term.elabTerm s none
 
 
-syntax "{" term "}"  : ids
+-- syntax "{" term "}"  : ids
 
 macro_rules
 | `([ids| ]) => `([])
 | `([ids| $i:ident ]) => `([id| $i] :: [])
 | `([ids| $i:ident $ps:ids ]) => `([id| $i] :: [ids| $ps])
 
-| `([ids| { $t:term } ]) => pure t
+-- | `([ids| { $t:term } ]) => pure t
 
 -- | `([box_ids| [] ]) => `([])
 -- | `([box_ids| [ $ps:ids ] ]) => `([ids| $ps])
@@ -1206,14 +1235,15 @@ macro_rules
 -- | `([box_typings| [ $ts:typings] ]) => `([ [typings| $ts]])
 
 
-syntax "{" term "}"  : typ
+-- syntax "{" term "}"  : typ
 
 
 macro_rules
 | `([typ| $i:ident ]) => `(Typ.var [id| $i])
-| `([typ| < $i:ident /> $t:typ  ]) => `(Typ.iso [id| $i] [typ| $t])
-| `([typ| < $i:ident //> ]) => `(Typ.iso [id| $i] .top)
-| `([typ| < $i:ident > $t:typ  ]) => `(Typ.entry [id| $i] [typ| $t])
+| `([typ| < $i:ident > $t:typ  ]) => `(Typ.iso [id| $i] [typ| $t])
+| `([typ| < $i:ident /> ]) => `(Typ.iso [id| $i] .top)
+-- | `([typ| < $i:ident > $t:typ  ]) => `(Typ.entry [id| $i] [typ| $t])
+| `([typ| $i:ident : $t:typ  ]) => `(Typ.entry [id| $i] [typ| $t])
 | `([typ| $x:typ -> $y:typ ]) => `(Typ.path [typ| $x] [typ| $y])
 | `([typ| $x:typ | $y:typ ]) => `(Typ.unio [typ| $x] [typ| $y])
 | `([typ| $x:typ & $y:typ ]) => `(Typ.inter [typ| $x] [typ| $y])
@@ -1235,7 +1265,7 @@ macro_rules
 | `([typ| BOT ]) => `(Typ.bot)
 | `([typ| TOP ]) => `(Typ.top)
 | `([typ| ( $t:typ ) ]) => `([typ| $t])
-| `([typ| { $t:term } ]) => pure t
+-- | `([typ| { $t:term } ]) => pure t
 
 
 macro_rules
@@ -1251,23 +1281,32 @@ macro_rules
 
 
 macro_rules
+| `([brief| : $i:ident ]) => `(([id| $i], Pat.var [id| $i]) :: [])
+| `([brief| : $i:ident $br:brief]) => `(([id| $i], Pat.var [id| $i]) :: [brief| $br])
+
+macro_rules
 -- | `([frame| <$i:ident/> ]) => `(([id| $i], [pattern| @]) :: [])
-| `([frame| <$i:ident> $p:pat ]) => `(([id| $i], [pattern| $p]) :: [])
-| `([frame| <$i:ident> $p:pat $pr:frame ]) => `(([id| $i], [pattern| $p]) :: [frame| $pr])
+| `([frame| $i:ident := $p:pat ]) => `(([id| $i], [pattern| $p]) :: [])
+| `([frame| $i:ident := $p:pat ; ]) => `(([id| $i], [pattern| $p]) :: [])
+| `([frame| $i:ident := $p:pat ; $pr:frame ]) => `(([id| $i], [pattern| $p]) :: [frame| $pr])
 
 macro_rules
 | `([pattern| $i:ident ]) => `(Pat.var [id| $i])
 | `([pattern| @ ]) => `(Pat.record [])
-| `([pattern| < $i:ident /> $p:pat ]) => `(Pat.iso [id| $i] [pattern| $p])
-| `([pattern| < $i:ident //> ]) => `(Pat.iso [id| $i] .top )
+| `([pattern| < $i:ident > $p:pat ]) => `(Pat.iso [id| $i] [pattern| $p])
+| `([pattern| < $i:ident /> ]) => `(Pat.iso [id| $i] (Pat.record []))
+| `([pattern| $br:brief ]) => `(Pat.record [brief| $br])
 | `([pattern| $pr:frame ]) => `(Pat.record [frame| $pr])
-| `([pattern| $i:ident ; $p:pat ]) => `(Pat.record ([id| $i], [pattern| $p]) :: [])
+-- | `([pattern| $i:ident ; $p:pat ]) => `(Pat.record ([id| $i], [pattern| $p]) :: [])
 | `([pattern| $l:pat , $r:pat ]) => `(Pat.pair [pattern| $l] [pattern| $r])
 
 macro_rules
 -- | `([record| <$i:ident/> ]) => `(([id| $i], [expr| @]) :: [])
-| `([record| <$i:ident> $e:expr ]) => `(([id| $i], [expr| $e]) :: [])
-| `([record| <$i:ident> $e:expr $er:record ]) => `(([id| $i], [expr| $e]) :: [record| $er])
+-- | `([record| <$i:ident> $e:expr ]) => `(([id| $i], [expr| $e]) :: [])
+-- | `([record| <$i:ident> $e:expr $er:record ]) => `(([id| $i], [expr| $e]) :: [record| $er])
+| `([record| $i:ident := $e:expr ]) => `(([id| $i], [expr| $e]) :: [])
+| `([record| $i:ident := $e:expr ; ]) => `(([id| $i], [expr| $e]) :: [])
+| `([record| $i:ident := $e:expr ; $r:record]) => `(([id| $i], [expr| $e]) :: [record| $r])
 
 macro_rules
 | `([function| [ $p:pat => $e:expr ] ]) => `(([pattern| $p], [expr| $e]) :: [])
@@ -1278,14 +1317,13 @@ macro_rules
 
 macro_rules
 | `([expr| $i:ident ]) => `([eid| $i])
-| `([expr| @ ]) => `(Expr.record [])
-| `([expr| < $i:ident /> $e:expr ]) => `(Expr.iso [id| $i] [expr| $e])
-| `([expr| < $i:ident //> ]) => `(Expr.iso [id| $i] [expr| @])
+| `([expr| < $i:ident > $e:expr ]) => `(Expr.iso [id| $i] [expr| $e])
+| `([expr| < $i:ident /> ]) => `(Expr.iso [id| $i] (Expr.record []))
 | `([expr| $er:record ]) => `(Expr.record [record| $er])
 | `([expr| $i:ident ; $e:expr ]) => `(Expr.record [([id| $i], [expr| $e])])
 | `([expr| $l:expr , $r:expr ]) => `(Expr.pair [expr| $l] [expr| $r])
 | `([expr| $f:function ]) => `(Expr.function [function| $f])
-| `([expr| $e:expr . $i:ident ]) => `(Expr.proj [expr| $e] [id| $i])
+| `([expr| $e:expr . $i:ident ]) => `(Expr.proj_entry [expr| $e] [id| $i])
 | `([expr| $f:expr ( $a:expr ) ]) => `(Expr.app [expr| $f] [expr| $a])
 | `([expr| $e:expr as $t:typ ]) => `(Expr.anno [expr| $e] [typ| $t])
 | `([expr| def $i:ident : $t:typ = $a:expr in $c:expr  ]) =>
@@ -1296,6 +1334,9 @@ macro_rules
 | `([expr| ( $e:expr ) ]) => `([expr| $e])
 
 
+
+#eval [expr| [:uno :dos => <output/>] ]
+#eval [expr| [uno := uno ; dos := dos => <output/>] ]
 
 
 
@@ -1366,8 +1407,8 @@ def Typ.do_diff : Typ → Typ → Typ
 
 theorem Typ.diff_drop {l body t l_sub body_sub} :
   l ≠ l_sub →
-  (.entry l body) = t →
-  (.entry l body) = Typ.do_diff t (Typ.capture (Typ.entry l_sub body_sub))
+  (.iso l body) = t →
+  (.iso l body) = Typ.do_diff t (Typ.capture (Typ.iso l_sub body_sub))
 := by sorry
 
 def ListTyp.diff (t : Typ) : List Typ → Typ
@@ -1375,7 +1416,7 @@ def ListTyp.diff (t : Typ) : List Typ → Typ
 | .cons x xs => ListTyp.diff (Typ.do_diff t (Typ.capture x)) xs
 
 
-#eval (Typ.free_vars [typ| X * <uno//>]).map (fun typ => (typ, Typ.top)) -- .map(fun typ => (typ, .top))
+#eval (Typ.free_vars [typ| X * <uno/>]).map (fun typ => (typ, Typ.top)) -- .map(fun typ => (typ, .top))
 
 
 @[reducible]
@@ -1387,4 +1428,12 @@ def Typ.enrich : Typ → Typ
 | t => t
 
 
-#eval [typ| <uno//> ]
+#eval [typ| <elem/> ]
+
+#eval [expr| ( uno := <elem/> ; dos := <elem/> ) ]
+#eval [expr| ( uno := <elem/>,<elem/> ; dos := <elem/> ) ]
+#eval [expr| ( uno := (<elem/>,<elem/>) , dos := <elem/> ) ]
+#eval [typ| uno : TOP & dos : TOP ]
+
+-- uno //
+-- <nil/> | <cons> (x, xs)

@@ -5,7 +5,7 @@ import Lang.Static
 set_option eval.pp false
 set_option pp.fieldNotation false
 
-#check [expr| @]
+#check [expr| <elem/>]
 
 #check [eid| x]
 
@@ -13,13 +13,13 @@ set_option pp.fieldNotation false
 
 #check [expr| uno.dos.tres]
 
-#check [expr| [x => @]]
+#check [expr| [x => <elem/>]]
 
 #check [expr| [x => x.uno]]
 
-#check [expr| (uno;@).uno]
+#check [expr| (uno := <uno/>).uno]
 
-#check [expr| def x = @ in x]
+#check [expr| def x = <elem/> in x]
 
 #check [expr| [<uno> x => x]]
 
@@ -110,16 +110,16 @@ example Δ Γ
 
 example Δ Γ
 : PatLifting.Static Δ Γ
-  [pattern| <uno/> <dos/>]
-  [typ| <uno/> & <dos/>]
+  [pattern| uno := <elem/> ; dos := <elem/>]
+  [typ| uno : <elem/> & dos : <elem/>]
   Δ Γ
 := by
   PatLifting_Static_prove
 
-#eval PatLifting.Static.compute [] [] [pattern| <uno> x <dos> y]
+#eval PatLifting.Static.compute [] [] [pattern| uno := x ; dos := y ]
 example :  ∃ t Δ' Γ', PatLifting.Static [] []
-  [pattern| <uno> x <dos> y] t Δ' Γ' := by
-  exists [typ| <uno> T669 & <dos> T670 ]
+  [pattern| uno := x ; dos := y] t Δ' Γ' := by
+  exists [typ| uno : T669 & dos : T670 ]
   exists [subtypings| (T670 <: TOP) (T669 <: TOP) ]
   exists [typings| (y : T670) (x : T669) ]
   PatLifting_Static_prove
@@ -143,7 +143,7 @@ example : Subtyping.Static
 
 
 ---------------------------------------
------ entry preservation (over union)
+----- iso preservation (over union)
 ---------------------------------------
 
 #eval Subtyping.Static.solve
@@ -155,6 +155,22 @@ example : Subtyping.Static
   [ids| ] [subtypings|  ]
   [typ| <label> <uno/> ]
   [typ| <label> (<uno/> | <dos/>) ]
+  [ids| ] [subtypings| ]
+:= by Subtyping_Static_prove
+
+---------------------------------------
+----- entry preservation (over union)
+---------------------------------------
+
+#eval Subtyping.Static.solve
+  [ids| ] [subtypings|  ]
+  [typ| label : <uno/> ]
+  [typ| label : (<uno/> | <dos/>) ]
+
+example : Subtyping.Static
+  [ids| ] [subtypings|  ]
+  [typ| label : <uno/> ]
+  [typ| label : (<uno/> | <dos/>) ]
   [ids| ] [subtypings| ]
 := by Subtyping_Static_prove
 
@@ -403,16 +419,32 @@ example : Subtyping.Static
 
 #eval Subtyping.Static.solve
   [ids| T] [subtypings| ]
-  [typ| <label> <uno/> & (<label> <dos/>)]
-  [typ| <label> (<uno/> & <dos/>)]
+  [typ| label : <uno/> & label : <dos/>]
+  [typ| label : (<uno/> & <dos/>)]
 
 example : Subtyping.Static
   [ids| T] [subtypings| ]
-  [typ| <label> <uno/> & (<label> <dos/>)]
-  [typ| <label> (<uno/> & <dos/>)]
+  [typ| label : <uno/> & label : <dos/>]
+  [typ| label : (<uno/> & <dos/>)]
   [ids| T] [subtypings| ]
 := by Subtyping_Static_prove
 
+---------------------------------------
+----- lfp induction
+---------------------------------------
+
+#eval Subtyping.Static.solve
+  [] []
+  [typ| LFP[R] <zero/> | EXI[N] [ (N <: R) ] <succ> N ]
+  [typ| LFP[R] (<zero/> | <succ> R) ]
+
+-- example : Subtyping.Static
+--   [] []
+--   [typ| LFP[R] <zero/> | EXI[N] [ (N <: R) ] <succ> N ]
+--   [typ| LFP[R] (<zero/> | <succ> R) ]
+--   [ids| N ] [subtypings| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
+-- -- [subtypings| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
+-- := by Subtyping_Static_prove
 
 ---------------------------------------
 ----- lfp factor elim
@@ -424,7 +456,7 @@ example : Subtyping.Static
       (<zero/> * <nil/>) |
       EXI [N L][(N*L <: R)] (<succ> N) * (<cons> L)
   )]
-  [typ| <left> LFP[R] (<zero/> | <succ> R) ]
+  [typ| left : LFP[R] (<zero/> | <succ> R) ]
 
 
 example : Subtyping.Static
@@ -433,7 +465,7 @@ example : Subtyping.Static
       (<zero/> * <nil/>) |
       EXI [N L][(N*L <: R)] (<succ> N) * (<cons> L)
   )]
-  [typ| <left> LFP[R] (<zero/> | <succ> R) ]
+  [typ| left : LFP[R] (<zero/> | <succ> R) ]
   [ids| N ] [subtypings| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
 := by Subtyping_Static_prove
 
@@ -483,7 +515,7 @@ example : Subtyping.Static
 
 #eval Subtyping.Static.solve
   [] []
-  [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
+  [typ| LFP[R] (<zero/> | <succ> <succ> R)]
   [typ| TOP \ <succ> <zero/>]
 
 --- if x is an even number then x ≠ 1
@@ -495,6 +527,11 @@ example : Subtyping.Static
 := by Subtyping_Static_prove
 
 --- if x is an even number then x ≠ 3
+#eval Subtyping.Static.solve
+  [] []
+  [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
+  [typ| TOP \ <succ> <succ> <succ>  <zero/>]
+
 example : Subtyping.Static
   [] []
   [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
@@ -701,11 +738,11 @@ example : Expr.Typing.Static
 
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
-  [expr| @ ]
+  [expr| <elem/> ]
 
 example : Expr.Typing.Static
   [ids| ] [subtypings| ] []
-  [expr| @ ]
+  [expr| <elem/> ]
   [typ| TOP ]
   [ids| ] [subtypings| ]
 := by Expr_Typing_Static_prove
@@ -824,7 +861,7 @@ example : Expr.Typing.Static
       [<uno/> => <dos/>]
       [<thank/> => <you/>]
       [<hello/> => <goodbye/>]
-    in @
+    in <result/>
   ]
 
 ---------------------------------------
@@ -832,14 +869,14 @@ example : Expr.Typing.Static
 ---------------------------------------
 
 #eval [expr|
-  [ f, x => f(x) ]
+  [ f,x => f(x) ]
 ]
 
 ---------------------------------------
 ----- application
 ---------------------------------------
 #eval [expr|
-  [ <left> f <right> x => f(x) ]
+  [ left := f ; right := x => f(x) ]
 ]
 
 ---------------------------------------

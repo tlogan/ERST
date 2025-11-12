@@ -344,6 +344,8 @@ mutual
       b == .true
     else
       .true
+  | .iso _ body =>
+    Typ.Monotonic.Static.decide id b body
   | .entry _ body =>
     Typ.Monotonic.Static.decide id b body
   | .path left right =>
@@ -568,6 +570,7 @@ def Typ.is_pattern (tops : List String) : Typ → Bool
   | .top => true
   | .exi ids [] body => Typ.is_pattern (tops ++ ids) body
   | .var id => id ∈ tops
+  | .iso _ body => Typ.is_pattern tops body
   | .entry _ body => Typ.is_pattern tops body
   | .inter left right => Typ.is_pattern tops left ∧ Typ.is_pattern tops right
   | _ => false
@@ -576,6 +579,8 @@ def Typ.height : Typ → Option Nat
   | .top => return 1
   | .exi _ [] body => Typ.height body
   | .var _ => return 1
+  | .iso _ body => do
+    return 1 + (← Typ.height body)
   | .entry _ body => do
     return 1 + (← Typ.height body)
   | .inter left right => do
@@ -602,6 +607,10 @@ mutual
     smaller == bigger || Typ.struct_less_than smaller bigger
 
   def Typ.struct_less_than : Typ → Typ → Bool
+
+    | (.iso ll tl), (.iso lr tr) => ll == lr && Typ.struct_less_than tl tr
+    | tl, (.iso _ tr) => tl == tr || Typ.struct_less_than tl tr
+
     | (.entry ll tl), (.entry lr tr) => ll == lr && Typ.struct_less_than tl tr
     | tl, (.entry _ tr) => tl == tr || Typ.struct_less_than tl tr
 
@@ -640,6 +649,8 @@ end
 -- NOTE: this should be complete, but not sound
 -- TODO: see if Subtyping.check and Subtyping.check can become one
 def Subtyping.check : Typ → Typ → Bool
+| .iso l k, .iso l' t =>
+  l == l' && Subtyping.check k t
 | .entry l k, .entry l' t =>
   l == l' && Subtyping.check k t
 | k, .diff left right =>
@@ -859,6 +870,9 @@ mutual
     let Δ' := (t, Typ.top) :: Δ
     let Γ' := ((id, t) :: (remove id Γ))
     return (t, Δ', Γ')
+  | .iso label body => do
+    let (t, Δ', Γ') ← PatLifting.Static.compute  Δ Γ body
+    return (Typ.iso label t, Δ', Γ')
   | .record items => ListPatLifting.Static.compute Δ Γ items
 end
 
@@ -896,6 +910,10 @@ mutual
   := if (Typ.toBruijn [] lower) == (Typ.toBruijn [] upper) then
     return [(skolems,assums)]
   else match lower, upper with
+    | (.iso ll lower), (.iso lu upper) =>
+      if ll == lu then
+        Subtyping.Static.solve skolems assums lower upper
+      else return []
     | (.entry ll lower), (.entry lu upper) =>
       if ll == lu then
         Subtyping.Static.solve skolems assums lower upper
@@ -1016,28 +1034,33 @@ mutual
       Subtyping.Static.solve skolems assums t (.inter (.entry l a) (.entry l b))
 
 
-    | (.lfp id left), upper =>
-      if not (left.free_vars.contains id) then
-        Subtyping.Static.solve skolems assums left upper
-      else if Typ.Monotonic.Static.decide id .true left then do
-        let result ← Subtyping.Static.solve skolems assums (Typ.sub [(id, upper)] left) upper
+    | (.lfp id lower), upper =>
+      if not (lower.free_vars.contains id) then
+        Subtyping.Static.solve skolems assums lower upper
+      else if Typ.Monotonic.Static.decide id .true lower then do
+        let result ← Subtyping.Static.solve skolems assums (Typ.sub [(id, upper)] lower) upper
         if not result.isEmpty then
           return result
         else
+          Lean.logInfo ("<<< lfp debug upper >>>\n" ++ (repr upper))
           match upper with
-          | (.entry l right) => match Typ.factor id left l with
-              | .some fac  => Subtyping.Static.solve skolems assums (.lfp id fac) right
+          | (.entry l body_upper) => match Typ.factor id lower l with
+              | .some fac  =>
+                  Lean.logInfo ("<<< lfp debug fac >>>\n" ++ (repr (Typ.lfp id fac)))
+                  Lean.logInfo ("<<< lfp debug body_upper >>>\n" ++ (repr body_upper))
+                  Subtyping.Static.solve skolems assums (.lfp id fac) body_upper
               | .none => return []
           | (.diff l r) => match Typ.height r with
               | .some h =>
+                Lean.logInfo ("<<< lfp debug upper diff h(r)>>>\n" ++ (repr h))
                 if (
                   Typ.is_pattern [] r &&
-                  Typ.Monotonic.Static.decide id .true left &&
-                  Typ.struct_less_than (.var id) left &&
-                  not (Subtyping.check (Typ.subfold id left 1) r) &&
-                  not (Subtyping.check r (Typ.subfold id left h))
+                  Typ.Monotonic.Static.decide id .true lower &&
+                  Typ.struct_less_than (.var id) lower &&
+                  not (Subtyping.check (Typ.subfold id lower 1) r) &&
+                  not (Subtyping.check r (Typ.subfold id lower h))
                 ) then
-                  Subtyping.Static.solve skolems assums left l
+                  Subtyping.Static.solve skolems assums lower l
                 else return []
               | .none => return []
           | _ => return []
@@ -1113,16 +1136,6 @@ mutual
     | _, _ => return []
 
 end
-
--- NOTE: should decompose intersection before constructing variable constraint
-#eval Subtyping.Static.solve
-  [ids| ] [subtypings| ]
-  [typ| <uno/> & <dos/> ]
-  [typ| BODY ]
-
-
-
-
 
 theorem lower_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
       ListSubtyping.bounds id .true cs = ts →
@@ -1331,6 +1344,10 @@ mutual
       Subtyping.Static skolems assums t t skolems assums
 
     -- implication preservation
+    | iso_pres {skolems assums skolems' assums' } l lower upper :
+      Subtyping.Static skolems assums lower upper skolems' assums' →
+      Subtyping.Static skolems assums (.iso l lower) (.iso l upper) skolems' assums'
+
     | entry_pres {skolems assums skolems' assums' } l lower upper :
       Subtyping.Static skolems assums lower upper skolems' assums' →
       Subtyping.Static skolems assums (.entry l lower) (.entry l upper) skolems' assums'
@@ -1544,6 +1561,8 @@ macro_rules
   | `(tactic| Subtyping_Static_prove) => `(tactic|
     (first
       | apply Subtyping.Static.refl
+      | apply Subtyping.Static.iso_pres
+        · Subtyping_Static_prove
       | apply Subtyping.Static.entry_pres
         · Subtyping_Static_prove
       | apply Subtyping.Static.path_pres
@@ -1757,6 +1776,9 @@ mutual
         else
           return (t, [(id, b)])
 
+  | .iso label body, b => do
+    let (body', idm_body) ← Typ.interpret ignore skolems assums body b
+    return (.iso label body', idm_body)
 
   | .entry label body, b => do
     let (body', idm_body) ← Typ.interpret ignore skolems assums body b
@@ -1842,13 +1864,13 @@ mutual
     return (t, [])
 end
 
-def ListSubtyping.recursion_split : List Typ → (List String) × (List Typ)
+def ListSubtyping.loop_split : List Typ → (List String) × (List Typ)
 | [] => ([], [])
 | (.var id) :: ts =>
-    let (ids, ts') := ListSubtyping.recursion_split ts
+    let (ids, ts') := ListSubtyping.loop_split ts
     (id :: ids, ts')
 | t :: ts =>
-    let (ids, ts') := ListSubtyping.recursion_split ts
+    let (ids, ts') := ListSubtyping.loop_split ts
     (ids, t :: ts')
 
 def List.to_option {α} : List α → Option α
@@ -1879,23 +1901,10 @@ def ListSubtyping.remove_by_var (id :String)
     c :: ListSubtyping.remove_by_var id cs
 
 
--- def Typ.try_extrude (lower : Typ) (antec : Typ) (consq : Typ)
--- : Lean.MetaM (List (Typ × Typ) × Typ)
--- := do
---   match lower with
---   | .var _ =>
---     let id_antec ← fresh_typ_id
---     let id_consq ← fresh_typ_id
---     let assums := [(antec, .var id_antec), (.var id_consq, consq)]
---     return (assums, .path (.var id_antec) (.var id_consq))
---   | _ =>
---     return ([], .path antec consq)
-
-
 def ListSubtyping.loop_normal_form (assums : List (Typ × Typ)) (id : String)
 : Option (List (Typ × Typ)) :=
   let bds :=  ListSubtyping.bounds id .false assums
-  let (ids, ts) := ListSubtyping.recursion_split bds
+  let (ids, ts) := ListSubtyping.loop_split bds
   let all_are_paths := ts.all (fun t =>
     match t with
     | Typ.path _ _ => true
@@ -2003,6 +2012,11 @@ mutual
     | .some t => return [⟨Θ, Δ, t⟩]
     | .none => failure
 
+  | .iso label body => do
+    (← Expr.Typing.Static.compute Θ Δ Γ body).mapM (fun ⟨skolems', assums', body'⟩ =>
+      return ⟨skolems', assums', Typ.iso label body'⟩
+    )
+
   | .record r =>  Record.Typing.Static.compute Θ Δ Γ r
 
   | .function f => do
@@ -2106,20 +2120,27 @@ end
 --------------------------------
 --------------------------------
 --------------------------------
+
+#eval [expr|
+  [uno := <elem/> => one := <elem/>]
+  [dos := <elem/> => two := <elem/>]
+]
+
 #eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] [typings| (x : <uno/> & <dos/>)]
+  [ids| ] [subtypings| ] [typings| (x : uno : <elem/> & dos : <elem/>)]
   [expr|
     (
-    [<uno/> => <one/>]
-    [<dos/> => <two/>]
+    [uno := <elem/> => one := <elem/>]
+    [dos := <elem/> => two := <elem/>]
     ) (x)
   ]
 
+-- NOTE: this passes because the typing assumption is absurd (<uno/> & <dos/>) <: BOT
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] [typings| (x : <uno/> & <dos/>)]
   [expr|
     (
-    [<uno/> => <one/>(@)]
+    [<uno/> => <one/>(<elem/>)]
     [<dos/> => <two/>]
     ) (x)
   ]
@@ -2138,25 +2159,25 @@ end
     ])
   ]
 
--- SHOULD FAIL
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    loop ([<guard> self =>
-      [<nil/> => <zero/>]
-      [<cons> n => <succ> (self(n)) ]
-    ])
-  ]
+-- -- SHOULD FAIL
+-- #eval Expr.Typing.Static.compute
+--   [ids| ] [subtypings| ] []
+--   [expr|
+--     loop ([<guard> self =>
+--       [<nil/> => <zero/>]
+--       [<cons> n => <succ> (self(n)) ]
+--     ])
+--   ]
 
--- SHOULD FAIL
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    loop ([<guard> self => <guard> (
-      [<nil/> => <zero/>]
-      [<cons> n => <succ> (self(n)) ]
-    )])
-  ]
+-- -- SHOULD FAIL
+-- #eval Expr.Typing.Static.compute
+--   [ids| ] [subtypings| ] []
+--   [expr|
+--     loop ([<guard> self => <guard> (
+--       [<nil/> => <zero/>]
+--       [<cons> n => <succ> (self(n)) ]
+--     )])
+--   ]
 
 --------------------------------
 --------------------------------
@@ -2240,15 +2261,15 @@ end
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
-    (<uno> <hello/> <dos> <bye/>)
+    (uno := <hello/> ; dos := <bye/>)
   ]
 
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
     (
-      [<uno> x <dos> y => (x,y)]
-    ) (<uno> <hello/> <dos> <bye/>)
+      [uno := x ; dos := y => (x,y)]
+    ) (uno := <hello/> ; dos := <bye/>)
   ]
 
 -------------------------
