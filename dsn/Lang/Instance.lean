@@ -1144,3 +1144,210 @@ def repeat_expr := [expr|
     -- Even -> Uno
     [x => g(f(x))]
   ]
+
+--------------------------------
+--------------------------------
+--------------------------------
+
+#eval [expr|
+  [uno := <elem/> => one := <elem/>]
+  [dos := <elem/> => two := <elem/>]
+]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] [typings| (x : uno : <elem/> & dos : <elem/>)]
+  [expr|
+    (
+    [uno := <elem/> => one := <elem/>]
+    [dos := <elem/> => two := <elem/>]
+    ) (x)
+  ]
+
+-- NOTE: this passes because the typing assumption is absurd (<uno/> & <dos/>) <: BOT
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] [typings| (x : <uno/> & <dos/>)]
+  [expr|
+    (
+    [<uno/> => <one/>(<elem/>)]
+    [<dos/> => <two/>]
+    ) (x)
+  ]
+
+--------------------------------
+--------------------------------
+--------------------------------
+
+-- TODO: interpret further to simplify type
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    loop ([self =>
+      [<nil/> => <zero/>]
+      [<cons> n => <succ> (self(n)) ]
+    ])
+  ]
+
+-- -- SHOULD FAIL
+-- #eval Expr.Typing.Static.compute
+--   [ids| ] [subtypings| ] []
+--   [expr|
+--     loop ([<guard> self =>
+--       [<nil/> => <zero/>]
+--       [<cons> n => <succ> (self(n)) ]
+--     ])
+--   ]
+
+-- -- SHOULD FAIL
+-- #eval Expr.Typing.Static.compute
+--   [ids| ] [subtypings| ] []
+--   [expr|
+--     loop ([<guard> self => <guard> (
+--       [<nil/> => <zero/>]
+--       [<cons> n => <succ> (self(n)) ]
+--     )])
+--   ]
+
+--------------------------------
+--------------------------------
+--------------------------------
+
+-- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [ x =>
+      (
+        [<zero/> => <uno/>]
+        [<succ/> => <dos/> ]
+      ) (
+        (
+          [<nil/> => <zero/>]
+          [<cons/> => <succ/>]
+        ) (x)
+      )
+    ]
+  ]
+
+
+-- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [f => f ](
+      [<nil/> => <zero/>]
+      [<cons/> => <succ/>]
+    )
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [<nil/> => <zero/>]
+    [<cons/> => <succ/>]
+  ]
+
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def f = (
+      [<nil/> => <zero/>]
+      [<cons/> => <succ/>]
+    ) in
+    [x => f(x)]
+  ]
+
+---------------------------------------
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [z =>
+      (
+        [<uno> y => y]
+        [<dos> y => y]
+      )(z)
+    ]
+  ]
+
+---------------------------------------
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    (uno := <hello/> ; dos := <bye/>)
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    (
+      [uno := x ; dos := y => (x,y)]
+    ) (uno := <hello/> ; dos := <bye/>)
+  ]
+
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    loop([self =>
+      [<zero/> => <nil/>]
+      [<succ> n => <cons> (self(n))]
+    ])
+  ]
+
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [ x =>
+      def g = [<zero/> => <uno/>] in
+      g(x)
+    ]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [x => x](<uno/>)
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [u =>
+      [x => x](<uno/>)
+    ]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [u =>
+      [x => u]
+    ](<uno/>)
+  ]
+
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [ x =>
+      [g => g(x)]([<zero/> => <uno/>])
+    ]
+  ]
+
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [g => g(<zero/>)]([<zero/> => <uno/>])
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [ x =>
+      [g => g(x)]
+    ]
+  ]

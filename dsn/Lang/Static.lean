@@ -720,7 +720,7 @@ def Zone.pack (pids : List String) (b : Bool) : Zone → Typ
   -- TODO: make sure exapmles work with the outer_ids
   let outer_ids := [] -- (ListSubtyping.free_vars Δ ∪ fids) ∩ Θ
   let inner_ids := List.diff (ListSubtyping.free_vars inner ∪ fids) (Θ ∪ pids)
-  BiZone.wrap b outer_ids outer inner_ids inner t
+  BiZone.wrap b outer_ids (outer.eraseDups) inner_ids (inner.eraseDups) t
 
 def ListZone.pack (pids : List String) (b : Bool) : List Zone → Typ
 | .nil => Typ.base b
@@ -1042,17 +1042,17 @@ mutual
         if not result.isEmpty then
           return result
         else
-          Lean.logInfo ("<<< lfp debug upper >>>\n" ++ (repr upper))
+          -- Lean.logInfo ("<<< lfp debug upper >>>\n" ++ (repr upper))
           match upper with
           | (.entry l body_upper) => match Typ.factor id lower l with
               | .some fac  =>
-                  Lean.logInfo ("<<< lfp debug fac >>>\n" ++ (repr (Typ.lfp id fac)))
-                  Lean.logInfo ("<<< lfp debug body_upper >>>\n" ++ (repr body_upper))
+                  -- Lean.logInfo ("<<< lfp debug fac >>>\n" ++ (repr (Typ.lfp id fac)))
+                  -- Lean.logInfo ("<<< lfp debug body_upper >>>\n" ++ (repr body_upper))
                   Subtyping.Static.solve skolems assums (.lfp id fac) body_upper
               | .none => return []
           | (.diff l r) => match Typ.height r with
               | .some h =>
-                Lean.logInfo ("<<< lfp debug upper diff h(r)>>>\n" ++ (repr h))
+                -- Lean.logInfo ("<<< lfp debug upper diff h(r)>>>\n" ++ (repr h))
                 if (
                   Typ.is_pattern [] r &&
                   Typ.Monotonic.Static.decide id .true lower &&
@@ -2032,14 +2032,15 @@ mutual
     (← Expr.Typing.Static.compute Θ Δ Γ ef).flatMapM (fun ⟨Θ', Δ', tf⟩ => do
     (← Expr.Typing.Static.compute Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
     (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ => do
-      -- return [ ⟨Θ''', Δ''', (.var α)⟩ ]
-      ------------------------------------
       -- Lean.logInfo ("<<< APP TF  >>>\n" ++ (repr tf))
-      Lean.logInfo ("<<< APP VAR  >>>\n" ++ (repr α))
-      let (t, id_map) ← Typ.repeat_interpret [] Θ''' Δ''' (.var α) .true 3
-      Lean.logInfo ("<<< APP RESULT  >>>\n" ++ (repr t))
+      -- Lean.logInfo ("<<< APP VAR  >>>\n" ++ (repr α))
+      let (t, id_map) ← Typ.repeat_interpret [] Θ''' Δ''' (.var α) .true 10
+      Lean.logInfo ("<<< APP ID MAP  >>>\n" ++ (repr id_map))
+      -- Lean.logInfo ("<<< APP RESULT  >>>\n" ++ (repr t))
       let Δ'''' := ListSubtyping.remove_by_bounds id_map Δ'''
-      return [ ⟨Θ''', Δ'''', t⟩ ]
+      -- return [ ⟨Θ''', Δ'''', t⟩ ]
+      ------------------------------------
+      return [ ⟨Θ''', Δ''', (.var α)⟩ ]
     )))
 
   | .loop e => do
@@ -2059,11 +2060,11 @@ mutual
         Zone.mk (List.mdiff skolems'' Θ) (List.mdiff assums'' Δ) body
       )
 
-      Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
+      -- Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
 
       let zones_normal ← ListZone.loop_normal_form id zones_local
 
-      Lean.logInfo ("<<< ZONES NORMAL >>>\n" ++ (repr zones_normal))
+      -- Lean.logInfo ("<<< ZONES NORMAL >>>\n" ++ (repr zones_normal))
 
       let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_normal
       return [⟨Θ', Δ', t'⟩]
@@ -2117,160 +2118,116 @@ mutual
 
 end
 
---------------------------------
---------------------------------
---------------------------------
+mutual
+  def ListSubtyping.polar_var (b : Bool) (id : String) : List (Typ × Typ) → Bool
+  | [] => .false
+  | (lower, upper) :: rest =>
+    Typ.polar_var (not b) id lower || Typ.polar_var b id upper ||
+    ListSubtyping.polar_var b id rest
 
-#eval [expr|
-  [uno := <elem/> => one := <elem/>]
-  [dos := <elem/> => two := <elem/>]
-]
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] [typings| (x : uno : <elem/> & dos : <elem/>)]
-  [expr|
-    (
-    [uno := <elem/> => one := <elem/>]
-    [dos := <elem/> => two := <elem/>]
-    ) (x)
-  ]
-
--- NOTE: this passes because the typing assumption is absurd (<uno/> & <dos/>) <: BOT
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] [typings| (x : <uno/> & <dos/>)]
-  [expr|
-    (
-    [<uno/> => <one/>(<elem/>)]
-    [<dos/> => <two/>]
-    ) (x)
-  ]
-
---------------------------------
---------------------------------
---------------------------------
-
--- TODO: interpret further to simplify type
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    loop ([self =>
-      [<nil/> => <zero/>]
-      [<cons> n => <succ> (self(n)) ]
-    ])
-  ]
-
--- -- SHOULD FAIL
--- #eval Expr.Typing.Static.compute
---   [ids| ] [subtypings| ] []
---   [expr|
---     loop ([<guard> self =>
---       [<nil/> => <zero/>]
---       [<cons> n => <succ> (self(n)) ]
---     ])
---   ]
-
--- -- SHOULD FAIL
--- #eval Expr.Typing.Static.compute
---   [ids| ] [subtypings| ] []
---   [expr|
---     loop ([<guard> self => <guard> (
---       [<nil/> => <zero/>]
---       [<cons> n => <succ> (self(n)) ]
---     )])
---   ]
-
---------------------------------
---------------------------------
---------------------------------
-
--- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [ x =>
-      (
-        [<zero/> => <uno/>]
-        [<succ/> => <dos/> ]
-      ) (
-        (
-          [<nil/> => <zero/>]
-          [<cons/> => <succ/>]
-        ) (x)
-      )
-    ]
-  ]
-
-
--- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [f => f ](
-      [<nil/> => <zero/>]
-      [<cons/> => <succ/>]
+  def Typ.polar_var (b : Bool) (id : String) : Typ → Bool
+  | .var id' => b && id == id'
+  | .iso _ body => Typ.polar_var b id body
+  | .entry _ body => Typ.polar_var b id body
+  | .path antec consq =>
+    Typ.polar_var (not b) id antec || Typ.polar_var b id consq
+  | .bot => .false
+  | .top => .false
+  | .unio left right =>
+    Typ.polar_var b id left || Typ.polar_var b id right
+  | .inter left right =>
+    Typ.polar_var b id left || Typ.polar_var b id right
+  | .diff minu subtra =>
+    Typ.polar_var b id minu || Typ.polar_var (not b) id subtra
+  | .all ids quals body =>
+    not (ids.contains id) && (
+      ListSubtyping.polar_var (not b) id quals ||
+      Typ.polar_var b id body
     )
-  ]
+  | .exi ids quals body =>
+    not (ids.contains id) && (
+      ListSubtyping.polar_var b id quals ||
+      Typ.polar_var b id body
+    )
+  | .lfp id' body =>
+    id' != id && Typ.polar_var b id body
+end
 
--------------------------
----- NOTE: repacks packaged constraints
----- TODO: once we do the application, it's safe to remove interpreted variables
----- that were generated from applying the function
----- perhaps it's always safe to remove constraints on interpreted variables
----- whether global or local
----- TODO: generalize repack into a type interpreation that depends on solve
----- Should take a Zone as input and return a Zone
----- Both the assumptions and type should be simplified
--------------------------
--- NOTE: we know that new constraints are generated by subtyping's application
--- some of these can be removed; which ones?
--------------------------
+mutual
+  def ListSubtyping.has_connection (ignore : List String) (b : Bool) (t : Typ)
+  : List (Typ × Typ) → Bool
+  | [] => .false
+  | (lower, upper) :: rest =>
+    Typ.has_connection ignore (not b) t lower || Typ.has_connection ignore b t upper ||
+    ListSubtyping.has_connection ignore b t rest
 
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [<nil/> => <zero/>]
-    [<cons/> => <succ/>]
-  ]
+  def Typ.has_connection (ignore : List String) (b : Bool) (t : Typ) : Typ → Bool
+  | .var id => not (ignore.contains id) && Typ.polar_var b id t
+  | .iso _ body => Typ.has_connection ignore b t body
+  | .entry _ body => Typ.has_connection ignore b t body
+  | .path antec consq =>
+    Typ.has_connection ignore (not b) t antec || Typ.has_connection ignore b t consq
+  | .bot => .false
+  | .top => .false
+  | .unio left right =>
+    Typ.has_connection ignore b t left || Typ.has_connection ignore b t right
+  | .inter left right =>
+    Typ.has_connection ignore b t left || Typ.has_connection ignore b t right
+  | .diff minu subtra =>
+    Typ.has_connection ignore b t minu || Typ.has_connection ignore (not b) t subtra
+  | .all ids quals body =>
+      ListSubtyping.has_connection (ids ∪ ignore) (not b) t quals ||
+      Typ.has_connection (ids ∪ ignore) b t body
+  | .exi ids quals body =>
+      ListSubtyping.has_connection (ids ∪ ignore) b t quals ||
+      Typ.has_connection (ids ∪ ignore) b t body
+  | .lfp id body =>
+    Typ.has_connection ([id] ∪ ignore) b t body
+end
 
 
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    def f = (
-      [<nil/> => <zero/>]
-      [<cons/> => <succ/>]
-    ) in
-    [x => f(x)]
-  ]
+def ListSubtyping.get_lowers : List (Typ × Typ) → List Typ
+| [] => []
+| (lower, _) :: rest => lower :: (ListSubtyping.get_lowers rest)
 
----------------------------------------
+def ListSubtyping.get_uppers : List (Typ × Typ) → List Typ
+| [] => []
+| (_, upper) :: rest => upper :: (ListSubtyping.get_uppers rest)
 
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [z =>
-      (
-        [<uno> y => y]
-        [<dos> y => y]
-      )(z)
-    ]
-  ]
 
----------------------------------------
+def Typ.connections (b : Bool) (t : Typ) :  List (Typ × Typ) → List (Typ × Typ)
+| [] => []
+| (lower, upper) :: rest =>
+  if Typ.has_connection [] (not b) t lower ||  Typ.has_connection [] b t upper then
+    (lower, upper) :: (Typ.connections b t rest)
+  else
+    (Typ.connections b t rest)
 
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    (uno := <hello/> ; dos := <bye/>)
-  ]
+def ListTyp.transitive_connections
+(ignore : List (Bool × Typ))
+(constraints : List (Typ × Typ))
+(b : Bool) : List Typ → List (Typ × Typ)
+| [] => []
+| t :: ts =>
+  if ignore.contains (b,t) then
+    let conns := Typ.connections b t constraints
+    let lowers := ListSubtyping.get_lowers conns
+    let uppers := ListSubtyping.get_uppers conns
+    let tcs_lower := ListTyp.transitive_connections ((b,t) :: ignore) constraints (not b) lowers
+    let tcs_upper := ListTyp.transitive_connections ((b,t) :: ignore) constraints b uppers
+    let tcs_rest :=ListTyp.transitive_connections ((b,t) :: ignore) constraints b ts
+    tcs_lower ∪ tcs_upper ∪ tcs_rest
+  else
+    -- Typ.transitive_connections ignore constraints b t ∪
+    ListTyp.transitive_connections ((b,t) :: ignore) constraints b ts
+termination_by ts => constraints.length - ignore.length
+decreasing_by
+· sorry
+· sorry
+· sorry
+· sorry
 
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    (
-      [uno := x ; dos := y => (x,y)]
-    ) (uno := <hello/> ; dos := <bye/>)
-  ]
+
 
 -------------------------
 ---- NOTE: packaged constraint
@@ -2280,15 +2237,10 @@ end
   [expr|
     def f = (
       [<nil/> => <zero/>]
-      [<cons/> => <succ/>]
     ) in
     [x => f(x)]
   ]
 
--- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
--- TODO: should be an intersection, not a union of cases
--- ERROR: result type is dissconnected from constraint
--- ERROR: pruning unsafe
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
@@ -2296,122 +2248,60 @@ end
       [<nil/> => <zero/>]
       [<cons/> => <succ/>]
     ) in
-    def g = (
-      [<zero/> => <uno/>]
-      [<succ/> => <dos/> ]
-    ) in
-    [x => g(f(x))]
+    [x => f(x)]
   ]
 
---------------------------------
---------------------------------
---------------------------------
-
--- RESULT: Even -> Uno | Dos
+-- RESULT: (<nil/> -> <uno/>)
+-- TODO: construct a reachable procedure that filters constraints
+-- to only those that are reachable from payload
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
   [expr|
-    -- Even -> Even
-    def f = loop ([self =>
+    -- def f = (
+    --   [<nil/> => <zero/>]
+    -- ) in
+    def g = (
+      [<zero/> => <uno/>]
+    ) in
+    -- f
+    [x => g([<nil/> => <zero/>](x))]
+  ]
+
+-- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def f = (
       [<nil/> => <zero/>]
-      [<cons> n => <succ> (self(n)) ]
-    ]) in
+      -- [<cons/> => <succ/>]
+    ) in
     def g = (
       [<zero/> => <uno/>]
-      [<succ> n => <dos/> ]
+      -- [<succ/> => <dos/> ]
     ) in
+    -- f
     [x => g(f(x))]
   ]
 
 --------------------------------
-------- BOT ERROR ------------------
+--------------------------------
 --------------------------------
 
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [g => g(<zero/>)]([<zero/> => <uno/>])
-  ]
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [ x =>
-      [g => g(x)]
-    ]
-  ]
-
--- TODO: use simplify type in after interpret_all in tidy function
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [ x =>
-      [g => g(x)]([<zero/> => <uno/>])
-    ]
-  ]
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [ x =>
-      def g = [<zero/> => <uno/>] in
-      g(x)
-    ]
-  ]
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [x => x](<uno/>)
-  ]
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [u =>
-      [x => x](<uno/>)
-    ]
-  ]
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [u =>
-      [x => u]
-    ](<uno/>)
-  ]
-
-#eval ListZone.invert "T970" [
-  { skolems := [ids| ], assums := [], typ := [typ| <zero/> -> <nil/> ] }
-,
-  { skolems := [ids| ], assums := [([typ| T970 ], [typ| T976 -> T977 ])], typ := [typ| <succ> T976 -> <cons> T977 ] }
-]
-
-#eval ListZone.pack ["T970"] .false [
-  { skolems := [ids| ], assums := [], typ := [typ| <zero/> * <nil/> ] },
-  { skolems := [ids| ], assums := [([typ| T976 * T977 ], [typ| T970 ])], typ := [typ| <succ> T976 * <cons> T977 ] }
-]
-
-#eval Typ.factor "T970"
-  [typ| <zero/> * <nil/> | ALL[T976 T977] [ (T976 * T977 <: T970) ] (<succ> T976) * (<cons> T977) ]
-  "left"
-
-#eval LoopListZone.Subtyping.Static.compute [] "T970" [
-  { skolems := [ids| ], assums := [],
-    typ := [typ| <zero/> -> <nil/> ] }
-  ,
-  { skolems := [ids| ], assums := [([typ| T970 ], [typ| T976 -> T977 ])],
-    typ := [typ| <succ> T976 -> <cons> T977 ] }
-]
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    loop([self =>
-      [<zero/> => <nil/>]
-      [<succ> n => <cons> (self(n))]
-    ])
-  ]
+-- -- RESULT: Even -> Uno | Dos
+-- #eval Expr.Typing.Static.compute
+--   [ids| ] [subtypings| ] []
+--   [expr|
+--     -- Even -> Even
+--     def f = loop ([self =>
+--       [<nil/> => <zero/>]
+--       [<cons> n => <succ> (self(n)) ]
+--     ]) in
+--     def g = (
+--       [<zero/> => <uno/>]
+--       [<succ> n => <dos/> ]
+--     ) in
+--     [x => g(f(x))]
+--   ]
 
 
 inductive LoopListZone.Subtyping.Static : List String → String → List Zone → Typ → Prop
