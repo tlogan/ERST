@@ -2212,6 +2212,8 @@ def ListTyp.transitive_connections
   if 1 + ts.length + 4 * constraints.length <= explored.length then
     []
   else if explored.contains (b,t) then
+    ListTyp.transitive_connections explored constraints b ts
+  else
     let conns := Typ.connections b t constraints
     let lowers := ListSubtyping.get_lowers conns
     let uppers := ListSubtyping.get_uppers conns
@@ -2219,8 +2221,6 @@ def ListTyp.transitive_connections
     let tcs_upper := ListTyp.transitive_connections ((b,t) :: explored) constraints b uppers
     let tcs_rest := ListTyp.transitive_connections ((b,t) :: explored) constraints b ts
     tcs_lower ∪ tcs_upper ∪ tcs_rest
-  else
-    ListTyp.transitive_connections ((b,t) :: explored) constraints b ts
 termination_by ts => (ts.length + 4 * constraints.length) - explored.length
 decreasing_by
 · simp [*, List.length];  sorry
