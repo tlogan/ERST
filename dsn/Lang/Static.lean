@@ -2204,29 +2204,29 @@ def Typ.connections (b : Bool) (t : Typ) :  List (Typ × Typ) → List (Typ × T
     (Typ.connections b t rest)
 
 def ListTyp.transitive_connections
-(ignore : List (Bool × Typ))
+(explored : List (Bool × Typ))
 (constraints : List (Typ × Typ))
 (b : Bool) : List Typ → List (Typ × Typ)
 | [] => []
 | t :: ts =>
-  if ignore.contains (b,t) then
+  if 1 + ts.length + 4 * constraints.length <= explored.length then
+    []
+  else if explored.contains (b,t) then
     let conns := Typ.connections b t constraints
     let lowers := ListSubtyping.get_lowers conns
     let uppers := ListSubtyping.get_uppers conns
-    let tcs_lower := ListTyp.transitive_connections ((b,t) :: ignore) constraints (not b) lowers
-    let tcs_upper := ListTyp.transitive_connections ((b,t) :: ignore) constraints b uppers
-    let tcs_rest :=ListTyp.transitive_connections ((b,t) :: ignore) constraints b ts
+    let tcs_lower := ListTyp.transitive_connections ((b,t) :: explored) constraints (not b) lowers
+    let tcs_upper := ListTyp.transitive_connections ((b,t) :: explored) constraints b uppers
+    let tcs_rest := ListTyp.transitive_connections ((b,t) :: explored) constraints b ts
     tcs_lower ∪ tcs_upper ∪ tcs_rest
   else
-    -- Typ.transitive_connections ignore constraints b t ∪
-    ListTyp.transitive_connections ((b,t) :: ignore) constraints b ts
-termination_by ts => constraints.length - ignore.length
+    ListTyp.transitive_connections ((b,t) :: explored) constraints b ts
+termination_by ts => (ts.length + 4 * constraints.length) - explored.length
 decreasing_by
+· simp [*, List.length];  sorry
 · sorry
 · sorry
 · sorry
-· sorry
-
 
 
 -------------------------
