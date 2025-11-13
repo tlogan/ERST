@@ -2186,15 +2186,6 @@ mutual
 end
 
 
-def ListSubtyping.get_lowers : List (Typ × Typ) → List Typ
-| [] => []
-| (lower, _) :: rest => lower :: (ListSubtyping.get_lowers rest)
-
-def ListSubtyping.get_uppers : List (Typ × Typ) → List Typ
-| [] => []
-| (_, upper) :: rest => upper :: (ListSubtyping.get_uppers rest)
-
-
 def Typ.connections (b : Bool) (t : Typ) :  List (Typ × Typ) → List (Typ × Typ)
 | [] => []
 | (lower, upper) :: rest =>
@@ -2204,30 +2195,21 @@ def Typ.connections (b : Bool) (t : Typ) :  List (Typ × Typ) → List (Typ × T
     (Typ.connections b t rest)
 
 def ListTyp.transitive_connections
-(explored : List (Bool × Typ))
-(constraints : List (Typ × Typ))
-(b : Bool) : List Typ → List (Typ × Typ)
-| [] => []
-| t :: ts =>
-  if 1 + ts.length + 4 * constraints.length <= explored.length then
+  (explored : List (Bool × Typ))
+  (constraints : List (Typ × Typ))
+  (b : Bool) (t : Typ) : List (Typ × Typ)
+:=
+  if explored.contains (b,t) then
     []
-  else if explored.contains (b,t) then
-    ListTyp.transitive_connections explored constraints b ts
-  else
+  else if explored.length < 1 + 4 * constraints.length  then
     let conns := Typ.connections b t constraints
-    let lowers := ListSubtyping.get_lowers conns
-    let uppers := ListSubtyping.get_uppers conns
-    let tcs_lower := ListTyp.transitive_connections ((b,t) :: explored) constraints (not b) lowers
-    let tcs_upper := ListTyp.transitive_connections ((b,t) :: explored) constraints b uppers
-    let tcs_rest := ListTyp.transitive_connections ((b,t) :: explored) constraints b ts
-    tcs_lower ∪ tcs_upper ∪ tcs_rest
-termination_by ts => (ts.length + 4 * constraints.length) - explored.length
-decreasing_by
-· simp [*, List.length];  sorry
-· sorry
-· sorry
-· sorry
-
+    conns.flatMap (fun (lower, upper) =>
+      let tcs_lower := ListTyp.transitive_connections ((b,t) :: explored) constraints (not b) lower
+      let tcs_upper := ListTyp.transitive_connections ((b,t) :: explored) constraints b upper
+      tcs_lower ∪ tcs_upper
+    )
+  else
+    []
 
 -------------------------
 ---- NOTE: packaged constraint
