@@ -26,7 +26,7 @@ inductive Typ
 | all :  List String → List (Typ × Typ) → Typ → Typ
 | exi :  List String → List (Typ × Typ) → Typ → Typ
 | lfp :  String → Typ → Typ
-deriving Lean.ToExpr
+deriving Lean.ToExpr, Ord
 
 -- <uno> thing <dos> thing
 -- {uno} thing  or {dos}thing
@@ -517,28 +517,34 @@ mutual
   | .diff left right, _ =>
     let content := Typ.reprPrec left 0 ++ " \\" ++ line ++ Typ.reprPrec right 0
     group content
-  | .all ids subtypings body, _ =>
-    if subtypings.isEmpty then
-      group (
-        "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
-      )
-    else
-      group (
-        "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++
-          "[" ++ line ++ nest 2 (ListSubtyping.repr subtypings) ++ line ++ "]" ++ line ++
-          nest 2 (Typ.reprPrec body 0)
-      )
-  | .exi ids subtypings body, _ =>
-    if subtypings.isEmpty then
-      group (
-        "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
-      )
-    else
-      group (
-        "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++
-          "[" ++ line ++ nest 2 (ListSubtyping.repr subtypings) ++ line ++ "]" ++ line ++
-          nest 2 (Typ.reprPrec body 0)
-      )
+  | .all ids subtypings body, p =>
+    let content := (
+      if subtypings.isEmpty then
+        group (
+          "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
+        )
+      else
+        group (
+          "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++
+            "[" ++ line ++ nest 2 (ListSubtyping.repr subtypings) ++ line ++ "]" ++ line ++
+            nest 2 (Typ.reprPrec body 0)
+        )
+    )
+    group (wrap content p 40)
+  | .exi ids subtypings body, p =>
+    let content := (
+      if subtypings.isEmpty then
+        group (
+          "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
+        )
+      else
+        group (
+          "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++
+            "[" ++ line ++ nest 2 (ListSubtyping.repr subtypings) ++ line ++ "]" ++ line ++
+            nest 2 (Typ.reprPrec body 0)
+        )
+    )
+    group (wrap content p 40)
   | .lfp id body, _ =>
     group (
       "(" ++
@@ -1050,12 +1056,12 @@ syntax "<" ident "/>" : typ
 syntax "<" ident ">" typ:100 : typ
 syntax ident ":" typ:100 : typ
 syntax typ "\\" typ : typ
-syntax "ALL" "[" ids "]" "[" subtypings "]" typ : typ
-syntax "EXI" "[" ids "]" "[" subtypings "]" typ : typ
-syntax "ALL" "[" ids "]" typ : typ
-syntax "EXI" "[" ids "]" typ : typ
-syntax "ALL" "[" "]" "[" subtypings "]" typ : typ
-syntax "EXI" "[" "]" "[" subtypings "]" typ : typ
+syntax:40 "ALL" "[" ids "]" "[" subtypings "]" typ : typ
+syntax:40 "EXI" "[" ids "]" "[" subtypings "]" typ : typ
+syntax:40 "ALL" "[" ids "]" typ : typ
+syntax:40 "EXI" "[" ids "]" typ : typ
+syntax:40 "ALL" "[" "]" "[" subtypings "]" typ : typ
+syntax:40 "EXI" "[" "]" "[" subtypings "]" typ : typ
 syntax "LFP" "[" ident "]" typ : typ
 syntax "BOT" : typ
 syntax "TOP" : typ
