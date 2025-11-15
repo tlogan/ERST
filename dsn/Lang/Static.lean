@@ -1874,64 +1874,47 @@ mutual
 
   | .exi ids_exi quals_exi (.all _ quals body), .true => do
     let constraints := quals_exi ++ quals
-    let zones := (
+
+    let zones ← (
       ← ListSubtyping.Static.solve (ids_exi ∪ skolems) assums constraints
-    ).map (fun (skolems', assums') => Zone.mk skolems' assums' body)
-    -- ).map (fun (skolems', assums') => Zone.mk (List.mdiff skolems' skolems) (List.mdiff assums' assums) body)
-
-    let zones_interp ← zones.mapM (fun zone => Zone.interpret ignore .true zone)
-
-    let zones_local := zones_interp.map (fun ⟨skolems', assums', body'⟩ =>
-      ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
+    ).mapM (fun (skolems', assums') => do
+      let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .true ⟨skolems', assums', body⟩
+      return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
     )
-
-
-    let t := ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones_local
-    return t
+    return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
 
   | (.all _ quals body), .true => do
     let constraints := quals
-    let zones := (
+
+    let zones ← (
       ← ListSubtyping.Static.solve skolems assums constraints
-    ).map (fun (skolems', assums') => Zone.mk skolems' assums' body)
-
-    let zones_interp ← zones.mapM (fun zone => Zone.interpret ignore .true zone)
-
-    let zones_local := zones_interp.map (fun ⟨skolems', assums', body'⟩ =>
-      ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
+    ).mapM (fun (skolems', assums') => do
+      let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .true ⟨skolems', assums', body⟩
+      return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
     )
-
-    let t := ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones_local
-    return t
+    return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
 
   | .all ids_all quals_all (.exi _ quals body), .false => do
     let constraints := quals_all ++ quals
-    let zones := (
+
+    let zones ← (
       ← ListSubtyping.Static.solve (ids_all ∪ skolems) assums constraints
-    ).map (fun (skolems', assums') => Zone.mk skolems' assums' body)
-
-    let zones_interp ← zones.mapM (fun zone => Zone.interpret ignore .false zone)
-
-    let zones_local := zones_interp.map (fun ⟨skolems', assums', body'⟩ =>
-      ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
+    ).mapM (fun (skolems', assums') => do
+      let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .false ⟨skolems', assums', body⟩
+      return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
     )
+    return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
 
-    let t := ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones_local
-    return t
 
   | (.exi _ quals body), .false => do
     let constraints := quals
-    let zones := (
+    let zones ← (
       ← ListSubtyping.Static.solve skolems assums constraints
-    ).map (fun (skolems', assums') => Zone.mk skolems' assums' body)
-
-    let zones_interp ← zones.mapM (fun zone => Zone.interpret ignore .false zone)
-
-    let zones_local := zones_interp.map (fun ⟨skolems', assums', body'⟩ =>
-      ⟨List.mdiff skolems' skolems, List.mdiff assums' assums, body'⟩
+    ).mapM (fun (skolems', assums') => do
+      let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .false ⟨skolems', assums', body⟩
+      return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
     )
-
-    return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones_local
+    return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
 
   | t, _ => do
     return t
@@ -2015,8 +1998,8 @@ mutual
     let nested_zones ← Function.Typing.Static.compute Θ Δ Γ (tp::subtras) f
     let tl := ListTyp.diff tp subtras
     let zones ← (← Expr.Typing.Static.compute Θ Δ' Γ' e).mapM (fun ⟨Θ', Δ'', tr ⟩ => do
-      let zone ← Zone.interpret [] .true ⟨List.diff Θ' Θ, List.diff Δ'' Δ, (.path tl tr)⟩
-      return zone
+      let ⟨skolems'', assums''', t⟩ ← Zone.interpret [] .true ⟨Θ', Δ'', (.path tl tr)⟩
+      return ⟨List.diff skolems'' Θ, List.diff assums''' Δ, t⟩
     )
     return zones :: nested_zones
 
