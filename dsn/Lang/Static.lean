@@ -1975,7 +1975,9 @@ def ListSubtyping.loop_normal_form (assums : List (Typ × Typ)) (id : String)
     | Typ.path _ _ => true
     | _ => true
   )
-  if all_are_paths then
+  if assums.isEmpty then
+    Option.some []
+  else if all_are_paths then
     match List.to_option ids with
     | some id => .some (ListSubtyping.remove_by_var id assums)
     | none => .none
@@ -2110,9 +2112,6 @@ mutual
       let id_antec ← fresh_typ_id
       let id_consq ← fresh_typ_id
 
-      -----------------------------------------------------
-      ---- NEW
-      -----------------------------------------------------
       let body := (Typ.path (.var id_antec) (.var id_consq))
 
       let zones_local ← (
@@ -2122,54 +2121,17 @@ mutual
         return Zone.mk (List.mdiff skolems''' Θ) (List.mdiff assums''' Δ) body'
       )
 
-      -- ISSUE: constraints used in interpretation were not removed
-      Lean.logInfo ("<<< LOOP ID >>>\n" ++ (repr id))
+      -- Lean.logInfo ("<<< LOOP ID >>>\n" ++ (repr id))
 
-      Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
+      -- Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
 
       let zones_normal ← ListZone.loop_normal_form id zones_local
 
-      Lean.logInfo ("<<< ZONES NORMAL >>>\n" ++ (repr zones_normal))
+      -- Lean.logInfo ("<<< ZONES NORMAL >>>\n" ++ (repr zones_normal))
 
       let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_normal
 
-      Lean.logInfo ("<<< POST LOOP LIST ZONE >>>\n" ++ (repr t'))
       return [⟨Θ', Δ', t'⟩]
-
-
-      -----------------------------------------------------
-      -----------------------------------------------------
-      ----------------------------------------------------------------
-
-      -- Lean.logInfo ("<<< INPUT t >>>\n" ++ (repr t))
-
-      -- Lean.logInfo ("<<< ID >>>\n" ++ id)
-
-      -- NOTE: we expect the body of each zone to be a Typ.path
-      -- let zones : List Zone :=
-      --   (← Subtyping.Static.solve Θ' Δ' t (.path (.var id) (.path (.var id_antec) (.var id_consq)))).map (
-      --     fun (Θ'', Δ'') =>
-      --       let (interp, id_map) := Typ.try_interpret_path_var Θ'' Δ'' (Typ.path (.var id_antec) (.var id_consq))
-      --       let Δ''' := ListSubtyping.remove_by_bounds id_map Δ''
-      --       ⟨List.diff Θ'' Θ, List.diff Δ''' Δ, interp⟩
-      --   )
-      -- -- Lean.logInfo ("<<< ID >>>\n" ++ id)
-      -- Lean.logInfo ("<<< ZONES ORIG >>>\n" ++ (repr zones))
-
-      -- match (ListZone.tidy (id :: (ListSubtyping.free_vars Δ)) zones) with
-      -- | .some zones' =>
-
-      --   Lean.logInfo ("<<< ZONES TIDIED >>>\n" ++ (repr zones'))
-      --   -- Lean.logInfo ("<<< ID >>>\n" ++ id)
-      --   -- Lean.logInfo ("<<< BEFORE LOOP LIST ZONE >>>\n" ++ (repr zones'))
-      --   -- Lean.logInfo ("<<< free vars >>>\n" ++ (repr (ListSubtyping.free_vars Δ')))
-      --   let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones'
-      --   -- Lean.logInfo ("<<< t' >>>\n" ++ (repr t'))
-      --   return [⟨Θ', Δ', t'⟩]
-      -- | .none =>
-      --   failure
-      ----------------------------------------------------------------
-      ----------------------------------------------------------------
     )
 
 
@@ -2188,29 +2150,6 @@ end
 ---------------------------------------
 ----- factorization
 ---------------------------------------
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [self =>
-      [<zero/> => <nil/>]
-      [<succ> n => <cons> (self(n))]
-    ]
-  ]
-
-
-#eval Typ.connections .true
-  [typ| T199 -> T200 ]
-  [([typ| <cons> T200 ], [typ| T197 ]),
-              ([typ| T192 ], [typ| T199 -> T200 ]),
-              ([typ| T196 ], [typ| <succ> T199 ])]
-
-#eval Typ.transitive_connections []
-  [([typ| <cons> T200 ], [typ| T197 ]),
-              ([typ| T192 ], [typ| T199 -> T200 ]),
-              ([typ| T196 ], [typ| <succ> T199 ])]
-  .true [typ| <succ> T199 -> <cons> T200 ]
-
 
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
