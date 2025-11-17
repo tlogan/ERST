@@ -1776,14 +1776,22 @@ mutual
     Typ.has_connection ([id] ∪ ignore) b t body
 end
 
-
-def Typ.connections (b : Bool) (t : Typ) :  List (Typ × Typ) → List (Typ × Typ)
+def Typ.connections (b : Bool) (t : Typ) :  List (Typ × Typ) → List (Typ × Typ × Bool)
 | [] => []
 | (lower, upper) :: rest =>
-  if Typ.has_connection [] (not b) t lower ||  Typ.has_connection [] b t upper then
-    (lower, upper) :: (Typ.connections b t rest)
-  else
-    (Typ.connections b t rest)
+  let lower_connections :=
+    if Typ.has_connection [] (not b) t lower then
+      [(lower, upper, (not b))]
+    else
+      []
+
+  let upper_connections :=
+    if Typ.has_connection [] b t upper then
+      [(lower, upper, b)]
+    else
+      []
+
+  lower_connections ∪ upper_connections ∪ (Typ.connections b t rest)
 
 def Typ.transitive_connections
   (explored : List (Bool × Typ))
@@ -1794,13 +1802,14 @@ def Typ.transitive_connections
     []
   else if explored.length < 1 + 4 * constraints.length  then
     let conns := Typ.connections b t constraints
-    (conns.flatMap (fun (lower, upper) =>
-      let tcs_lower := Typ.transitive_connections ((b,t) :: explored) constraints (not b) lower
-      let tcs_upper := Typ.transitive_connections ((b,t) :: explored) constraints b upper
+    (conns.flatMap (fun (lower, upper, b') =>
+      let tcs_lower := Typ.transitive_connections ((b,t) :: explored) constraints (not b') lower
+      let tcs_upper := Typ.transitive_connections ((b,t) :: explored) constraints b' upper
       ([(lower,upper)] ∪ tcs_lower ∪ tcs_upper)
     )).eraseDups
   else
     []
+
 
 -- def Typ.variable_connections (constraints : List (Typ × Typ))
 -- : List String → List (Typ × Typ)
@@ -2106,19 +2115,25 @@ mutual
       -----------------------------------------------------
       let body := (Typ.path (.var id_antec) (.var id_consq))
 
-      let zones_local := (
+      let zones_local ← (
         ← Subtyping.Static.solve Θ' Δ' t (Typ.path (.var id) body)
-      ).map (fun (skolems'', assums'') =>
-        Zone.mk (List.mdiff skolems'' Θ) (List.mdiff assums'' Δ) body
+      ).mapM (fun (skolems'', assums'') => do
+        let ⟨skolems''', assums''', body'⟩ ← Zone.interpret [id] .true ⟨skolems'', assums'', body⟩
+        return Zone.mk (List.mdiff skolems''' Θ) (List.mdiff assums''' Δ) body'
       )
 
-      -- Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
+      -- ISSUE: constraints used in interpretation were not removed
+      Lean.logInfo ("<<< LOOP ID >>>\n" ++ (repr id))
+
+      Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
 
       let zones_normal ← ListZone.loop_normal_form id zones_local
 
-      -- Lean.logInfo ("<<< ZONES NORMAL >>>\n" ++ (repr zones_normal))
+      Lean.logInfo ("<<< ZONES NORMAL >>>\n" ++ (repr zones_normal))
 
       let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_normal
+
+      Lean.logInfo ("<<< POST LOOP LIST ZONE >>>\n" ++ (repr t'))
       return [⟨Θ', Δ', t'⟩]
 
 
@@ -2169,6 +2184,45 @@ mutual
       return []
 
 end
+
+---------------------------------------
+----- factorization
+---------------------------------------
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [self =>
+      [<zero/> => <nil/>]
+      [<succ> n => <cons> (self(n))]
+    ]
+  ]
+
+
+#eval Typ.connections .true
+  [typ| T199 -> T200 ]
+  [([typ| <cons> T200 ], [typ| T197 ]),
+              ([typ| T192 ], [typ| T199 -> T200 ]),
+              ([typ| T196 ], [typ| <succ> T199 ])]
+
+#eval Typ.transitive_connections []
+  [([typ| <cons> T200 ], [typ| T197 ]),
+              ([typ| T192 ], [typ| T199 -> T200 ]),
+              ([typ| T196 ], [typ| <succ> T199 ])]
+  .true [typ| <succ> T199 -> <cons> T200 ]
+
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    loop([self =>
+      [<zero/> => <nil/>]
+      [<succ> n => <cons> (self(n))]
+    ])
+  ]
+
+-------------------------------------------------
+-------------------------------------------------
 
 #eval Expr.Typing.Static.compute
   [ids| ] [subtypings| ] []
@@ -2239,6 +2293,21 @@ end
       -- f
       [x => g(f(x))]
     ]
+  ]
+
+-- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+      def f = (
+        [<nil/>  => <zero/>]
+        [<cons/>  => <succ/>]
+      ) in
+      def g = (
+        [<zero/> => <uno/>]
+        [<succ/> => <dos/> ]
+      ) in
+      [x => g(f(x))]
   ]
 
 --------------------------------

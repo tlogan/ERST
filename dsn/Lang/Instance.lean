@@ -435,7 +435,7 @@ example : Subtyping.Static
 
 #eval Subtyping.Static.solve
   [] []
-  [typ| LFP[R] <zero/> | EXI[N] [ (N <: R) ] <succ> N ]
+  [typ| LFP[R] <zero/> | (EXI[N] [ (N <: R) ] <succ> N ) ]
   [typ| LFP[R] (<zero/> | <succ> R) ]
 
 -- example : Subtyping.Static
@@ -454,7 +454,7 @@ example : Subtyping.Static
   [] []
   [typ| LFP[R]  (
       (<zero/> * <nil/>) |
-      EXI [N L][(N*L <: R)] (<succ> N) * (<cons> L)
+      (EXI [N L][(N*L <: R)] (<succ> N) * (<cons> L))
   )]
   [typ| left : LFP[R] (<zero/> | <succ> R) ]
 
@@ -463,7 +463,7 @@ example : Subtyping.Static
   [] []
   [typ| LFP[R]  (
       (<zero/> * <nil/>) |
-      EXI [N L][(N*L <: R)] (<succ> N) * (<cons> L)
+      (EXI [N L][(N*L <: R)] (<succ> N) * (<cons> L))
   )]
   [typ| left : LFP[R] (<zero/> | <succ> R) ]
   [ids| N ] [subtypings| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
