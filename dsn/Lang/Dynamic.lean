@@ -122,9 +122,9 @@ inductive Progression : Expr → Expr → Prop
     (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
 
 
-inductive MultiProgression : Expr → Expr → Prop
-| refl {e} : MultiProgression e e
-| step {e e' e''} : MultiProgression e e' → MultiProgression e e'' → MultiProgression e e''
+inductive ProgressionStar : Expr → Expr → Prop
+| refl {e} : ProgressionStar e e
+| step {e e' e''} : Progression e e' → ProgressionStar e' e'' → ProgressionStar e e''
 
 
 def Typing.Dynamic.Fin (e : Expr) : Typ → Prop
@@ -165,7 +165,7 @@ def Typ.Monotonic.Dynamic (am : List (String × Typ)) (id : String) (body : Typ)
 
   def Typing.Dynamic (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
-  | .top => ∃ e',  Expr.is_value e' ∧ MultiProgression e e'
+  | .top => ∃ e',  Expr.is_value e' ∧ ProgressionStar e e'
   | .iso l τ => Typing.Dynamic am (.proj_iso e l) τ
   | .entry l τ => Typing.Dynamic am (.proj_entry e l) τ
   | .path left right => ∀ e' , Typing.Dynamic am e' left → Typing.Dynamic am (.app e e') right
