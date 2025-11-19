@@ -1961,7 +1961,7 @@ def List.to_option {α} : List α → Option α
 | x :: [] => .some x
 | _ => .none
 
-def ListSubtyping.remove_by_var (id :String)
+def ListSubtyping.remove_by_var (id : String)
 : List (Typ × Typ) → List (Typ × Typ)
 | [] => []
 | (.var idl, .var idu) :: cs =>
@@ -2001,19 +2001,6 @@ def ListSubtyping.loop_normal_form (assums : List (Typ × Typ)) (id : String)
     | none => .none
   else
     Option.none
-
-def ListZone.loop_normal_form (id : String) :
-List Zone → Lean.MetaM (List Zone)
-| [] => return []
-| zone :: zones => do
-  let ⟨skolems, assums, body⟩ ← Zone.interpret [] .true zone
-  let zones_normal ← ListZone.loop_normal_form id zones
-  match ListSubtyping.loop_normal_form assums id with
-  | .some assums' =>
-    return ⟨skolems, assums', body⟩ :: zones_normal
-  | .none => return zones_normal
-
-
 
 
 mutual
@@ -2134,17 +2121,19 @@ mutual
 
       let zones_local ← (
         ← Subtyping.Static.solve Θ' Δ' t (Typ.path (.var id) body)
-      ).mapM (fun (skolems'', assums'') => do
-        let ⟨skolems''', assums''', body'⟩ ← Zone.interpret [id] .true ⟨skolems'', assums'', body⟩
-        return Zone.mk (List.mdiff skolems''' Θ) (List.mdiff assums''' Δ) body'
+      ).flatMapM (fun (skolems'', assums'') => do
+        let ⟨skolems''', assums'', body'⟩ ← Zone.interpret [id] .true ⟨skolems'', assums'', body⟩
+        let op_assums''' := ListSubtyping.loop_normal_form assums'' id
+        match op_assums''' with
+        | some assums''' =>
+          return [Zone.mk (List.mdiff skolems''' Θ) (List.mdiff assums''' Δ) body']
+        | none => return []
       )
 
-      -- Lean.logInfo ("<<< LOOP ID >>>\n" ++ (repr id))
-      -- Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
-      let zones_normal ← ListZone.loop_normal_form id zones_local
-      -- Lean.logInfo ("<<< ZONES NORMAL >>>\n" ++ (repr zones_normal))
+      Lean.logInfo ("<<< LOOP ID >>>\n" ++ (repr id))
+      Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
 
-      let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_normal
+      let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_local
 
       return [⟨Θ', Δ', t'⟩]
     )
