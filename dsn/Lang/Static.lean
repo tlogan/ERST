@@ -1984,7 +1984,7 @@ def ListSubtyping.remove_by_var (id : String)
     c :: ListSubtyping.remove_by_var id cs
 
 
-def ListSubtyping.loop_normal_form (assums : List (Typ × Typ)) (id : String)
+def ListSubtyping.loop_normal_form (id : String) (assums : List (Typ × Typ))
 : Option (List (Typ × Typ)) :=
   let bds :=  ListSubtyping.bounds id .false assums
   let (ids, ts) := ListSubtyping.loop_split bds
@@ -2123,16 +2123,14 @@ mutual
         ← Subtyping.Static.solve Θ' Δ' t (Typ.path (.var id) body)
       ).flatMapM (fun (skolems'', assums'') => do
         let ⟨skolems''', assums'', body'⟩ ← Zone.interpret [id] .true ⟨skolems'', assums'', body⟩
-        let op_assums''' := ListSubtyping.loop_normal_form assums'' id
+        let op_assums''' := ListSubtyping.loop_normal_form id assums''
         match op_assums''' with
         | some assums''' =>
           return [Zone.mk (List.mdiff skolems''' Θ) (List.mdiff assums''' Δ) body']
         | none => return []
       )
-
-      Lean.logInfo ("<<< LOOP ID >>>\n" ++ (repr id))
-      Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
-
+      -- Lean.logInfo ("<<< LOOP ID >>>\n" ++ (repr id))
+      -- Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
       let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_local
 
       return [⟨Θ', Δ', t'⟩]
