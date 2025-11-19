@@ -1208,219 +1208,219 @@ mutual
   inductive ListSubtyping.Static
   : List String → List (Typ × Typ) → List (Typ × Typ)
   → List String → List (Typ × Typ) → Prop
-    | nil {skolems assums} : ListSubtyping.Static skolems assums [] skolems assums
-    | cons {skolems assums skolems'' assums''} l r cs skolems' assums' :
-      Subtyping.Static skolems assums l r skolems' assums' →
-      ListSubtyping.Static skolems' assums' cs skolems'' assums'' →
-      ListSubtyping.Static skolems assums ((l,r) :: cs) skolems'' assums''
+  | nil {skolems assums} : ListSubtyping.Static skolems assums [] skolems assums
+  | cons {skolems assums skolems'' assums''} l r cs skolems' assums' :
+    Subtyping.Static skolems assums l r skolems' assums' →
+    ListSubtyping.Static skolems' assums' cs skolems'' assums'' →
+    ListSubtyping.Static skolems assums ((l,r) :: cs) skolems'' assums''
 
 
   inductive Subtyping.Static
   : List String → List (Typ × Typ)
   → Typ → Typ
   → List String → List (Typ × Typ) → Prop
-    | refl skolems assums t :
-      Subtyping.Static skolems assums t t skolems assums
+  | refl skolems assums t :
+    Subtyping.Static skolems assums t t skolems assums
 
-    -- implication preservation
-    | iso_pres {skolems assums skolems' assums' } l lower upper :
-      Subtyping.Static skolems assums lower upper skolems' assums' →
-      Subtyping.Static skolems assums (.iso l lower) (.iso l upper) skolems' assums'
+  -- implication preservation
+  | iso_pres {skolems assums skolems' assums' } l lower upper :
+    Subtyping.Static skolems assums lower upper skolems' assums' →
+    Subtyping.Static skolems assums (.iso l lower) (.iso l upper) skolems' assums'
 
-    | entry_pres {skolems assums skolems' assums' } l lower upper :
-      Subtyping.Static skolems assums lower upper skolems' assums' →
-      Subtyping.Static skolems assums (.entry l lower) (.entry l upper) skolems' assums'
+  | entry_pres {skolems assums skolems' assums' } l lower upper :
+    Subtyping.Static skolems assums lower upper skolems' assums' →
+    Subtyping.Static skolems assums (.entry l lower) (.entry l upper) skolems' assums'
 
-    | path_pres {skolems assums skolems'' assums''} p q x y  skolems' assums' :
-      Subtyping.Static skolems assums x p skolems' assums' →
-      Subtyping.Static skolems' assums' q y skolems'' assums'' →
-      Subtyping.Static skolems assums (.path p q) (.path x y) skolems'' assums''
+  | path_pres {skolems assums skolems'' assums''} p q x y  skolems' assums' :
+    Subtyping.Static skolems assums x p skolems' assums' →
+    Subtyping.Static skolems' assums' q y skolems'' assums'' →
+    Subtyping.Static skolems assums (.path p q) (.path x y) skolems'' assums''
 
-    -- bottom elimination
-    | bot_elim skolems assums t :
-      Subtyping.Static skolems assums .bot t skolems assums
+  -- bottom elimination
+  | bot_elim skolems assums t :
+    Subtyping.Static skolems assums .bot t skolems assums
 
-    -- top introduction
-    | top_intro skolems assums t :
-      Subtyping.Static skolems assums t .top skolems assums
+  -- top introduction
+  | top_intro skolems assums t :
+    Subtyping.Static skolems assums t .top skolems assums
 
-    -- expansion elimination
-    | unio_elim {skolems assums skolems'' assums''} left right t skolems' assums' :
-      Subtyping.Static skolems assums left t skolems' assums' →
-      Subtyping.Static skolems' assums' right t skolems'' assums'' →
-      Subtyping.Static skolems assums (.unio left right) t skolems'' assums''
+  -- expansion elimination
+  | unio_elim {skolems assums skolems'' assums''} left right t skolems' assums' :
+    Subtyping.Static skolems assums left t skolems' assums' →
+    Subtyping.Static skolems' assums' right t skolems'' assums'' →
+    Subtyping.Static skolems assums (.unio left right) t skolems'' assums''
 
-    | exi_elim {skolems assums skolems'' assums''} ids quals body t skolems' assums' :
-      ListSubtyping.restricted skolems assums quals →
-      ids ∩ Typ.free_vars t = [] →
-      -- NOTE: require quals to contain all bound variables so we can use it for freshness guarantees
-      ids ⊆ ListSubtyping.free_vars quals →
-      ListSubtyping.Static skolems assums quals skolems' assums' →
-      Subtyping.Static (ids ++ skolems') assums' body t skolems'' assums'' →
-      Subtyping.Static skolems assums (.exi ids quals body) t skolems'' assums''
+  | exi_elim {skolems assums skolems'' assums''} ids quals body t skolems' assums' :
+    ListSubtyping.restricted skolems assums quals →
+    ids ∩ Typ.free_vars t = [] →
+    -- NOTE: require quals to contain all bound variables so we can use it for freshness guarantees
+    ids ⊆ ListSubtyping.free_vars quals →
+    ListSubtyping.Static skolems assums quals skolems' assums' →
+    Subtyping.Static (ids ++ skolems') assums' body t skolems'' assums'' →
+    Subtyping.Static skolems assums (.exi ids quals body) t skolems'' assums''
 
-    -- refinement introduction
-    | inter_intro {skolems assums skolems'' assums''} t left right skolems' assums' :
-      Subtyping.Static skolems assums t left skolems' assums' →
-      Subtyping.Static skolems' assums' t right skolems'' assums'' →
-      Subtyping.Static skolems assums t (.inter left right) skolems'' assums''
+  -- refinement introduction
+  | inter_intro {skolems assums skolems'' assums''} t left right skolems' assums' :
+    Subtyping.Static skolems assums t left skolems' assums' →
+    Subtyping.Static skolems' assums' t right skolems'' assums'' →
+    Subtyping.Static skolems assums t (.inter left right) skolems'' assums''
 
-    | all_intro {skolems assums skolems'' assums''} t ids quals body skolems' assums' :
-      ListSubtyping.restricted skolems assums quals →
-      ids ∩ Typ.free_vars t = [] →
-      ids ⊆ ListSubtyping.free_vars quals →
-      ListSubtyping.Static skolems assums quals skolems' assums' →
-      Subtyping.Static (ids ++ skolems') assums' t body skolems'' assums'' →
-      Subtyping.Static skolems assums t (.all ids quals body) skolems'' assums''
+  | all_intro {skolems assums skolems'' assums''} t ids quals body skolems' assums' :
+    ListSubtyping.restricted skolems assums quals →
+    ids ∩ Typ.free_vars t = [] →
+    ids ⊆ ListSubtyping.free_vars quals →
+    ListSubtyping.Static skolems assums quals skolems' assums' →
+    Subtyping.Static (ids ++ skolems') assums' t body skolems'' assums'' →
+    Subtyping.Static skolems assums t (.all ids quals body) skolems'' assums''
 
-    -- placeholder elimination
-    | placeholder_elim {skolems assums t skolems'} id cs assums' :
-      id ∉ skolems →
-      (∀ t', (t', .var id) ∈ assums → (t', t) ∈ cs) →
-      ListSubtyping.Static skolems assums cs skolems' assums' →
-      Subtyping.Static skolems assums (.var id) t skolems' ((.var id, t) :: assums')
+  -- placeholder elimination
+  | placeholder_elim {skolems assums t skolems'} id cs assums' :
+    id ∉ skolems →
+    (∀ t', (t', .var id) ∈ assums → (t', t) ∈ cs) →
+    ListSubtyping.Static skolems assums cs skolems' assums' →
+    Subtyping.Static skolems assums (.var id) t skolems' ((.var id, t) :: assums')
 
-    -- placeholder introduction
-    | placeholder_intro {skolems assums t skolems'} id cs assums' :
-      id ∉ skolems →
-      (∀ t', (.var id, t') ∈ assums → (t, t') ∈ cs) →
-      ListSubtyping.Static skolems assums cs skolems' assums' →
-      Subtyping.Static skolems assums t (.var id) skolems' ((t, .var id) :: assums')
+  -- placeholder introduction
+  | placeholder_intro {skolems assums t skolems'} id cs assums' :
+    id ∉ skolems →
+    (∀ t', (.var id, t') ∈ assums → (t, t') ∈ cs) →
+    ListSubtyping.Static skolems assums cs skolems' assums' →
+    Subtyping.Static skolems assums t (.var id) skolems' ((t, .var id) :: assums')
 
-    -- skolem placeholder introduction
-    | skolem_placeholder_intro {skolems assums t skolems'} id cs assums' :
-      id ∈ skolems →
-      (∃ id', (.var id', .var id) ∈ assums ∧ id' ∉ skolems) →
-      (∀ t', (.var id, t') ∈ assums → (t, t') ∈ cs) →
-      ListSubtyping.Static skolems assums cs skolems' assums' →
-      Subtyping.Static skolems assums t (.var id) skolems' ((t, .var id) :: assums')
+  -- skolem placeholder introduction
+  | skolem_placeholder_intro {skolems assums t skolems'} id cs assums' :
+    id ∈ skolems →
+    (∃ id', (.var id', .var id) ∈ assums ∧ id' ∉ skolems) →
+    (∀ t', (.var id, t') ∈ assums → (t, t') ∈ cs) →
+    ListSubtyping.Static skolems assums cs skolems' assums' →
+    Subtyping.Static skolems assums t (.var id) skolems' ((t, .var id) :: assums')
 
-    -- skolem introduction
-    | skolem_intro {skolems assums t skolems' assums'} t' id :
-      id ∈ skolems →
-      (t', .var id) ∈ assums →
-      (∀ id', (.var id') = t' → id' ∈ skolems) →
-      Subtyping.Static skolems assums t t' skolems' assums' →
-      Subtyping.Static skolems assums t (.var id) skolems' assums'
+  -- skolem introduction
+  | skolem_intro {skolems assums t skolems' assums'} t' id :
+    id ∈ skolems →
+    (t', .var id) ∈ assums →
+    (∀ id', (.var id') = t' → id' ∈ skolems) →
+    Subtyping.Static skolems assums t t' skolems' assums' →
+    Subtyping.Static skolems assums t (.var id) skolems' assums'
 
-    -- skolem placeholder elimination
-    | skolem_placeholder_elim {skolems assums t skolems'} id cs assums':
-      id ∈ skolems →
-      (∃ id', (.var id, .var id') ∈ assums ∧ id' ∉ skolems) →
-      (∀ t', (t', .var id) ∈ assums → (t', t) ∈ cs) →
-      ListSubtyping.Static skolems assums cs skolems' assums' →
-      Subtyping.Static skolems assums (.var id) t skolems' ((.var id, t) :: assums')
+  -- skolem placeholder elimination
+  | skolem_placeholder_elim {skolems assums t skolems'} id cs assums':
+    id ∈ skolems →
+    (∃ id', (.var id, .var id') ∈ assums ∧ id' ∉ skolems) →
+    (∀ t', (t', .var id) ∈ assums → (t', t) ∈ cs) →
+    ListSubtyping.Static skolems assums cs skolems' assums' →
+    Subtyping.Static skolems assums (.var id) t skolems' ((.var id, t) :: assums')
 
-    -- skolem elimination
-    | skolem_elim {skolems assums t skolems' assums'} t' id :
-      id ∈ skolems →
-      (.var id, t') ∈ assums →
-      (∀ id', (.var id') = t → id' ∈ skolems) →
-      Subtyping.Static skolems assums t' t skolems' assums' →
-      Subtyping.Static skolems assums (.var id) t skolems' assums'
+  -- skolem elimination
+  | skolem_elim {skolems assums t skolems' assums'} t' id :
+    id ∈ skolems →
+    (.var id, t') ∈ assums →
+    (∀ id', (.var id') = t → id' ∈ skolems) →
+    Subtyping.Static skolems assums t' t skolems' assums' →
+    Subtyping.Static skolems assums (.var id) t skolems' assums'
 
-    | unio_antec {skolems assums l skolems'' assums''} a b upper assums' skolems' :
-      Subtyping.Static skolems assums l (.path a upper) skolems' assums' →
-      Subtyping.Static skolems' assums' l (.path b upper) skolems'' assums'' →
-      Subtyping.Static skolems assums l (.path (.unio a b) upper) skolems'' assums''
+  | unio_antec {skolems assums l skolems'' assums''} a b upper assums' skolems' :
+    Subtyping.Static skolems assums l (.path a upper) skolems' assums' →
+    Subtyping.Static skolems' assums' l (.path b upper) skolems'' assums'' →
+    Subtyping.Static skolems assums l (.path (.unio a b) upper) skolems'' assums''
 
-    | inter_conseq {skolems assums l skolems'' assums''} upper a b skolems' assums':
-      Subtyping.Static skolems assums l (.path upper a) skolems' assums' →
-      Subtyping.Static skolems' assums' l (.path upper b) skolems'' assums'' →
-      Subtyping.Static skolems assums l (.path upper (.inter a b)) skolems'' assums''
+  | inter_conseq {skolems assums l skolems'' assums''} upper a b skolems' assums':
+    Subtyping.Static skolems assums l (.path upper a) skolems' assums' →
+    Subtyping.Static skolems' assums' l (.path upper b) skolems'' assums'' →
+    Subtyping.Static skolems assums l (.path upper (.inter a b)) skolems'' assums''
 
-    | inter_entry {skolems assums t skolems'' assums''} l a b skolems' assums':
-      Subtyping.Static skolems assums t (.entry l a) skolems' assums' →
-      Subtyping.Static skolems' assums' t (.entry l b) skolems'' assums'' →
-      Subtyping.Static skolems assums t (.entry l (.inter a b)) skolems'' assums''
+  | inter_entry {skolems assums t skolems'' assums''} l a b skolems' assums':
+    Subtyping.Static skolems assums t (.entry l a) skolems' assums' →
+    Subtyping.Static skolems' assums' t (.entry l b) skolems'' assums'' →
+    Subtyping.Static skolems assums t (.entry l (.inter a b)) skolems'' assums''
 
-    -- least fixed point elimination
-    | lfp_skip_elim {skolems assums right skolems' assums'} id body :
-      id ∉ Typ.free_vars body →
-      Subtyping.Static skolems assums body right skolems' assums' →
-      Subtyping.Static skolems assums (.lfp id body) right skolems' assums'
+  -- least fixed point elimination
+  | lfp_skip_elim {skolems assums right skolems' assums'} id body :
+    id ∉ Typ.free_vars body →
+    Subtyping.Static skolems assums body right skolems' assums' →
+    Subtyping.Static skolems assums (.lfp id body) right skolems' assums'
 
-    | lfp_induct_elim {skolems assums upper skolems' assums'} id lower :
-      Typ.Monotonic.Static id .true lower →
-      Subtyping.Static skolems assums (Typ.sub [(id, upper)] lower) upper skolems' assums' →
-      Subtyping.Static skolems assums (.lfp id lower) upper skolems' assums'
+  | lfp_induct_elim {skolems assums upper skolems' assums'} id lower :
+    Typ.Monotonic.Static id .true lower →
+    Subtyping.Static skolems assums (Typ.sub [(id, upper)] lower) upper skolems' assums' →
+    Subtyping.Static skolems assums (.lfp id lower) upper skolems' assums'
 
-    | lfp_factor_elim {skolems assums l skolems' assums'} id lower upper fac :
-      Typ.factor id lower l = .some fac →
-      Subtyping.Static skolems assums fac upper skolems' assums' →
-      Subtyping.Static skolems assums (.lfp id lower) (.entry l upper) skolems' assums'
+  | lfp_factor_elim {skolems assums l skolems' assums'} id lower upper fac :
+    Typ.factor id lower l = .some fac →
+    Subtyping.Static skolems assums fac upper skolems' assums' →
+    Subtyping.Static skolems assums (.lfp id lower) (.entry l upper) skolems' assums'
 
-    | lfp_elim_diff_intro {skolems assums skolems' assums'} id lower upper sub h :
-      -- TODO: check if is_pattern is subsumed by check
-      Typ.is_pattern [] sub →
-      -- TODO: struct_less_than might not be necessary
-      Typ.struct_less_than (.var id) lower →
-      Typ.height sub = .some h →
-      Typ.Monotonic.Static id .true lower →
-      Subtyping.Static skolems assums (.lfp id lower) upper skolems' assums' →
-      ¬ (Subtyping.check (Typ.subfold id lower 1) sub) →
-      ¬ (Subtyping.check sub (Typ.subfold id lower h)) →
-      Subtyping.Static skolems assums (.lfp id lower) (.diff upper sub) skolems' assums'
+  | lfp_elim_diff_intro {skolems assums skolems' assums'} id lower upper sub h :
+    -- TODO: check if is_pattern is subsumed by check
+    Typ.is_pattern [] sub →
+    -- TODO: struct_less_than might not be necessary
+    Typ.struct_less_than (.var id) lower →
+    Typ.height sub = .some h →
+    Typ.Monotonic.Static id .true lower →
+    Subtyping.Static skolems assums (.lfp id lower) upper skolems' assums' →
+    ¬ (Subtyping.check (Typ.subfold id lower 1) sub) →
+    ¬ (Subtyping.check sub (Typ.subfold id lower h)) →
+    Subtyping.Static skolems assums (.lfp id lower) (.diff upper sub) skolems' assums'
 
-    -- difference introduction
-    | diff_intro {skolems assums lower skolems' assums'} upper sub:
-      Typ.is_pattern [] sub →
-      ¬ Subtyping.check lower sub →
-      ¬ Subtyping.check sub lower →
-      Subtyping.Static skolems assums lower upper skolems' assums' →
-      Subtyping.Static skolems assums lower (.diff upper sub) skolems' assums'
+  -- difference introduction
+  | diff_intro {skolems assums lower skolems' assums'} upper sub:
+    Typ.is_pattern [] sub →
+    ¬ Subtyping.check lower sub →
+    ¬ Subtyping.check sub lower →
+    Subtyping.Static skolems assums lower upper skolems' assums' →
+    Subtyping.Static skolems assums lower (.diff upper sub) skolems' assums'
 
 
-    -- least fixed point introduction
-    | lfp_peel_intro {skolems assums lower skolems' assums'} id body :
-      -- TODO: peelable is a heuristic;
-      -- it's not necessary for soundness
-      -- consider merely using it in tactic
-      Subtyping.peelable lower body →
-      Subtyping.Static skolems assums lower (.sub [(id, .lfp id body)] body) skolems' assums' →
-      Subtyping.Static skolems assums lower (.lfp id body) skolems' assums'
+  -- least fixed point introduction
+  | lfp_peel_intro {skolems assums lower skolems' assums'} id body :
+    -- TODO: peelable is a heuristic;
+    -- it's not necessary for soundness
+    -- consider merely using it in tactic
+    Subtyping.peelable lower body →
+    Subtyping.Static skolems assums lower (.sub [(id, .lfp id body)] body) skolems' assums' →
+    Subtyping.Static skolems assums lower (.lfp id body) skolems' assums'
 
-    | lfp_drop_intro {skolems assums lower skolems' assums'} id body :
-      Subtyping.Static skolems assums lower (Typ.drop id body) skolems' assums' →
-      Subtyping.Static skolems assums lower (.lfp id body) skolems' assums'
+  | lfp_drop_intro {skolems assums lower skolems' assums'} id body :
+    Subtyping.Static skolems assums lower (Typ.drop id body) skolems' assums' →
+    Subtyping.Static skolems assums lower (.lfp id body) skolems' assums'
 
-    -- difference elimination
-    | diff_elim {skolems assums skolems' assums'} lower sub upper :
-      Subtyping.Static skolems assums lower (.unio sub upper) skolems' assums' →
-      Subtyping.Static skolems assums (.diff lower sub) upper skolems' assums'
+  -- difference elimination
+  | diff_elim {skolems assums skolems' assums'} lower sub upper :
+    Subtyping.Static skolems assums lower (.unio sub upper) skolems' assums' →
+    Subtyping.Static skolems assums (.diff lower sub) upper skolems' assums'
 
-    -- expansion introduction
-    | unio_left_intro {skolems assums skolems' assums'} t l r:
-      Subtyping.Static skolems assums t l skolems' assums' →
-      Subtyping.Static skolems assums t (.unio l r) skolems' assums'
+  -- expansion introduction
+  | unio_left_intro {skolems assums skolems' assums'} t l r:
+    Subtyping.Static skolems assums t l skolems' assums' →
+    Subtyping.Static skolems assums t (.unio l r) skolems' assums'
 
-    | unio_right_intro {skolems assums skolems' assums'} t l r :
-      Subtyping.Static skolems assums t r skolems' assums' →
-      Subtyping.Static skolems assums t (.unio l r) skolems' assums'
+  | unio_right_intro {skolems assums skolems' assums'} t l r :
+    Subtyping.Static skolems assums t r skolems' assums' →
+    Subtyping.Static skolems assums t (.unio l r) skolems' assums'
 
-    | exi_intro {skolems assums lower skolems'' assums''} ids quals upper skolems' assums' :
-      Subtyping.Static skolems assums lower upper skolems' assums' →
-      ListSubtyping.Static skolems' assums' quals skolems'' assums'' →
-      Subtyping.Static skolems assums lower (.exi ids quals upper)  skolems'' assums''
+  | exi_intro {skolems assums lower skolems'' assums''} ids quals upper skolems' assums' :
+    Subtyping.Static skolems assums lower upper skolems' assums' →
+    ListSubtyping.Static skolems' assums' quals skolems'' assums'' →
+    Subtyping.Static skolems assums lower (.exi ids quals upper)  skolems'' assums''
 
-    -- refinement elimination
-    | inter_left_elim {skolems assums skolems' assums'} l r t :
-      Subtyping.Static skolems assums l t skolems' assums' →
-      Subtyping.Static skolems assums (.inter l r) t skolems' assums'
+  -- refinement elimination
+  | inter_left_elim {skolems assums skolems' assums'} l r t :
+    Subtyping.Static skolems assums l t skolems' assums' →
+    Subtyping.Static skolems assums (.inter l r) t skolems' assums'
 
-    | inter_right_elim {skolems assums skolems' assums'} l r t :
-      Subtyping.Static skolems assums r t skolems' assums' →
-      Subtyping.Static skolems assums (.inter l r) t skolems' assums'
+  | inter_right_elim {skolems assums skolems' assums'} l r t :
+    Subtyping.Static skolems assums r t skolems' assums' →
+    Subtyping.Static skolems assums (.inter l r) t skolems' assums'
 
-    -- | inter_merge_elim skolems assums l r p q t skolems' assums' :
-    --   Typ.merge_paths (.inter l r) = .some t →
-    --   Subtyping.Static skolems assums t (.path p q) skolems' assums' →
-    --   Subtyping.Static skolems assums (.inter l r) (.path p q) skolems' assums'
+  -- | inter_merge_elim skolems assums l r p q t skolems' assums' :
+  --   Typ.merge_paths (.inter l r) = .some t →
+  --   Subtyping.Static skolems assums t (.path p q) skolems' assums' →
+  --   Subtyping.Static skolems assums (.inter l r) (.path p q) skolems' assums'
 
-    | all_elim {skolems assums upper skolems'' assums''} ids quals lower skolems' assums' :
-      Subtyping.Static skolems assums lower upper skolems' assums' →
-      ListSubtyping.Static skolems' assums' quals skolems'' assums'' →
-      Subtyping.Static skolems assums (.all ids quals lower) upper skolems'' assums''
+  | all_elim {skolems assums upper skolems'' assums''} ids quals lower skolems' assums' :
+    Subtyping.Static skolems assums lower upper skolems' assums' →
+    ListSubtyping.Static skolems' assums' quals skolems'' assums'' →
+    Subtyping.Static skolems assums (.all ids quals lower) upper skolems'' assums''
 
 end
 
@@ -1716,25 +1716,25 @@ mutual
 
   partial def Zone.interpret (ignore : List String) (b : Bool) : Zone → Lean.MetaM Zone
   | ⟨skolems, assums, t⟩ => do
-    let t' ← Typ.interpret_star ignore skolems assums t b
+    let t' ← Typ.interpret_star ignore skolems assums b t
     let assums' := Typ.transitive_connections [] assums b t'
     return ⟨skolems, assums', t'⟩
 
 
   partial def Typ.interpret_star
     (ignore : List String) (skolems : List String) (assums : List (Typ × Typ))
-    (t : Typ) (b : Bool)
+     (b : Bool) (t : Typ)
   :  Lean.MetaM Typ := do
-    let result ← Typ.interpret ignore skolems assums t b
+    let result ← Typ.interpret ignore skolems assums b t
     if result == t then
       return result
     else
-      Typ.interpret_star (Typ.free_vars t ∪ ignore) skolems assums result b
+      Typ.interpret_star (Typ.free_vars t ∪ ignore) skolems assums b result
 
   partial def Typ.interpret
     (ignore : List String) (skolems : List String) (assums : List (Typ × Typ))
-  : Typ → Bool → Lean.MetaM Typ
-  | .var id, b => do
+  : Bool → Typ → Lean.MetaM Typ
+  | b, .var id => do
     if ignore.contains id || skolems.contains id then
       return .var id
     else
@@ -1748,31 +1748,31 @@ mutual
         else
           return t
 
-  | .iso label body, b => do
-    let body' ← Typ.interpret ignore skolems assums body b
+  | b, .iso label body => do
+    let body' ← Typ.interpret ignore skolems assums b body
     return .iso label body'
 
-  | .entry label body, b => do
-    let body' ← Typ.interpret ignore skolems assums body b
+  | b, .entry label body => do
+    let body' ← Typ.interpret ignore skolems assums b body
     return .entry label body'
 
-  | .inter l r, b => do
-    let l' ← Typ.interpret ignore skolems assums l b
-    let r' ← Typ.interpret ignore skolems assums r b
+  | b, .inter l r => do
+    let l' ← Typ.interpret ignore skolems assums b l
+    let r' ← Typ.interpret ignore skolems assums b r
     return Typ.simp (Typ.inter l' r')
 
-  | .unio l r, b => do
-    let l' ← Typ.interpret ignore skolems assums l b
-    let r' ← Typ.interpret ignore skolems assums r b
+  | b, .unio l r => do
+    let l' ← Typ.interpret ignore skolems assums b l
+    let r' ← Typ.interpret ignore skolems assums b r
     return Typ.simp (Typ.unio l' r')
 
-  | .path antec consq, b => do
-    let antec' ← Typ.interpret ignore skolems assums antec (not b)
+  | b, .path antec consq => do
+    let antec' ← Typ.interpret ignore skolems assums (not b) antec
     let ignore' := (Typ.free_vars antec' ∩ Typ.free_vars consq) ∪ ignore
-    let consq' ← Typ.interpret ignore' skolems assums consq b
+    let consq' ← Typ.interpret ignore' skolems assums b consq
     return Typ.simp (Typ.path antec' consq')
 
-  | .exi ids_exi quals_exi (.all _ quals body), .true => do
+  | .true, .exi ids_exi quals_exi (.all _ quals body) => do
     let constraints := quals_exi ++ quals
 
     let zones ← (
@@ -1783,7 +1783,7 @@ mutual
     )
     return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
 
-  | (.all _ quals body), .true => do
+  | .true, (.all _ quals body) => do
     let constraints := quals
 
     let zones ← (
@@ -1794,7 +1794,7 @@ mutual
     )
     return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
 
-  | .all ids_all quals_all (.exi _ quals body), .false => do
+  | .false, .all ids_all quals_all (.exi _ quals body) => do
     let constraints := quals_all ++ quals
 
     let zones ← (
@@ -1806,7 +1806,7 @@ mutual
     return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
 
 
-  | (.exi _ quals body), .false => do
+  | .false, (.exi _ quals body) => do
     let constraints := quals
     let zones ← (
       ← ListSubtyping.Static.solve skolems assums constraints
@@ -1816,8 +1816,109 @@ mutual
     )
     return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
 
-  | t, _ => do
+  | _, t => do
     return t
+end
+
+mutual
+
+  inductive Zone.Interp
+  : List String → Bool → Zone → Zone → Prop
+  | dummy : Zone.Interp [] .true ⟨[],[],Typ.top⟩ ⟨[],[],Typ.top⟩
+
+  inductive Typ.Interp
+  : List String → List String → List (Typ × Typ) → Bool → Typ → Typ → Prop
+  | var {ignore skolems assums b t} bds id :
+    id ∉ ignore →
+    id ∉ skolems →
+    (ListSubtyping.bounds id b assums).eraseDups = bds →
+    bds ≠ [] →
+    Typ.combine (not b) bds = t →
+    t ≠ Typ.bot →
+    t ≠ Typ.top →
+    Typ.Interp ignore skolems assums b (.var id) t
+
+  | iso {ignore skolems assums b} label body body' :
+    Typ.Interp ignore skolems assums b body body' →
+    Typ.Interp ignore skolems assums b (.iso label body) (.iso label body')
+
+  | entry {ignore skolems assums b} label body body' :
+    Typ.Interp ignore skolems assums b body body' →
+    Typ.Interp ignore skolems assums b (.entry label body) (.entry label body')
+
+  | inter {ignore skolems assums b} l l' r r'  :
+    Typ.Interp ignore skolems assums b l l' →
+    Typ.Interp ignore skolems assums b r r' →
+    Typ.Interp ignore skolems assums b (.inter l r) (Typ.simp (Typ.inter l' r'))
+
+  | unio {ignore skolems assums b} l l' r r'  :
+    Typ.Interp ignore skolems assums b l l' →
+    Typ.Interp ignore skolems assums b r r' →
+    Typ.Interp ignore skolems assums b (.unio l r) (Typ.simp (Typ.unio l' r'))
+
+  | path {ignore skolems assums b} antec antec' consq consq'  :
+    Typ.Interp ignore skolems assums b antec antec' →
+    Typ.Interp ((Typ.free_vars antec' ∩ Typ.free_vars consq) ∪ ignore)
+      skolems assums b consq consq' →
+    Typ.Interp ignore skolems assums b (Typ.path antec consq) (Typ.path antec' consq')
+
+  | exi_all_positive {ignore skolems assums} ids_exi quals_exi quals body zones:
+
+    -- TODO: replace List.mdiff with List.remove_all
+    (∀ skolems'' assums'' body', ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩ ∈ zones →
+      (∀ skolems' assums' ,
+        ListSubtyping.Static (ids_exi ∪ skolems) assums (quals_exi ∪ quals) skolems' assums' →
+        Zone.Interp ignore .true ⟨skolems', assums', body⟩ ⟨skolems', assums', body⟩
+      )
+    ) →
+
+    (∀ skolems''' assums''' , ⟨skolems''', assums''', _⟩ ∈ zones →
+      (∃ skolems'' , List.mdiff skolems'' skolems = skolems''') ∧
+      (∃ assums'', List.mdiff assums'' assums = assums''') ∧
+      (∃ skolems' assums' , ListSubtyping.Static (ids_exi ∪ skolems) assums (quals_exi ∪ quals) skolems' assums')
+    ) →
+
+    Typ.Interp ignore skolems assums .true
+      (.exi ids_exi quals_exi (.all _ quals body))
+      (ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones)
+
+
+  -- | (.all _ quals body), .true => do
+  --   let constraints := quals
+
+  --   let zones ← (
+  --     ← ListSubtyping.Static.solve skolems assums constraints
+  --   ).mapM (fun (skolems', assums') => do
+  --     let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .true ⟨skolems', assums', body⟩
+  --     return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
+  --   )
+  --   return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
+
+  -- | .all ids_all quals_all (.exi _ quals body), .false => do
+  --   let constraints := quals_all ++ quals
+
+  --   let zones ← (
+  --     ← ListSubtyping.Static.solve (ids_all ∪ skolems) assums constraints
+  --   ).mapM (fun (skolems', assums') => do
+  --     let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .false ⟨skolems', assums', body⟩
+  --     return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
+  --   )
+  --   return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
+
+
+  -- | (.exi _ quals body), .false => do
+  --   let constraints := quals
+  --   let zones ← (
+  --     ← ListSubtyping.Static.solve skolems assums constraints
+  --   ).mapM (fun (skolems', assums') => do
+  --     let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .false ⟨skolems', assums', body⟩
+  --     return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
+  --   )
+  --   return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
+
+  -- | t, _ => do
+  --   return t
+
 end
 
 def ListSubtyping.loop_split : List Typ → (List String) × (List Typ)
@@ -1942,8 +2043,8 @@ mutual
       let t' := ListZone.pack (id :: pids) .false zones'
       (Typ.factor id t' "left").bindM (fun l => do
       (Typ.factor id t' "right").bindM (fun r => do
-        let l' ← Typ.interpret_star [id] [] [] l .false
-        let r' ← Typ.interpret_star [id] [] [] r .false
+        let l' ← Typ.interpret_star [id] [] [] .false l
+        let r' ← Typ.interpret_star [id] [] [] .false r
         return Option.some (Typ.path (.lfp id l') (.lfp id r'))
       ))
     )
@@ -1993,7 +2094,7 @@ mutual
     (← Expr.Typing.Static.compute Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
     (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ => do
       -- NOTE: do not remove anything from global assumptions
-      let t ← Typ.interpret_star [] Θ''' Δ''' (.var α) .true
+      let t ← Typ.interpret_star [] Θ''' Δ''' .true (.var α)
       return [ ⟨Θ''', Δ''', t⟩ ]
     )))
 
@@ -2013,11 +2114,8 @@ mutual
       )
 
       -- Lean.logInfo ("<<< LOOP ID >>>\n" ++ (repr id))
-
       -- Lean.logInfo ("<<< ZONES LOCAL >>>\n" ++ (repr zones_local))
-
       let zones_normal ← ListZone.loop_normal_form id zones_local
-
       -- Lean.logInfo ("<<< ZONES NORMAL >>>\n" ++ (repr zones_normal))
 
       let t' ← LoopListZone.Subtyping.Static.compute (ListSubtyping.free_vars Δ') id zones_normal
@@ -2037,128 +2135,6 @@ mutual
       return []
 
 end
-
----------------------------------------
------ factorization
----------------------------------------
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    loop([self =>
-      [<zero/> => <nil/>]
-      [<succ> n => <cons> (self(n))]
-    ])
-  ]
-
--------------------------------------------------
--------------------------------------------------
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [x => [<nil/> => <zero/>](x)]
-  ]
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    def f = (
-      [<nil/> => <zero/>]
-    ) in
-    [x => f(x)]
-  ]
-
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    def f = (
-      [<nil/> => <zero/>]
-      [<cons/> => <succ/>]
-    ) in
-    [x => f(x)]
-  ]
-
--- RESULT: (<nil/> -> <uno/>)
--- TODO: construct a reachable procedure that filters constraints
--- to only those that are reachable from payload
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [<start/> =>
-      def g = (
-        [<zero/> => <uno/>]
-      ) in
-      [x => g([<nil/> => <zero/>](x))]
-    ]
-  ]
-
-
--- RESULT: (<nil/> -> <uno/>)
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    def f = (
-      [<nil/> => <zero/>]
-    ) in
-    def g = (
-      [<zero/> => <uno/>]
-    ) in
-    [x => g(f(x))]
-  ]
-
--- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-    [ <start/> =>
-      def f = (
-        [<nil/>  => <zero/>]
-        [<cons/>  => <succ/>]
-      ) in
-      def g = (
-        [<zero/> => <uno/>]
-        [<succ/> => <dos/> ]
-      ) in
-      -- f
-      [x => g(f(x))]
-    ]
-  ]
-
--- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
-#eval Expr.Typing.Static.compute
-  [ids| ] [subtypings| ] []
-  [expr|
-      def f = (
-        [<nil/>  => <zero/>]
-        [<cons/>  => <succ/>]
-      ) in
-      def g = (
-        [<zero/> => <uno/>]
-        [<succ/> => <dos/> ]
-      ) in
-      [x => g(f(x))]
-  ]
-
---------------------------------
---------------------------------
---------------------------------
-
--- -- RESULT: Even -> Uno | Dos
--- #eval Expr.Typing.Static.compute
---   [ids| ] [subtypings| ] []
---   [expr|
---     -- Even -> Even
---     def f = loop ([self =>
---       [<nil/> => <zero/>]
---       [<cons> n => <succ> (self(n)) ]
---     ]) in
---     def g = (
---       [<zero/> => <uno/>]
---       [<succ> n => <dos/> ]
---     ) in
---     [x => g(f(x))]
---   ]
 
 
 inductive LoopListZone.Subtyping.Static : List String → String → List Zone → Typ → Prop

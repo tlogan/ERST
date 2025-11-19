@@ -231,7 +231,7 @@ example : Subtyping.Static
   [typ| EXI[T] [(T <: <uno/>)] T]
   [typ| <uno/> | <dos/>]
 
-#eval Typ.interpret_one "T" .true []
+#eval Typ.combine_bounds "T" .true []
 
 example : Subtyping.Static
   [ids| ] [subtypings|  ]
@@ -1351,3 +1351,126 @@ def repeat_expr := [expr|
       [g => g(x)]
     ]
   ]
+
+
+---------------------------------------
+----- factorization
+---------------------------------------
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    loop([self =>
+      [<zero/> => <nil/>]
+      [<succ> n => <cons> (self(n))]
+    ])
+  ]
+
+-------------------------------------------------
+-------------------------------------------------
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [x => [<nil/> => <zero/>](x)]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def f = (
+      [<nil/> => <zero/>]
+    ) in
+    [x => f(x)]
+  ]
+
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def f = (
+      [<nil/> => <zero/>]
+      [<cons/> => <succ/>]
+    ) in
+    [x => f(x)]
+  ]
+
+-- RESULT: (<nil/> -> <uno/>)
+-- TODO: construct a reachable procedure that filters constraints
+-- to only those that are reachable from payload
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [<start/> =>
+      def g = (
+        [<zero/> => <uno/>]
+      ) in
+      [x => g([<nil/> => <zero/>](x))]
+    ]
+  ]
+
+
+-- RESULT: (<nil/> -> <uno/>)
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    def f = (
+      [<nil/> => <zero/>]
+    ) in
+    def g = (
+      [<zero/> => <uno/>]
+    ) in
+    [x => g(f(x))]
+  ]
+
+-- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+    [ <start/> =>
+      def f = (
+        [<nil/>  => <zero/>]
+        [<cons/>  => <succ/>]
+      ) in
+      def g = (
+        [<zero/> => <uno/>]
+        [<succ/> => <dos/> ]
+      ) in
+      -- f
+      [x => g(f(x))]
+    ]
+  ]
+
+-- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
+#eval Expr.Typing.Static.compute
+  [ids| ] [subtypings| ] []
+  [expr|
+      def f = (
+        [<nil/>  => <zero/>]
+        [<cons/>  => <succ/>]
+      ) in
+      def g = (
+        [<zero/> => <uno/>]
+        [<succ/> => <dos/> ]
+      ) in
+      [x => g(f(x))]
+  ]
+
+--------------------------------
+--------------------------------
+--------------------------------
+
+-- -- RESULT: Even -> Uno | Dos
+-- #eval Expr.Typing.Static.compute
+--   [ids| ] [subtypings| ] []
+--   [expr|
+--     -- Even -> Even
+--     def f = loop ([self =>
+--       [<nil/> => <zero/>]
+--       [<cons> n => <succ> (self(n)) ]
+--     ]) in
+--     def g = (
+--       [<zero/> => <uno/>]
+--       [<succ> n => <dos/> ]
+--     ) in
+--     [x => g(f(x))]
+--   ]
