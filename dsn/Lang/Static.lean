@@ -1721,16 +1721,6 @@ mutual
     return ⟨skolems, assums', t'⟩
 
 
-  -- partial def Typ.interpret_star
-  --   (ignore : List String) (skolems : List String) (assums : List (Typ × Typ))
-  --    (b : Bool) (t : Typ)
-  -- :  Lean.MetaM Typ := do
-  --   let result ← Typ.interpret ignore skolems assums b t
-  --   if result == t then
-  --     return result
-  --   else
-  --     Typ.interpret_star (Typ.free_vars t ∪ ignore) skolems assums b result
-
   partial def Typ.interpret
     (ignore : List String) (skolems : List String) (assums : List (Typ × Typ))
   : Bool → Typ → Lean.MetaM Typ
@@ -1803,7 +1793,7 @@ mutual
       let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .false ⟨skolems', assums', body⟩
       return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
     )
-    return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
+    return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .false zones
 
 
   | .false, (.exi _ quals body) => do
@@ -1814,7 +1804,7 @@ mutual
       let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .false ⟨skolems', assums', body⟩
       return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
     )
-    return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
+    return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .false zones
 
   | _, t => do
     return t
@@ -1824,7 +1814,10 @@ mutual
 
   inductive Zone.Interp
   : List String → Bool → Zone → Zone → Prop
-  | dummy : Zone.Interp [] .true ⟨[],[],Typ.top⟩ ⟨[],[],Typ.top⟩
+  | intro {ignore b} skolems assums t assums' t':
+    Typ.Interp ignore skolems assums b t t' →
+    Typ.transitive_connections [] assums b t' = assums' →
+    Zone.Interp ignore b ⟨skolems,assums,t⟩ ⟨skolems, assums,t'⟩
 
   inductive Typ.Interp
   : List String → List String → List (Typ × Typ) → Bool → Typ → Typ → Prop
@@ -1869,7 +1862,8 @@ mutual
   | exi_all_positive {ignore skolems assums} ids_exi quals_exi quals body zones:
 
     -- TODO: replace List.mdiff with List.remove_all
-    (∀ skolems'' assums'' body', ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩ ∈ zones →
+    (∀ skolems'' assums'' body',
+      ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩ ∈ zones →
       (∀ skolems' assums' ,
         ListSubtyping.Static (ids_exi ∪ skolems) assums (quals_exi ∪ quals) skolems' assums' →
         Zone.Interp ignore .true ⟨skolems', assums', body⟩ ⟨skolems', assums', body⟩
@@ -1879,7 +1873,8 @@ mutual
     (∀ skolems''' assums''' , ⟨skolems''', assums''', _⟩ ∈ zones →
       (∃ skolems'' , List.mdiff skolems'' skolems = skolems''') ∧
       (∃ assums'', List.mdiff assums'' assums = assums''') ∧
-      (∃ skolems' assums' , ListSubtyping.Static (ids_exi ∪ skolems) assums (quals_exi ∪ quals) skolems' assums')
+      (∃ skolems' assums' ,
+        ListSubtyping.Static (ids_exi ∪ skolems) assums (quals_exi ∪ quals) skolems' assums')
     ) →
 
     Typ.Interp ignore skolems assums .true
@@ -1887,41 +1882,68 @@ mutual
       (ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones)
 
 
-  -- | (.all _ quals body), .true => do
-  --   let constraints := quals
+  | all_positive {ignore skolems assums} ids_exi quals body zones:
+    (∀ skolems'' assums'' body',
+      ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩ ∈ zones →
+      (∀ skolems' assums' ,
+        ListSubtyping.Static (ids_exi ∪ skolems) assums quals skolems' assums' →
+        Zone.Interp ignore .true ⟨skolems', assums', body⟩ ⟨skolems', assums', body⟩
+      )
+    ) →
 
-  --   let zones ← (
-  --     ← ListSubtyping.Static.solve skolems assums constraints
-  --   ).mapM (fun (skolems', assums') => do
-  --     let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .true ⟨skolems', assums', body⟩
-  --     return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
-  --   )
-  --   return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
+    (∀ skolems''' assums''' , ⟨skolems''', assums''', _⟩ ∈ zones →
+      (∃ skolems'' , List.mdiff skolems'' skolems = skolems''') ∧
+      (∃ assums'', List.mdiff assums'' assums = assums''') ∧
+      (∃ skolems' assums' , ListSubtyping.Static skolems assums quals skolems' assums')
+    ) →
 
-  -- | .all ids_all quals_all (.exi _ quals body), .false => do
-  --   let constraints := quals_all ++ quals
+    Typ.Interp ignore skolems assums .true
+      (.all _ quals body)
+      (ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones)
 
-  --   let zones ← (
-  --     ← ListSubtyping.Static.solve (ids_all ∪ skolems) assums constraints
-  --   ).mapM (fun (skolems', assums') => do
-  --     let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .false ⟨skolems', assums', body⟩
-  --     return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
-  --   )
-  --   return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
+  | all_exi_negative {ignore skolems assums} ids_all quals_all quals body zones:
 
+    -- TODO: replace List.mdiff with List.remove_all
+    (∀ skolems'' assums'' body',
+      ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩ ∈ zones →
+      (∀ skolems' assums' ,
+        ListSubtyping.Static (ids_all ∪ skolems) assums (quals_all ∪ quals) skolems' assums' →
+        Zone.Interp ignore .false ⟨skolems', assums', body⟩ ⟨skolems', assums', body⟩
+      )
+    ) →
 
-  -- | (.exi _ quals body), .false => do
-  --   let constraints := quals
-  --   let zones ← (
-  --     ← ListSubtyping.Static.solve skolems assums constraints
-  --   ).mapM (fun (skolems', assums') => do
-  --     let ⟨skolems'', assums'', body'⟩ ← Zone.interpret ignore .false ⟨skolems', assums', body⟩
-  --     return ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩
-  --   )
-  --   return ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones
+    (∀ skolems''' assums''' , ⟨skolems''', assums''', _⟩ ∈ zones →
+      (∃ skolems'' , List.mdiff skolems'' skolems = skolems''') ∧
+      (∃ assums'', List.mdiff assums'' assums = assums''') ∧
+      (∃ skolems' assums' ,
+        ListSubtyping.Static (ids_all ∪ skolems) assums (quals_all ∪ quals) skolems' assums')
+    ) →
 
-  -- | t, _ => do
-  --   return t
+    Typ.Interp ignore skolems assums .false
+      (.all ids_all quals_all (.exi _ quals body))
+      (ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .false zones)
+
+  | exi_negative {ignore skolems assums} quals body zones:
+
+    -- TODO: replace List.mdiff with List.remove_all
+    (∀ skolems'' assums'' body',
+      ⟨List.mdiff skolems'' skolems, List.mdiff assums'' assums, body'⟩ ∈ zones →
+      (∀ skolems' assums' ,
+        ListSubtyping.Static skolems assums quals skolems' assums' →
+        Zone.Interp ignore .false ⟨skolems', assums', body⟩ ⟨skolems', assums', body⟩
+      )
+    ) →
+
+    (∀ skolems''' assums''' , ⟨skolems''', assums''', _⟩ ∈ zones →
+      (∃ skolems'' , List.mdiff skolems'' skolems = skolems''') ∧
+      (∃ assums'', List.mdiff assums'' assums = assums''') ∧
+      (∃ skolems' assums' ,
+        ListSubtyping.Static skolems assums quals skolems' assums')
+    ) →
+
+    Typ.Interp ignore skolems assums .false
+      (.exi _ quals body)
+      (ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .false zones)
 
 end
 
