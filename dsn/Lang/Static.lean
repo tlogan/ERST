@@ -1716,20 +1716,20 @@ mutual
 
   partial def Zone.interpret (ignore : List String) (b : Bool) : Zone → Lean.MetaM Zone
   | ⟨skolems, assums, t⟩ => do
-    let t' ← Typ.interpret_star ignore skolems assums b t
+    let t' ← Typ.interpret ignore skolems assums b t
     let assums' := Typ.transitive_connections [] assums b t'
     return ⟨skolems, assums', t'⟩
 
 
-  partial def Typ.interpret_star
-    (ignore : List String) (skolems : List String) (assums : List (Typ × Typ))
-     (b : Bool) (t : Typ)
-  :  Lean.MetaM Typ := do
-    let result ← Typ.interpret ignore skolems assums b t
-    if result == t then
-      return result
-    else
-      Typ.interpret_star (Typ.free_vars t ∪ ignore) skolems assums b result
+  -- partial def Typ.interpret_star
+  --   (ignore : List String) (skolems : List String) (assums : List (Typ × Typ))
+  --    (b : Bool) (t : Typ)
+  -- :  Lean.MetaM Typ := do
+  --   let result ← Typ.interpret ignore skolems assums b t
+  --   if result == t then
+  --     return result
+  --   else
+  --     Typ.interpret_star (Typ.free_vars t ∪ ignore) skolems assums b result
 
   partial def Typ.interpret
     (ignore : List String) (skolems : List String) (assums : List (Typ × Typ))
@@ -1746,7 +1746,7 @@ mutual
         if (t == .bot || t == .top) then
           return .var id
         else
-          return t
+          Typ.interpret ([id] ∪  ignore) skolems assums b t
 
   | b, .iso label body => do
     let body' ← Typ.interpret ignore skolems assums b body
@@ -1828,7 +1828,10 @@ mutual
 
   inductive Typ.Interp
   : List String → List String → List (Typ × Typ) → Bool → Typ → Typ → Prop
-  | var {ignore skolems assums b t} bds id :
+  | refl {ignore skolems assums b t} :
+    Typ.Interp ignore skolems assums b t t
+
+  | var {ignore skolems assums b t'} bds id t:
     id ∉ ignore →
     id ∉ skolems →
     (ListSubtyping.bounds id b assums).eraseDups = bds →
@@ -1836,7 +1839,8 @@ mutual
     Typ.combine (not b) bds = t →
     t ≠ Typ.bot →
     t ≠ Typ.top →
-    Typ.Interp ignore skolems assums b (.var id) t
+    Typ.Interp ([id] ∪ ignore) skolems assums b t t' →
+    Typ.Interp ignore skolems assums b (.var id) t'
 
   | iso {ignore skolems assums b} label body body' :
     Typ.Interp ignore skolems assums b body body' →
@@ -2043,8 +2047,8 @@ mutual
       let t' := ListZone.pack (id :: pids) .false zones'
       (Typ.factor id t' "left").bindM (fun l => do
       (Typ.factor id t' "right").bindM (fun r => do
-        let l' ← Typ.interpret_star [id] [] [] .false l
-        let r' ← Typ.interpret_star [id] [] [] .false r
+        let l' ← Typ.interpret [id] [] [] .false l
+        let r' ← Typ.interpret [id] [] [] .false r
         return Option.some (Typ.path (.lfp id l') (.lfp id r'))
       ))
     )
@@ -2094,7 +2098,7 @@ mutual
     (← Expr.Typing.Static.compute Θ' Δ' Γ ea).flatMapM (fun ⟨Θ'', Δ'', ta⟩ => do
     (← Subtyping.Static.solve Θ'' Δ'' tf (.path ta (.var α))).flatMapM (fun ⟨Θ''', Δ'''⟩ => do
       -- NOTE: do not remove anything from global assumptions
-      let t ← Typ.interpret_star [] Θ''' Δ''' .true (.var α)
+      let t ← Typ.interpret [] Θ''' Δ''' .true (.var α)
       return [ ⟨Θ''', Δ''', t⟩ ]
     )))
 
