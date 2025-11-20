@@ -2184,23 +2184,28 @@ mutual
     Function.Typing.Static skolems assums context subtras [] []
 
   | cons {skolems context } {assums : List (Typ × Typ)}
-    p e f assums' context' tp zones_tidied nested_zones zones subtras
+    p e f assums' context' tp nested_zones zones subtras
   :
     PatLifting.Static assums context p tp assums' context' →
-    (∀ {skolems' assums'' tr},
-      ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ∈ zones →
-      Expr.Typing.Static skolems assums' context' e tr (skolems' ++ skolems) (assums'' ++ assums)
+    (∀ skolems''' assums'''' t , ⟨skolems''', assums'''', t⟩ ∈ zones →
+      ∀ skolems'' , List.mdiff skolems'' skolems = skolems''' →
+      ∀ assums''' , List.mdiff assums''' assums = assums'''' →
+      ∀ skolems' assums'' tr ,
+        Zone.Interp [] .true
+          ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ⟨skolems'', assums''', t⟩ →
+        Expr.Typing.Static skolems assums' context' e tr skolems' assums''
     ) →
-    (∀ {skolems' assums'' t},
-      ⟨skolems', assums'', t⟩ ∈ zones →
-      ∃ assums_ext, assums'' = assums_ext ++ assums' ∧
-      ∃ tr , t = (.path (ListTyp.diff tp subtras) tr)
+
+    (∀ skolems''' assums'''' t, ⟨skolems''', assums'''', t⟩ ∈ zones →
+      ∃ skolems'' , List.mdiff skolems'' skolems = skolems''' ∧
+      ∃ assums''' , List.mdiff assums''' assums = assums'''' ∧
+      ∃ skolems' assums'' tr ,
+        Zone.Interp [] .true
+          ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ⟨skolems'', assums''', t⟩
     ) →
-    -- TODO: update definition
-    zones = zones_tidied →
-    -- ListZone.tidy (ListSubtyping.free_vars assums) zones = .some zones_tidied →
     Function.Typing.Static skolems assums context (tp :: subtras) f nested_zones →
-    Function.Typing.Static skolems assums context subtras ((p,e)::f) (zones_tidied :: nested_zones)
+    Function.Typing.Static skolems assums context subtras ((p,e)::f) (zones :: nested_zones)
+
 
   inductive Record.Typing.Static :
     List String → List (Typ × Typ) → List (String × Typ) →
@@ -2236,31 +2241,42 @@ mutual
     ListZone.pack (ListSubtyping.free_vars assums) .true (nested_zones.flatten) = t →
     Expr.Typing.Static skolems assums context (.function f) t skolems assums
 
+
   | app {skolems assums context skolems''' assums'''}
-    ef ea id tf skolems' assums' ta skolems'' assums'' :
+    ef ea id tf skolems' assums' ta skolems'' assums'' interp:
     Expr.Typing.Static skolems assums context ef tf skolems' assums' →
     Expr.Typing.Static skolems' assums' context ea ta skolems'' assums'' →
     Subtyping.Static skolems'' assums'' tf (.path ta (.var id)) skolems''' assums''' →
-    -- TODO: update to match procedure with interp and repack
-    Expr.Typing.Static skolems assums context (.app ef ea) (.var id) skolems''' assums'''
+    Typ.Interp [] skolems''' assums''' .true (.var id) interp →
+    Expr.Typing.Static skolems assums context (.app ef ea) interp skolems''' assums'''
 
-  | loop {skolems assums context t' skolems' assums'} e t id zones zones' id_body :
-    -- TODO: update to match procedure
-    -- let id_antec ← fresh_typ_id
-    -- let id_consq ← fresh_typ_id
+  | loop {skolems assums context t' skolems' assums'} e t id zones id_antec id_consq  :
     Expr.Typing.Static skolems assums context e t skolems' assums' →
-    (∀ {skolems'' assums'' t''},
-      ⟨skolems'', assums'', t''⟩ ∈ zones →
-      -- TODO: update to match procedure
-      -- t'' = (interp id_body .true (assums'' ++ assums')) ∧
-      id_body ∉ skolems'' ∧
-      Subtyping.Static skolems' assums' t (.path (.var id) (.var id_body))
-        (skolems'' ++ skolems') (assums'' ++ assums')
+    id_antec ∉ skolems' →
+    id_consq ∉ skolems' →
+    (∀ skolems'''' assums''''' body', ⟨skolems'''', assums''''', body'⟩ ∈ zones →
+      ∀ skolems''' , List.mdiff skolems''' skolems = skolems'''' →
+      ∀ assums'''' , List.mdiff assums'''' assums = assums''''' →
+      ∀ assums''' , ListSubtyping.loop_normal_form id assums''' = .some assums'''' →
+      ∀ skolems'' assums'',
+      Zone.Interp [id] .true
+        ⟨skolems'', assums'', (Typ.path (.var id_antec) (.var id_consq))⟩
+        ⟨skolems''', assums''', body'⟩ →
+      Subtyping.Static skolems' assums' t (.path (.var id)
+        (Typ.path (.var id_antec) (.var id_consq)))
+        skolems'' assums''
     ) →
-    -- TODO: update to match procedure
-    zones = zones' →
-    -- ListZone.tidy (id :: (ListSubtyping.free_vars assums')) zones = .some zones' →
-    LoopListZone.Subtyping.Static (ListSubtyping.free_vars assums') id zones' t' →
+
+    (∀ skolems'''' assums''''' body', ⟨skolems'''', assums''''', body'⟩ ∈ zones →
+      ∃ skolems''' , List.mdiff skolems''' skolems = skolems'''' ∧
+      ∃ assums'''' , List.mdiff assums'''' assums = assums''''' ∧
+      ∃ assums''' , ListSubtyping.loop_normal_form id assums''' = .some assums'''' ∧
+      ∃ skolems'' assums'',
+      Zone.Interp [id] .true
+        ⟨skolems'', assums'', (Typ.path (.var id_antec) (.var id_consq))⟩
+        ⟨skolems''', assums''', body'⟩
+    ) →
+    LoopListZone.Subtyping.Static (ListSubtyping.free_vars assums') id zones t' →
     id ∉ ListSubtyping.free_vars assums' →
     Expr.Typing.Static skolems assums context (.loop e) t' skolems' assums'
 
