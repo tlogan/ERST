@@ -450,6 +450,11 @@ theorem Subtyping.Dynamic.inter_right_elim {am l r t} :
 := by sorry
 
 
+theorem Subtyping.Dynamic.iso_pres {am bodyl bodyu} l :
+  Subtyping.Dynamic am bodyl bodyu →
+  Subtyping.Dynamic am (Typ.iso l bodyl) (Typ.iso l bodyu)
+:= by sorry
+
 theorem Subtyping.Dynamic.entry_pres {am bodyl bodyu} l :
   Subtyping.Dynamic am bodyl bodyu →
   Subtyping.Dynamic am (Typ.entry l bodyl) (Typ.entry l bodyu)
@@ -877,12 +882,20 @@ mutual
     (∀ {am'},
       MultiSubtyping.Dynamic (am ++ am') assums' →
       Subtyping.Dynamic (am ++ am') lower upper)
-  | .refl skolems0 assums0 t => by
+  | .refl => by
     exists []
     simp [*]
     apply And.intro (by simp [ListPair.dom])
     intros am0 p1
-    exact Subtyping.Dynamic.refl am0 t
+    exact Subtyping.Dynamic.refl am0 lower
+
+  | .iso_pres l lower0 upper0 p0 => by
+    have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := Subtyping.Static.aux p0
+    exists am0
+    simp [*]
+    intros am' p9
+    exact Subtyping.Dynamic.iso_pres l (ih0r p9)
 
   | .entry_pres l lower0 upper0 p0 => by
     have ⟨am0, ih0l, ih0r⟩ := Subtyping.Static.soundness p0
@@ -1310,7 +1323,7 @@ end
 
 
 def Expr.Convergence (a b : Expr) :=
-  ∃ e , MultiProgression a e ∧ MultiProgression b e
+  ∃ e , ProgressionStar a e ∧ ProgressionStar b e
 
 theorem Expr.Convergence.typing_left_to_right {a b am t} :
   Expr.Convergence a b →
@@ -1751,59 +1764,59 @@ theorem Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
       (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
       p22 ep p20
 
-theorem ListZone.tidy_substance {pids zones0 zones1 am} :
-  ListZone.tidy pids zones0 = .some zones1 →
-  (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
-      ∃ am'' ,
-        ListPair.dom am'' ⊆ ListSubtyping.free_vars assums0 ∧
-        MultiSubtyping.Dynamic (am'' ++ am) assums0)
-  →
-  (∀ {skolems assums1 t1}, ⟨skolems, assums1, t1⟩ ∈ zones1 →
-      ∃ am'' ,
-        ListPair.dom am'' ⊆ ListSubtyping.free_vars assums1 ∧
-        MultiSubtyping.Dynamic (am'' ++ am) assums1)
-:= by sorry
+-- theorem ListZone.tidy_substance {pids zones0 zones1 am} :
+--   ListZone.tidy pids zones0 = .some zones1 →
+--   (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
+--       ∃ am'' ,
+--         ListPair.dom am'' ⊆ ListSubtyping.free_vars assums0 ∧
+--         MultiSubtyping.Dynamic (am'' ++ am) assums0)
+--   →
+--   (∀ {skolems assums1 t1}, ⟨skolems, assums1, t1⟩ ∈ zones1 →
+--       ∃ am'' ,
+--         ListPair.dom am'' ⊆ ListSubtyping.free_vars assums1 ∧
+--         MultiSubtyping.Dynamic (am'' ++ am) assums1)
+-- := by sorry
 
 
-theorem ListZone.tidy_soundness {pids zones0 zones1 am assums e} :
-  ListZone.tidy pids zones0 = .some zones1 →
-  (ListSubtyping.free_vars assums) ⊆ pids →
-  MultiSubtyping.Dynamic am assums →
-  (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
-    (∃ am'', ListPair.dom am'' ⊆ skolems ∧
-      (∀ {am'},
-        ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
-        MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums0 →
-        Typing.Dynamic (am'' ++ am' ++ am) e t0 ) ) ) →
+-- theorem ListZone.tidy_soundness {pids zones0 zones1 am assums e} :
+--   ListZone.tidy pids zones0 = .some zones1 →
+--   (ListSubtyping.free_vars assums) ⊆ pids →
+--   MultiSubtyping.Dynamic am assums →
+--   (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
+--     (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+--       (∀ {am'},
+--         ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+--         MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums0 →
+--         Typing.Dynamic (am'' ++ am' ++ am) e t0 ) ) ) →
 
-  (∀ {skolems assums1 t1}, ⟨skolems, assums1, t1⟩ ∈ zones1 →
-    (∃ am'', ListPair.dom am'' ⊆ skolems ∧
-      (∀ {am'},
-        ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
-        MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums1 →
-        Typing.Dynamic (am'' ++ am' ++ am) e t1 ) ) )
-:= by sorry
+--   (∀ {skolems assums1 t1}, ⟨skolems, assums1, t1⟩ ∈ zones1 →
+--     (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+--       (∀ {am'},
+--         ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+--         MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums1 →
+--         Typing.Dynamic (am'' ++ am' ++ am) e t1 ) ) )
+-- := by sorry
 
-theorem ListZone.tidy_soundness_alt
-  {zones0 zones1 e context skolems assums1 t1}
-  {assums : List (Typ × Typ)}
-:
-  ListZone.tidy (ListSubtyping.free_vars assums) zones0 = .some zones1 →
-  ⟨skolems, assums1, t1⟩ ∈ zones1 →
+-- theorem ListZone.tidy_soundness_alt
+--   {zones0 zones1 e context skolems assums1 t1}
+--   {assums : List (Typ × Typ)}
+-- :
+--   ListZone.tidy (ListSubtyping.free_vars assums) zones0 = .some zones1 →
+--   ⟨skolems, assums1, t1⟩ ∈ zones1 →
 
-  (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
-    (∃ am'', ListPair.dom am'' ⊆ skolems ∧
-      (∀ {am'},
-        MultiSubtyping.Dynamic (am'' ++ am') (assums0 ++ assums) →
-        ∀ {eam}, MultiTyping.Dynamic am' eam context →
-        Typing.Dynamic (am'' ++ am') (Expr.sub eam e) t0 ) ) ) →
+--   (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
+--     (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+--       (∀ {am'},
+--         MultiSubtyping.Dynamic (am'' ++ am') (assums0 ++ assums) →
+--         ∀ {eam}, MultiTyping.Dynamic am' eam context →
+--         Typing.Dynamic (am'' ++ am') (Expr.sub eam e) t0 ) ) ) →
 
-  (∃ am'', ListPair.dom am'' ⊆ skolems ∧
-    (∀ {am'},
-      MultiSubtyping.Dynamic (am'' ++ am') (assums1 ++ assums) →
-      ∀ {eam}, MultiTyping.Dynamic am' eam context →
-      Typing.Dynamic (am'' ++ am') (Expr.sub eam e) t1 ) )
-:= by sorry
+--   (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+--     (∀ {am'},
+--       MultiSubtyping.Dynamic (am'' ++ am') (assums1 ++ assums) →
+--       ∀ {eam}, MultiTyping.Dynamic am' eam context →
+--       Typing.Dynamic (am'' ++ am') (Expr.sub eam e) t1 ) )
+-- := by sorry
 
 
 theorem MultiSubtyping.Dynamic.concat {am cs cs'} :
@@ -1871,20 +1884,20 @@ mutual
 end
 
 
-theorem Typ.interpret_one_positive_soundness {id am assums e} :
+theorem Typ.combine_bounds_positive_soundness {id am assums e} :
   (∀ am , MultiSubtyping.Dynamic am assums → Typing.Dynamic am e (.var id)) →
   MultiSubtyping.Dynamic am assums →
-  Typing.Dynamic am e (Typ.interpret_one id true assums)
+  Typing.Dynamic am e (Typ.combine_bounds id true assums)
 := by sorry
 
-theorem Typ.interpret_one_positive_subtyping_path_conseq_soundness {id am am_skol assums t antec} :
+theorem Typ.combine_bounds_positive_subtyping_path_conseq_soundness {id am am_skol assums t antec} :
   id ∉ ListPair.dom am_skol →
   MultiSubtyping.Dynamic (am_skol ++ am) assums →
   (∀ {am} ,
     MultiSubtyping.Dynamic (am_skol ++ am) assums →
     Subtyping.Dynamic (am_skol ++ am) t (.path antec (.var id))
   ) →
-  Subtyping.Dynamic (am_skol ++ am) t (.path antec (Typ.interpret_one id true assums))
+  Subtyping.Dynamic (am_skol ++ am) t (.path antec (Typ.combine_bounds id true assums))
 := by sorry
 
 -- theorem Typ.factor_expansion_soundness {am id t label t' e'} :
@@ -1902,6 +1915,43 @@ theorem Typ.interpret_one_positive_subtyping_path_conseq_soundness {id am am_sko
 --   Typing.Dynamic am e' (.lfp id t')
 -- := by sorry
 
+
+
+
+
+mutual
+
+  theorem Zone.Interp.aux {ignore skolems assums t skolems' assums' t'} :
+    Zone.Interp ignore .true ⟨skolems, assums, t⟩ ⟨skolems', assums', t'⟩ →
+    skolems = skolems'
+  := by sorry
+
+  theorem Zone.Interp.positive_soundness {ignore skolems assums t skolems' assums' t'} :
+    Zone.Interp ignore .true ⟨skolems, assums, t⟩ ⟨skolems', assums', t'⟩ →
+    (∀ e ,
+      (∃ am ,
+        ListPair.dom am ⊆ skolems ∧
+        ∀ am' , MultiSubtyping.Dynamic (am ++ am') assums → Typing.Dynamic (am ++ am') e t) →
+      (∃ am ,
+        ListPair.dom am ⊆ skolems' ∧
+        ∀ am' , MultiSubtyping.Dynamic (am ++ am') assums' → Typing.Dynamic (am ++ am') e t')
+    )
+  := by sorry
+
+  theorem Typ.Interp.positive_soundness {ignore skolems assums t t'} :
+    Typ.Interp ignore skolems assums .true t t' →
+    (∃ am , ListPair.dom am ⊆ skolems ∧
+      ∀ am' , MultiSubtyping.Dynamic (am ++ am') assums → Subtyping.Dynamic (am ++ am') t t')
+  := by sorry
+
+end
+
+
+
+
+
+
+
 -- set_option maxHeartbeats 1000000 in
 mutual
 
@@ -1916,8 +1966,8 @@ mutual
         Typing.Dynamic (tam ++ tam') (Expr.sub eam (.function f)) t ) )
   | .nil => by intros ; contradiction
   | .cons
-      p e f assums0 context0 tp zones nested_zones' zones'' subtras
-      p0 p1 p2 p3 p4
+      p e f assums0 context0 tp zones nested_zones' subtras
+      p0 p1 p2 p3
   => by
     intro p10
     apply Iff.mp List.mem_append at p10
@@ -2148,7 +2198,7 @@ mutual
     intros eam p30
 
 
-    -- Typ.interpret_one id_body true assums''
+    -- Typ.combine_bounds id_body true assums''
 
     have typing_zones : ∀ {skolems1 assums1 t1}, ⟨skolems1, assums1, t1⟩ ∈ zones →
       ∃ am'' ,
@@ -2198,7 +2248,7 @@ mutual
       { apply List.disjoint_preservation_left h33l p45 }
       { apply MultiSubtyping.Dynamic.dom_extension p55 p20 }
 
-    have id_body_interp_subtyping := Typ.interpret_one_positive_subtyping_path_conseq_soundness
+    have id_body_interp_subtyping := Typ.combine_bounds_positive_subtyping_path_conseq_soundness
       id_body_not_skolem_dom muli_subtyping_assums h33r
     unfold Subtyping.Dynamic at id_body_interp_subtyping
     apply id_body_interp_subtyping

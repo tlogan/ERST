@@ -166,8 +166,8 @@ def Typ.Monotonic.Dynamic (am : List (String × Typ)) (id : String) (body : Typ)
   def Typing.Dynamic (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
   | .top => ∃ e',  Expr.is_value e' ∧ ProgressionStar e e'
-  | .iso l τ => Typing.Dynamic am (.proj_iso e l) τ
-  | .entry l τ => Typing.Dynamic am (.proj_entry e l) τ
+  | .iso l τ => Typing.Dynamic am (.extract e l) τ
+  | .entry l τ => Typing.Dynamic am (.proj e l) τ
   | .path left right => ∀ e' , Typing.Dynamic am e' left → Typing.Dynamic am (.app e e') right
   | .unio left right => Typing.Dynamic am e left ∨ Typing.Dynamic am e right
   | .inter left right => Typing.Dynamic am e left ∧ Typing.Dynamic am e right

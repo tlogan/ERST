@@ -1219,7 +1219,7 @@ mutual
   : List String → List (Typ × Typ)
   → Typ → Typ
   → List String → List (Typ × Typ) → Prop
-  | refl skolems assums t :
+  | refl {skolems assums t} :
     Subtyping.Static skolems assums t t skolems assums
 
   -- implication preservation
