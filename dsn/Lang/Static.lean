@@ -2184,7 +2184,7 @@ mutual
     Function.Typing.Static skolems assums context subtras [] []
 
   | cons {skolems context } {assums : List (Typ × Typ)}
-    p e f assums' context' tp nested_zones zones subtras
+    p e f assums' context' tp zones nested_zones subtras
   :
     PatLifting.Static assums context p tp assums' context' →
     (∀ skolems''' assums'''' t , ⟨skolems''', assums'''', t⟩ ∈ zones →

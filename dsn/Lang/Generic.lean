@@ -65,8 +65,16 @@ theorem ListPair.mem_disj_concat_right {β}
     simp [*]
 
 
+theorem mdiff_refl {α} [BEq α] {xs ys : List α}:
+   List.mdiff xs ys ⊆ xs
+:= by sorry
+
 theorem containment_mdiff_concat_elim {α} [BEq α] {xs ys : List α}:
    List.mdiff (xs ++ ys) ys ⊆ xs
+:= by sorry
+
+theorem containment_mdiff_union_elim {α} [BEq α] {xs ys : List α}:
+   List.mdiff (xs ∪ ys) ys ⊆ xs
 := by sorry
 
 
@@ -78,6 +86,12 @@ theorem mdiff_left_sub_refl_disjoint {xs ys : List String} :
   List.mdiff xs ys ∩ ys = []
 := by sorry
 
+
+
+theorem MultiSubtyping.Dynamic.mdiff_union {tam cs' cs} :
+  MultiSubtyping.Dynamic tam (List.mdiff cs' cs ∪ cs) →
+  MultiSubtyping.Dynamic tam cs'
+:= by sorry
 
 
 theorem mdiff_concat_eq {xs ys zs : List String} :
@@ -678,6 +692,14 @@ theorem Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
   ) →
   Typing.Dynamic am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
 := by sorry
+
+-- theorem Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
+--   (∀ {v} ,
+--     IsValue v → Typing.Dynamic am v tp →
+--     ∃ eam , pattern_match v p = .some eam ∧ Typing.Dynamic am (Expr.sub eam e) tr
+--   ) →
+--   Typing.Dynamic am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
+-- := by sorry
 
 theorem Typing.Dynamic.function_tail_elim {am p tp e f t } :
   (∀ {v} , IsValue v → Typing.Dynamic am v tp → ∃ eam , pattern_match v p = .some eam) →
@@ -1926,17 +1948,30 @@ mutual
     skolems = skolems'
   := by sorry
 
-  theorem Zone.Interp.positive_soundness {ignore skolems assums t skolems' assums' t'} :
+
+
+
+  theorem Zone.Interp.integrated_positive_soundness
+  {ignore skolems assums t skolems' assums' t' e skolems_base assums_base context} :
     Zone.Interp ignore .true ⟨skolems, assums, t⟩ ⟨skolems', assums', t'⟩ →
-    (∀ e ,
-      (∃ am ,
-        ListPair.dom am ⊆ skolems ∧
-        ∀ am' , MultiSubtyping.Dynamic (am ++ am') assums → Typing.Dynamic (am ++ am') e t) →
-      (∃ am ,
-        ListPair.dom am ⊆ skolems' ∧
-        ∀ am' , MultiSubtyping.Dynamic (am ++ am') assums' → Typing.Dynamic (am ++ am') e t')
+    (∃ tam,
+      ListPair.dom tam ⊆ List.mdiff skolems skolems_base ∧
+        ∀ (tam' : List (String × Typ)),
+          MultiSubtyping.Dynamic (tam ++ tam') assums →
+            ∀ (eam : List (String × Expr)),
+              MultiTyping.Dynamic tam' eam context →
+                Typing.Dynamic (tam ++ tam') (Expr.sub eam e) t
+    ) →
+    (∃ tam,
+      ListPair.dom tam ⊆ List.mdiff skolems' skolems_base ∧
+        ∀ (tam' : List (String × Typ)),
+          MultiSubtyping.Dynamic (tam ++ tam') (List.mdiff assums' assums_base ∪ assums_base) →
+            ∀ (eam : List (String × Expr)),
+              MultiTyping.Dynamic tam' eam context →
+                Typing.Dynamic (tam ++ tam') (Expr.sub eam e) t'
     )
   := by sorry
+
 
   theorem Typ.Interp.positive_soundness {ignore skolems assums t t'} :
     Typ.Interp ignore skolems assums .true t t' →
@@ -1956,38 +1991,51 @@ end
 mutual
 
   theorem Function.Typing.Static.soundness {
-    skolems assums context f nested_zones subtras skolems' assums' t
+    skolems assums context f nested_zones subtras skolems''' assums'''' t
   } :
     Function.Typing.Static skolems assums context subtras f nested_zones →
-    ⟨skolems', assums', t⟩ ∈ nested_zones.flatten →
-    ∃ tam, ListPair.dom tam ⊆ skolems' ∧
-    (∀ {tam'}, MultiSubtyping.Dynamic (tam ++ tam') (assums' ++ assums) →
-      (∀ {eam}, MultiTyping.Dynamic tam' eam context →
+    ⟨skolems''', assums'''', t⟩ ∈ nested_zones.flatten →
+    ∃ tam, ListPair.dom tam ⊆ skolems''' ∧
+    (∀ tam', MultiSubtyping.Dynamic (tam ++ tam') (assums'''' ∪ assums) →
+      (∀ eam, MultiTyping.Dynamic tam' eam context →
         Typing.Dynamic (tam ++ tam') (Expr.sub eam (.function f)) t ) )
   | .nil => by intros ; contradiction
   | .cons
-      p e f assums0 context0 tp zones nested_zones' subtras
-      p0 p1 p2 p3
+      pat e f assums0 context0 tp zones nested_zones subtras
+      pat_lifting_static typing_static keys function_typing_static
   => by
-    intro p10
-    apply Iff.mp List.mem_append at p10
-    cases p10 with
-    | inl p11 =>
-      apply ListZone.tidy_soundness_alt p3 p11
-      intros skolems' assums' t p12
+    intro mem_con_zones
+    cases (Iff.mp List.mem_append mem_con_zones) with
+    | inl mem_zones =>
+      -- apply ListZone.tidy_soundness_alt p3 p11
+      -- intros skolems' assums' t p12
 
-      have ⟨assums_ext, p20, tr, p22⟩ := p2 p12
-      rw [p22] at p12
-      have p23 := p1 p12
+      -- have ⟨assums_ext, p20, tr, p22⟩ := p2 p12
+      -- rw [p22] at p12
+      -- have p23 := p1 p12
 
-      have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness p23
-      have ⟨p24,p26,p28,p30,p32,p34⟩ := Expr.Typing.Static.aux p23
+
+      have ⟨skolems'', mdiff_skolems, assums''', mdiff_assums, skolems', assums'', tr, interp⟩ := (keys _ _ _ mem_zones)
+      specialize typing_static _ _ _ mem_zones skolems'' mdiff_skolems assums''' mdiff_assums skolems' assums'' tr interp
+      clear keys
+
+      rw [← mdiff_skolems]
+      rw [← mdiff_assums]
+
+      apply Zone.Interp.integrated_positive_soundness interp
+
+      have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness typing_static
+
+      have ⟨p24,p26,p28,p30,p32,p34⟩ := Expr.Typing.Static.aux typing_static
 
       exists tam0
-      apply And.intro (fun _ p38 => containment_mdiff_concat_elim (ih0l p38))
 
-      intros tam' p40
-      intros eam p42
+      -- have interp_aux := Zone.Interp.aux interp
+
+      apply And.intro ih0l
+
+
+      ------------------------------
       rw [p22]
 
       simp [Expr.sub, Expr.Function.sub]
