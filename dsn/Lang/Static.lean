@@ -2243,12 +2243,12 @@ mutual
 
 
   | app {skolems assums context skolems''' assums'''}
-    ef ea id tf skolems' assums' ta skolems'' assums'' interp:
+    ef ea id tf skolems' assums' ta skolems'' assums'' t:
     Expr.Typing.Static skolems assums context ef tf skolems' assums' →
     Expr.Typing.Static skolems' assums' context ea ta skolems'' assums'' →
     Subtyping.Static skolems'' assums'' tf (.path ta (.var id)) skolems''' assums''' →
-    Typ.Interp [] skolems''' assums''' .true (.var id) interp →
-    Expr.Typing.Static skolems assums context (.app ef ea) interp skolems''' assums'''
+    Typ.Interp [] skolems''' assums''' .true (.var id) t →
+    Expr.Typing.Static skolems assums context (.app ef ea) t skolems''' assums'''
 
   | loop {skolems assums context t' skolems' assums'} e t id zones id_antec id_consq  :
     Expr.Typing.Static skolems assums context e t skolems' assums' →

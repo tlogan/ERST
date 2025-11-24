@@ -1847,6 +1847,12 @@ theorem MultiSubtyping.Dynamic.concat {am cs cs'} :
   MultiSubtyping.Dynamic am (cs ++ cs')
 := by sorry
 
+theorem MultiSubtyping.Dynamic.union {am cs cs'} :
+  MultiSubtyping.Dynamic am cs →
+  MultiSubtyping.Dynamic am cs' →
+  MultiSubtyping.Dynamic am (cs ∪ cs')
+:= by sorry
+
 theorem MultiSubtyping.Dynamic.concat_elim_left {am cs cs'} :
   MultiSubtyping.Dynamic am (cs ++ cs') →
   MultiSubtyping.Dynamic am cs
@@ -1973,10 +1979,30 @@ mutual
   := by sorry
 
 
-  theorem Typ.Interp.positive_soundness {ignore skolems assums t t'} :
+  -- theorem Typ.Interp.positive_soundness {ignore skolems assums t t'} :
+  --   Typ.Interp ignore skolems assums .true t t' →
+  --   ∀ am , MultiSubtyping.Dynamic am assums → Subtyping.Dynamic am t t'
+  -- := by sorry
+
+  theorem Typ.Interp.integrated_positive_soundness
+  {ignore skolems assums t t' e skolems_base context} :
     Typ.Interp ignore skolems assums .true t t' →
-    (∃ am , ListPair.dom am ⊆ skolems ∧
-      ∀ am' , MultiSubtyping.Dynamic (am ++ am') assums → Subtyping.Dynamic (am ++ am') t t')
+    (∃ tam,
+      ListPair.dom tam ⊆ List.mdiff skolems skolems_base ∧
+        ∀ (tam' : List (String × Typ)),
+          MultiSubtyping.Dynamic (tam ++ tam') assums →
+            ∀ (eam : List (String × Expr)),
+              MultiTyping.Dynamic tam' eam context →
+                Typing.Dynamic (tam ++ tam') (Expr.sub eam e) t
+    ) →
+    (∃ tam,
+      ListPair.dom tam ⊆ List.mdiff skolems skolems_base ∧
+        ∀ (tam' : List (String × Typ)),
+          MultiSubtyping.Dynamic (tam ++ tam') assums →
+            ∀ (eam : List (String × Expr)),
+              MultiTyping.Dynamic tam' eam context →
+                Typing.Dynamic (tam ++ tam') (Expr.sub eam e) t'
+    )
   := by sorry
 
 end
@@ -2142,7 +2168,7 @@ mutual
       intro tam''
       intros p5 p6
       apply ih0r
-      { apply MultiSubtyping.Dynamic.concat  p6
+      { apply MultiSubtyping.Dynamic.union p6
         apply MultiSubtyping.Dynamic.dom_extension
         { apply List.disjoint_preservation_left ih0l p11 }
         { apply MultiSubtyping.Dynamic.dom_extension p5 p2 } }
@@ -2150,15 +2176,17 @@ mutual
         { apply List.disjoint_preservation_right p13 p5 }
         { apply p3 } }
 
-  | .app ef ea id tf skolems0 assums0 ta skolems1 assums1 p0 p1 p2 => by
+  | .app ef ea id tf skolems0 assums0 ta skolems1 assums1 t p0 p1 p2 interp => by
     have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness p0
     have ⟨p5,p6,p105,p7,p8,p9⟩ := Expr.Typing.Static.aux p0
     have ⟨tam1,ih1l,ih1r⟩ := Expr.Typing.Static.soundness p1
     have ⟨p10,p11,p107,p12,p13,p14⟩ := Expr.Typing.Static.aux p1
     have ⟨tam2,ih2l,ih2r⟩ := Subtyping.Static.soundness p2
     have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := Subtyping.Static.aux p2
+
+    apply Typ.Interp.integrated_positive_soundness interp
+
     exists tam2 ++ (tam1 ++ tam0)
-    simp [*]
     apply And.intro
     { apply dom_concat_mdiff_containment
       { intro a p30 ; apply p10 (p5 p30) }
@@ -2166,7 +2194,8 @@ mutual
       { apply p15 }
       { apply ih2l } }
 
-    { intro tam' p30 eam p31
+    { simp [*]
+      intro tam' p30 eam p31
       apply Typing.Dynamic.path_elim
       {
         unfold Subtyping.Dynamic at ih2r
