@@ -1630,20 +1630,32 @@ theorem Typ.sub_weaken_soundness {am idl t0 t1 t2} :
 := by sorry
 
 
+
+  -- (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
+  --   ∃ am'', ListPair.dom am'' ⊆ skolems' ∧
+  --   ∃ am' , ListPair.dom am' ⊆ ListSubtyping.free_vars assums' ∧
+  --   MultiSubtyping.Dynamic (am' ++ am) assums' ∧
+  --   Typing.Dynamic (am'' ++ am' ++ am) e t'
+  -- ) →
 theorem Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
   LoopListZone.Subtyping.Static (ListSubtyping.free_vars assums) id zones t →
   MultiSubtyping.Dynamic am assums →
   id ∉ ListSubtyping.free_vars assums →
+  ------------------------------
+  --- TODO: figure out if this is needed (subtyping_local assums)
+  ------------------------------
   (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
     ∃ am' ,
     ListPair.dom am' ⊆ ListSubtyping.free_vars assums' ∧
     MultiSubtyping.Dynamic (am' ++ am) assums') →
+  ------------------------------
   (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
     (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
       (∀ {am'},
         ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
         MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums' →
         Typing.Dynamic (am'' ++ am' ++ am) e t' ) ) ) →
+  ------------------------------
   Typing.Dynamic am e t
 := by
   intros p0 p1 p2 subtyping_local_assums p3
@@ -2254,7 +2266,11 @@ mutual
       }
     }
 
-  | .loop body t0 id zones zones' id_body p0 p1 p2 p3 id_fresh => by
+  | .loop body t0 id zones id_antec id_consq p0
+    no_mem_id_antec no_mem_id_consq subtyping_static keys subtyping_static_zones id_fresh
+  => by
+
+
     have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness p0
     have ⟨p5,p6,p7,p8,p9,p10⟩ := Expr.Typing.Static.aux p0
     exists tam0
@@ -2263,6 +2279,34 @@ mutual
     intros tam' p20
     intros eam p30
 
+
+    apply Subtyping.LoopListZone.Static.soundness subtyping_static_zones p20 id_fresh
+    { intros skolems'''' assums''''' body' mem_zones
+      have ⟨
+        skolems''', mdiff_skolems, assums'''', mdiff_assums,
+        assums''', loop_normal_form, skolems'', assums'',
+        interp
+      ⟩ := keys _ _ _ mem_zones
+
+      -- rw [← mdiff_skolems]
+      -- rw [← mdiff_assums]
+
+      sorry
+    }
+    { intros skolems'''' assums''''' body' mem_zones
+      have ⟨
+        skolems''', mdiff_skolems, assums'''', mdiff_assums,
+        assums''', loop_normal_form, skolems'', assums'',
+        interp
+      ⟩ := keys _ _ _ mem_zones
+
+      -- rw [← mdiff_skolems]
+      -- rw [← mdiff_assums]
+
+      sorry
+    }
+
+    ----------------------------------------------------
 
     -- Typ.combine_bounds id_body true assums''
 
