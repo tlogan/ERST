@@ -2007,13 +2007,6 @@ mutual
     intro mem_con_zones
     cases (Iff.mp List.mem_append mem_con_zones) with
     | inl mem_zones =>
-      -- apply ListZone.tidy_soundness_alt p3 p11
-      -- intros skolems' assums' t p12
-
-      -- have ⟨assums_ext, p20, tr, p22⟩ := p2 p12
-      -- rw [p22] at p12
-      -- have p23 := p1 p12
-
 
       have ⟨skolems'', mdiff_skolems, assums''', mdiff_assums, skolems', assums'', tr, interp⟩ := (keys _ _ _ mem_zones)
       specialize typing_static _ _ _ mem_zones skolems'' mdiff_skolems assums''' mdiff_assums skolems' assums'' tr interp
@@ -2030,30 +2023,26 @@ mutual
 
       exists tam0
 
-      -- have interp_aux := Zone.Interp.aux interp
-
       apply And.intro ih0l
 
-
-      ------------------------------
-      rw [p22]
-
-      simp [Expr.sub, Expr.Function.sub]
+      intros tam' subtyping_dynamic_assums
+      intros eam typing_dynamic_context
       apply Typing.Dynamic.function_head_elim
       intros v p44 p46
-      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p0 (tam0 ++ tam') v p44 p46
+      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p44 p46
       exists eam0
       simp [*]
       rw [Expr.sub_sub_removal (pattern_match_ids_containment p48)]
-      apply ih0r p40
+
+      apply ih0r subtyping_dynamic_assums
       apply MultiTyping.Dynamic.dom_reduction
       { apply List.disjoint_preservation_left ih0l
         apply List.disjoint_preservation_right p28 p32 }
       { apply MultiTyping.Dynamic.dom_context_extension p50 }
 
     | inr p11 =>
-      have ⟨tam0,ih0l,ih0r⟩ := Function.Typing.Static.soundness p4 p11
-      have ⟨p20,p22,p24,p26⟩ := Function.Typing.Static.aux p4 p11
+      have ⟨tam0,ih0l,ih0r⟩ := Function.Typing.Static.soundness function_typing_static p11
+      have ⟨p20,p22,p24,p26⟩ := Function.Typing.Static.aux function_typing_static p11
 
       exists tam0
       simp [*]
@@ -2062,10 +2051,10 @@ mutual
 
       apply Typing.Dynamic.function_tail_elim
       { intros v p40 p42
-        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness p0 (tam0 ++ tam') v p40 p42
+        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p40 p42
         apply Exists.intro eam0 p48 }
-      { apply Function.Typing.Static.subtra_soundness p4 List.mem_cons_self p11 }
-      { apply ih0r p30 p32 }
+      { apply Function.Typing.Static.subtra_soundness function_typing_static List.mem_cons_self p11 }
+      { apply ih0r _ p30 _ p32 }
 
 
   theorem Record.Typing.Static.soundness {skolems assums context r t skolems' assums'} :
