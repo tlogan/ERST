@@ -1452,7 +1452,7 @@ example {P Q R} :
 
 
 
-theorem Zone.pack_negative_right_to_left_soundness {pids t am assums skolems' assums' t' e am'} :
+theorem Zone.pack_negative_soundness_left_to_right {pids t am assums skolems' assums' t' e am'} :
   Zone.pack pids .false ⟨skolems', assums', t'⟩ = t →
   ListSubtyping.free_vars assums ⊆ pids →
   MultiSubtyping.Dynamic am assums →
@@ -1630,35 +1630,40 @@ theorem Typ.sub_weaken_soundness {am idl t0 t1 t2} :
 := by sorry
 
 
-
-  -- (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
-  --   ∃ am'', ListPair.dom am'' ⊆ skolems' ∧
-  --   ∃ am' , ListPair.dom am' ⊆ ListSubtyping.free_vars assums' ∧
-  --   MultiSubtyping.Dynamic (am' ++ am) assums' ∧
-  --   Typing.Dynamic (am'' ++ am' ++ am) e t'
-  -- ) →
 theorem Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
   LoopListZone.Subtyping.Static (ListSubtyping.free_vars assums) id zones t →
   MultiSubtyping.Dynamic am assums →
   id ∉ ListSubtyping.free_vars assums →
   ------------------------------
-  --- TODO: figure out if this is needed (subtyping_local assums)
+  -- substance
+  ------------------------------
+  -- (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
+  --   ∃ am' ,
+  --   ListPair.dom am' ⊆ ListSubtyping.free_vars assums' ∧
+  --   MultiSubtyping.Dynamic (am' ++ am) assums'
+  -- ) →
   ------------------------------
   (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
-    ∃ am' ,
-    ListPair.dom am' ⊆ ListSubtyping.free_vars assums' ∧
-    MultiSubtyping.Dynamic (am' ++ am) assums') →
-  ------------------------------
-  (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
+    -------------
+    -- substance
+    -------------
+    (∃ am' ,
+      ListPair.dom am' ⊆ ListSubtyping.free_vars assums' ∧
+      MultiSubtyping.Dynamic (am' ++ am) assums'
+    ) ∧
+    -------------
+    -- soundness
+    -------------
     (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
       (∀ {am'},
         ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
         MultiSubtyping.Dynamic (am'' ++ am' ++ am) assums' →
-        Typing.Dynamic (am'' ++ am' ++ am) e t' ) ) ) →
+        Typing.Dynamic (am'' ++ am' ++ am) e t' ) )
+  ) →
   ------------------------------
   Typing.Dynamic am e t
 := by
-  intros p0 p1 p2 subtyping_local_assums p3
+  intros p0 p1 p2 substance_and_soundness
   cases p0 with
   | batch zones' t' left right p4 p5 p6 p7 p8 =>
     unfold Typing.Dynamic
@@ -1672,6 +1677,10 @@ theorem Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
 
     apply Typ.factor_reduction_soundness p8 p11
 
+    have p3 := (fun {x y z} mem_zones =>
+      let ⟨substance, soundness⟩ := @substance_and_soundness x y z mem_zones
+      soundness
+    )
     apply ListZone.inversion_soundness p4 p1 at p3
 
     apply p3 ep
@@ -1695,10 +1704,8 @@ theorem Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
     intro ea
     intro p13
 
-    simp [*] at subtyping_local_assums
-    have ⟨am', dom_local_assums, subtyping_local_assums⟩ := subtyping_local_assums rfl rfl rfl
-
-    specialize p3 (Iff.mpr List.mem_singleton rfl)
+    have ⟨substance, soundness⟩ := substance_and_soundness (Iff.mpr List.mem_singleton rfl)
+    have ⟨am', dom_local_assums, subtyping_local_assums⟩ := substance
 
     have subtyping_assums0'_bot : MultiSubtyping.Dynamic (am' ++ (id,.bot)::am) assums0' := by
       apply ListSubtyping.inversion_substance p5
@@ -1716,7 +1723,8 @@ theorem Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
         Typing.Dynamic ((id,.bot)::am) e t'
     := by
       intros e_pair typing_pair
-      apply Zone.pack_negative_right_to_left_soundness p6
+      -- NOTE: pack_negative_soundness_left_to_right depends on substance
+      apply Zone.pack_negative_soundness_left_to_right p6
         (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
         (MultiSubtyping.Dynamic.dom_single_extension p2 p1)
         subtyping_assums0'_bot
@@ -1729,7 +1737,6 @@ theorem Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
     := by
       exact fun e a ↦ Typ.factor_imp_typing_covariant factor_pair p8 imp_typing_pair_to_packed e a
 
-
     have subtyping_idl_left : Subtyping.Dynamic ((id,.bot)::am) (Typ.var idl) l := by
       unfold Subtyping.Dynamic
       intros el typing_idl
@@ -1740,11 +1747,8 @@ theorem Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
         exact List.nonmem_to_disjoint_right idl (ListSubtyping.free_vars assums0) idl_fresh }
       { exact typing_idl }
 
-    ------------------------------
-
     have typing_idl_bot : Typing.Dynamic ((id,.bot)::am) ea (Typ.var idl) := by
       apply Typing.Dynamic.dom_single_extension (Iff.mp List.count_eq_zero rfl) p13
-
 
     have typing_factor_left_bot : Typing.Dynamic ((id,.bot)::am) ea l := by
       unfold Subtyping.Dynamic at subtyping_idl_left
@@ -1782,9 +1786,9 @@ theorem Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
     apply Expr.Convergence.typing_left_to_right (Expr.Convergence.app_arg_preservation e p14)
     apply Typ.factor_reduction_soundness p9 p15
 
-    apply ListSubtyping.inversion_soundness skolems (Typ.var idl) r p5 p1 at p3
+    apply ListSubtyping.inversion_soundness skolems (Typ.var idl) r p5 p1 at soundness
 
-    apply p3 ep
+    apply soundness ep
 
     have p20 : Typing.Dynamic ((id, .top) :: am) ep t' := by
       apply Typing.Dynamic.lfp_elim_top (Typ.Monotonic.Static.soundness am p7) p15
@@ -2281,30 +2285,17 @@ mutual
 
 
     apply Subtyping.LoopListZone.Static.soundness subtyping_static_zones p20 id_fresh
-    { intros skolems'''' assums''''' body' mem_zones
-      have ⟨
-        skolems''', mdiff_skolems, assums'''', mdiff_assums,
-        assums''', loop_normal_form, skolems'', assums'',
-        interp
-      ⟩ := keys _ _ _ mem_zones
-
-      -- rw [← mdiff_skolems]
-      -- rw [← mdiff_assums]
-
-      sorry
-    }
-    { intros skolems'''' assums''''' body' mem_zones
-      have ⟨
-        skolems''', mdiff_skolems, assums'''', mdiff_assums,
-        assums''', loop_normal_form, skolems'', assums'',
-        interp
-      ⟩ := keys _ _ _ mem_zones
-
-      -- rw [← mdiff_skolems]
-      -- rw [← mdiff_assums]
-
-      sorry
-    }
+    intros skolems'''' assums''''' body' mem_zones
+    have ⟨
+      skolems''', mdiff_skolems, assums'''', mdiff_assums,
+      assums''', loop_normal_form, skolems'', assums'',
+      interp
+    ⟩ := keys _ _ _ mem_zones
+    apply And.intro
+    { -- TODO: substance
+      sorry }
+    { -- TODO: soundness case
+      sorry }
 
     ----------------------------------------------------
 
