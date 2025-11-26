@@ -2034,6 +2034,7 @@ theorem  ListSubtyping.loop_normal_form_integrated_completeness
   )
 := by sorry
 
+
 theorem  Zone.Interp.assums_integrated_completeness
 {ignore b am assums skolems' assums' t' skolems'' assums'' t''} :
   Zone.Interp ignore b ⟨skolems', assums', t'⟩ ⟨skolems'', assums'', t''⟩ →
@@ -2047,6 +2048,57 @@ theorem  Zone.Interp.assums_integrated_completeness
   )
 := by sorry
 
+
+
+
+
+theorem  ListSubtyping.loop_normal_form_integrated_soundness
+{id am_base skolems skolems' assums assums' assums'' e t} :
+  ListSubtyping.loop_normal_form id assums' = some assums'' →
+  (∃ am'',
+    ListPair.dom am'' ⊆ List.mdiff skolems' skolems ∧
+    ∀ {am' : List (String × Typ)},
+      ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+      MultiSubtyping.Dynamic (am'' ++ am' ++ am_base) (List.mdiff assums' assums) →
+      Typing.Dynamic (am'' ++ am' ++ am_base) e t
+  ) →
+  (∃ am'',
+    ListPair.dom am'' ⊆ List.mdiff skolems' skolems ∧
+    ∀ {am' : List (String × Typ)},
+      ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+      MultiSubtyping.Dynamic (am'' ++ am' ++ am_base) (List.mdiff assums'' assums) →
+      Typing.Dynamic (am'' ++ am' ++ am_base) e t
+  )
+:= by sorry
+
+
+
+theorem  Zone.Interp.integrated_soundness
+{ignore b am_base skolems skolems' skolems'' assums assums' assums'' e t' t''} :
+  Zone.Interp ignore b ⟨skolems', assums', t'⟩ ⟨skolems'', assums'', t''⟩ →
+  (∃ am'',
+    ListPair.dom am'' ⊆ List.mdiff skolems' skolems ∧
+    ∀ {am' : List (String × Typ)},
+      ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+      MultiSubtyping.Dynamic (am'' ++ am' ++ am_base) (List.mdiff assums' assums) →
+      Typing.Dynamic (am'' ++ am' ++ am_base) e t'
+  ) →
+  (∃ am'',
+    ListPair.dom am'' ⊆ List.mdiff skolems'' skolems ∧
+    ∀ {am' : List (String × Typ)},
+      ListPair.dom am' ∩ ListSubtyping.free_vars assums = [] →
+      MultiSubtyping.Dynamic (am'' ++ am' ++ am_base) (List.mdiff assums'' assums) →
+      Typing.Dynamic (am'' ++ am' ++ am_base) e t''
+  )
+:= by sorry
+
+
+
+theorem MultiSubtyping.Dynamic.mdiff_removal {tam assums assums'} :
+  MultiSubtyping.Dynamic tam assums →
+  MultiSubtyping.Dynamic tam (List.mdiff assums' assums) →
+  MultiSubtyping.Dynamic tam assums'
+:= by sorry
 
 
 
@@ -2294,9 +2346,8 @@ mutual
     }
 
   | .loop body t0 id zones id_antec id_consq p0
-    no_mem_id_antec no_mem_id_consq subtyping_static keys subtyping_static_zones id_fresh
+    subtyping_static keys subtyping_static_zones id_fresh
   => by
-
 
     have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness p0
     have ⟨p5,p6,p7,p8,p9,p10⟩ := Expr.Typing.Static.aux p0
@@ -2305,7 +2356,6 @@ mutual
 
     intros tam' p20
     intros eam p30
-
 
     apply Subtyping.LoopListZone.Static.soundness subtyping_static_zones p20 id_fresh
     intros skolems'''' assums''''' body' mem_zones
@@ -2324,73 +2374,40 @@ mutual
     clear keys
 
     apply And.intro
-    { -- substance
+    { -- substance / conditional completeness
       apply ListSubtyping.loop_normal_form_integrated_completeness loop_normal_form
       apply Zone.Interp.assums_integrated_completeness interp
       apply Subtyping.Static.substance subtyping_static p20
     }
     { -- soundness
-      sorry }
+      apply ListSubtyping.loop_normal_form_integrated_soundness loop_normal_form
+      apply Zone.Interp.integrated_soundness interp
 
-    ----------------------------------------------------
+      have ⟨tam1, h33l, h33r⟩ := Subtyping.Static.soundness subtyping_static
+      have ⟨p41,p42,p43,p44,p45,p46,p47⟩ := Subtyping.Static.aux subtyping_static
+      exists tam1
+      simp [*]
 
-    -- Typ.combine_bounds id_body true assums''
+      intros tam'' p55 p56
+      apply Typing.Dynamic.loop_path_elim id
 
-    have typing_zones : ∀ {skolems1 assums1 t1}, ⟨skolems1, assums1, t1⟩ ∈ zones →
-      ∃ am'' ,
-        ListPair.dom am'' ⊆ ListSubtyping.free_vars assums1 ∧
-        MultiSubtyping.Dynamic (am'' ++ (tam0 ++ tam')) assums1
-    := by
-      intros skolems1 assums1 t1 mem_zones
-      apply Subtyping.Static.substance
-      { have ⟨_,_,h⟩ := p1 mem_zones; exact h }
-      { exact p20 }
-
-    have typing_zones' : ∀ {skolems1 assums1 t1}, ⟨skolems1, assums1, t1⟩ ∈ zones' →
-      ∃ am'' ,
-        ListPair.dom am'' ⊆ ListSubtyping.free_vars assums1 ∧
-        MultiSubtyping.Dynamic (am'' ++ (tam0 ++ tam')) assums1
-    := by
-      apply ListZone.tidy_substance p2
-      intros skolems1 assums1 t1 h
-      exact typing_zones h
-
-    apply Subtyping.LoopListZone.Static.soundness p3 p20 id_fresh typing_zones'
-    apply ListZone.tidy_soundness p2
-    { exact List.subset_cons_of_subset id (fun _ x => x) }
-    { exact p20 }
-
-    intros skolems0 assums0 t0 p40
-
-    have ⟨interp_eq, id_body_not_skolem, p40⟩ := p1 p40
-    have ⟨tam1, h33l, h33r⟩ := Subtyping.Static.soundness p40
-    have ⟨p41,p42,p43,p44,p45,p46,p47⟩ := Subtyping.Static.aux p40
-
-    have id_body_not_skolem_dom : id_body ∉ ListPair.dom tam1 := by
-      intro h
-      apply id_body_not_skolem (containment_mdiff_concat_elim (h33l h))
-
-    exists tam1
-    simp [*]
-    apply And.intro (fun _ p50 => containment_mdiff_concat_elim (h33l p50))
-    intros tam'' p55 p56
-    apply Typing.Dynamic.loop_path_elim id
-
-    have muli_subtyping_assums :
-      MultiSubtyping.Dynamic (tam1 ++ (tam'' ++ (tam0 ++ tam'))) (assums0 ++ assums')
-    := by
-      apply MultiSubtyping.Dynamic.concat p56
-      apply MultiSubtyping.Dynamic.dom_extension
-      { apply List.disjoint_preservation_left h33l p45 }
-      { apply MultiSubtyping.Dynamic.dom_extension p55 p20 }
-
-    have id_body_interp_subtyping := Typ.combine_bounds_positive_subtyping_path_conseq_soundness
-      id_body_not_skolem_dom muli_subtyping_assums h33r
-    unfold Subtyping.Dynamic at id_body_interp_subtyping
-    apply id_body_interp_subtyping
-    apply Typing.Dynamic.dom_extension (List.disjoint_preservation_left h33l p46)
-    apply Typing.Dynamic.dom_extension (List.disjoint_preservation_right p8 p55)
-    apply ih0r p20 p30
+      unfold Subtyping.Dynamic at h33r
+      apply h33r
+      {
+        apply MultiSubtyping.Dynamic.mdiff_removal
+        {
+          apply MultiSubtyping.Dynamic.dom_extension
+          { apply List.disjoint_preservation_left h33l p45 }
+          { apply MultiSubtyping.Dynamic.dom_extension p55 p20 }
+        }
+        { exact p56 }
+      }
+      {
+        apply Typing.Dynamic.dom_extension (List.disjoint_preservation_left h33l p46)
+        apply Typing.Dynamic.dom_extension (List.disjoint_preservation_right p8 p55)
+        apply ih0r p20 p30
+      }
+    }
 
   | .anno e ta te skolems0 assums0 p0 p1 p2 => by
     have ⟨tam0,ih0l,ih0r⟩ := Expr.Typing.Static.soundness p1

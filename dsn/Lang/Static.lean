@@ -2252,8 +2252,6 @@ mutual
 
   | loop {skolems assums context t' skolems' assums'} e t id zones id_antec id_consq  :
     Expr.Typing.Static skolems assums context e t skolems' assums' →
-    id_antec ∉ skolems' →
-    id_consq ∉ skolems' →
     (∀ skolems'''' assums''''' body', ⟨skolems'''', assums''''', body'⟩ ∈ zones →
       ∀ skolems''' , List.mdiff skolems''' skolems' = skolems'''' →
       ∀ assums'''' , List.mdiff assums'''' assums' = assums''''' →
