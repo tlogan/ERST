@@ -10,8 +10,6 @@ import Lang.Dynamic
 set_option pp.fieldNotation false
 
 
-
-
 theorem ListPair.mem_concat_disj {β}
   (x : String) (am0 am1 : List (String × β))
 :
@@ -1452,7 +1450,7 @@ example {P Q R} :
 
 
 
-theorem Zone.pack_negative_soundness_left_to_right {pids t am assums skolems' assums' t' e am'} :
+theorem Zone.pack_negative_completeness {pids t am assums skolems' assums' t' e am'} :
   Zone.pack pids .false ⟨skolems', assums', t'⟩ = t →
   ListSubtyping.free_vars assums ⊆ pids →
   MultiSubtyping.Dynamic am assums →
@@ -1723,8 +1721,7 @@ theorem Subtyping.LoopListZone.Static.soundness {id zones t am assums e} :
         Typing.Dynamic ((id,.bot)::am) e t'
     := by
       intros e_pair typing_pair
-      -- NOTE: pack_negative_soundness_left_to_right depends on substance
-      apply Zone.pack_negative_soundness_left_to_right p6
+      apply Zone.pack_negative_completeness p6
         (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
         (MultiSubtyping.Dynamic.dom_single_extension p2 p1)
         subtyping_assums0'_bot
@@ -1919,11 +1916,11 @@ mutual
   theorem Subtyping.Static.substance {
     skolems assums lower upper skolems' assums' am
   } :
-    Subtyping.Static skolems assums lower upper skolems' (assums' ++ assums) →
+    Subtyping.Static skolems assums lower upper skolems' assums' →
     MultiSubtyping.Dynamic am assums →
     ∃ am'' ,
-    ListPair.dom am'' ⊆ ListSubtyping.free_vars assums' ∧
-    MultiSubtyping.Dynamic (am'' ++ am) assums'
+    ListPair.dom am'' ⊆ ListSubtyping.free_vars (List.mdiff assums' assums) ∧
+    MultiSubtyping.Dynamic (am'' ++ am) (List.mdiff assums' assums)
   := by sorry
 end
 
@@ -2023,6 +2020,32 @@ mutual
 
 end
 
+
+theorem  ListSubtyping.loop_normal_form_integrated_completeness
+{id am assums assums' assums''} :
+  ListSubtyping.loop_normal_form id assums' = some assums'' →
+  (∃ am',
+    ListPair.dom am' ⊆ ListSubtyping.free_vars (List.mdiff assums' assums) ∧
+    MultiSubtyping.Dynamic (am' ++ am) (List.mdiff assums' assums)
+  ) →
+  (∃ am',
+    ListPair.dom am' ⊆ ListSubtyping.free_vars (List.mdiff assums'' assums) ∧
+      MultiSubtyping.Dynamic (am' ++ am) (List.mdiff assums'' assums)
+  )
+:= by sorry
+
+theorem  Zone.Interp.assums_integrated_completeness
+{ignore b am assums skolems' assums' t' skolems'' assums'' t''} :
+  Zone.Interp ignore b ⟨skolems', assums', t'⟩ ⟨skolems'', assums'', t''⟩ →
+  (∃ am',
+    ListPair.dom am' ⊆ ListSubtyping.free_vars (List.mdiff assums' assums) ∧
+    MultiSubtyping.Dynamic (am' ++ am) (List.mdiff assums' assums)
+  ) →
+  (∃ am',
+    ListPair.dom am' ⊆ ListSubtyping.free_vars (List.mdiff assums'' assums) ∧
+      MultiSubtyping.Dynamic (am' ++ am) (List.mdiff assums'' assums)
+  )
+:= by sorry
 
 
 
@@ -2288,13 +2311,25 @@ mutual
     intros skolems'''' assums''''' body' mem_zones
     have ⟨
       skolems''', mdiff_skolems, assums'''', mdiff_assums,
-      assums''', loop_normal_form, skolems'', assums'',
-      interp
+      assums''', loop_normal_form, skolems'', assums'', interp
     ⟩ := keys _ _ _ mem_zones
+
+    specialize subtyping_static _ _ _ mem_zones
+      skolems''' mdiff_skolems assums'''' mdiff_assums
+      assums''' loop_normal_form skolems'' assums'' interp
+
+    rw [← mdiff_skolems]
+    rw [← mdiff_assums]
+
+    clear keys
+
     apply And.intro
-    { -- TODO: substance
-      sorry }
-    { -- TODO: soundness case
+    { -- substance
+      apply ListSubtyping.loop_normal_form_integrated_completeness loop_normal_form
+      apply Zone.Interp.assums_integrated_completeness interp
+      apply Subtyping.Static.substance subtyping_static p20
+    }
+    { -- soundness
       sorry }
 
     ----------------------------------------------------

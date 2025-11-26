@@ -675,6 +675,7 @@ def List.merase {α} [BEq α] (x : α) : List α → List α
   else
     y :: (List.merase x ys)
 
+-- TODO: replace with List.removeAll
 def List.mdiff {α} [BEq α] (xs : List α) : List α → List α
 | .nil => xs
 | .cons y ys =>

@@ -2126,7 +2126,7 @@ mutual
         let op_assums''' := ListSubtyping.loop_normal_form id assums''
         match op_assums''' with
         | some assums''' =>
-          return [Zone.mk (List.mdiff skolems''' Θ) (List.mdiff assums''' Δ) body']
+          return [Zone.mk (List.mdiff skolems''' Θ) (List.mdiff assums''' Δ') body']
         | none => return []
       )
       -- Lean.logInfo ("<<< LOOP ID >>>\n" ++ (repr id))
@@ -2255,8 +2255,8 @@ mutual
     id_antec ∉ skolems' →
     id_consq ∉ skolems' →
     (∀ skolems'''' assums''''' body', ⟨skolems'''', assums''''', body'⟩ ∈ zones →
-      ∀ skolems''' , List.mdiff skolems''' skolems = skolems'''' →
-      ∀ assums'''' , List.mdiff assums'''' assums = assums''''' →
+      ∀ skolems''' , List.mdiff skolems''' skolems' = skolems'''' →
+      ∀ assums'''' , List.mdiff assums'''' assums' = assums''''' →
       ∀ assums''' , ListSubtyping.loop_normal_form id assums''' = .some assums'''' →
       ∀ skolems'' assums'',
       Zone.Interp [id] .true
@@ -2268,8 +2268,8 @@ mutual
     ) →
 
     (∀ skolems'''' assums''''' body', ⟨skolems'''', assums''''', body'⟩ ∈ zones →
-      ∃ skolems''' , List.mdiff skolems''' skolems = skolems'''' ∧
-      ∃ assums'''' , List.mdiff assums'''' assums = assums''''' ∧
+      ∃ skolems''' , List.mdiff skolems''' skolems' = skolems'''' ∧
+      ∃ assums'''' , List.mdiff assums'''' assums' = assums''''' ∧
       ∃ assums''' , ListSubtyping.loop_normal_form id assums''' = .some assums'''' ∧
       ∃ skolems'' assums'',
       Zone.Interp [id] .true
