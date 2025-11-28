@@ -34,6 +34,70 @@ mutual
   | _, _ => none
 end
 
+inductive IsFreshLabel : List (String × Expr) → String → Prop
+| nil : ∀ {l}, IsFreshLabel [] l
+| cons : ∀ {l e r l'},
+  l' ≠ l →
+  IsFreshLabel r l' →
+  IsFreshLabel ((l,e)::r) l'
+
+mutual
+  inductive IsRecordValue : List (String × Expr) → Prop
+  | nil : IsRecordValue []
+  | cons : ∀ {l e r},
+    IsFreshLabel r l → IsValue e →
+    IsRecordValue ((l,e)::r)
+
+  inductive IsValue : Expr → Prop
+  | record : ∀ {r}, IsRecordValue r → IsValue (.record r)
+  | function : ∀ {f}, IsValue (.function f)
+end
+
+mutual
+  def ids_record_pattern : List (String × Pat) → List String
+  | .nil => .nil
+  | (_, p) :: r =>
+    (ids_pattern p) ++ (ids_record_pattern r)
+
+  def ids_pattern : Pat → List String
+  | .var id => [id]
+  | .iso l body => ids_pattern body
+  | .record r => ids_record_pattern r
+end
+
+
+mutual
+  def Expr.Record.sub (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
+  | .nil => .nil
+  | (l, e) :: r =>
+    (l, Expr.sub m e) :: (Expr.Record.sub m r)
+
+  def Expr.Function.sub (m : List (String × Expr)): List (Pat × Expr) → List (Pat × Expr)
+  | .nil => .nil
+  | (p, e) :: f =>
+    let ids := ids_pattern p
+    (p, Expr.sub (remove_all m ids) e) :: (Expr.Function.sub m f)
+
+  def Expr.sub (m : List (String × Expr)): Expr → Expr
+  | .var id => match (find id m) with
+    | .none => (.var id)
+    | .some e => e
+  | .iso l body => .iso l (Expr.sub m body)
+  | .record r => .record (Expr.Record.sub m r)
+  | .function f => .function (Expr.Function.sub m f)
+  | .app ef ea => .app (Expr.sub m ef) (Expr.sub m ea)
+  | .anno e t => .anno (Expr.sub m e) t
+  | .loop e => .loop (Expr.sub m e)
+end
+
+
+theorem Expr.sub_sub_removal {ids eam0 eam1 e} :
+  ids ⊆ ListPair.dom eam0 →
+  (Expr.sub eam0 (Expr.sub (remove_all eam1 ids) e)) =
+  (Expr.sub (eam0 ++ eam1) e)
+:= by sorry
+
+
 inductive Progression : Expr → Expr → Prop
 | entry : ∀ {r l e e'},
   Progression e e' →
@@ -351,21 +415,6 @@ theorem Subtyping.Dynamic.lfp_skip_elim {am id body t} :
   Subtyping.Dynamic am (Typ.lfp id body) t
 := by sorry
 
-theorem Subtyping.Dynamic.lfp_induct_elim {am id body t} :
-  Typ.Monotonic.Dynamic am id body →
-  Subtyping.Dynamic am (Typ.sub [(id, t)] body) t →
-  Subtyping.Dynamic am (Typ.lfp id body) t
-:= by sorry
-
-
-theorem Subtyping.Dynamic.lfp_elim_diff_intro {am id lower upper sub n} :
-  Typ.Monotonic.Dynamic am id lower →
-  Subtyping.Dynamic am (Typ.lfp id lower) upper →
-  ¬ Subtyping.Dynamic am (Typ.subfold id lower 1) sub →
-  ¬ Subtyping.Dynamic am sub (Typ.subfold id lower n) →
-  Subtyping.Dynamic am (Typ.lfp id lower) (.diff upper sub)
-:= by sorry
-
 theorem Subtyping.Dynamic.diff_intro {am t left right} :
   Subtyping.Dynamic am t left →
   ¬ (Subtyping.Dynamic am t right) →
@@ -373,16 +422,6 @@ theorem Subtyping.Dynamic.diff_intro {am t left right} :
   Subtyping.Dynamic am t (Typ.diff left right)
 := by sorry
 
-
-theorem Subtyping.Dynamic.lfp_peel_intro {am t id body} :
-  Subtyping.Dynamic am t (Typ.sub [(id, .lfp id body)] body) →
-  Subtyping.Dynamic am t (Typ.lfp id body)
-:= by sorry
-
-theorem Subtyping.Dynamic.lfp_drop_intro {am t id body} :
-  Subtyping.Dynamic am t (Typ.drop id body) →
-  Subtyping.Dynamic am t (Typ.lfp id body)
-:= by sorry
 
 theorem Subtyping.Dynamic.exi_intro {am t ids quals body} :
   MultiSubtyping.Dynamic am quals →
@@ -577,4 +616,11 @@ theorem MultiSubtyping.Dynamic.removeAll_removal {tam assums assums'} :
   MultiSubtyping.Dynamic tam assums →
   MultiSubtyping.Dynamic tam (List.removeAll assums' assums) →
   MultiSubtyping.Dynamic tam assums'
+:= by sorry
+
+
+theorem Subtyping.Dynamic.lfp_induct_elim {am id body t} :
+  Typ.Monotonic.Dynamic am id body →
+  Subtyping.Dynamic ((id, t) :: am) body t →
+  Subtyping.Dynamic am (Typ.lfp id body) t
 := by sorry

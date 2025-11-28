@@ -10,6 +10,126 @@ import Mathlib.Tactic.Linarith
 set_option eval.pp false
 set_option pp.fieldNotation false
 
+mutual
+
+  def ListSubtyping.sub (δ : List (String × Typ)) : ListSubtyping → ListSubtyping
+  | .nil => .nil
+  | .cons (l,r) remainder => .cons (Typ.sub δ l, Typ.sub δ r) (ListSubtyping.sub δ remainder)
+
+  def Typ.sub (δ : List (String × Typ)) : Typ → Typ
+  | .var id => match find id δ with
+    | .none => .var id
+    | .some t => t
+  | .iso l body => .iso l (Typ.sub δ body)
+  | .entry l body => .entry l (Typ.sub δ body)
+  | .path left right => .path (Typ.sub δ left) (Typ.sub δ right)
+  | .bot => .bot
+  | .top => .top
+  | .unio left right => .unio (Typ.sub δ left) (Typ.sub δ right)
+  | .inter left right => .inter (Typ.sub δ left) (Typ.sub δ right)
+  | .diff left right => .diff (Typ.sub δ left) (Typ.sub δ right)
+  | .all ids subtypings body =>
+      let δ' := remove_all δ ids
+      .all ids (ListSubtyping.sub δ' subtypings) (Typ.sub δ' body)
+  | .exi ids subtypings body =>
+      let δ' := remove_all δ ids
+      .exi ids (ListSubtyping.sub δ' subtypings) (Typ.sub δ' body)
+  | .lfp id body =>
+      let δ' := remove id δ
+      .lfp id (Typ.sub δ' body)
+end
+
+def Typ.subfold (id : String) (t : Typ) : Nat → Typ
+| 0 => .exi ["T"] .nil (.var "T")
+| n + 1 => Typ.sub [(id, Typ.subfold id t n)] t
+
+def Typ.break : Bool → Typ → List Typ
+| .false, .unio l r => Typ.break .false l ++ Typ.break .false r
+| .true, .inter l r => Typ.break .true l ++ Typ.break .true r
+| _, t => [t]
+
+
+def Typ.base : Bool → Typ
+| .true => .top
+| .false => .bot
+
+-- def Typ.rator : Bool → Typ → Typ → Typ
+-- | .true => .inter
+-- | .false => .unio
+
+def Typ.rator : Bool → Typ → Typ → Typ
+| .true, .top, r => r
+| .true, l, .top => l
+| .true, .bot, _ => .bot
+| .true, _, .bot => .bot
+| .true, l , r => .inter l r
+
+| .false, .bot, r => r
+| .false, l, .bot => l
+| .false, .top, _ => .top
+| .false, _, .top => .top
+| .false, l , r => .unio l r
+
+def Typ.combine (b : Bool) : List Typ → Typ
+| .nil => Typ.base b
+| [t] => t
+
+| t :: ts =>
+  let t' := (Typ.combine b ts)
+  if t == Typ.base b then
+    t'
+  else if t' == Typ.base b then
+    t
+  else
+    Typ.rator b t t'
+
+theorem Typ.break_size_lte b t :
+  ListTyp.size (Typ.break b t) ≤ Typ.size t
+:= by sorry
+
+def Typ.drop (id : String) (t : Typ) : Typ :=
+  let cases := Typ.break .false t
+  let cases' := List.filter (fun c => id ∉ Typ.free_vars c) cases
+  Typ.combine .false cases'
+
+theorem Typ.sub.typing.completeness {am id body e t} :
+  Typing.Dynamic ((id, t) :: am) e body →
+  Typing.Dynamic am e (Typ.sub [(id, t)] body)
+:= by sorry
+
+
+theorem Typ.sub.subtyping.completeness {am id body t} :
+  Subtyping.Dynamic am (Typ.sub [(id, t)] body) t →
+  Subtyping.Dynamic ((id, t) :: am) body t
+:= by sorry
+
+-- theorem Subtyping.Dynamic.lfp_induct_elim {am id body t} :
+--   Typ.Monotonic.Dynamic am id body →
+--   Subtyping.Dynamic am (Typ.sub [(id, t)] body) t →
+--   Subtyping.Dynamic am (Typ.lfp id body) t
+-- := by sorry
+
+theorem Subtyping.Dynamic.lfp_elim_diff_intro {am id lower upper sub n} :
+  Typ.Monotonic.Dynamic am id lower →
+  Subtyping.Dynamic am (Typ.lfp id lower) upper →
+  ¬ Subtyping.Dynamic am (Typ.subfold id lower 1) sub →
+  ¬ Subtyping.Dynamic am sub (Typ.subfold id lower n) →
+  Subtyping.Dynamic am (Typ.lfp id lower) (.diff upper sub)
+:= by sorry
+
+
+theorem Subtyping.Dynamic.lfp_peel_intro {am t id body} :
+  Subtyping.Dynamic am t (Typ.sub [(id, .lfp id body)] body) →
+  Subtyping.Dynamic am t (Typ.lfp id body)
+:= by sorry
+
+theorem Subtyping.Dynamic.lfp_drop_intro {am t id body} :
+  Subtyping.Dynamic am t (Typ.drop id body) →
+  Subtyping.Dynamic am t (Typ.lfp id body)
+:= by sorry
+
+
+
 structure Zone where
   skolems : List String
   assums : List (Typ × Typ)
@@ -3013,7 +3133,10 @@ mutual
     exists am0
     simp [*]
     intros am' p40
-    apply Subtyping.Dynamic.lfp_induct_elim (Typ.Monotonic.Static.soundness (am0 ++ am') p0) (ih0r p40)
+
+    apply Subtyping.Dynamic.lfp_induct_elim (Typ.Monotonic.Static.soundness (am0 ++ am') p0)
+    exact Typ.sub.subtyping.completeness (ih0r p40)
+
 
   | .lfp_factor_elim id lower upper fac p0 p1 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p1
