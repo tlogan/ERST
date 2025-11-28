@@ -1,9 +1,10 @@
 import Lean
 import Mathlib.Data.Set.Basic
-import Mathlib.Tactic.Linarith
 import Mathlib.Algebra.Order.Ring.Defs
--- import data.nat.basic
--- import algebra.order.ring
+
+import Lang.Util
+
+
 
 set_option pp.fieldNotation false
 
@@ -667,22 +668,22 @@ def List.firstIndexOf {α} [BEq α] (target : α) (l : List α) : Option Nat :=
   else
     .none
 
-def List.merase {α} [BEq α] (x : α) : List α → List α
-| .nil => .nil
-| .cons y ys =>
-  if x == y then
-    (List.merase x ys)
-  else
-    y :: (List.merase x ys)
+-- def List.merase {α} [BEq α] (x : α) : List α → List α
+-- | .nil => .nil
+-- | .cons y ys =>
+--   if x == y then
+--     (List.merase x ys)
+--   else
+--     y :: (List.merase x ys)
 
--- TODO: replace with List.removeAll
-def List.mdiff {α} [BEq α] (xs : List α) : List α → List α
-| .nil => xs
-| .cons y ys =>
-  List.mdiff (List.merase y xs) ys
+-- -- TODO: replace with List.removeAll
+-- def List.removeAll {α} [BEq α] (xs : List α) : List α → List α
+-- | .nil => xs
+-- | .cons y ys =>
+--   List.removeAll (List.merase y xs) ys
 
-#eval List.merase 3 [1,2,3,3]
-#eval List.mdiff [1,2, 3] [2]
+-- #eval List.merase 3 [1,2,3,3]
+-- #eval List.removeAll [1,2, 3] [2]
 
 
 
@@ -696,34 +697,34 @@ mutual
     Typ.ordered_bound_vars bounds t
   | .path left right =>
     let a := Typ.ordered_bound_vars bounds left
-    let b := List.mdiff (Typ.ordered_bound_vars bounds right) a
+    let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
     a ∪ b
   | .bot => []
   | .top => []
   | .unio left right =>
     let a := Typ.ordered_bound_vars bounds left
-    let b := List.mdiff (Typ.ordered_bound_vars bounds right) a
+    let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
     a ∪ b
   | .inter left right =>
     let a := Typ.ordered_bound_vars bounds left
-    let b := List.mdiff (Typ.ordered_bound_vars bounds right) a
+    let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
     a ∪ b
   | .diff left right =>
     let a := Typ.ordered_bound_vars bounds left
-    let b := List.mdiff (Typ.ordered_bound_vars bounds right) a
+    let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
     a ∪ b
   | .all ids subtypings body =>
-    let bounds' := List.mdiff bounds ids
+    let bounds' := List.removeAll bounds ids
     let a := ListPairTyp.ordered_bound_vars bounds' subtypings
-    let b := List.mdiff (Typ.ordered_bound_vars bounds' body) a
+    let b := List.removeAll (Typ.ordered_bound_vars bounds' body) a
     a ∪ b
   | .exi ids subtypings body =>
-    let bounds' := List.mdiff bounds ids
+    let bounds' := List.removeAll bounds ids
     let a := ListPairTyp.ordered_bound_vars bounds' subtypings
-    let b := List.mdiff (Typ.ordered_bound_vars bounds' body) a
+    let b := List.removeAll (Typ.ordered_bound_vars bounds' body) a
     a ∪ b
   | .lfp id body =>
-    let bounds' := List.mdiff bounds [id]
+    let bounds' := List.removeAll bounds [id]
     Typ.ordered_bound_vars bounds' body
 
   def ListPairTyp.ordered_bound_vars (bounds : List String)
@@ -731,12 +732,12 @@ mutual
   | .nil => .nil
   | .cons (l,r) remainder =>
     let a := (Typ.ordered_bound_vars bounds l)
-    let b := List.mdiff (Typ.ordered_bound_vars bounds r) a
-    let c := List.mdiff (ListPairTyp.ordered_bound_vars bounds remainder) (a ∪ b)
+    let b := List.removeAll (Typ.ordered_bound_vars bounds r) a
+    let c := List.removeAll (ListPairTyp.ordered_bound_vars bounds remainder) (a ∪ b)
     a ∪ b ∪ c
 end
 
-#eval List.mdiff [1,2,3] [1]
+#eval List.removeAll [1,2,3] [1]
 
 mutual
   def ListSubtyping.free_vars : ListSubtyping → List String
@@ -755,15 +756,15 @@ mutual
   | .inter l r => Typ.free_vars l ∪ Typ.free_vars r
   | .diff l r => Typ.free_vars l ∪ Typ.free_vars r
   | .all ids subtypings body =>
-    List.mdiff (
+    List.removeAll (
       ListSubtyping.free_vars subtypings ∪ Typ.free_vars body
     ) ids
   | .exi ids subtypings body =>
-    List.mdiff (
+    List.removeAll (
       ListSubtyping.free_vars subtypings ∪ Typ.free_vars body
     ) ids
   | .lfp id body =>
-    List.mdiff (Typ.free_vars body) [id]
+    List.removeAll (Typ.free_vars body) [id]
 end
 
 
@@ -874,32 +875,8 @@ theorem ListTyp.zero_lt_size {ts : List Typ} : 0 < ListTyp.size ts := by
 cases ts <;> simp [ListTyp.size, Typ.zero_lt_size]
 
 
-def ListPair.dom {α} {β} : List (α × β) → List α
-| .nil => .nil
-| (a, _) :: xs => a :: dom xs
-
-
-def remove {α} (id : String) : List (String × α) →  List (String × α)
-| .nil => .nil
-| (key, e) :: m =>
-  if key == id then
-    m
-  else
-    (key, e) :: (remove id m)
-
-def remove_all {α} (m : List (String × α)) : (ids : List String) →  List (String × α)
-| .nil => m
-| id :: remainder => remove_all (remove id m) remainder
-
-def find {α} (id : String) : List (String × α) → Option α
-| .nil => none
-| (key, e) :: m =>
-  if key == id then
-    some e
-  else
-    find id m
-
 mutual
+
 
   def ListSubtyping.sub (δ : List (String × Typ)) : ListSubtyping → ListSubtyping
   | .nil => .nil
@@ -1444,3 +1421,122 @@ def Typ.enrich : Typ → Typ
 
 -- uno //
 -- <nil/> | <cons> (x, xs)
+
+mutual
+  def ids_record_pattern : List (String × Pat) → List String
+  | .nil => .nil
+  | (_, p) :: r =>
+    (ids_pattern p) ++ (ids_record_pattern r)
+
+  def ids_pattern : Pat → List String
+  | .var id => [id]
+  | .iso l body => ids_pattern body
+  | .record r => ids_record_pattern r
+end
+
+
+
+mutual
+  def Expr.Record.sub (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
+  | .nil => .nil
+  | (l, e) :: r =>
+    (l, Expr.sub m e) :: (Expr.Record.sub m r)
+
+  def Expr.Function.sub (m : List (String × Expr)): List (Pat × Expr) → List (Pat × Expr)
+  | .nil => .nil
+  | (p, e) :: f =>
+    let ids := ids_pattern p
+    (p, Expr.sub (remove_all m ids) e) :: (Expr.Function.sub m f)
+
+  def Expr.sub (m : List (String × Expr)): Expr → Expr
+  | .var id => match (find id m) with
+    | .none => (.var id)
+    | .some e => e
+  | .iso l body => .iso l (Expr.sub m body)
+  | .record r => .record (Expr.Record.sub m r)
+  | .function f => .function (Expr.Function.sub m f)
+  | .app ef ea => .app (Expr.sub m ef) (Expr.sub m ea)
+  | .anno e t => .anno (Expr.sub m e) t
+  | .loop e => .loop (Expr.sub m e)
+end
+
+
+theorem Expr.sub_sub_removal {ids eam0 eam1 e} :
+  ids ⊆ ListPair.dom eam0 →
+  (Expr.sub eam0 (Expr.sub (remove_all eam1 ids) e)) =
+  (Expr.sub (eam0 ++ eam1) e)
+:= by sorry
+
+
+inductive IsFreshLabel : List (String × Expr) → String → Prop
+| nil : ∀ {l}, IsFreshLabel [] l
+| cons : ∀ {l e r l'},
+  l' ≠ l →
+  IsFreshLabel r l' →
+  IsFreshLabel ((l,e)::r) l'
+
+mutual
+  inductive IsRecordValue : List (String × Expr) → Prop
+  | nil : IsRecordValue []
+  | cons : ∀ {l e r},
+    IsFreshLabel r l → IsValue e →
+    IsRecordValue ((l,e)::r)
+
+  inductive IsValue : Expr → Prop
+  | record : ∀ {r}, IsRecordValue r → IsValue (.record r)
+  | function : ∀ {f}, IsValue (.function f)
+end
+
+def Typ.break : Bool → Typ → List Typ
+| .false, .unio l r => Typ.break .false l ++ Typ.break .false r
+| .true, .inter l r => Typ.break .true l ++ Typ.break .true r
+| _, t => [t]
+
+
+def Typ.base : Bool → Typ
+| .true => .top
+| .false => .bot
+
+-- def Typ.rator : Bool → Typ → Typ → Typ
+-- | .true => .inter
+-- | .false => .unio
+
+def Typ.rator : Bool → Typ → Typ → Typ
+| .true, .top, r => r
+| .true, l, .top => l
+| .true, .bot, _ => .bot
+| .true, _, .bot => .bot
+| .true, l , r => .inter l r
+
+| .false, .bot, r => r
+| .false, l, .bot => l
+| .false, .top, _ => .top
+| .false, _, .top => .top
+| .false, l , r => .unio l r
+
+def Typ.combine (b : Bool) : List Typ → Typ
+| .nil => Typ.base b
+| [t] => t
+
+| t :: ts =>
+  let t' := (Typ.combine b ts)
+  if t == Typ.base b then
+    t'
+  else if t' == Typ.base b then
+    t
+  else
+    Typ.rator b t t'
+
+theorem Typ.break_size_lte b t :
+  ListTyp.size (Typ.break b t) ≤ Typ.size t
+:= by sorry
+
+def Typ.drop (id : String) (t : Typ) : Typ :=
+  let cases := Typ.break .false t
+  let cases' := List.filter (fun c => id ∉ Typ.free_vars c) cases
+  Typ.combine .false cases'
+
+
+theorem ListSubtyping.free_vars_containment {xs ys : List (Typ × Typ)} :
+  xs ⊆ ys → ListSubtyping.free_vars xs ⊆ ListSubtyping.free_vars ys
+:= by sorry

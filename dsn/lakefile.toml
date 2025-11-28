@@ -1,6 +1,6 @@
-name = "Untitled"
+name = "quince"
 version = "0.1.0"
-keywords = ["math"]
+keywords = ["logic", "subtypnig"]
 defaultTargets = ["Main"]
 
 [leanOptions]
