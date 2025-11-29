@@ -610,8 +610,6 @@ theorem Typ.toBruijn_exi_injection {ids' quals' body' ids quals body} :
 := by sorry
 
 
-
-
 theorem MultiSubtyping.Dynamic.removeAll_removal {tam assums assums'} :
   MultiSubtyping.Dynamic tam assums →
   MultiSubtyping.Dynamic tam (List.removeAll assums' assums) →
@@ -621,6 +619,6 @@ theorem MultiSubtyping.Dynamic.removeAll_removal {tam assums assums'} :
 
 theorem Subtyping.Dynamic.lfp_induct_elim {am id body t} :
   Typ.Monotonic.Dynamic am id body →
-  Subtyping.Dynamic ((id, t) :: am) body t →
+  (∀ e, Typing.Dynamic ((id, t) :: am) e body → Typing.Dynamic am e t) →
   Subtyping.Dynamic am (Typ.lfp id body) t
 := by sorry

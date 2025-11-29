@@ -92,16 +92,13 @@ def Typ.drop (id : String) (t : Typ) : Typ :=
   let cases' := List.filter (fun c => id ∉ Typ.free_vars c) cases
   Typ.combine .false cases'
 
+
 theorem Typ.sub.typing.completeness {am id body e t} :
   Typing.Dynamic ((id, t) :: am) e body →
   Typing.Dynamic am e (Typ.sub [(id, t)] body)
 := by sorry
 
 
-theorem Typ.sub.subtyping.completeness {am id body t} :
-  Subtyping.Dynamic am (Typ.sub [(id, t)] body) t →
-  Subtyping.Dynamic ((id, t) :: am) body t
-:= by sorry
 
 -- theorem Subtyping.Dynamic.lfp_induct_elim {am id body t} :
 --   Typ.Monotonic.Dynamic am id body →
@@ -3135,8 +3132,10 @@ mutual
     intros am' p40
 
     apply Subtyping.Dynamic.lfp_induct_elim (Typ.Monotonic.Static.soundness (am0 ++ am') p0)
-    exact Typ.sub.subtyping.completeness (ih0r p40)
-
+    intro e typing_dynamic_lower
+    apply Typ.sub.typing.completeness at typing_dynamic_lower
+    unfold Subtyping.Dynamic at ih0r
+    apply ih0r p40 _ typing_dynamic_lower
 
   | .lfp_factor_elim id lower upper fac p0 p1 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p1
