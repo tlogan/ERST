@@ -2727,10 +2727,6 @@ theorem ListSubtyping.solution_completeness {skolems assums cs skolems' assums' 
 := by sorry
 
 
-theorem List.disjoint_swap {α} [BEq α] {xs ys : List α} :
-  xs ∩ ys = [] → ys ∩ xs = []
-:= by sorry
-
 theorem ListSubtyping.Dynamic.dom_disjoint_concat_reorder {am am' am'' cs} :
   ListPair.dom am ∩ ListPair.dom am' = [] →
   MultiSubtyping.Dynamic (am ++ (am' ++ am'')) cs →

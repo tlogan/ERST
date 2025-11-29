@@ -324,3 +324,21 @@ theorem List.disjoint_preservation_right {α} [BEq α] {xs ys zs : List α} :
 theorem List.disjoint_concat_right {α} [BEq α] {xs ys zs : List α} :
   xs ∩ (ys ++ zs) = [] → xs ∩ ys = [] ∧ xs ∩ zs = []
 := by sorry
+
+
+theorem List.inter_empty_eq_empty {α} [BEq α] {ys : List α} :
+  ys ∩ [] = []
+:= by
+  cases ys with
+  | nil => exact rfl
+  | cons x xs =>
+    simp [Inter.inter, List.inter]
+
+
+theorem List.disjoint_swap {α} [BEq α] {xs ys : List α} :
+  xs ∩ ys = [] → ys ∩ xs = []
+:= by
+  intros
+  induction xs with
+  | nil => exact inter_empty_eq_empty
+  | cons => sorry
