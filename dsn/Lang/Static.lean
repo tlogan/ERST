@@ -99,14 +99,8 @@ theorem Typ.sub.typing.completeness {am id body e t} :
 := by sorry
 
 
-
--- theorem Subtyping.Dynamic.lfp_induct_elim {am id body t} :
---   Typ.Monotonic.Dynamic am id body →
---   Subtyping.Dynamic am (Typ.sub [(id, t)] body) t →
---   Subtyping.Dynamic am (Typ.lfp id body) t
--- := by sorry
-
-theorem Subtyping.Dynamic.lfp_elim_diff_intro {am id lower upper sub n} :
+-- theorem Subtyping.Dynamic.lfp_elim_diff_intro {am id lower upper sub n} :
+theorem Typ.subfold.subtyping.soundness_and_completeness {am id lower upper sub n} :
   Typ.Monotonic.Dynamic am id lower →
   Subtyping.Dynamic am (Typ.lfp id lower) upper →
   ¬ Subtyping.Dynamic am (Typ.subfold id lower 1) sub →
@@ -115,12 +109,12 @@ theorem Subtyping.Dynamic.lfp_elim_diff_intro {am id lower upper sub n} :
 := by sorry
 
 
-theorem Subtyping.Dynamic.lfp_peel_intro {am t id body} :
+theorem Typ.sub.lfp.soundness {am t id body} :
   Subtyping.Dynamic am t (Typ.sub [(id, .lfp id body)] body) →
   Subtyping.Dynamic am t (Typ.lfp id body)
 := by sorry
 
-theorem Subtyping.Dynamic.lfp_drop_intro {am t id body} :
+theorem Typ.drop.lfp.soundness {am t id body} :
   Subtyping.Dynamic am t (Typ.drop id body) →
   Subtyping.Dynamic am t (Typ.lfp id body)
 := by sorry
@@ -3147,7 +3141,7 @@ mutual
     exists am0
     simp [*]
     intros am' p45
-    apply Subtyping.Dynamic.lfp_elim_diff_intro (Typ.Monotonic.Static.soundness (am0 ++ am') p3) (ih0r p45)
+    apply Typ.subfold.subtyping.soundness_and_completeness (Typ.Monotonic.Static.soundness (am0 ++ am') p3) (ih0r p45)
     { intros p50
       apply Subtyping.check_completeness at p50
       contradiction }
@@ -3176,7 +3170,7 @@ mutual
     exists am0
     simp [*]
     intros am' p40
-    apply Subtyping.Dynamic.lfp_peel_intro (ih0r p40)
+    apply Typ.sub.lfp.soundness (ih0r p40)
 
   | .lfp_drop_intro id body p0 => by
     have ⟨am0,ih0l,ih0r⟩ := Subtyping.Static.soundness p0
@@ -3184,7 +3178,7 @@ mutual
     exists am0
     simp [*]
     intros am' p40
-    apply Subtyping.Dynamic.lfp_drop_intro (ih0r p40)
+    apply Typ.drop.lfp.soundness (ih0r p40)
   -------------------------------------------------------------------
 
   | .diff_elim lower sub upper p0  => by

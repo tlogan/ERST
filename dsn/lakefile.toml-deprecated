@@ -1,7 +1,7 @@
-name = ""
+name = "Flubber Type System"
 version = "0.1.0"
 keywords = ["logic", "subtypnig"]
-defaultTargets = ["Main"]
+defaultTargets = []
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`

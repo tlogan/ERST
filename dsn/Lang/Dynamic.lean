@@ -536,11 +536,17 @@ theorem Typing.Dynamic.function_tail_elim {am p tp e f t } :
 := by sorry
 
 
+theorem dummy {x : Nat} :
+  x = x
+:= by sorry
+
+
 theorem Typing.Dynamic.path_elim {am ef ea t t'} :
   Typing.Dynamic am ef (.path t t') →
   Typing.Dynamic am ea t →
   Typing.Dynamic am (.app ef ea) t'
-:= by sorry
+:= by
+  sorry
 
 theorem Typing.Dynamic.loop_path_elim {am e t} id :
   Typing.Dynamic am e (.path (.var id) t) →

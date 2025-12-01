@@ -27,7 +27,9 @@ inductive Typ
 | all :  List String → List (Typ × Typ) → Typ → Typ
 | exi :  List String → List (Typ × Typ) → Typ → Typ
 | lfp :  String → Typ → Typ
-deriving Lean.ToExpr, Ord
+deriving Lean.ToExpr
+
+-- , Ord
 
 -- <uno> thing <dos> thing
 -- {uno} thing  or {dos}thing

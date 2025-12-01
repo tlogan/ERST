@@ -1,6 +1,6 @@
+import Lean
 import Mathlib.Tactic.Linarith
--- import Mathlib.Data.Set.Basic
--- import Mathlib.Data.List.Basic
+
 
 #check Lean.mkFreshId
 def fresh_typ_id {m : Type → Type} [Monad m] [Lean.MonadNameGenerator m] : m String :=
@@ -88,7 +88,7 @@ theorem ListPair.mem_concat_disj {β}
     | inl h =>
       simp [*]
     | inr h =>
-      apply ih at h
+      have h := ih h
       cases h with
       | inl h' =>
         simp [*]
@@ -109,7 +109,7 @@ theorem ListPair.mem_disj_concat_left {β}
     | inl h =>
       simp [*]
     | inr h =>
-      apply ih at h
+      have h := ih h
       simp [*]
 
 theorem ListPair.mem_disj_concat_right {β}
@@ -122,7 +122,7 @@ theorem ListPair.mem_disj_concat_right {β}
   | cons a am1' ih =>
     simp [dom]
     intro p
-    apply ih at p
+    have p := ih p
     simp [*]
 
 
