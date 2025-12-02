@@ -34,25 +34,6 @@ mutual
   | _, _ => none
 end
 
-inductive IsFreshLabel : List (String × Expr) → String → Prop
-| nil : ∀ {l}, IsFreshLabel [] l
-| cons : ∀ {l e r l'},
-  l' ≠ l →
-  IsFreshLabel r l' →
-  IsFreshLabel ((l,e)::r) l'
-
-mutual
-  inductive IsRecordValue : List (String × Expr) → Prop
-  | nil : IsRecordValue []
-  | cons : ∀ {l e r},
-    IsFreshLabel r l → IsValue e →
-    IsRecordValue ((l,e)::r)
-
-  inductive IsValue : Expr → Prop
-  | record : ∀ {r}, IsRecordValue r → IsValue (.record r)
-  | function : ∀ {f}, IsValue (.function f)
-end
-
 mutual
   def ids_record_pattern : List (String × Pat) → List String
   | .nil => .nil
@@ -99,25 +80,25 @@ theorem Expr.sub_sub_removal {ids eam0 eam1 e} :
 
 
 inductive Progression : Expr → Expr → Prop
-| entry : ∀ {r l e e'},
+| entry l e r e' :
   Progression e e' →
   Progression (Expr.record ((l, e) :: r)) (Expr.record ((l, e') :: r))
 | record : ∀ {r r' l v},
   Progression (Expr.record r) (Expr.record r') →
-  IsValue v →
+  v.is_value →
   Progression (Expr.record ((l, v) :: r)) (Expr.record ((l, v) :: r'))
 | applicator : ∀ {ef ef' e},
   Progression ef ef' →
   Progression (.app ef e) (.app ef' e)
-| applicand : ∀ {f e e'},
+| applicand f e e' :
   Progression e e' →
   Progression (.app (.function f) e) (.app (.function f) e')
 | appmatch : ∀ {p e f v m},
-  IsValue v →
+  v.is_value →
   pattern_match v p = some m →
   Progression (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
 | appskip : ∀ {p e f v},
-  IsValue v →
+  v.is_value →
   pattern_match v p = none →
   Progression (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
 | anno : ∀ {e t},
@@ -132,8 +113,8 @@ inductive Progression : Expr → Expr → Prop
 
 
 inductive ProgressionStar : Expr → Expr → Prop
-| refl {e} : ProgressionStar e e
-| step {e e' e''} : Progression e e' → ProgressionStar e' e'' → ProgressionStar e e''
+| refl e : ProgressionStar e e
+| step e e' e'' : Progression e e' → ProgressionStar e' e'' → ProgressionStar e e''
 
 
 def Typing.Dynamic.Fin (e : Expr) : Typ → Prop
@@ -499,7 +480,12 @@ theorem Subtyping.Dynamic.top_intro {am lower} :
 
 theorem Typing.Dynamic.empty_record_top am :
   Typing.Dynamic am (Expr.record []) Typ.top
-:= by sorry
+:= by
+  unfold Typing.Dynamic
+  exists (Expr.record [])
+  apply And.intro
+  · exact rfl
+  · apply ProgressionStar.refl
 
 theorem Typing.Dynamic.inter_entry_intro {am l e r body t} :
   Typing.Dynamic am e body →
@@ -507,14 +493,100 @@ theorem Typing.Dynamic.inter_entry_intro {am l e r body t} :
   Typing.Dynamic am (Expr.record ((l, e) :: r)) (Typ.inter (Typ.entry l body) t)
 := by sorry
 
+
+theorem ProgressionStar.record_single_elim {e l e' id}:
+  ProgressionStar e e' → Expr.is_value e' →
+  ProgressionStar (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)])) e'
+:= by
+  intro h0 h1
+  induction h0 with
+  | refl e'' =>
+    apply ProgressionStar.step
+    { apply Progression.appmatch
+      { reduce; exact h1 }
+      { simp [pattern_match, pattern_match_record, Pat.free_vars, pattern_match_entry]
+        reduce
+        apply And.intro rfl rfl
+      }
+    }
+    { simp [Expr.sub, find]
+      apply ProgressionStar.refl
+    }
+  | step e e' e'' h3 h4 ih =>
+    cases h5 : (Expr.is_value (Expr.record [(l,e)])) with
+    | true =>
+      apply ProgressionStar.step
+      { apply Progression.appmatch h5
+        { simp [pattern_match, pattern_match_record, Pat.free_vars, pattern_match_entry]
+          reduce
+          apply And.intro rfl rfl
+        }
+      }
+      { simp [Expr.sub, find]
+        exact ProgressionStar.step e e' e'' h3 h4
+      }
+    | false =>
+      apply ProgressionStar.step
+      {
+        apply Progression.applicand
+        apply Progression.entry
+        apply h3
+      }
+      { apply ih h1 }
+
 theorem Typing.Dynamic.entry_intro {am l e t} :
   Typing.Dynamic am e t →
   Typing.Dynamic am (Expr.record ((l, e) :: [])) (Typ.entry l t)
-:= by sorry
+:= match t with
+| .bot => by
+  intro h0
+  unfold Typing.Dynamic at h0
+  exact False.elim h0
+| .top => by
+  intro h0
+  unfold Typing.Dynamic at h0
+  have ⟨e', h1,h2⟩ := h0
+  unfold Typing.Dynamic
+  simp [Expr.proj]
+  unfold Typing.Dynamic
+  exists e'
+  apply And.intro h1
+  exact ProgressionStar.record_single_elim h2 h1
+-- | .iso l τ => Typing.Dynamic am (.extract e l) τ
+-- | .entry l τ => Typing.Dynamic am (.proj e l) τ
+-- | .path left right => ∀ e' , Typing.Dynamic am e' left → Typing.Dynamic am (.app e e') right
+-- | .unio left right => Typing.Dynamic am e left ∨ Typing.Dynamic am e right
+-- | .inter left right => Typing.Dynamic am e left ∧ Typing.Dynamic am e right
+-- | .diff left right => Typing.Dynamic am e left ∧ ¬ (Typing.Dynamic am e right)
+-- | .exi ids quals body =>
+--   ∃ am' , (ListPair.dom am') ⊆ ids ∧
+--   (MultiSubtyping.Dynamic (am' ++ am) quals) ∧
+--   (Typing.Dynamic (am' ++ am) e body)
+-- | .all ids quals body =>
+--   ∀ am' , (ListPair.dom am') ⊆ ids →
+--   (MultiSubtyping.Dynamic (am' ++ am) quals) →
+--   (Typing.Dynamic (am' ++ am) e body)
+-- | .lfp id body =>
+--   Typ.Monotonic.Dynamic am id body ∧
+--   (∃ t, ∃ (h : Typ.size t < Typ.size (.lfp id body)),
+--     (∀ e',
+--       Typing.Dynamic am e' t →
+--       Typing.Dynamic ((id,t) :: am) e' body
+--     ) ∧
+--     Typing.Dynamic ((id,t) :: am) e  body
+--   )
+-- -----------------------
+-- -- TODO: remove old lfp case
+-- -- | .lfp id body =>
+-- --   Typ.Monotonic id true body ∧
+-- --   ∃ n, Typing.Dynamic.Fin e (Typ.sub am (Typ.subfold id body n))
+-- | .var id => ∃ τ, find id am = some τ ∧ Typing.Dynamic.Fin e τ
+| _ => sorry
+
 
 theorem Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
   (∀ {v} ,
-    IsValue v → Typing.Dynamic am v tp →
+    Expr.is_value v → Typing.Dynamic am v tp →
     ∃ eam , pattern_match v p = .some eam ∧ Typing.Dynamic am (Expr.sub eam e) tr
   ) →
   Typing.Dynamic am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
@@ -529,7 +601,7 @@ theorem Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
 -- := by sorry
 
 theorem Typing.Dynamic.function_tail_elim {am p tp e f t } :
-  (∀ {v} , IsValue v → Typing.Dynamic am v tp → ∃ eam , pattern_match v p = .some eam) →
+  (∀ {v} , Expr.is_value v → Typing.Dynamic am v tp → ∃ eam , pattern_match v p = .some eam) →
   ¬ Subtyping.Dynamic am t (.path tp .top) →
   Typing.Dynamic am (.function f) t →
   Typing.Dynamic am (.function ((p,e) :: f)) t
@@ -540,18 +612,24 @@ theorem dummy {x : Nat} :
   x = x
 := by sorry
 
+theorem test (p q : Prop) (hp : p) (hq : q)
+: p ∧ q ∧ p := by sorry
+
 
 theorem Typing.Dynamic.path_elim {am ef ea t t'} :
   Typing.Dynamic am ef (.path t t') →
   Typing.Dynamic am ea t →
   Typing.Dynamic am (.app ef ea) t'
 := by
-  sorry
+  intro h0
+  unfold Typing.Dynamic at h0
+  exact fun a => h0 ea a
 
 theorem Typing.Dynamic.loop_path_elim {am e t} id :
   Typing.Dynamic am e (.path (.var id) t) →
   Typing.Dynamic am (.loop e) t
-:= by sorry
+:= by
+  sorry
 
 theorem Typing.Dynamic.anno_intro {am e t ta} :
   Subtyping.Dynamic am t ta →

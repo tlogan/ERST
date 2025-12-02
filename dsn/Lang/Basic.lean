@@ -918,14 +918,21 @@ def Expr.is_pair : Expr → Bool
 | .record [( "right", _), ("left", _)] => .true
 | _ => .false
 
+def List.is_fresh_key {α} (key : String) : List (String × α) → Bool
+| [] => .true
+| (k,_) :: r =>
+  k != key && List.is_fresh_key key r
+
 mutual
-  def Expr.Record.is_value : List (String × Expr) → Bool
-  | .nil => .true
-  | .cons (l,e) r =>  Expr.is_value e && Expr.Record.is_value r
+  def List.is_record_value : List (String × Expr) → Bool
+  | [] => .true
+  | (l,e) :: r =>
+    List.is_fresh_key l r && Expr.is_value e
 
   def Expr.is_value : Expr → Bool
-  | .record r => Expr.Record.is_value r
-  | .function _ => .true
+  | (.iso _ e) => Expr.is_value e
+  | (.record r) => List.is_record_value r
+  | (.function _) => .true
   | _ => .false
 end
 
