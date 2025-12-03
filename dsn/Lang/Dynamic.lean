@@ -534,16 +534,17 @@ theorem ProgressionStar.record_single_elim {e l e' id}:
       }
       { apply ih h1 }
 
-theorem Typing.Dynamic.entry_intro {am l e t} :
+theorem Typing.Dynamic.entry_intro l am t :
+  ∀ e,
   Typing.Dynamic am e t →
   Typing.Dynamic am (Expr.record ((l, e) :: [])) (Typ.entry l t)
 := match t with
 | .bot => by
-  intro h0
+  intro e h0
   unfold Typing.Dynamic at h0
   exact False.elim h0
 | .top => by
-  intro h0
+  intro e h0
   unfold Typing.Dynamic at h0
   have ⟨e', h1,h2⟩ := h0
   unfold Typing.Dynamic
@@ -552,11 +553,37 @@ theorem Typing.Dynamic.entry_intro {am l e t} :
   exists e'
   apply And.intro h1
   exact ProgressionStar.record_single_elim h2 h1
--- | .iso l τ => Typing.Dynamic am (.extract e l) τ
+| .iso label body => by
+  intro e h0
+  unfold Typing.Dynamic at h0
+  unfold Typing.Dynamic
+  unfold Typing.Dynamic
+  -- have ih := Typing.Dynamic.entry_intro l am body _ h0
+  -- unfold Typing.Dynamic at ih
+  -- simp [Expr.extract] at h0
+  -- simp [Expr.proj]
+  -- simp [Expr.extract]
+  sorry
 -- | .entry l τ => Typing.Dynamic am (.proj e l) τ
 -- | .path left right => ∀ e' , Typing.Dynamic am e' left → Typing.Dynamic am (.app e e') right
 -- | .unio left right => Typing.Dynamic am e left ∨ Typing.Dynamic am e right
--- | .inter left right => Typing.Dynamic am e left ∧ Typing.Dynamic am e right
+| .inter left right => by
+    intro e h0
+    unfold Typing.Dynamic at h0
+    have ⟨h1,h2⟩ := h0
+    unfold Dynamic
+    unfold Dynamic
+    apply And.intro
+    {
+      have ih := Typing.Dynamic.entry_intro l am left _ h1
+      unfold Dynamic at ih
+      apply ih
+    }
+    {
+      have ih := Typing.Dynamic.entry_intro l am right _ h2
+      unfold Dynamic at ih
+      apply ih
+    }
 -- | .diff left right => Typing.Dynamic am e left ∧ ¬ (Typing.Dynamic am e right)
 -- | .exi ids quals body =>
 --   ∃ am' , (ListPair.dom am') ⊆ ids ∧
