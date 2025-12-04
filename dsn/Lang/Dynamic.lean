@@ -586,6 +586,11 @@ theorem Typing.Dynamic.extract_preservation :
 Dynamic am (Expr.extract e l) t → Dynamic am (Expr.extract e' l) t
 := by sorry
 
+theorem Typing.Dynamic.Fin.proj_record_beta_expansion l :
+  Typing.Dynamic.Fin e t →
+  Typing.Dynamic.Fin (Expr.proj (Expr.record [(l, e)]) l) t
+:= by sorry
+
 theorem Typing.Dynamic.proj_record_beta_expansion l :
   Typing.Dynamic am e t →
   Dynamic am (Expr.proj (Expr.record [(l, e)]) l) t
@@ -676,12 +681,34 @@ theorem Typing.Dynamic.proj_record_beta_expansion l :
   apply Typing.Dynamic.proj_record_beta_expansion l h3
 
 | .all ids quals body => by
-  sorry
+  intro h0
+  unfold Typing.Dynamic at h0
+  unfold Typing.Dynamic
+  intro am' dom_subset dynamic_quals
+  specialize h0 am' dom_subset dynamic_quals
+  apply Typing.Dynamic.proj_record_beta_expansion l h0
+
 | .lfp id body => by
-  sorry
+  intro h0
+  unfold Typing.Dynamic at h0
+  have ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩ := h0
+  clear h0
+  unfold Typing.Dynamic
+  apply And.intro monotonic_body
+  exists t
+  exists lt_size
+  apply And.intro imp_dynamic
+  apply Typing.Dynamic.proj_record_beta_expansion l dynamic_body
 
 | .var id => by
-  sorry
+  intro h0
+  unfold Typing.Dynamic at h0
+  have ⟨t, h1, h2⟩ := h0
+  unfold Typing.Dynamic
+  exists t
+  apply And.intro h1
+  apply Typing.Dynamic.Fin.proj_record_beta_expansion l h2
+
 
 theorem Typing.Dynamic.entry_intro l :
   Typing.Dynamic am e t →
