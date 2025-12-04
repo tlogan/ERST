@@ -565,6 +565,12 @@ theorem Typing.Dynamic.proj_record_bubble :
 := by sorry
 
 
+theorem Typing.Dynamic.proj_record_beta_reduction :
+  Dynamic am (Expr.proj (Expr.record [(l, e)]) l) t →
+  Dynamic am e t
+:= by sorry
+
+
 theorem Typing.Dynamic.proj_preservation :
 (∀ t, Dynamic am e t → Dynamic am e' t) →
 ∀ t, Dynamic am (Expr.proj e l) t → Dynamic am (Expr.proj e' l) t
@@ -661,7 +667,23 @@ theorem Typing.Dynamic.entry_intro l :
     unfold Dynamic at ih
     apply ih
   }
--- | .diff left right => Typing.Dynamic am e left ∧ ¬ (Typing.Dynamic am e right)
+| .diff left right => by
+  intro h0
+  unfold Typing.Dynamic at h0
+  have ⟨h1,h2⟩ := h0
+  unfold Dynamic
+  unfold Dynamic
+  apply And.intro
+  {
+    have ih := Typing.Dynamic.entry_intro l h1
+    unfold Dynamic at ih
+    apply ih
+  }
+  {
+    intro h3
+    apply h2
+    exact Typing.Dynamic.proj_record_beta_reduction h3
+  }
 -- | .exi ids quals body =>
 --   ∃ am' , (ListPair.dom am') ⊆ ids ∧
 --   (MultiSubtyping.Dynamic (am' ++ am) quals) ∧
