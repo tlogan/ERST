@@ -571,14 +571,24 @@ theorem Typing.Dynamic.proj_record_beta_reduction :
 := by sorry
 
 
-theorem Typing.Dynamic.proj_preservation :
-(∀ t, Dynamic am e t → Dynamic am e' t) →
-∀ t, Dynamic am (Expr.proj e l) t → Dynamic am (Expr.proj e' l) t
+theorem Typing.Dynamic.app_preservation :
+(∀ t', Dynamic am e t' → Dynamic am e' t') →
+Dynamic am (Expr.app e e'') t → Dynamic am (Expr.app e' e'') t
 := by sorry
 
-theorem Typing.Dynamic.entry_intro l :
+theorem Typing.Dynamic.proj_preservation :
+(∀ t', Dynamic am e t' → Dynamic am e' t') →
+Dynamic am (Expr.proj e l) t → Dynamic am (Expr.proj e' l) t
+:= by sorry
+
+theorem Typing.Dynamic.extract_preservation :
+(∀ t', Dynamic am e t' → Dynamic am e' t') →
+Dynamic am (Expr.extract e l) t → Dynamic am (Expr.extract e' l) t
+:= by sorry
+
+theorem Typing.Dynamic.proj_record_beta_expansion l :
   Typing.Dynamic am e t →
-  Typing.Dynamic am (Expr.record ((l, e) :: [])) (Typ.entry l t)
+  Dynamic am (Expr.proj (Expr.record [(l, e)]) l) t
 := match t with
 | .bot => by
   intro h0
@@ -588,9 +598,7 @@ theorem Typing.Dynamic.entry_intro l :
 | .top => by
   intro h0
   unfold Typing.Dynamic at h0
-  have ⟨e', h1,h2⟩ := h0
-  unfold Typing.Dynamic
-  simp [Expr.proj]
+  have ⟨e',h1,h2⟩ := h0
   unfold Typing.Dynamic
   exists e'
   apply And.intro h1
@@ -600,54 +608,41 @@ theorem Typing.Dynamic.entry_intro l :
   intro h0
   unfold Typing.Dynamic at h0
   unfold Typing.Dynamic
-  unfold Typing.Dynamic
-  have ih := Typing.Dynamic.entry_intro l h0
-  unfold Typing.Dynamic at ih
-  apply Typing.Dynamic.extract_proj_bubble
-  apply Typing.Dynamic.proj_preservation
-  { apply Typing.Dynamic.extract_record_bubble }
-  { exact ih }
+  apply Typing.Dynamic.extract_preservation _ h0
+  intro t' h1
+  have ih := Typing.Dynamic.proj_record_beta_expansion l h1
+  apply ih
 
 | .entry label body => by
   intro h0
   unfold Typing.Dynamic at h0
   unfold Typing.Dynamic
-  unfold Typing.Dynamic
-  have ih := Typing.Dynamic.entry_intro l h0
-  unfold Typing.Dynamic at ih
-  apply Typing.Dynamic.proj_proj_bubble
-  apply Typing.Dynamic.proj_preservation
-  { apply Typing.Dynamic.proj_record_bubble }
-  { exact ih }
-
+  apply Typing.Dynamic.proj_preservation _ h0
+  intro t' h1
+  have ih := Typing.Dynamic.proj_record_beta_expansion l h1
+  apply ih
 
 | .path left right => by
   intro h0
   unfold Typing.Dynamic at h0
   unfold Dynamic
-  unfold Dynamic
   intro e' h1
-  specialize h0 _ h1
-  have ih := Typing.Dynamic.entry_intro l h0
-  unfold Dynamic at ih
-  apply Typing.Dynamic.app_proj_bubble
-  apply Typing.Dynamic.proj_preservation
-  { apply Typing.Dynamic.app_record_bubble }
-  { exact ih }
+  specialize h0 e' h1
+  apply Typing.Dynamic.app_preservation _ h0
+  intro t' h1
+  have ih := Typing.Dynamic.proj_record_beta_expansion l h1
+  apply ih
 
 | .unio left right => by
   intro h0
   unfold Typing.Dynamic at h0
   unfold Typing.Dynamic
-  unfold Typing.Dynamic
   cases h0 with
   | inl h1 =>
-    have ih := Typing.Dynamic.entry_intro l h1
-    unfold Dynamic at ih
+    have ih := Typing.Dynamic.proj_record_beta_expansion l h1
     exact Or.inl ih
   | inr h1 =>
-    have ih := Typing.Dynamic.entry_intro l h1
-    unfold Dynamic at ih
+    have ih := Typing.Dynamic.proj_record_beta_expansion l h1
     exact Or.inr ih
 
 | .inter left right => by
@@ -655,60 +650,46 @@ theorem Typing.Dynamic.entry_intro l :
   unfold Typing.Dynamic at h0
   have ⟨h1,h2⟩ := h0
   unfold Dynamic
-  unfold Dynamic
   apply And.intro
-  {
-    have ih := Typing.Dynamic.entry_intro l h1
-    unfold Dynamic at ih
-    apply ih
-  }
-  {
-    have ih := Typing.Dynamic.entry_intro l h2
-    unfold Dynamic at ih
-    apply ih
-  }
+  { apply Typing.Dynamic.proj_record_beta_expansion l h1 }
+  { apply Typing.Dynamic.proj_record_beta_expansion l h2 }
 | .diff left right => by
   intro h0
   unfold Typing.Dynamic at h0
   have ⟨h1,h2⟩ := h0
   unfold Dynamic
-  unfold Dynamic
   apply And.intro
-  {
-    have ih := Typing.Dynamic.entry_intro l h1
-    unfold Dynamic at ih
-    apply ih
-  }
+  { apply Typing.Dynamic.proj_record_beta_expansion l h1 }
   {
     intro h3
     apply h2
     exact Typing.Dynamic.proj_record_beta_reduction h3
   }
--- | .exi ids quals body =>
---   ∃ am' , (ListPair.dom am') ⊆ ids ∧
---   (MultiSubtyping.Dynamic (am' ++ am) quals) ∧
---   (Typing.Dynamic (am' ++ am) e body)
--- | .all ids quals body =>
---   ∀ am' , (ListPair.dom am') ⊆ ids →
---   (MultiSubtyping.Dynamic (am' ++ am) quals) →
---   (Typing.Dynamic (am' ++ am) e body)
--- | .lfp id body =>
---   Typ.Monotonic.Dynamic am id body ∧
---   (∃ t, ∃ (h : Typ.size t < Typ.size (.lfp id body)),
---     (∀ e',
---       Typing.Dynamic am e' t →
---       Typing.Dynamic ((id,t) :: am) e' body
---     ) ∧
---     Typing.Dynamic ((id,t) :: am) e  body
---   )
--- -----------------------
--- -- TODO: remove old lfp case
--- -- | .lfp id body =>
--- --   Typ.Monotonic id true body ∧
--- --   ∃ n, Typing.Dynamic.Fin e (Typ.sub am (Typ.subfold id body n))
--- | .var id => ∃ τ, find id am = some τ ∧ Typing.Dynamic.Fin e τ
-| _ => sorry
+| .exi ids quals body => by
+  intro h0
+  unfold Typing.Dynamic at h0
+  have ⟨am', h1, h2, h3⟩ := h0
+  unfold Typing.Dynamic
+  exists am'
+  apply And.intro h1
+  apply And.intro h2
+  apply Typing.Dynamic.proj_record_beta_expansion l h3
 
+| .all ids quals body => by
+  sorry
+| .lfp id body => by
+  sorry
+
+| .var id => by
+  sorry
+
+theorem Typing.Dynamic.entry_intro l :
+  Typing.Dynamic am e t →
+  Typing.Dynamic am (Expr.record ((l, e) :: [])) (Typ.entry l t)
+:= by
+  intro h0
+  unfold Typing.Dynamic
+  exact proj_record_beta_expansion l h0
 
 theorem Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
   (∀ {v} ,
