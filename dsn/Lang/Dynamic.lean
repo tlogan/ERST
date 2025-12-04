@@ -534,6 +534,34 @@ theorem ProgressionStar.record_single_elim {e l e' id}:
       }
       { apply ih h1 }
 
+theorem Typing.Dynamic.extract_record_bubble :
+  Dynamic am (Expr.record [(lr, Expr.extract e li)]) t →
+  Dynamic am (Expr.extract (Expr.record [(lr, e)]) li) t
+:= by sorry
+
+theorem Typing.Dynamic.extract_proj_bubble :
+  Dynamic am (Expr.proj (Expr.extract e li) lr) t →
+  Dynamic am (Expr.extract (Expr.proj e lr) li) t
+:= by sorry
+
+
+theorem Typing.Dynamic.proj_preservation :
+(∀ t, Dynamic am e t → Dynamic am e' t) →
+∀ t, Dynamic am (Expr.proj e l) t → Dynamic am (Expr.proj e' l) t
+:= by sorry
+
+theorem Typing.Dynamic.extract_proj_record_intro :
+  Dynamic am (Expr.proj (Expr.record [(lr, Expr.extract e li)]) lr) t →
+  Dynamic am (Expr.extract (Expr.proj (Expr.record [(lr, e)]) lr) li) t
+:= by
+  intro h0
+  apply Typing.Dynamic.extract_proj_bubble
+  revert h0
+  revert t
+  apply Typing.Dynamic.proj_preservation
+  intro _ h0
+  apply Typing.Dynamic.extract_record_bubble h0
+
 theorem Typing.Dynamic.entry_intro l am t :
   ∀ e,
   Typing.Dynamic am e t →
@@ -558,12 +586,9 @@ theorem Typing.Dynamic.entry_intro l am t :
   unfold Typing.Dynamic at h0
   unfold Typing.Dynamic
   unfold Typing.Dynamic
-  -- have ih := Typing.Dynamic.entry_intro l am body _ h0
-  -- unfold Typing.Dynamic at ih
-  -- simp [Expr.extract] at h0
-  -- simp [Expr.proj]
-  -- simp [Expr.extract]
-  sorry
+  have ih := Typing.Dynamic.entry_intro l am body _ h0
+  unfold Typing.Dynamic at ih
+  exact extract_proj_record_intro ih
 -- | .entry l τ => Typing.Dynamic am (.proj e l) τ
 -- | .path left right => ∀ e' , Typing.Dynamic am e' left → Typing.Dynamic am (.app e e') right
 -- | .unio left right => Typing.Dynamic am e left ∨ Typing.Dynamic am e right
