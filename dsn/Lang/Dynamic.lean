@@ -544,6 +544,16 @@ theorem Typing.Dynamic.extract_proj_bubble :
   Dynamic am (Expr.extract (Expr.proj e lr) li) t
 := by sorry
 
+theorem Typing.Dynamic.proj_proj_bubble :
+  Dynamic am (Expr.proj (Expr.proj e l0) l1) t →
+  Dynamic am (Expr.proj (Expr.proj e l1) l0) t
+:= by sorry
+
+theorem Typing.Dynamic.proj_record_bubble :
+  Dynamic am (Expr.record [(lr, Expr.proj e l)]) t →
+  Dynamic am (Expr.proj (Expr.record [(lr, e)]) l) t
+:= by sorry
+
 
 theorem Typing.Dynamic.proj_preservation :
 (∀ t, Dynamic am e t → Dynamic am e' t) →
@@ -583,7 +593,19 @@ theorem Typing.Dynamic.entry_intro l am t :
   { apply Typing.Dynamic.extract_record_bubble }
   { exact ih }
 
--- | .entry l τ => Typing.Dynamic am (.proj e l) τ
+| .entry label body => by
+  intro e h0
+  unfold Typing.Dynamic at h0
+  unfold Typing.Dynamic
+  unfold Typing.Dynamic
+  have ih := Typing.Dynamic.entry_intro l am body _ h0
+  unfold Typing.Dynamic at ih
+  apply Typing.Dynamic.proj_proj_bubble
+  apply Typing.Dynamic.proj_preservation
+  { apply Typing.Dynamic.proj_record_bubble }
+  { exact ih }
+
+
 -- | .path left right => ∀ e' , Typing.Dynamic am e' left → Typing.Dynamic am (.app e e') right
 -- | .unio left right => Typing.Dynamic am e left ∨ Typing.Dynamic am e right
 | .inter left right => by
