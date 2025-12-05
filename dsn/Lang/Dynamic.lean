@@ -571,20 +571,22 @@ theorem Typing.Dynamic.proj_record_beta_reduction :
 := by sorry
 
 
-theorem Typing.Dynamic.app_preservation :
-(∀ t', Dynamic am e t' → Dynamic am e' t') →
-Dynamic am (Expr.app e e'') t → Dynamic am (Expr.app e' e'') t
+theorem Typing.Dynamic.proj_record.app_bubble :
+  Dynamic am (Expr.proj (Expr.record [(l, Expr.app e e')]) l) body →
+  Dynamic am (Expr.app (Expr.proj (Expr.record [(l, e)]) l) e') body
 := by sorry
 
-theorem Typing.Dynamic.proj_preservation :
-(∀ t', Dynamic am e t' → Dynamic am e' t') →
-Dynamic am (Expr.proj e l) t → Dynamic am (Expr.proj e' l) t
+theorem Typing.Dynamic.proj_record.proj_bubble :
+  Dynamic am (Expr.proj (Expr.record [(l, Expr.proj e label)]) l) body →
+  Dynamic am (Expr.proj (Expr.proj (Expr.record [(l, e)]) l) label) body
 := by sorry
 
-theorem Typing.Dynamic.extract_preservation :
-(∀ t', Dynamic am e t' → Dynamic am e' t') →
-Dynamic am (Expr.extract e l) t → Dynamic am (Expr.extract e' l) t
+theorem Typing.Dynamic.proj_record.extract_bubble :
+  Dynamic am (Expr.proj (Expr.record [(l, Expr.extract e label)]) l) body →
+  Dynamic am (Expr.extract (Expr.proj (Expr.record [(l, e)]) l) label) body
 := by sorry
+
+
 
 theorem Typing.Dynamic.Fin.proj_record_beta_expansion l :
   Typing.Dynamic.Fin e t →
@@ -613,18 +615,17 @@ theorem Typing.Dynamic.proj_record_beta_expansion l :
   intro h0
   unfold Typing.Dynamic at h0
   unfold Typing.Dynamic
-  apply Typing.Dynamic.extract_preservation _ h0
-  intro t' h1
-  have ih := Typing.Dynamic.proj_record_beta_expansion l h1
+  apply Typing.Dynamic.proj_record.extract_bubble
+  have ih := Typing.Dynamic.proj_record_beta_expansion l h0
   apply ih
 
 | .entry label body => by
   intro h0
   unfold Typing.Dynamic at h0
   unfold Typing.Dynamic
-  apply Typing.Dynamic.proj_preservation _ h0
-  intro t' h1
-  have ih := Typing.Dynamic.proj_record_beta_expansion l h1
+
+  apply Typing.Dynamic.proj_record.proj_bubble
+  have ih := Typing.Dynamic.proj_record_beta_expansion l h0
   apply ih
 
 | .path left right => by
@@ -633,9 +634,8 @@ theorem Typing.Dynamic.proj_record_beta_expansion l :
   unfold Dynamic
   intro e' h1
   specialize h0 e' h1
-  apply Typing.Dynamic.app_preservation _ h0
-  intro t' h1
-  have ih := Typing.Dynamic.proj_record_beta_expansion l h1
+  apply Typing.Dynamic.proj_record.app_bubble
+  have ih := Typing.Dynamic.proj_record_beta_expansion l h0
   apply ih
 
 | .unio left right => by
