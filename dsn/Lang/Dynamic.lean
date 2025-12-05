@@ -7,72 +7,72 @@ set_option pp.fieldNotation false
 
 
 mutual
-  def pattern_match_entry (label : String) (pat : Pat) :
-  List (String × Expr) → Option (List (String × Expr))
+  def List.pattern_match_entry (label : String) (pat : Pat)
+  : List (String × Expr) → Option (List (String × Expr))
   | .nil => none
   | (l, e) :: args =>
     if l == label then
-      (pattern_match e pat)
+      (Expr.pattern_match e pat)
     else
-      pattern_match_entry label pat args
+      List.pattern_match_entry label pat args
 
-  def pattern_match_record (args : List (String × Expr)):
-  List (String × Pat) →
-  Option (List (String × Expr))
+  def List.pattern_match_record (args : List (String × Expr))
+  : List (String × Pat) → Option (List (String × Expr))
   | .nil => some []
   | (label, pat) :: pats => do
-    if Pat.free_vars pat ∩ ListPat.free_vars pats = [] then
-      let m0 ← pattern_match_entry label pat args
-      let m1 ← pattern_match_record args pats
+    if Pat.free_vars pat ∩ ListPat.free_vars pats == [] then
+      let m0 ← List.pattern_match_entry label pat args
+      let m1 ← List.pattern_match_record args pats
       return (m0 ++ m1)
     else
       .none
 
-  def pattern_match : Expr → Pat → Option (List (String × Expr))
+  def Expr.pattern_match : Expr → Pat → Option (List (String × Expr))
   | e, (.var id) => some [(id, e)]
-  | (.record r), (.record p) => pattern_match_record r p
+  | (.record r), (.record p) => List.pattern_match_record r p
   | _, _ => none
 end
 
+
 mutual
-  def ids_record_pattern : List (String × Pat) → List String
+  def List.pattern_ids : List (String × Pat) → List String
   | .nil => .nil
   | (_, p) :: r =>
-    (ids_pattern p) ++ (ids_record_pattern r)
+    (Pat.ids p) ++ (List.pattern_ids r)
 
-  def ids_pattern : Pat → List String
+  def Pat.ids : Pat → List String
   | .var id => [id]
-  | .iso l body => ids_pattern body
-  | .record r => ids_record_pattern r
+  | .iso l body => Pat.ids body
+  | .record r => List.pattern_ids r
 end
 
 
 mutual
-  def Expr.Record.sub (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
+  def List.record_sub (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
   | .nil => .nil
   | (l, e) :: r =>
-    (l, Expr.sub m e) :: (Expr.Record.sub m r)
+    (l, Expr.sub m e) :: (List.record_sub m r)
 
-  def Expr.Function.sub (m : List (String × Expr)): List (Pat × Expr) → List (Pat × Expr)
+  def List.function_sub (m : List (String × Expr)): List (Pat × Expr) → List (Pat × Expr)
   | .nil => .nil
   | (p, e) :: f =>
-    let ids := ids_pattern p
-    (p, Expr.sub (remove_all m ids) e) :: (Expr.Function.sub m f)
+    let ids := Pat.ids p
+    (p, Expr.sub (remove_all m ids) e) :: (List.function_sub m f)
 
   def Expr.sub (m : List (String × Expr)): Expr → Expr
   | .var id => match (find id m) with
     | .none => (.var id)
     | .some e => e
   | .iso l body => .iso l (Expr.sub m body)
-  | .record r => .record (Expr.Record.sub m r)
-  | .function f => .function (Expr.Function.sub m f)
+  | .record r => .record (List.record_sub m r)
+  | .function f => .function (List.function_sub m f)
   | .app ef ea => .app (Expr.sub m ef) (Expr.sub m ea)
   | .anno e t => .anno (Expr.sub m e) t
   | .loop e => .loop (Expr.sub m e)
 end
 
 
-theorem Expr.sub_sub_removal {ids eam0 eam1 e} :
+theorem Expr.sub_sub_removal :
   ids ⊆ ListPair.dom eam0 →
   (Expr.sub eam0 (Expr.sub (remove_all eam1 ids) e)) =
   (Expr.sub (eam0 ++ eam1) e)
@@ -95,11 +95,11 @@ inductive Progression : Expr → Expr → Prop
   Progression (.app (.function f) e) (.app (.function f) e')
 | appmatch : ∀ {p e f v m},
   v.is_value →
-  pattern_match v p = some m →
+  Expr.pattern_match v p = some m →
   Progression (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
 | appskip : ∀ {p e f v},
   v.is_value →
-  pattern_match v p = none →
+  Expr.pattern_match v p = none →
   Progression (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
 | anno : ∀ {e t},
   Progression (.anno  e t) e
@@ -117,83 +117,85 @@ inductive ProgressionStar : Expr → Expr → Prop
 | step e e' e'' : Progression e e' → ProgressionStar e' e'' → ProgressionStar e e''
 
 
-def Typing.Dynamic.Fin (e : Expr) : Typ → Prop
-| .entry l τ => Typing.Dynamic.Fin (.record [(l,e)]) τ
-| .path left right => ∀ e' , Typing.Dynamic.Fin e' left → Typing.Dynamic.Fin (.app e e') right
-| .unio left right => Typing.Dynamic.Fin e left ∨ Typing.Dynamic.Fin e right
-| .inter left right => Typing.Dynamic.Fin e left ∧ Typing.Dynamic.Fin e right
-| .diff left right => Typing.Dynamic.Fin e left ∧ ¬ (Typing.Dynamic.Fin e right)
+def SimpleTyping (e : Expr) : Typ → Prop
+| .iso l body => SimpleTyping (.extract e l) body
+| .entry l body => SimpleTyping (.proj e l) body
+| .path left right => ∀ e' , SimpleTyping e' left → SimpleTyping (.app e e') right
+| .unio left right => SimpleTyping e left ∨ SimpleTyping e right
+| .inter left right => SimpleTyping e left ∧ SimpleTyping e right
+| .diff left right => SimpleTyping e left ∧ ¬ (SimpleTyping e right)
 | _ => False
 
-def Subtyping.Dynamic.Fin (left right : Typ) : Prop :=
-  ∀ e, Typing.Dynamic.Fin e left → Typing.Dynamic.Fin e right
+
+def Subtyping.Fin (left right : Typ) : Prop :=
+  ∀ e, SimpleTyping e left → SimpleTyping e right
 
 
 mutual
-  def Subtyping.Dynamic (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
-    ∀ e, Typing.Dynamic am e left → Typing.Dynamic am e right
+  def Subtyping (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
+    ∀ e, Typing am e left → Typing am e right
   termination_by Typ.size left + Typ.size right
   decreasing_by
     all_goals simp [Typ.zero_lt_size]
 
-  def MultiSubtyping.Dynamic (am : List (String × Typ)) : List (Typ × Typ) → Prop
+  def MultiSubtyping (am : List (String × Typ)) : List (Typ × Typ) → Prop
   | .nil => True
   | .cons (left, right) remainder =>
-    Subtyping.Dynamic am left right ∧ MultiSubtyping.Dynamic am remainder
+    Subtyping am left right ∧ MultiSubtyping am remainder
   termination_by sts => ListSubtyping.size sts
   decreasing_by
     all_goals simp [ListSubtyping.size, ListPairTyp.zero_lt_size, Typ.zero_lt_size]
 
-def Typ.Monotonic.Dynamic (am : List (String × Typ)) (id : String) (body : Typ) : Prop :=
-  (∀ t0 t1,
-    Subtyping.Dynamic am t0 t1 →
-    ∀ e, Typing.Dynamic ((id,t0):: am) e body → Typing.Dynamic ((id,t1):: am) e body
-  )
+  def Monotonic (am : List (String × Typ)) (id : String) (body : Typ) : Prop :=
+    (∀ t0 t1,
+      Subtyping am t0 t1 →
+      ∀ e, Typing ((id,t0):: am) e body → Typing ((id,t1):: am) e body
+    )
   termination_by Typ.size body
   decreasing_by
     all_goals sorry
 
-  def Typing.Dynamic (am : List (String × Typ)) (e : Expr) : Typ → Prop
+  def Typing (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
   | .top => ∃ e',  Expr.is_value e' ∧ ProgressionStar e e'
-  | .iso l τ => Typing.Dynamic am (.extract e l) τ
-  | .entry l τ => Typing.Dynamic am (.proj e l) τ
-  | .path left right => ∀ e' , Typing.Dynamic am e' left → Typing.Dynamic am (.app e e') right
-  | .unio left right => Typing.Dynamic am e left ∨ Typing.Dynamic am e right
-  | .inter left right => Typing.Dynamic am e left ∧ Typing.Dynamic am e right
-  | .diff left right => Typing.Dynamic am e left ∧ ¬ (Typing.Dynamic am e right)
+  | .iso l τ => Typing am (.extract e l) τ
+  | .entry l τ => Typing am (.proj e l) τ
+  | .path left right => ∀ e' , Typing am e' left → Typing am (.app e e') right
+  | .unio left right => Typing am e left ∨ Typing am e right
+  | .inter left right => Typing am e left ∧ Typing am e right
+  | .diff left right => Typing am e left ∧ ¬ (Typing am e right)
   | .exi ids quals body =>
     ∃ am' , (ListPair.dom am') ⊆ ids ∧
-    (MultiSubtyping.Dynamic (am' ++ am) quals) ∧
-    (Typing.Dynamic (am' ++ am) e body)
+    (MultiSubtyping (am' ++ am) quals) ∧
+    (Typing (am' ++ am) e body)
   | .all ids quals body =>
     ∀ am' , (ListPair.dom am') ⊆ ids →
-    (MultiSubtyping.Dynamic (am' ++ am) quals) →
-    (Typing.Dynamic (am' ++ am) e body)
+    (MultiSubtyping (am' ++ am) quals) →
+    (Typing (am' ++ am) e body)
   | .lfp id body =>
-    Typ.Monotonic.Dynamic am id body ∧
+    Monotonic am id body ∧
     (∃ t, ∃ (h : Typ.size t < Typ.size (.lfp id body)),
       (∀ e',
-        Typing.Dynamic am e' t →
-        Typing.Dynamic ((id,t) :: am) e' body
+        Typing am e' t →
+        Typing ((id,t) :: am) e' body
       ) ∧
-      Typing.Dynamic ((id,t) :: am) e  body
+      Typing ((id,t) :: am) e  body
     )
   -----------------------
   -- TODO: remove old lfp case
   -- | .lfp id body =>
   --   Typ.Monotonic id true body ∧
-  --   ∃ n, Typing.Dynamic.Fin e (Typ.sub am (Typ.subfold id body n))
-  | .var id => ∃ τ, find id am = some τ ∧ Typing.Dynamic.Fin e τ
+  --   ∃ n, SimpleTyping e (Typ.sub am (Typ.subfold id body n))
+  | .var id => ∃ τ, find id am = some τ ∧ SimpleTyping e τ
   termination_by t => (Typ.size t)
   decreasing_by
     all_goals simp_all [Typ.size]
     all_goals try linarith
 end
 
-def MultiTyping.Dynamic
+def MultiTyping
   (tam : List (String × Typ)) (eam : List (String × Expr)) (context : List (String × Typ)) : Prop
-:= ∀ {x t}, find x context = .some t → ∃ e, (find x eam) = .some e ∧ Typing.Dynamic tam e t
+:= ∀ {x t}, find x context = .some t → ∃ e, (find x eam) = .some e ∧ Typing tam e t
 
 
 
@@ -201,296 +203,296 @@ def MultiTyping.Dynamic
 --- rename lemmas to indicate they are either soundness or (conditional) completeness properties
 
 
-theorem MultiSubtyping.Dynamic.removeAll_union {tam cs' cs} :
-  MultiSubtyping.Dynamic tam (List.removeAll cs' cs ∪ cs) →
-  MultiSubtyping.Dynamic tam cs'
+theorem MultiSubtyping.removeAll_union {tam cs' cs} :
+  MultiSubtyping tam (List.removeAll cs' cs ∪ cs) →
+  MultiSubtyping tam cs'
 := by sorry
 
 
 
-theorem Typing.Dynamic.dom_reduction {tam1 tam0 e t} :
+theorem Typing.dom_reduction {tam1 tam0 e t} :
   (ListPair.dom tam1) ∩ Typ.free_vars t = [] →
-  Typing.Dynamic (tam1 ++ tam0) e t →
-  Typing.Dynamic tam0 e t
+  Typing (tam1 ++ tam0) e t →
+  Typing tam0 e t
 := by sorry
 
-theorem Typing.Dynamic.dom_extension {tam1 tam0 e t} :
+theorem Typing.dom_extension {tam1 tam0 e t} :
   (ListPair.dom tam1) ∩ Typ.free_vars t = [] →
-  Typing.Dynamic tam0 e t →
-  Typing.Dynamic (tam1 ++ tam0) e t
+  Typing tam0 e t →
+  Typing (tam1 ++ tam0) e t
 := by sorry
 
-theorem Typing.Dynamic.dom_single_extension {id am e t t'} :
+theorem Typing.dom_single_extension {id am e t t'} :
   id ∉ Typ.free_vars t →
-  Typing.Dynamic am e t' →
-  Typing.Dynamic ((id,t) :: am) e t'
+  Typing am e t' →
+  Typing ((id,t) :: am) e t'
 := by sorry
 
 
-theorem MultiTyping.Dynamic.dom_reduction {tam1 tam0 eam cs} :
+theorem MultiTyping.dom_reduction {tam1 tam0 eam cs} :
   (ListPair.dom tam1) ∩ ListTyping.free_vars cs = [] →
-  MultiTyping.Dynamic (tam1 ++ tam0) eam cs →
-  MultiTyping.Dynamic tam0 eam cs
+  MultiTyping (tam1 ++ tam0) eam cs →
+  MultiTyping tam0 eam cs
 := by sorry
 
 
-theorem MultiTyping.Dynamic.dom_extension {tam1 tam0 eam cs} :
+theorem MultiTyping.dom_extension {tam1 tam0 eam cs} :
   (ListPair.dom tam1) ∩ ListTyping.free_vars cs = [] →
-  MultiTyping.Dynamic tam0 eam cs →
-  MultiTyping.Dynamic (tam1 ++ tam0) eam cs
+  MultiTyping tam0 eam cs →
+  MultiTyping (tam1 ++ tam0) eam cs
 := by sorry
 
-theorem MultiTyping.Dynamic.dom_context_extension {tam eam cs} :
-  MultiTyping.Dynamic tam eam cs →
-  ∀ eam', MultiTyping.Dynamic tam (eam ++ eam') cs
+theorem MultiTyping.dom_context_extension {tam eam cs} :
+  MultiTyping tam eam cs →
+  ∀ eam', MultiTyping tam (eam ++ eam') cs
 := by sorry
 
 
-theorem Subtyping.Dynamic.dom_extension {am1 am0 lower upper} :
+theorem Subtyping.dom_extension {am1 am0 lower upper} :
   (ListPair.dom am1) ∩ Typ.free_vars lower = [] →
   (ListPair.dom am1) ∩ Typ.free_vars upper = [] →
-  Subtyping.Dynamic am0 lower upper →
-  Subtyping.Dynamic (am1 ++ am0) lower upper
+  Subtyping am0 lower upper →
+  Subtyping (am1 ++ am0) lower upper
 := by sorry
 
-theorem MultiSubtyping.Dynamic.dom_single_extension {id tam0 t cs} :
+theorem MultiSubtyping.dom_single_extension {id tam0 t cs} :
   id ∉ ListSubtyping.free_vars cs →
-  MultiSubtyping.Dynamic tam0 cs →
-  MultiSubtyping.Dynamic ((id,t) :: tam0) cs
+  MultiSubtyping tam0 cs →
+  MultiSubtyping ((id,t) :: tam0) cs
 := by sorry
 
-theorem MultiSubtyping.Dynamic.dom_extension {am1 am0 cs} :
+theorem MultiSubtyping.dom_extension {am1 am0 cs} :
   (ListPair.dom am1) ∩ ListSubtyping.free_vars cs = [] →
-  MultiSubtyping.Dynamic am0 cs →
-  MultiSubtyping.Dynamic (am1 ++ am0) cs
+  MultiSubtyping am0 cs →
+  MultiSubtyping (am1 ++ am0) cs
 := by sorry
 
-theorem MultiSubtyping.Dynamic.dom_reduction {am1 am0 cs} :
+theorem MultiSubtyping.dom_reduction {am1 am0 cs} :
   (ListPair.dom am1) ∩ ListSubtyping.free_vars cs = [] →
-  MultiSubtyping.Dynamic (am1 ++ am0) cs →
-  MultiSubtyping.Dynamic am0 cs
+  MultiSubtyping (am1 ++ am0) cs →
+  MultiSubtyping am0 cs
 := by sorry
 
-theorem MultiSubtyping.Dynamic.reduction {am cs cs'} :
+theorem MultiSubtyping.reduction {am cs cs'} :
   cs ⊆ cs' →
-  MultiSubtyping.Dynamic am cs'  →
-  MultiSubtyping.Dynamic am cs
+  MultiSubtyping am cs'  →
+  MultiSubtyping am cs
 := by sorry
 
-theorem Subtyping.Dynamic.refl am t :
-  Subtyping.Dynamic am t t
+theorem Subtyping.refl am t :
+  Subtyping am t t
 := by sorry
 
-theorem Subtyping.Dynamic.unio_left_intro {am t l r} :
-  Subtyping.Dynamic am t l →
-  Subtyping.Dynamic am t (Typ.unio l r)
-:= by sorry
-
-
-theorem Subtyping.Dynamic.unio_right_intro {am t l r} :
-  Subtyping.Dynamic am t r →
-  Subtyping.Dynamic am t (Typ.unio l r)
-:= by sorry
-
-theorem Subtyping.Dynamic.inter_left_elim {am l r t} :
-  Subtyping.Dynamic am l t →
-  Subtyping.Dynamic am (Typ.inter l r) t
-:= by sorry
-
-theorem Subtyping.Dynamic.inter_right_elim {am l r t} :
-  Subtyping.Dynamic am r t →
-  Subtyping.Dynamic am (Typ.inter l r) t
+theorem Subtyping.unio_left_intro {am t l r} :
+  Subtyping am t l →
+  Subtyping am t (Typ.unio l r)
 := by sorry
 
 
-theorem Subtyping.Dynamic.iso_pres {am bodyl bodyu} l :
-  Subtyping.Dynamic am bodyl bodyu →
-  Subtyping.Dynamic am (Typ.iso l bodyl) (Typ.iso l bodyu)
+theorem Subtyping.unio_right_intro {am t l r} :
+  Subtyping am t r →
+  Subtyping am t (Typ.unio l r)
 := by sorry
 
-theorem Subtyping.Dynamic.entry_pres {am bodyl bodyu} l :
-  Subtyping.Dynamic am bodyl bodyu →
-  Subtyping.Dynamic am (Typ.entry l bodyl) (Typ.entry l bodyu)
+theorem Subtyping.inter_left_elim {am l r t} :
+  Subtyping am l t →
+  Subtyping am (Typ.inter l r) t
 := by sorry
 
-theorem Subtyping.Dynamic.path_pres {am p q x y} :
-  Subtyping.Dynamic am x p →
-  Subtyping.Dynamic am q y →
-  Subtyping.Dynamic am (Typ.path p q) (Typ.path x y)
-:= by sorry
-
-
-theorem Subtyping.Dynamic.unio_elim {am left right t} :
-  Subtyping.Dynamic am left t →
-  Subtyping.Dynamic am right t →
-  Subtyping.Dynamic am (Typ.unio left right) t
+theorem Subtyping.inter_right_elim {am l r t} :
+  Subtyping am r t →
+  Subtyping am (Typ.inter l r) t
 := by sorry
 
 
-theorem Subtyping.Dynamic.inter_intro {am t left right} :
-  Subtyping.Dynamic am t left →
-  Subtyping.Dynamic am t right →
-  Subtyping.Dynamic am t (Typ.inter left right)
+theorem Subtyping.iso_pres {am bodyl bodyu} l :
+  Subtyping am bodyl bodyu →
+  Subtyping am (Typ.iso l bodyl) (Typ.iso l bodyu)
 := by sorry
 
-theorem Subtyping.Dynamic.unio_antec {am t left right upper} :
-  Subtyping.Dynamic am t (Typ.path left upper) →
-  Subtyping.Dynamic am t (Typ.path right upper) →
-  Subtyping.Dynamic am t (Typ.path (Typ.unio left right) upper)
+theorem Subtyping.entry_pres {am bodyl bodyu} l :
+  Subtyping am bodyl bodyu →
+  Subtyping am (Typ.entry l bodyl) (Typ.entry l bodyu)
 := by sorry
 
-theorem Subtyping.Dynamic.inter_conseq {am t upper left right} :
-  Subtyping.Dynamic am t (Typ.path upper left) →
-  Subtyping.Dynamic am t (Typ.path upper right) →
-  Subtyping.Dynamic am t (Typ.path upper (Typ.inter left right))
-:= by sorry
-
-theorem Subtyping.Dynamic.inter_entry {am t l left right} :
-  Subtyping.Dynamic am t (Typ.entry l left) →
-  Subtyping.Dynamic am t (Typ.entry l right) →
-  Subtyping.Dynamic am t (Typ.entry l (Typ.inter left right))
+theorem Subtyping.path_pres {am p q x y} :
+  Subtyping am x p →
+  Subtyping am q y →
+  Subtyping am (Typ.path p q) (Typ.path x y)
 := by sorry
 
 
-
-
-theorem Subtyping.Dynamic.diff_elim {am lower sub upper} :
-  Subtyping.Dynamic am lower (Typ.unio sub upper) →
-  Subtyping.Dynamic am (Typ.diff lower sub) upper
+theorem Subtyping.unio_elim {am left right t} :
+  Subtyping am left t →
+  Subtyping am right t →
+  Subtyping am (Typ.unio left right) t
 := by sorry
 
 
-theorem Subtyping.Dynamic.not_diff_elim {am t0 t1 t2} :
+theorem Subtyping.inter_intro {am t left right} :
+  Subtyping am t left →
+  Subtyping am t right →
+  Subtyping am t (Typ.inter left right)
+:= by sorry
+
+theorem Subtyping.unio_antec {am t left right upper} :
+  Subtyping am t (Typ.path left upper) →
+  Subtyping am t (Typ.path right upper) →
+  Subtyping am t (Typ.path (Typ.unio left right) upper)
+:= by sorry
+
+theorem Subtyping.inter_conseq {am t upper left right} :
+  Subtyping am t (Typ.path upper left) →
+  Subtyping am t (Typ.path upper right) →
+  Subtyping am t (Typ.path upper (Typ.inter left right))
+:= by sorry
+
+theorem Subtyping.inter_entry {am t l left right} :
+  Subtyping am t (Typ.entry l left) →
+  Subtyping am t (Typ.entry l right) →
+  Subtyping am t (Typ.entry l (Typ.inter left right))
+:= by sorry
+
+
+
+
+theorem Subtyping.diff_elim {am lower sub upper} :
+  Subtyping am lower (Typ.unio sub upper) →
+  Subtyping am (Typ.diff lower sub) upper
+:= by sorry
+
+
+theorem Subtyping.not_diff_elim {am t0 t1 t2} :
   Typ.toBruijn [] t1 = Typ.toBruijn [] t2 →
-  ¬ Dynamic am (Typ.diff t0 t1) t2
+  ¬ Subtyping am (Typ.diff t0 t1) t2
 := by sorry
 
-theorem Subtyping.Dynamic.not_diff_intro {am t0 t1 t2} :
+theorem Subtyping.not_diff_intro {am t0 t1 t2} :
   Typ.toBruijn [] t0 = Typ.toBruijn [] t2 →
-  ¬ Dynamic am t0 (Typ.diff t1 t2)
+  ¬ Subtyping am t0 (Typ.diff t1 t2)
 := by sorry
 
 
 
-theorem Subtyping.Dynamic.diff_sub_elim {am lower upper} sub:
-  Subtyping.Dynamic am lower sub →
-  Subtyping.Dynamic am (Typ.diff lower sub) upper
+theorem Subtyping.diff_sub_elim {am lower upper} sub:
+  Subtyping am lower sub →
+  Subtyping am (Typ.diff lower sub) upper
 := by sorry
 
-theorem Subtyping.Dynamic.diff_upper_elim {am lower upper} sub:
-  Subtyping.Dynamic am lower upper →
-  Subtyping.Dynamic am (Typ.diff lower sub) upper
+theorem Subtyping.diff_upper_elim {am lower upper} sub:
+  Subtyping am lower upper →
+  Subtyping am (Typ.diff lower sub) upper
 := by sorry
 
 
--- theorem Subtyping.Dynamic.exi_intro {am am' t ids quals body} :
+-- theorem Subtyping.exi_intro {am am' t ids quals body} :
 --   ListPair.dom am' ⊆ ids →
---   MultiSubtyping.Dynamic (am' ++ am) quals →
---   Subtyping.Dynamic (am' ++ am) t body →
---   Subtyping.Dynamic am t (Typ.exi ids quals body)
+--   MultiSubtyping (am' ++ am) quals →
+--   Subtyping (am' ++ am) t body →
+--   Subtyping am t (Typ.exi ids quals body)
 -- := by sorry
 
-theorem Subtyping.Dynamic.lfp_skip_elim {am id body t} :
+theorem Subtyping.lfp_skip_elim {am id body t} :
   id ∉ Typ.free_vars body →
-  Subtyping.Dynamic am body t →
-  Subtyping.Dynamic am (Typ.lfp id body) t
+  Subtyping am body t →
+  Subtyping am (Typ.lfp id body) t
 := by sorry
 
-theorem Subtyping.Dynamic.diff_intro {am t left right} :
-  Subtyping.Dynamic am t left →
-  ¬ (Subtyping.Dynamic am t right) →
-  ¬ (Subtyping.Dynamic am right t) →
-  Subtyping.Dynamic am t (Typ.diff left right)
+theorem Subtyping.diff_intro {am t left right} :
+  Subtyping am t left →
+  ¬ (Subtyping am t right) →
+  ¬ (Subtyping am right t) →
+  Subtyping am t (Typ.diff left right)
 := by sorry
 
 
-theorem Subtyping.Dynamic.exi_intro {am t ids quals body} :
-  MultiSubtyping.Dynamic am quals →
-  Subtyping.Dynamic am t body →
-  Subtyping.Dynamic am t (Typ.exi ids quals body)
+theorem Subtyping.exi_intro {am t ids quals body} :
+  MultiSubtyping am quals →
+  Subtyping am t body →
+  Subtyping am t (Typ.exi ids quals body)
 := by sorry
 
-theorem Subtyping.Dynamic.exi_elim {am ids quals body t} :
+theorem Subtyping.exi_elim {am ids quals body t} :
   ids ∩ Typ.free_vars t = [] →
   (∀ am',
     ListPair.dom am' ⊆ ids →
-    MultiSubtyping.Dynamic (am' ++ am) quals →
-    Subtyping.Dynamic (am' ++ am) body t
+    MultiSubtyping (am' ++ am) quals →
+    Subtyping (am' ++ am) body t
   ) →
-  Subtyping.Dynamic am (Typ.exi ids quals body) t
+  Subtyping am (Typ.exi ids quals body) t
 := by sorry
 
--- theorem Subtyping.Dynamic.all_elim {am am' ids quals body t} :
+-- theorem Subtyping.all_elim {am am' ids quals body t} :
 --   ListPair.dom am' ⊆ ids →
---   MultiSubtyping.Dynamic (am' ++ am) quals →
---   Subtyping.Dynamic (am' ++ am) body t →
---   Subtyping.Dynamic am (Typ.all ids quals body) t
+--   MultiSubtyping (am' ++ am) quals →
+--   Subtyping (am' ++ am) body t →
+--   Subtyping am (Typ.all ids quals body) t
 -- := by sorry
 
-theorem Subtyping.Dynamic.all_elim {am ids quals body t} :
-  MultiSubtyping.Dynamic am quals →
-  Subtyping.Dynamic am body t →
-  Subtyping.Dynamic am (Typ.all ids quals body) t
+theorem Subtyping.all_elim {am ids quals body t} :
+  MultiSubtyping am quals →
+  Subtyping am body t →
+  Subtyping am (Typ.all ids quals body) t
 := by sorry
 
-theorem Subtyping.Dynamic.all_intro {am t ids quals body} :
+theorem Subtyping.all_intro {am t ids quals body} :
   ids ∩ Typ.free_vars t = [] →
   (∀ am',
     ListPair.dom am' ⊆ ids →
-    MultiSubtyping.Dynamic (am' ++ am) quals →
-    Subtyping.Dynamic (am' ++ am) t body
+    MultiSubtyping (am' ++ am) quals →
+    Subtyping (am' ++ am) t body
   ) →
-  Subtyping.Dynamic am t (Typ.all ids quals body)
+  Subtyping am t (Typ.all ids quals body)
 := by sorry
 
-theorem Subtyping.Dynamic.lfp_intro {am t id body} :
-  Typ.Monotonic.Dynamic am id body →
-  Subtyping.Dynamic ((id, (Typ.lfp id body)) :: am) t body →
-  Subtyping.Dynamic am t (Typ.lfp id body)
+theorem Subtyping.lfp_intro {am t id body} :
+  Monotonic am id body →
+  Subtyping ((id, (Typ.lfp id body)) :: am) t body →
+  Subtyping am t (Typ.lfp id body)
 := by sorry
 
-theorem Subtyping.Dynamic.lfp_elim {am id body t} :
-  Typ.Monotonic.Dynamic am id body →
+theorem Subtyping.lfp_elim {am id body t} :
+  Monotonic am id body →
   id ∉ Typ.free_vars t →
-  Subtyping.Dynamic ((id, t) :: am) t body →
-  Subtyping.Dynamic am (Typ.lfp id body) t
+  Subtyping ((id, t) :: am) t body →
+  Subtyping am (Typ.lfp id body) t
 := by sorry
 
 
-theorem Subtyping.Dynamic.rename_lower {am lower lower' upper} :
+theorem Subtyping.rename_lower {am lower lower' upper} :
   Typ.toBruijn [] lower = Typ.toBruijn [] lower' →
-  Subtyping.Dynamic am lower upper →
-  Subtyping.Dynamic am lower' upper
+  Subtyping am lower upper →
+  Subtyping am lower' upper
 := by sorry
 
-theorem Subtyping.Dynamic.rename_upper {am lower upper upper'} :
+theorem Subtyping.rename_upper {am lower upper upper'} :
   Typ.toBruijn [] upper = Typ.toBruijn [] upper' →
-  Subtyping.Dynamic am lower upper →
-  Subtyping.Dynamic am lower upper'
+  Subtyping am lower upper →
+  Subtyping am lower upper'
 := by sorry
 
-theorem Subtyping.Dynamic.bot_elim {am upper} :
-  Subtyping.Dynamic am Typ.bot upper
+theorem Subtyping.bot_elim {am upper} :
+  Subtyping am Typ.bot upper
 := by sorry
 
-theorem Subtyping.Dynamic.top_intro {am lower} :
-  Subtyping.Dynamic am lower Typ.top
+theorem Subtyping.top_intro {am lower} :
+  Subtyping am lower Typ.top
 := by sorry
 
 
-theorem Typing.Dynamic.empty_record_top am :
-  Typing.Dynamic am (Expr.record []) Typ.top
+theorem Typing.empty_record_top am :
+  Typing am (Expr.record []) Typ.top
 := by
-  unfold Typing.Dynamic
+  unfold Typing
   exists (Expr.record [])
   apply And.intro
   · exact rfl
   · apply ProgressionStar.refl
 
-theorem Typing.Dynamic.inter_entry_intro {am l e r body t} :
-  Typing.Dynamic am e body →
-  Typing.Dynamic am (.record r) t  →
-  Typing.Dynamic am (Expr.record ((l, e) :: r)) (Typ.inter (Typ.entry l body) t)
+theorem Typing.inter_entry_intro {am l e r body t} :
+  Typing am e body →
+  Typing am (.record r) t  →
+  Typing am (Expr.record ((l, e) :: r)) (Typ.inter (Typ.entry l body) t)
 := by sorry
 
 
@@ -504,7 +506,7 @@ theorem ProgressionStar.record_single_elim {e l e' id}:
     apply ProgressionStar.step
     { apply Progression.appmatch
       { reduce; exact h1 }
-      { simp [pattern_match, pattern_match_record, Pat.free_vars, pattern_match_entry]
+      { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
         reduce
         apply And.intro rfl rfl
       }
@@ -517,7 +519,7 @@ theorem ProgressionStar.record_single_elim {e l e' id}:
     | true =>
       apply ProgressionStar.step
       { apply Progression.appmatch h5
-        { simp [pattern_match, pattern_match_record, Pat.free_vars, pattern_match_entry]
+        { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
           reduce
           apply And.intro rfl rfl
         }
@@ -534,211 +536,293 @@ theorem ProgressionStar.record_single_elim {e l e' id}:
       }
       { apply ih h1 }
 
-theorem Typing.Dynamic.app_record_bubble :
-  Dynamic am (Expr.record [(lr, Expr.app e e')]) t →
-  Dynamic am (Expr.app (Expr.record [(lr, e)]) e') t
+theorem Typing.app_record_bubble :
+  Typing am (Expr.record [(lr, Expr.app e e')]) t →
+  Typing am (Expr.app (Expr.record [(lr, e)]) e') t
 := by sorry
 
-theorem Typing.Dynamic.app_proj_bubble :
-  Dynamic am (Expr.proj (Expr.app e e') l) t →
-  Dynamic am (Expr.app (Expr.proj e l) e') t
+theorem Typing.app_proj_bubble :
+  Typing am (Expr.proj (Expr.app e e') l) t →
+  Typing am (Expr.app (Expr.proj e l) e') t
 := by sorry
 
-theorem Typing.Dynamic.extract_record_bubble :
-  Dynamic am (Expr.record [(lr, Expr.extract e li)]) t →
-  Dynamic am (Expr.extract (Expr.record [(lr, e)]) li) t
+theorem Typing.extract_record_bubble :
+  Typing am (Expr.record [(lr, Expr.extract e li)]) t →
+  Typing am (Expr.extract (Expr.record [(lr, e)]) li) t
 := by sorry
 
-theorem Typing.Dynamic.extract_proj_bubble :
-  Dynamic am (Expr.proj (Expr.extract e li) lr) t →
-  Dynamic am (Expr.extract (Expr.proj e lr) li) t
+theorem Typing.extract_proj_bubble :
+  Typing am (Expr.proj (Expr.extract e li) lr) t →
+  Typing am (Expr.extract (Expr.proj e lr) li) t
 := by sorry
 
-theorem Typing.Dynamic.proj_proj_bubble :
-  Dynamic am (Expr.proj (Expr.proj e l0) l1) t →
-  Dynamic am (Expr.proj (Expr.proj e l1) l0) t
+theorem Typing.proj_proj_bubble :
+  Typing am (Expr.proj (Expr.proj e l0) l1) t →
+  Typing am (Expr.proj (Expr.proj e l1) l0) t
 := by sorry
 
-theorem Typing.Dynamic.proj_record_bubble :
-  Dynamic am (Expr.record [(lr, Expr.proj e l)]) t →
-  Dynamic am (Expr.proj (Expr.record [(lr, e)]) l) t
-:= by sorry
-
-
-theorem Typing.Dynamic.proj_record_beta_reduction :
-  Dynamic am (Expr.proj (Expr.record [(l, e)]) l) t →
-  Dynamic am e t
+theorem Typing.proj_record_bubble :
+  Typing am (Expr.record [(lr, Expr.proj e l)]) t →
+  Typing am (Expr.proj (Expr.record [(lr, e)]) l) t
 := by sorry
 
 
-theorem Typing.Dynamic.proj_record.app_bubble :
-  Dynamic am (Expr.proj (Expr.record [(l, Expr.app e e')]) l) body →
-  Dynamic am (Expr.app (Expr.proj (Expr.record [(l, e)]) l) e') body
+theorem Typing.proj_record_beta_reduction :
+  Typing am (Expr.proj (Expr.record [(l, e)]) l) t →
+  Typing am e t
 := by sorry
 
-theorem Typing.Dynamic.proj_record.proj_bubble :
-  Dynamic am (Expr.proj (Expr.record [(l, Expr.proj e label)]) l) body →
-  Dynamic am (Expr.proj (Expr.proj (Expr.record [(l, e)]) l) label) body
-:= by sorry
-
-theorem Typing.Dynamic.proj_record.extract_bubble :
-  Dynamic am (Expr.proj (Expr.record [(l, Expr.extract e label)]) l) body →
-  Dynamic am (Expr.extract (Expr.proj (Expr.record [(l, e)]) l) label) body
+theorem SimpleTyping.proj_record_beta_reduction :
+  SimpleTyping (Expr.proj (Expr.record [(l, e)]) l) t →
+  SimpleTyping e t
 := by sorry
 
 
-
-theorem Typing.Dynamic.Fin.proj_record_beta_expansion l :
-  Typing.Dynamic.Fin e t →
-  Typing.Dynamic.Fin (Expr.proj (Expr.record [(l, e)]) l) t
+theorem Typing.proj_record.app_bubble :
+  Typing am (Expr.proj (Expr.record [(l, Expr.app e e')]) l) body →
+  Typing am (Expr.app (Expr.proj (Expr.record [(l, e)]) l) e') body
 := by sorry
 
-theorem Typing.Dynamic.proj_record_beta_expansion l :
-  Typing.Dynamic am e t →
-  Dynamic am (Expr.proj (Expr.record [(l, e)]) l) t
+theorem Typing.proj_record.proj_bubble :
+  Typing am (Expr.proj (Expr.record [(l, Expr.proj e label)]) l) body →
+  Typing am (Expr.proj (Expr.proj (Expr.record [(l, e)]) l) label) body
+:= by sorry
+
+theorem Typing.proj_record.extract_bubble :
+  Typing am (Expr.proj (Expr.record [(l, Expr.extract e label)]) l) body →
+  Typing am (Expr.extract (Expr.proj (Expr.record [(l, e)]) l) label) body
+:= by sorry
+
+theorem SimpleTyping.proj_record.app_bubble :
+  SimpleTyping (Expr.proj (Expr.record [(l, Expr.app e e')]) l) body →
+  SimpleTyping (Expr.app (Expr.proj (Expr.record [(l, e)]) l) e') body
+:= by sorry
+
+theorem SimpleTyping.proj_record.extract_bubble :
+  SimpleTyping (Expr.proj (Expr.record [(l, Expr.extract e label)]) l) body →
+  SimpleTyping (Expr.extract (Expr.proj (Expr.record [(l, e)]) l) label) body
+:= by sorry
+
+theorem SimpleTyping.proj_record.proj_bubble :
+  SimpleTyping (Expr.proj (Expr.record [(l, Expr.proj e label)]) l) body →
+  SimpleTyping (Expr.proj (Expr.proj (Expr.record [(l, e)]) l) label) body
+:= by sorry
+
+
+
+theorem SimpleTyping.proj_record_beta_expansion l :
+  SimpleTyping e t →
+  SimpleTyping (Expr.proj (Expr.record [(l, e)]) l) t
+:= by
+  cases t with
+  | iso label body =>
+    intro h0
+    unfold SimpleTyping at h0
+    unfold SimpleTyping
+    apply SimpleTyping.proj_record.extract_bubble
+    have ih := SimpleTyping.proj_record_beta_expansion l h0
+    apply ih
+
+  | entry label body =>
+    intro h0
+    unfold SimpleTyping at h0
+    unfold SimpleTyping
+    apply SimpleTyping.proj_record.proj_bubble
+    have ih := SimpleTyping.proj_record_beta_expansion l h0
+    apply ih
+
+  | path left right =>
+    intro h0
+    unfold SimpleTyping at h0
+    intro e' h1
+    specialize h0 e' h1
+    apply SimpleTyping.proj_record.app_bubble
+    have ih := SimpleTyping.proj_record_beta_expansion l h0
+    apply ih
+
+  | unio left right =>
+    intro h0
+    unfold SimpleTyping at h0
+    unfold SimpleTyping
+    cases h0 with
+    | inl h1 =>
+      have ih := SimpleTyping.proj_record_beta_expansion l h1
+      exact Or.inl ih
+    | inr h1 =>
+      have ih := SimpleTyping.proj_record_beta_expansion l h1
+      exact Or.inr ih
+
+  | inter left right =>
+    intro h0
+    unfold SimpleTyping at h0
+    have ⟨h1,h2⟩ := h0
+    unfold SimpleTyping
+    apply And.intro
+    { apply SimpleTyping.proj_record_beta_expansion l h1 }
+    { apply SimpleTyping.proj_record_beta_expansion l h2 }
+  | diff left right =>
+    intro h0
+    unfold SimpleTyping at h0
+    have ⟨h1,h2⟩ := h0
+    unfold SimpleTyping
+    apply And.intro
+    { apply SimpleTyping.proj_record_beta_expansion l h1 }
+    {
+      intro h3
+      apply h2
+      exact SimpleTyping.proj_record_beta_reduction h3
+    }
+  | _ =>
+    intro h0
+    unfold SimpleTyping at h0
+    exact h0
+
+theorem Typing.proj_record_beta_expansion l :
+  Typing am e t →
+  Typing am (Expr.proj (Expr.record [(l, e)]) l) t
 := match t with
 | .bot => by
   intro h0
-  unfold Typing.Dynamic at h0
+  unfold Typing at h0
   exact False.elim h0
 
 | .top => by
   intro h0
-  unfold Typing.Dynamic at h0
+  unfold Typing at h0
   have ⟨e',h1,h2⟩ := h0
-  unfold Typing.Dynamic
+  unfold Typing
   exists e'
   apply And.intro h1
   exact ProgressionStar.record_single_elim h2 h1
 
 | .iso label body => by
   intro h0
-  unfold Typing.Dynamic at h0
-  unfold Typing.Dynamic
-  apply Typing.Dynamic.proj_record.extract_bubble
-  have ih := Typing.Dynamic.proj_record_beta_expansion l h0
+  unfold Typing at h0
+  unfold Typing
+  apply Typing.proj_record.extract_bubble
+  have ih := Typing.proj_record_beta_expansion l h0
   apply ih
 
 | .entry label body => by
   intro h0
-  unfold Typing.Dynamic at h0
-  unfold Typing.Dynamic
+  unfold Typing at h0
+  unfold Typing
 
-  apply Typing.Dynamic.proj_record.proj_bubble
-  have ih := Typing.Dynamic.proj_record_beta_expansion l h0
+  apply Typing.proj_record.proj_bubble
+  have ih := Typing.proj_record_beta_expansion l h0
   apply ih
 
 | .path left right => by
   intro h0
-  unfold Typing.Dynamic at h0
-  unfold Dynamic
+  unfold Typing at h0
+  unfold Typing
   intro e' h1
   specialize h0 e' h1
-  apply Typing.Dynamic.proj_record.app_bubble
-  have ih := Typing.Dynamic.proj_record_beta_expansion l h0
+  apply Typing.proj_record.app_bubble
+  have ih := Typing.proj_record_beta_expansion l h0
   apply ih
 
 | .unio left right => by
   intro h0
-  unfold Typing.Dynamic at h0
-  unfold Typing.Dynamic
+  unfold Typing at h0
+  unfold Typing
   cases h0 with
   | inl h1 =>
-    have ih := Typing.Dynamic.proj_record_beta_expansion l h1
+    have ih := Typing.proj_record_beta_expansion l h1
     exact Or.inl ih
   | inr h1 =>
-    have ih := Typing.Dynamic.proj_record_beta_expansion l h1
+    have ih := Typing.proj_record_beta_expansion l h1
     exact Or.inr ih
 
 | .inter left right => by
   intro h0
-  unfold Typing.Dynamic at h0
+  unfold Typing at h0
   have ⟨h1,h2⟩ := h0
-  unfold Dynamic
+  unfold Typing
   apply And.intro
-  { apply Typing.Dynamic.proj_record_beta_expansion l h1 }
-  { apply Typing.Dynamic.proj_record_beta_expansion l h2 }
+  { apply Typing.proj_record_beta_expansion l h1 }
+  { apply Typing.proj_record_beta_expansion l h2 }
 | .diff left right => by
   intro h0
-  unfold Typing.Dynamic at h0
+  unfold Typing at h0
   have ⟨h1,h2⟩ := h0
-  unfold Dynamic
+  unfold Typing
   apply And.intro
-  { apply Typing.Dynamic.proj_record_beta_expansion l h1 }
+  { apply Typing.proj_record_beta_expansion l h1 }
   {
     intro h3
     apply h2
-    exact Typing.Dynamic.proj_record_beta_reduction h3
+    exact Typing.proj_record_beta_reduction h3
   }
 | .exi ids quals body => by
   intro h0
-  unfold Typing.Dynamic at h0
+  unfold Typing at h0
   have ⟨am', h1, h2, h3⟩ := h0
-  unfold Typing.Dynamic
+  unfold Typing
   exists am'
   apply And.intro h1
   apply And.intro h2
-  apply Typing.Dynamic.proj_record_beta_expansion l h3
+  apply Typing.proj_record_beta_expansion l h3
 
 | .all ids quals body => by
   intro h0
-  unfold Typing.Dynamic at h0
-  unfold Typing.Dynamic
+  unfold Typing at h0
+  unfold Typing
   intro am' dom_subset dynamic_quals
   specialize h0 am' dom_subset dynamic_quals
-  apply Typing.Dynamic.proj_record_beta_expansion l h0
+  apply Typing.proj_record_beta_expansion l h0
 
 | .lfp id body => by
   intro h0
-  unfold Typing.Dynamic at h0
+  unfold Typing at h0
   have ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩ := h0
   clear h0
-  unfold Typing.Dynamic
+  unfold Typing
   apply And.intro monotonic_body
   exists t
   exists lt_size
   apply And.intro imp_dynamic
-  apply Typing.Dynamic.proj_record_beta_expansion l dynamic_body
+  apply Typing.proj_record_beta_expansion l dynamic_body
 
 | .var id => by
   intro h0
-  unfold Typing.Dynamic at h0
+  unfold Typing at h0
   have ⟨t, h1, h2⟩ := h0
-  unfold Typing.Dynamic
+  unfold Typing
   exists t
   apply And.intro h1
-  apply Typing.Dynamic.Fin.proj_record_beta_expansion l h2
+  apply SimpleTyping.proj_record_beta_expansion l h2
 
 
-theorem Typing.Dynamic.entry_intro l :
-  Typing.Dynamic am e t →
-  Typing.Dynamic am (Expr.record ((l, e) :: [])) (Typ.entry l t)
+theorem Typing.entry_intro l :
+  Typing am e t →
+  Typing am (Expr.record ((l, e) :: [])) (Typ.entry l t)
 := by
   intro h0
-  unfold Typing.Dynamic
+  unfold Typing
   exact proj_record_beta_expansion l h0
 
-theorem Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
+theorem Typing.function_head_elim {am p e f subtras tp tr} :
   (∀ {v} ,
-    Expr.is_value v → Typing.Dynamic am v tp →
-    ∃ eam , pattern_match v p = .some eam ∧ Typing.Dynamic am (Expr.sub eam e) tr
+    Expr.is_value v → Typing am v tp →
+    ∃ eam , Expr.pattern_match v p = .some eam ∧ Typing am (Expr.sub eam e) tr
   ) →
-  Typing.Dynamic am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
+  Typing am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
 := by sorry
 
--- theorem Typing.Dynamic.function_head_elim {am p e f subtras tp tr} :
+-- theorem Typing.function_head_elim {am p e f subtras tp tr} :
 --   (∀ {v} ,
---     IsValue v → Typing.Dynamic am v tp →
---     ∃ eam , pattern_match v p = .some eam ∧ Typing.Dynamic am (Expr.sub eam e) tr
+--     IsValue v → Typing am v tp →
+--     ∃ eam , pattern_match v p = .some eam ∧ Typing am (Expr.sub eam e) tr
 --   ) →
---   Typing.Dynamic am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
+--   Typing am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
 -- := by sorry
 
-theorem Typing.Dynamic.function_tail_elim {am p tp e f t } :
-  (∀ {v} , Expr.is_value v → Typing.Dynamic am v tp → ∃ eam , pattern_match v p = .some eam) →
-  ¬ Subtyping.Dynamic am t (.path tp .top) →
-  Typing.Dynamic am (.function f) t →
-  Typing.Dynamic am (.function ((p,e) :: f)) t
+theorem Typing.function_tail_elim {am p tp e f t } :
+  (∀ {v} , Expr.is_value v → Typing am v tp → ∃ eam , Expr.pattern_match v p = .some eam) →
+  ¬ Subtyping am t (.path tp .top) →
+  Typing am (.function f) t →
+  Typing am (.function ((p,e) :: f)) t
 := by sorry
 
 
@@ -750,25 +834,25 @@ theorem test (p q : Prop) (hp : p) (hq : q)
 : p ∧ q ∧ p := by sorry
 
 
-theorem Typing.Dynamic.path_elim {am ef ea t t'} :
-  Typing.Dynamic am ef (.path t t') →
-  Typing.Dynamic am ea t →
-  Typing.Dynamic am (.app ef ea) t'
+theorem Typing.path_elim {am ef ea t t'} :
+  Typing am ef (.path t t') →
+  Typing am ea t →
+  Typing am (.app ef ea) t'
 := by
   intro h0
-  unfold Typing.Dynamic at h0
+  unfold Typing at h0
   exact fun a => h0 ea a
 
-theorem Typing.Dynamic.loop_path_elim {am e t} id :
-  Typing.Dynamic am e (.path (.var id) t) →
-  Typing.Dynamic am (.loop e) t
+theorem Typing.loop_path_elim {am e t} id :
+  Typing am e (.path (.var id) t) →
+  Typing am (.loop e) t
 := by
   sorry
 
-theorem Typing.Dynamic.anno_intro {am e t ta} :
-  Subtyping.Dynamic am t ta →
-  Typing.Dynamic am e t →
-  Typing.Dynamic am (.anno e ta) ta
+theorem Typing.anno_intro {am e t ta} :
+  Subtyping am t ta →
+  Typing am e t →
+  Typing am (.anno e ta) ta
 := by sorry
 
 
@@ -803,17 +887,17 @@ theorem Typ.lfp_rename id' id body :
   -- theorem ListSubtyping.bruijn_eq_imp_dynamic {am} :
   --   ∀ {lower upper},
   --   ListSubtyping.toBruijn 0 [] lower = ListSubtyping.toBruijn 0 [] upper →
-  --   MultiSubtyping.Dynamic am lower →
-  --   MultiSubtyping.Dynamic am upper
+  --   MultiSubtyping am lower →
+  --   MultiSubtyping am upper
   -- := by sorry
 
-theorem Subtyping.Dynamic.bruijn_eq {lower upper} am :
+theorem Subtyping.bruijn_eq {lower upper} am :
   Typ.toBruijn [] lower = Typ.toBruijn [] upper →
-  Subtyping.Dynamic am lower upper
+  Subtyping am lower upper
 := by
   intro p0
-  apply Subtyping.Dynamic.rename_upper p0
-  apply Subtyping.Dynamic.refl am lower
+  apply Subtyping.rename_upper p0
+  apply Subtyping.refl am lower
 
 
 
@@ -828,15 +912,28 @@ theorem Typ.toBruijn_exi_injection {ids' quals' body' ids quals body} :
 := by sorry
 
 
-theorem MultiSubtyping.Dynamic.removeAll_removal {tam assums assums'} :
-  MultiSubtyping.Dynamic tam assums →
-  MultiSubtyping.Dynamic tam (List.removeAll assums' assums) →
-  MultiSubtyping.Dynamic tam assums'
+theorem MultiSubtyping.removeAll_removal {tam assums assums'} :
+  MultiSubtyping tam assums →
+  MultiSubtyping tam (List.removeAll assums' assums) →
+  MultiSubtyping tam assums'
 := by sorry
 
 
-theorem Subtyping.Dynamic.lfp_induct_elim {am id body t} :
-  Typ.Monotonic.Dynamic am id body →
-  (∀ e, Typing.Dynamic ((id, t) :: am) e body → Typing.Dynamic am e t) →
-  Subtyping.Dynamic am (Typ.lfp id body) t
+theorem Subtyping.lfp_induct_elim {am id body t} :
+  Monotonic am id body →
+  (∀ e, Typing ((id, t) :: am) e body → Typing am e t) →
+  Subtyping am (Typ.lfp id body) t
+:= by sorry
+
+
+theorem Typing.lfp_elim_top {am e id t} :
+  Monotonic am id t →
+  Typing am e (.lfp id t) →
+  Typing ((id, .top) :: am) e t
+:= by sorry
+
+theorem Typing.lfp_intro_bot {am e id t} :
+  Monotonic am id t →
+  Typing ((id, .bot) :: am) e t →
+  Typing am e (.lfp id t)
 := by sorry

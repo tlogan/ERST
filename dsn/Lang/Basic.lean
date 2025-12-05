@@ -37,10 +37,6 @@ deriving Lean.ToExpr
 -- uno: @  ::dos hing or [tres/]
 
 
-
-
-
-
 def ListSubtyping := List (Typ × Typ)
 
 instance : Membership (Typ × Typ) ListSubtyping where
