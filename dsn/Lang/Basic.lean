@@ -37,22 +37,17 @@ deriving Lean.ToExpr
 -- uno: @  ::dos hing or [tres/]
 
 
-def ListSubtyping := List (Typ × Typ)
+-- instance : Membership (Typ × Typ) (List (Typ × Typ)) where
+--   mem (xs : List (Typ × Typ)) x := x ∈ xs
 
-instance : Membership (Typ × Typ) ListSubtyping where
-  mem (xs : List (Typ × Typ)) x := x ∈ xs
-
-
-instance : Membership (Typ × Typ) ListSubtyping where
-  mem (xs : List (Typ × Typ)) x := x ∈ xs
 
 mutual
-  instance ListSubtyping.decidable_eq : DecidableEq (List (Typ × Typ))
+  instance List.pair_typ_decidable_eq : DecidableEq (List (Typ × Typ))
   | [], [] => isTrue rfl
   | l :: ls, [] => isFalse (by simp)
   | [], r :: rs => isFalse (by simp)
   | (al,bl) :: ls, (ar,br) :: rs =>
-    match Typ.decidable_eq al ar, Typ.decidable_eq bl br, ListSubtyping.decidable_eq ls rs with
+    match Typ.decidable_eq al ar, Typ.decidable_eq bl br, List.pair_typ_decidable_eq ls rs with
     | isTrue _, isTrue _, isTrue _ => isTrue (by simp [*])
     | isFalse _, _, _ => isFalse (by simp [*])
     | _, isFalse _, _ => isFalse (by simp [*])
@@ -143,7 +138,7 @@ mutual
     | .all idsl qsl bodyl => by cases right with
       | all idsr qsr bodyr =>
         have dids : Decidable (idsl = idsr) := inferInstance
-        have dqs := ListSubtyping.decidable_eq qsl qsr
+        have dqs := List.pair_typ_decidable_eq qsl qsr
         have dbody := Typ.decidable_eq bodyl bodyr
         cases dids with
         | isFalse => apply isFalse; simp [*]
@@ -158,7 +153,7 @@ mutual
     | .exi idsl qsl bodyl => by cases right with
       | exi idsr qsr bodyr =>
         have dids : Decidable (idsl = idsr) := inferInstance
-        have dqs := ListSubtyping.decidable_eq qsl qsr
+        have dqs := List.pair_typ_decidable_eq qsl qsr
         have dbody := Typ.decidable_eq bodyl bodyr
         cases dids with
         | isFalse => apply isFalse; simp [*]
@@ -185,12 +180,12 @@ end
 
 
 mutual
-  def ListSubtyping.beq : List (Typ × Typ) → List (Typ × Typ) → Bool
+  def List.pair_typ_beq : List (Typ × Typ) → List (Typ × Typ) → Bool
   | .nil, .nil => .true
   | (a,b) :: l, (c,d) :: r =>
     Typ.beq a c &&
     Typ.beq b d &&
-    ListSubtyping.beq l r
+    List.pair_typ_beq l r
   | _, _ => .false
 
   def Typ.beq : Typ → Typ → Bool
@@ -204,35 +199,32 @@ mutual
   | .inter a b, .inter c d => Typ.beq a c && Typ.beq b d
   | .diff a b, .diff c d => Typ.beq a c && Typ.beq b d
   | .all idsl qsl bodyl, .all idsr qsr bodyr =>
-      idsl == idsr &&
-      ListSubtyping.beq qsl qsr &&
-      Typ.beq bodyl bodyr
+    idsl == idsr &&
+    List.pair_typ_beq qsl qsr &&
+    Typ.beq bodyl bodyr
   | .exi idsl qsl bodyl, .exi idsr qsr bodyr =>
-      idsl == idsr &&
-      ListSubtyping.beq qsl qsr &&
-      Typ.beq bodyl bodyr
+    idsl == idsr &&
+    List.pair_typ_beq qsl qsr &&
+    Typ.beq bodyl bodyr
   | .lfp idl bodyl, .lfp idr bodyr =>
-      idl == idr && Typ.beq bodyl bodyr
+    idl == idr && Typ.beq bodyl bodyr
   | _, _ => false
 end
 
 instance : BEq (List (Typ × Typ)) where
-  beq := ListSubtyping.beq
-
-instance : BEq ListSubtyping where
-  beq := ListSubtyping.beq
+  beq := List.pair_typ_beq
 
 instance Typ.instanceBEq : BEq Typ where
   beq := Typ.beq
 
 
 mutual
-  theorem ListSubtyping.refl_beq_true : ∀ cs : ListSubtyping, ListSubtyping.beq cs cs = true
+  theorem List.pair_typ_refl_beq_true : ∀ cs : List (Typ × Typ), List.pair_typ_beq cs cs = true
   | .nil => rfl
   | (lower,upper) :: cs' => by
-    simp [ListSubtyping.beq]
+    simp [List.pair_typ_beq]
     simp [Typ.refl_beq_true]
-    apply ListSubtyping.refl_beq_true
+    apply List.pair_typ_refl_beq_true
 
   theorem Typ.refl_beq_true : ∀ t : Typ, Typ.beq t t = true
   | .var id => by
@@ -281,14 +273,14 @@ mutual
     unfold Typ.beq
     simp
     apply And.intro
-    · apply ListSubtyping.refl_beq_true
+    · apply List.pair_typ_refl_beq_true
     · apply Typ.refl_beq_true
 
   | .exi ids qs body => by
     unfold Typ.beq
     simp
     apply And.intro
-    · apply ListSubtyping.refl_beq_true
+    · apply List.pair_typ_refl_beq_true
     · apply Typ.refl_beq_true
 
   | .lfp id body => by
@@ -300,18 +292,18 @@ end
 
 mutual
 
-  theorem ListSubtyping.beq_implies_eq : ∀ ls rs, ListSubtyping.beq ls rs = true → ls = rs
+  theorem List.pair_typ_beq_implies_eq : ∀ ls rs, List.pair_typ_beq ls rs = true → ls = rs
   | [], [] => by simp
   | l :: ls, [] => by
-    simp [ListSubtyping.beq]
+    simp [List.pair_typ_beq]
   | [], r :: rs => by
-    simp [ListSubtyping.beq]
+    simp [List.pair_typ_beq]
   | (al,bl) :: ls, (ar,br) :: rs => by
-    simp [ListSubtyping.beq]
+    simp [List.pair_typ_beq]
     intros uno dos tres
     apply Typ.beq_implies_eq at uno
     apply Typ.beq_implies_eq at dos
-    apply ListSubtyping.beq_implies_eq at tres
+    apply List.pair_typ_beq_implies_eq at tres
     simp [*]
 
   -- TODO: use mututual recursion
@@ -384,7 +376,7 @@ mutual
         intro uno
         intro dos
         intro tres
-        apply ListSubtyping.beq_implies_eq at dos
+        apply List.pair_typ_beq_implies_eq at dos
         apply Typ.beq_implies_eq at tres
         simp [*]
       | _ => unfold Typ.beq; simp
@@ -394,7 +386,7 @@ mutual
         intro uno
         intro dos
         intro tres
-        apply ListSubtyping.beq_implies_eq at dos
+        apply List.pair_typ_beq_implies_eq at dos
         apply Typ.beq_implies_eq at tres
         simp [*]
       | _ => unfold Typ.beq; simp
@@ -472,7 +464,7 @@ def Typ.pair (left right : Typ) := Typ.inter (.entry "left" left) (.entry "right
 #check List.map
 #eval (String.intercalate (" ") ["a", "b"])
 mutual
-  partial def ListSubtyping.repr : ListSubtyping → Std.Format
+  partial def List.pair_typ_repr : List (Typ × Typ) → Std.Format
   | [] => ""
   | (l,r) :: [] =>
       group (
@@ -482,7 +474,7 @@ mutual
       group (
         "(" ++ (Typ.reprPrec l 0) ++ " <: " ++ (Typ.reprPrec r 0) ++ ")"
         ++ line ++
-        ListSubtyping.repr remainder
+        List.pair_typ_repr remainder
       )
 
 
@@ -525,7 +517,7 @@ mutual
       else
         group (
           "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++
-            "[" ++ line ++ nest 2 (ListSubtyping.repr subtypings) ++ line ++ "]" ++ line ++
+            "[" ++ line ++ nest 2 (List.pair_typ_repr subtypings) ++ line ++ "]" ++ line ++
             nest 2 (Typ.reprPrec body 0)
         )
     )
@@ -539,7 +531,7 @@ mutual
       else
         group (
           "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++
-            "[" ++ line ++ nest 2 (ListSubtyping.repr subtypings) ++ line ++ "]" ++ line ++
+            "[" ++ line ++ nest 2 (List.pair_typ_repr subtypings) ++ line ++ "]" ++ line ++
             nest 2 (Typ.reprPrec body 0)
         )
     )
@@ -553,8 +545,8 @@ mutual
     )
 end
 
-instance : Repr ListSubtyping where
-  reprPrec cs _ := group ("[subtypings|" ++ line ++ nest 2 (ListSubtyping.repr cs) ++ " ]")
+instance : Repr (List (Typ × Typ)) where
+  reprPrec cs _ := group ("[subtypings|" ++ line ++ nest 2 (List.pair_typ_repr cs) ++ " ]")
 
 instance : Repr Typ where
   reprPrec t n := group ("[typ|" ++ line ++ nest 2 (Typ.reprPrec t n) ++ " ]")
@@ -617,14 +609,14 @@ inductive Typ.Bruijn
 deriving Repr
 
 mutual
-  def ListSubtyping.Bruijn.beq
+  def List.pair_typ_Bruijn.beq
   : List (Typ.Bruijn × Typ.Bruijn) → List (Typ.Bruijn × Typ.Bruijn)
   → Bool
   | .nil, .nil => .true
   | (a,b) :: l, (c,d) :: r =>
     Typ.Bruijn.beq a c &&
     Typ.Bruijn.beq b d &&
-    ListSubtyping.Bruijn.beq l r
+    List.pair_typ_Bruijn.beq l r
   | _, _ => .false
 
   def Typ.Bruijn.beq : Typ.Bruijn → Typ.Bruijn → Bool
@@ -640,11 +632,11 @@ mutual
   | .diff a b, .diff c d => Typ.Bruijn.beq a c && Typ.Bruijn.beq b d
   | .all idsl qsl bodyl, .all idsr qsr bodyr =>
       idsl == idsr &&
-      ListSubtyping.Bruijn.beq qsl qsr &&
+      List.pair_typ_Bruijn.beq qsl qsr &&
       Typ.Bruijn.beq bodyl bodyr
   | .exi idsl qsl bodyl, .exi idsr qsr bodyr =>
       idsl == idsr &&
-      ListSubtyping.Bruijn.beq qsl qsr &&
+      List.pair_typ_Bruijn.beq qsl qsr &&
       Typ.Bruijn.beq bodyl bodyr
   | .lfp bodyl, .lfp bodyr =>
       Typ.Bruijn.beq bodyl bodyr
@@ -713,35 +705,35 @@ mutual
     a ∪ b
   | .all ids subtypings body =>
     let bounds' := List.removeAll bounds ids
-    let a := ListPairTyp.ordered_bound_vars bounds' subtypings
+    let a := List.pair_typ_ordered_bound_vars bounds' subtypings
     let b := List.removeAll (Typ.ordered_bound_vars bounds' body) a
     a ∪ b
   | .exi ids subtypings body =>
     let bounds' := List.removeAll bounds ids
-    let a := ListPairTyp.ordered_bound_vars bounds' subtypings
+    let a := List.pair_typ_ordered_bound_vars bounds' subtypings
     let b := List.removeAll (Typ.ordered_bound_vars bounds' body) a
     a ∪ b
   | .lfp id body =>
     let bounds' := List.removeAll bounds [id]
     Typ.ordered_bound_vars bounds' body
 
-  def ListPairTyp.ordered_bound_vars (bounds : List String)
-  : ListSubtyping → List String
+  def List.pair_typ_ordered_bound_vars (bounds : List String)
+  : (List (Typ × Typ)) → List String
   | .nil => .nil
   | .cons (l,r) remainder =>
     let a := (Typ.ordered_bound_vars bounds l)
     let b := List.removeAll (Typ.ordered_bound_vars bounds r) a
-    let c := List.removeAll (ListPairTyp.ordered_bound_vars bounds remainder) (a ∪ b)
+    let c := List.removeAll (List.pair_typ_ordered_bound_vars bounds remainder) (a ∪ b)
     a ∪ b ∪ c
 end
 
 #eval List.removeAll [1,2,3] [1]
 
 mutual
-  def ListSubtyping.free_vars : ListSubtyping → List String
+  def List.pair_typ_free_vars : List (Typ × Typ) → List String
   | .nil => []
   | .cons (l,r) remainder =>
-    Typ.free_vars l ∪ Typ.free_vars r ∪ ListSubtyping.free_vars remainder
+    Typ.free_vars l ∪ Typ.free_vars r ∪ List.pair_typ_free_vars remainder
 
   def Typ.free_vars : Typ → List String
   | .var id => [id]
@@ -755,11 +747,11 @@ mutual
   | .diff l r => Typ.free_vars l ∪ Typ.free_vars r
   | .all ids subtypings body =>
     List.removeAll (
-      ListSubtyping.free_vars subtypings ∪ Typ.free_vars body
+      List.pair_typ_free_vars subtypings ∪ Typ.free_vars body
     ) ids
   | .exi ids subtypings body =>
     List.removeAll (
-      ListSubtyping.free_vars subtypings ∪ Typ.free_vars body
+      List.pair_typ_free_vars subtypings ∪ Typ.free_vars body
     ) ids
   | .lfp id body =>
     List.removeAll (Typ.free_vars body) [id]
@@ -784,13 +776,13 @@ def List.toBruijn (bids : List String) : List String → List Token
     | .some n => Token.num (bids.length + n) :: List.toBruijn bids xs
 
 mutual
-  def ListSubtyping.toBruijn (bids : List String)
-  : ListSubtyping → List (Typ.Bruijn × Typ.Bruijn)
+  def List.pair_typ_toBruijn (bids : List String)
+  : List (Typ × Typ) → List (Typ.Bruijn × Typ.Bruijn)
   | .nil => .nil
   | .cons (l,r) remainder =>
     .cons
     (Typ.toBruijn bids l, Typ.toBruijn bids r)
-    (ListSubtyping.toBruijn bids remainder)
+    (List.pair_typ_toBruijn bids remainder)
 
   def Typ.toBruijn (bids : List String) : Typ → Typ.Bruijn
   | .var id =>
@@ -818,17 +810,17 @@ mutual
     (Typ.toBruijn bids left)
     (Typ.toBruijn bids right)
   | .all ids subtypings body =>
-    let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.bot,body) subtypings)
+    let bids' := List.pair_typ_ordered_bound_vars ids (.cons (.bot,body) subtypings)
     let n := (List.length bids')
     (.all n
-      (ListSubtyping.toBruijn (bids' ++ bids) subtypings)
+      (List.pair_typ_toBruijn (bids' ++ bids) subtypings)
       (Typ.toBruijn (bids' ++ bids) body)
     )
   | .exi ids subtypings body =>
-    let bids' := ListPairTyp.ordered_bound_vars ids (.cons (.bot,body) subtypings)
+    let bids' := List.pair_typ_ordered_bound_vars ids (.cons (.bot,body) subtypings)
     let n := (List.length bids')
     (.exi n
-      (ListSubtyping.toBruijn (bids' ++ bids) subtypings)
+      (List.pair_typ_toBruijn (bids' ++ bids) subtypings)
       (Typ.toBruijn (bids' ++ bids) body)
     )
   | .lfp id body =>
@@ -838,9 +830,9 @@ end
 
 mutual
 
-  def ListSubtyping.size : ListSubtyping → Nat
+  def List.pair_typ_size : List (Typ × Typ) → Nat
   | .nil => 1
-  | .cons (l,r) rest =>  Typ.size l + Typ.size r + ListSubtyping.size rest
+  | .cons (l,r) rest =>  Typ.size l + Typ.size r + List.pair_typ_size rest
 
   def Typ.size : Typ → Nat
   | .var id => 1
@@ -852,8 +844,8 @@ mutual
   | .unio left right => Typ.size left + Typ.size right + 1
   | .inter left right => Typ.size left + Typ.size right + 1
   | .diff left right => Typ.size left + Typ.size right + 1
-  | .all ids subtypings body => ListSubtyping.size subtypings + Typ.size body + 1
-  | .exi ids subtypings body => ListSubtyping.size subtypings + Typ.size body + 1
+  | .all ids subtypings body => List.pair_typ_size subtypings + Typ.size body + 1
+  | .exi ids subtypings body => List.pair_typ_size subtypings + Typ.size body + 1
   | .lfp id body => (Typ.size body) * 600 + 1
 end
 
@@ -866,8 +858,8 @@ def ListTyp.size : List Typ → Nat
 theorem Typ.zero_lt_size {t : Typ} : 0 < Typ.size t := by
 cases t <;> simp [Typ.size]
 
-theorem ListPairTyp.zero_lt_size {cs} : 0 < ListSubtyping.size cs := by
-cases cs <;> simp [ListSubtyping.size, Typ.zero_lt_size]
+theorem List.pair_typ_zero_lt_size {cs} : 0 < List.pair_typ_size cs := by
+cases cs <;> simp [List.pair_typ_size, Typ.zero_lt_size]
 
 theorem ListTyp.zero_lt_size {ts : List Typ} : 0 < ListTyp.size ts := by
 cases ts <;> simp [ListTyp.size, Typ.zero_lt_size]
@@ -1393,6 +1385,6 @@ def Typ.enrich : Typ → Typ
 -- <nil/> | <cons> (x, xs)
 
 
-theorem ListSubtyping.free_vars_containment {xs ys : List (Typ × Typ)} :
-  xs ⊆ ys → ListSubtyping.free_vars xs ⊆ ListSubtyping.free_vars ys
+theorem List.pair_typ_free_vars_containment {xs ys : List (Typ × Typ)} :
+  xs ⊆ ys → List.pair_typ_free_vars xs ⊆ List.pair_typ_free_vars ys
 := by sorry

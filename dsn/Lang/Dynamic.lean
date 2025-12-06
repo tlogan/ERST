@@ -142,9 +142,9 @@ mutual
   | .nil => True
   | .cons (left, right) remainder =>
     Subtyping am left right ∧ MultiSubtyping am remainder
-  termination_by sts => ListSubtyping.size sts
+  termination_by sts => List.pair_typ_size sts
   decreasing_by
-    all_goals simp [ListSubtyping.size, ListPairTyp.zero_lt_size, Typ.zero_lt_size]
+    all_goals simp [List.pair_typ_size, List.pair_typ_zero_lt_size, Typ.zero_lt_size]
 
   def Monotonic (am : List (String × Typ)) (id : String) (body : Typ) : Prop :=
     (∀ t0 t1,
@@ -256,19 +256,19 @@ theorem Subtyping.dom_extension {am1 am0 lower upper} :
 := by sorry
 
 theorem MultiSubtyping.dom_single_extension {id tam0 t cs} :
-  id ∉ ListSubtyping.free_vars cs →
+  id ∉ List.pair_typ_free_vars cs →
   MultiSubtyping tam0 cs →
   MultiSubtyping ((id,t) :: tam0) cs
 := by sorry
 
 theorem MultiSubtyping.dom_extension {am1 am0 cs} :
-  (ListPair.dom am1) ∩ ListSubtyping.free_vars cs = [] →
+  (ListPair.dom am1) ∩ List.pair_typ_free_vars cs = [] →
   MultiSubtyping am0 cs →
   MultiSubtyping (am1 ++ am0) cs
 := by sorry
 
 theorem MultiSubtyping.dom_reduction {am1 am0 cs} :
-  (ListPair.dom am1) ∩ ListSubtyping.free_vars cs = [] →
+  (ListPair.dom am1) ∩ List.pair_typ_free_vars cs = [] →
   MultiSubtyping (am1 ++ am0) cs →
   MultiSubtyping am0 cs
 := by sorry
@@ -884,9 +884,9 @@ theorem Typ.lfp_rename id' id body :
   Typ.toBruijn [] (Typ.lfp id' body') = Typ.toBruijn [] (Typ.lfp id body)
 := by sorry
 
-  -- theorem ListSubtyping.bruijn_eq_imp_dynamic {am} :
+  -- theorem List.pair_typ_bruijn_eq_imp_dynamic {am} :
   --   ∀ {lower upper},
-  --   ListSubtyping.toBruijn 0 [] lower = ListSubtyping.toBruijn 0 [] upper →
+  --   List.pair_typ_toBruijn 0 [] lower = List.pair_typ_toBruijn 0 [] upper →
   --   MultiSubtyping am lower →
   --   MultiSubtyping am upper
   -- := by sorry
@@ -901,9 +901,9 @@ theorem Subtyping.bruijn_eq {lower upper} am :
 
 
 
-theorem ListSubtyping.toBruijn_exi_injection {ids' quals' body' ids quals body} :
+theorem List.pair_typ_toBruijn_exi_injection {ids' quals' body' ids quals body} :
   Typ.toBruijn [] (.exi ids' quals' body') = Typ.toBruijn [] (.exi ids quals body) →
-  ListSubtyping.toBruijn ids' quals' = ListSubtyping.toBruijn ids quals
+  List.pair_typ_toBruijn ids' quals' = List.pair_typ_toBruijn ids quals
 := by sorry
 
 theorem Typ.toBruijn_exi_injection {ids' quals' body' ids quals body} :

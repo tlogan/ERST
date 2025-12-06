@@ -12,9 +12,10 @@ set_option pp.fieldNotation false
 
 mutual
 
-  def ListSubtyping.sub (δ : List (String × Typ)) : ListSubtyping → ListSubtyping
+
+  def List.pair_typ_sub (δ : List (String × Typ)) : List (Typ × Typ) → List (Typ × Typ)
   | .nil => .nil
-  | .cons (l,r) remainder => .cons (Typ.sub δ l, Typ.sub δ r) (ListSubtyping.sub δ remainder)
+  | .cons (l,r) remainder => .cons (Typ.sub δ l, Typ.sub δ r) (List.pair_typ_sub δ remainder)
 
   def Typ.sub (δ : List (String × Typ)) : Typ → Typ
   | .var id => match find id δ with
@@ -30,10 +31,10 @@ mutual
   | .diff left right => .diff (Typ.sub δ left) (Typ.sub δ right)
   | .all ids subtypings body =>
       let δ' := remove_all δ ids
-      .all ids (ListSubtyping.sub δ' subtypings) (Typ.sub δ' body)
+      .all ids (List.pair_typ_sub δ' subtypings) (Typ.sub δ' body)
   | .exi ids subtypings body =>
       let δ' := remove_all δ ids
-      .exi ids (ListSubtyping.sub δ' subtypings) (Typ.sub δ' body)
+      .exi ids (List.pair_typ_sub δ' subtypings) (Typ.sub δ' body)
   | .lfp id body =>
       let δ' := remove id δ
       .lfp id (Typ.sub δ' body)
@@ -127,16 +128,16 @@ structure Zone where
   typ : Typ
 deriving Repr, Lean.ToExpr
 
-def Typ.inner : Bool → List String → ListSubtyping → Typ → Typ
+def Typ.inner : Bool → List String → List (Typ × Typ) → Typ → Typ
 | .true => .all
 | .false => .exi
 
-def Typ.outer : Bool → List String → ListSubtyping → Typ → Typ
+def Typ.outer : Bool → List String → List (Typ × Typ) → Typ → Typ
 | .true => .exi
 | .false => .all
 
 def BiZone.wrap (b : Bool)
-: List String → ListSubtyping → List String → ListSubtyping → Typ → Typ
+: List String → List (Typ × Typ) → List String → List (Typ × Typ) → Typ → Typ
 | [], .nil, [], .nil, t => t
 | [], .nil, Θ', Δ', t => Typ.inner b Θ' Δ' t
 | Θ, Δ, [], .nil, t => Typ.outer b Θ Δ t
@@ -147,35 +148,35 @@ def Subtyping.target_bound : Bool → (Typ × Typ) → Typ × Typ
 | .true, (l,r) => (r,l)
 
 
-def ListSubtyping.bounds (id : String) (b : Bool) : ListSubtyping → List Typ
+def List.pair_typ_bounds (id : String) (b : Bool) : List (Typ × Typ) → List Typ
 | .nil => []
 | .cons st sts =>
     let (t,bd) := Subtyping.target_bound b st
     if (.var id) == t then
-      bd :: ListSubtyping.bounds id b sts
+      bd :: List.pair_typ_bounds id b sts
     else
-      ListSubtyping.bounds id b sts
+      List.pair_typ_bounds id b sts
 
 #eval [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
-#eval (ListSubtyping.bounds "R" .true [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ])
+#eval (List.pair_typ_bounds "R" .true [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ])
 
 
--- def ListSubtyping.complex_vars : List (Typ × Typ) → List String
+-- def List.pair_typ_complex_vars : List (Typ × Typ) → List String
 -- | [] => []
--- | (.var _ , .var _ ) :: sts => ListSubtyping.complex_vars sts
--- | (lower , .var _ ) :: sts => (Typ.free_vars lower) ++ (ListSubtyping.complex_vars sts)
--- | (.var _, upper) :: sts => (Typ.free_vars upper) ++ (ListSubtyping.complex_vars sts)
+-- | (.var _ , .var _ ) :: sts => List.pair_typ_complex_vars sts
+-- | (lower , .var _ ) :: sts => (Typ.free_vars lower) ++ (List.pair_typ_complex_vars sts)
+-- | (.var _, upper) :: sts => (Typ.free_vars upper) ++ (List.pair_typ_complex_vars sts)
 -- | (lower, upper) :: sts =>
---   (Typ.free_vars lower) ++ (Typ.free_vars upper) ++ (ListSubtyping.complex_vars sts)
+--   (Typ.free_vars lower) ++ (Typ.free_vars upper) ++ (List.pair_typ_complex_vars sts)
 
 
-def ListSubtyping.prune (pids : List String) : List (Typ × Typ) → List (Typ × Typ)
+def List.pair_typ_prune (pids : List String) : List (Typ × Typ) → List (Typ × Typ)
 | .nil => []
 | .cons (l,r) sts =>
   if (Typ.free_vars l) ∪ (Typ.free_vars r) ⊆ pids then
-    (l,r) :: ListSubtyping.prune pids sts
+    (l,r) :: List.pair_typ_prune pids sts
   else
-    ListSubtyping.prune pids sts
+    List.pair_typ_prune pids sts
 
 mutual
   def ListTyp.simp : List Typ → List Typ
@@ -231,11 +232,11 @@ def Subtyping.removable_upper (id_map : List (String × Bool)) : Typ → Bool
 | _ => .false
 
 
-def ListSubtyping.invert (id : String) : List (Typ × Typ) → Option (List (Typ × Typ))
+def List.pair_typ_invert (id : String) : List (Typ × Typ) → Option (List (Typ × Typ))
 | .nil => return []
 | .cons (.var id', .path l r) sts =>
     if id' == id then do
-      let sts' ← ListSubtyping.invert id sts
+      let sts' ← List.pair_typ_invert id sts
       return (.pair l r, .var id') :: sts'
     else
       failure
@@ -245,7 +246,7 @@ def ListZone.invert (id : String) : List Zone → Option (List Zone)
 | .nil => return []
 | .cons ⟨Θ, Δ, .path l r⟩ zones => do
     let zones' ← ListZone.invert id zones
-    let Δ' ← ListSubtyping.invert id Δ
+    let Δ' ← List.pair_typ_invert id Δ
     return ⟨Θ, Δ', .pair l r⟩ :: zones'
 | _ => failure
 
@@ -253,7 +254,7 @@ def ListZone.invert (id : String) : List Zone → Option (List Zone)
 
 mutual
 
-  inductive EitherMultiPolarity : ListSubtyping → Typ → List String → Prop
+  inductive EitherMultiPolarity : List (Typ × Typ) → Typ → List String → Prop
   | nil cs t : EitherMultiPolarity cs t []
   | cons cs t b id ids :
     MultiPolarity id b cs →
@@ -261,7 +262,7 @@ mutual
     EitherMultiPolarity cs t ids →
     EitherMultiPolarity cs t (id :: ids)
 
-  inductive MultiPolarity : String → Bool → ListSubtyping → Prop
+  inductive MultiPolarity : String → Bool → List (Typ × Typ) → Prop
   | nil id b : MultiPolarity id b .nil
   | cons id b l r remainder :
     Polarity id (not b) l →
@@ -326,7 +327,7 @@ end
 -- TODO, could define as a structure or multi-And
 inductive UpperFounded (id : String) : Typ → Typ → Prop
 | intro quals id' cases t t' :
-  ListSubtyping.bounds id .true quals = cases →
+  List.pair_typ_bounds id .true quals = cases →
   List.length cases = List.length quals →
   Typ.combine .false cases = t →
   Polarity id' .true t →
@@ -357,12 +358,12 @@ def Typ.height : Typ → Option Nat
   | _ => failure
 
 
-def ListSubtyping.var_restricted (id : String) : List (Typ × Typ) → Bool
+def List.pair_typ_var_restricted (id : String) : List (Typ × Typ) → Bool
   | [] => .true
   | (l,r) :: remainder =>
     id ∉ (Typ.free_vars l) &&
     (r == (.var id) || id ∉ (Typ.free_vars r)) &&
-    ListSubtyping.var_restricted id remainder
+    List.pair_typ_var_restricted id remainder
 
 mutual
   -- NOTE: check that recursive type is structurally decreasing
@@ -390,8 +391,8 @@ mutual
     | a, (.unio b c) => Typ.struct_less_than a b && Typ.struct_less_than a c
 
     | (.var id), (.exi _ qs body )  =>
-      let bs := ListSubtyping.bounds id .true qs
-      ListSubtyping.var_restricted id qs &&
+      let bs := List.pair_typ_bounds id .true qs
+      List.pair_typ_var_restricted id qs &&
       ListTyp.struct_less_than bs body
     | (.var _), .top => .true
     | _, _ => .false
@@ -459,11 +460,11 @@ def Typ.break_paths : List Typ → Option (List Typ × List Typ)
 
 
 
-def ListSubtyping.partition (pids : List String) (Θ : List String)
+def List.pair_typ_partition (pids : List String) (Θ : List String)
 : List (Typ × Typ) → List (Typ × Typ) × List (Typ × Typ)
 | .nil => ([],[])
 | .cons (l,r) remainder =>
-    let (outer, inner) := ListSubtyping.partition pids Θ remainder
+    let (outer, inner) := List.pair_typ_partition pids Θ remainder
     let fids := Typ.free_vars l ∪  Typ.free_vars r
     if fids ∩ Θ != [] && fids ⊆ (pids ∪ Θ) then
       -- to be an outer constraints
@@ -478,10 +479,10 @@ def ListSubtyping.partition (pids : List String) (Θ : List String)
 def Zone.pack (pids : List String) (b : Bool) : Zone → Typ
 | ⟨Θ, Δ, t⟩ =>
   let fids := Typ.free_vars t
-  let (outer, inner) := ListSubtyping.partition pids Θ Δ
+  let (outer, inner) := List.pair_typ_partition pids Θ Δ
   -- TODO: make sure exapmles work with the outer_ids
-  let outer_ids := [] -- (ListSubtyping.free_vars Δ ∪ fids) ∩ Θ
-  let inner_ids := List.diff (ListSubtyping.free_vars inner ∪ fids) (Θ ∪ pids)
+  let outer_ids := [] -- (List.pair_typ_free_vars Δ ∪ fids) ∩ Θ
+  let inner_ids := List.diff (List.pair_typ_free_vars inner ∪ fids) (Θ ∪ pids)
 
   let outer' := outer.eraseDups.mergeSort (fun a b => reprStr a <= reprStr b)
   let inner' := inner.eraseDups.mergeSort (fun a b => reprStr a <= reprStr b)
@@ -502,7 +503,7 @@ def ListZone.pack (pids : List String) (b : Bool) : List Zone → Typ
 
 
 def Typ.combine_bounds (id : String) (b : Bool) (assums : List (Typ × Typ)) : Typ :=
-  let bds := (ListSubtyping.bounds id b assums).eraseDups
+  let bds := (List.pair_typ_bounds id b assums).eraseDups
   if bds == [] then
     Typ.base (not b)
   else
@@ -528,12 +529,12 @@ def Subtyping.restricted
   | _, _ => .false
   )
 
-def ListSubtyping.restricted (Θ : List String) (Δ : List (Typ × Typ))
+def List.pair_typ_restricted (Θ : List String) (Δ : List (Typ × Typ))
 : List (Typ × Typ) → Bool
 | .nil => .true
 | .cons (l,r) sts =>
   Subtyping.restricted Θ Δ l r &&
-  ListSubtyping.restricted Θ Δ  sts
+  List.pair_typ_restricted Θ Δ  sts
 
 mutual
   def Subtyping.proj (id : String) (l : String) : (Typ × Typ) → Option (Typ × Typ)
@@ -545,11 +546,11 @@ mutual
       failure
   | st => return st
 
-  def ListSubtyping.proj (id : String) (l : String) : List (Typ × Typ) → Option (List (Typ × Typ))
+  def List.pair_typ_proj (id : String) (l : String) : List (Typ × Typ) → Option (List (Typ × Typ))
   | .nil => return []
   | .cons st sts => do
     let st' ← Subtyping.proj id l st
-    let sts' ← ListSubtyping.proj id l sts
+    let sts' ← List.pair_typ_proj id l sts
     return st' :: sts'
 
   def Typ.proj (id : String) (l : String) : Typ → Option Typ
@@ -569,9 +570,9 @@ mutual
     if id ∈ ids then
       failure
     else do
-      let quals' ← ListSubtyping.proj id l quals
+      let quals' ← List.pair_typ_proj id l quals
       let body' ← Typ.proj id l body
-      let ids' := ids ∩ (ListSubtyping.free_vars quals' ∪ Typ.free_vars body')
+      let ids' := ids ∩ (List.pair_typ_free_vars quals' ∪ Typ.free_vars body')
       return .exi ids' quals' body'
   | _ => .none
 end
@@ -625,55 +626,47 @@ inductive PatLifting.Static
   PatLifting.Static Δ Γ (.record ((l,p) :: remainder))
     (.inter (.entry l t) t') Δ'' Γ''
 
-theorem lower_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
-      ListSubtyping.bounds id .true cs = ts →
+theorem lower_bound_map id (cs : List (Typ × Typ)) (t : Typ) : ∀ ts,
+      List.pair_typ_bounds id .true cs = ts →
       (∀ t', (t', Typ.var id) ∈ cs → (t', t) ∈ ts.map (fun t' => (t', t)))
 := by induction cs with
 | nil =>
-  simp [ListSubtyping.bounds]
-  intros
-  intro
-  contradiction
+  simp [List.pair_typ_bounds]
 | cons head tail ih =>
-  simp [ListSubtyping.bounds, Subtyping.target_bound]
+  simp [List.pair_typ_bounds, Subtyping.target_bound]
   let (lower,upper) := head
   simp_all
-  intro t'
-  intro m
+  intro t' m
   cases m with
-  | head =>
-    simp [Typ.refl_BEq_true]
-  | tail _ m'' =>
+  | inl h =>
+    simp [*, Typ.refl_BEq_true]
+  | inr h =>
     cases (Typ.var id == upper) with
-      | false =>
-        apply ih
-        assumption
-      | true =>
-        simp
-        apply Or.inr
-        apply ih
-        assumption
+    | false =>
+      apply ih
+      assumption
+    | true =>
+      simp
+      apply Or.inr
+      apply ih
+      assumption
 
 
-theorem upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
-  ListSubtyping.bounds id .false cs = ts →
+theorem upper_bound_map id (cs : List (Typ × Typ)) (t : Typ) : ∀ ts,
+  List.pair_typ_bounds id .false cs = ts →
   (∀ t', (Typ.var id, t') ∈ cs → (t, t') ∈ ts.map (fun t' => (t, t')))
 := by induction cs with
 | nil =>
-  simp [ListSubtyping.bounds]
-  intros
-  intro
-  contradiction
+  simp [List.pair_typ_bounds]
 | cons head tail ih =>
-  simp [ListSubtyping.bounds, Subtyping.target_bound]
+  simp [List.pair_typ_bounds, Subtyping.target_bound]
   let (lower,upper) := head
   simp_all
-  intro t'
-  intro m
+  intro t' m
   cases m with
-  | head =>
-    simp [Typ.refl_BEq_true]
-  | tail _ m'' =>
+  | inl h =>
+    simp [*, Typ.refl_BEq_true]
+  | inr h =>
     cases (Typ.var id == lower) with
     | false =>
       apply ih
@@ -684,7 +677,7 @@ theorem upper_bound_map id (cs : ListSubtyping) (t : Typ) : ∀ ts,
       apply ih
       assumption
 
-theorem skolem_lower_bound id (assums : ListSubtyping) (skolems : List String) :
+theorem skolem_lower_bound id (assums : List (Typ × Typ)) (skolems : List String) :
   assums.exi (fun
   | (.var idl, .var idu) => idl == id && not (skolems.contains idu)
   | _ => .false
@@ -708,7 +701,7 @@ theorem skolem_lower_bound id (assums : ListSubtyping) (skolems : List String) :
   | _ => simp
 
 
-theorem skolem_upper_bound id (assums : ListSubtyping) (skolems : List String) :
+theorem skolem_upper_bound id (assums : List (Typ × Typ)) (skolems : List String) :
   assums.exi (fun
   | (.var idl, .var idu) => idu == id && not (skolems.contains idl)
   | _ => .false
@@ -737,13 +730,13 @@ theorem skolem_upper_bound id (assums : ListSubtyping) (skolems : List String) :
       -- )) then
 
 theorem lower_bound_mem id cs t : ∀ ts,
-  ListSubtyping.bounds id .true cs = ts →
+  List.pair_typ_bounds id .true cs = ts →
   t ∈ ts → (t, .var id) ∈ cs
 := by induction cs with
 | nil =>
-  simp [ListSubtyping.bounds]
+  simp [List.pair_typ_bounds]
 | cons head tail ih =>
-  simp [ListSubtyping.bounds, Subtyping.target_bound]
+  simp [List.pair_typ_bounds, Subtyping.target_bound]
   let (lower,upper) := head
   simp_all
   cases b : (Typ.var id == upper) with
@@ -754,27 +747,25 @@ theorem lower_bound_mem id cs t : ∀ ts,
     cases c with
     | inl d =>
       rw [d]
-      apply List.mem_cons_self
+      exact Or.inl rfl
     | inr d =>
       apply ih at d
       rw [← b]
-      apply List.mem_cons_of_mem
-      assumption
+      exact (Or.intro_right (t = lower) d)
   | false =>
     simp
     intro h
     apply ih at h
-    apply List.mem_cons_of_mem
-    assumption
+    exact Or.inr h
 
 theorem upper_bound_mem id cs t : ∀ ts,
-  ListSubtyping.bounds id .false cs = ts →
+  List.pair_typ_bounds id .false cs = ts →
   t ∈ ts → (.var id, t) ∈ cs
 := by induction cs with
 | nil =>
-  simp [ListSubtyping.bounds]
+  simp [List.pair_typ_bounds]
 | cons head tail ih =>
-  simp [ListSubtyping.bounds, Subtyping.target_bound]
+  simp [List.pair_typ_bounds, Subtyping.target_bound]
   let (lower,upper) := head
   simp_all
   cases b : (Typ.var id == lower) with
@@ -785,18 +776,16 @@ theorem upper_bound_mem id cs t : ∀ ts,
     cases c with
     | inl d =>
       rw [d]
-      apply List.mem_cons_self
+      exact Or.inl rfl
     | inr d =>
       apply ih at d
       rw [← b]
-      apply List.mem_cons_of_mem
-      assumption
+      exact (Or.intro_right (t = upper) d)
   | false =>
     simp
     intro h
     apply ih at h
-    apply List.mem_cons_of_mem
-    assumption
+    exact Or.inr h
 
 -- theorem zones_todo_uno :
 --   (∀ {skolems' assums'' t},
@@ -865,10 +854,10 @@ mutual
     GuardedSubtyping skolems assums (.unio left right) t skolems'' assums''
 
   | exi_elim {skolems assums skolems'' assums''} ids quals body t skolems' assums' :
-    ListSubtyping.restricted skolems assums quals →
+    List.pair_typ_restricted skolems assums quals →
     ids ∩ Typ.free_vars t = [] →
     -- NOTE: require quals to contain all bound variables so we can use it for freshness guarantees
-    ids ⊆ ListSubtyping.free_vars quals →
+    ids ⊆ List.pair_typ_free_vars quals →
     GuardedMultiSubtyping skolems assums quals skolems' assums' →
     GuardedSubtyping (ids ++ skolems') assums' body t skolems'' assums'' →
     GuardedSubtyping skolems assums (.exi ids quals body) t skolems'' assums''
@@ -880,9 +869,9 @@ mutual
     GuardedSubtyping skolems assums t (.inter left right) skolems'' assums''
 
   | all_intro {skolems assums skolems'' assums''} t ids quals body skolems' assums' :
-    ListSubtyping.restricted skolems assums quals →
+    List.pair_typ_restricted skolems assums quals →
     ids ∩ Typ.free_vars t = [] →
-    ids ⊆ ListSubtyping.free_vars quals →
+    ids ⊆ List.pair_typ_free_vars quals →
     GuardedMultiSubtyping skolems assums quals skolems' assums' →
     GuardedSubtyping (ids ++ skolems') assums' t body skolems'' assums'' →
     GuardedSubtyping skolems assums t (.all ids quals body) skolems'' assums''
@@ -1040,11 +1029,11 @@ end
 
 
 mutual
-  def ListSubtyping.polar_var (b : Bool) (id : String) : List (Typ × Typ) → Bool
+  def List.pair_typ_polar_var (b : Bool) (id : String) : List (Typ × Typ) → Bool
   | [] => .false
   | (lower, upper) :: rest =>
     Typ.polar_var (not b) id lower || Typ.polar_var b id upper ||
-    ListSubtyping.polar_var b id rest
+    List.pair_typ_polar_var b id rest
 
   def Typ.polar_var (b : Bool) (id : String) : Typ → Bool
   | .var id' => b && id == id'
@@ -1062,12 +1051,12 @@ mutual
     Typ.polar_var b id minu || Typ.polar_var (not b) id subtra
   | .all ids quals body =>
     not (ids.contains id) && (
-      ListSubtyping.polar_var (not b) id quals ||
+      List.pair_typ_polar_var (not b) id quals ||
       Typ.polar_var b id body
     )
   | .exi ids quals body =>
     not (ids.contains id) && (
-      ListSubtyping.polar_var b id quals ||
+      List.pair_typ_polar_var b id quals ||
       Typ.polar_var b id body
     )
   | .lfp id' body =>
@@ -1075,12 +1064,12 @@ mutual
 end
 
 mutual
-  def ListSubtyping.has_connection (ignore : List String) (b : Bool) (t : Typ)
+  def List.pair_typ_has_connection (ignore : List String) (b : Bool) (t : Typ)
   : List (Typ × Typ) → Bool
   | [] => .false
   | (lower, upper) :: rest =>
     Typ.has_connection ignore (not b) t lower || Typ.has_connection ignore b t upper ||
-    ListSubtyping.has_connection ignore b t rest
+    List.pair_typ_has_connection ignore b t rest
 
   def Typ.has_connection (ignore : List String) (b : Bool) (t : Typ) : Typ → Bool
   | .var id => not (ignore.contains id) && Typ.polar_var b id t
@@ -1097,10 +1086,10 @@ mutual
   | .diff minu subtra =>
     Typ.has_connection ignore b t minu || Typ.has_connection ignore (not b) t subtra
   | .all ids quals body =>
-      ListSubtyping.has_connection (ids ∪ ignore) (not b) t quals ||
+      List.pair_typ_has_connection (ids ∪ ignore) (not b) t quals ||
       Typ.has_connection (ids ∪ ignore) b t body
   | .exi ids quals body =>
-      ListSubtyping.has_connection (ids ∪ ignore) b t quals ||
+      List.pair_typ_has_connection (ids ∪ ignore) b t quals ||
       Typ.has_connection (ids ∪ ignore) b t body
   | .lfp id body =>
     Typ.has_connection ([id] ∪ ignore) b t body
@@ -1159,7 +1148,7 @@ mutual
   | var {ignore skolems assums b t'} bds id t:
     id ∉ ignore →
     id ∉ skolems →
-    (ListSubtyping.bounds id b assums).eraseDups = bds →
+    (List.pair_typ_bounds id b assums).eraseDups = bds →
     bds ≠ [] →
     Typ.combine (not b) bds = t →
     t ≠ Typ.bot →
@@ -1211,7 +1200,7 @@ mutual
 
     TypInterp ignore skolems assums .true
       (.exi ids_exi quals_exi (.all _ quals body))
-      (ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones)
+      (ListZone.pack (ignore ∪ skolems ∪ List.pair_typ_free_vars assums) .true zones)
 
 
   | all_positive {ignore skolems assums} ids_exi quals body zones:
@@ -1231,7 +1220,7 @@ mutual
 
     TypInterp ignore skolems assums .true
       (.all _ quals body)
-      (ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .true zones)
+      (ListZone.pack (ignore ∪ skolems ∪ List.pair_typ_free_vars assums) .true zones)
 
   | all_exi_negative {ignore skolems assums} ids_all quals_all quals body zones:
 
@@ -1253,7 +1242,7 @@ mutual
 
     TypInterp ignore skolems assums .false
       (.all ids_all quals_all (.exi _ quals body))
-      (ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .false zones)
+      (ListZone.pack (ignore ∪ skolems ∪ List.pair_typ_free_vars assums) .false zones)
 
   | exi_negative {ignore skolems assums} quals body zones:
 
@@ -1275,17 +1264,17 @@ mutual
 
     TypInterp ignore skolems assums .false
       (.exi _ quals body)
-      (ListZone.pack (ignore ∪ skolems ∪ ListSubtyping.free_vars assums) .false zones)
+      (ListZone.pack (ignore ∪ skolems ∪ List.pair_typ_free_vars assums) .false zones)
 
 end
 
-def ListSubtyping.loop_split : List Typ → (List String) × (List Typ)
+def List.pair_typ_loop_split : List Typ → (List String) × (List Typ)
 | [] => ([], [])
 | (.var id) :: ts =>
-    let (ids, ts') := ListSubtyping.loop_split ts
+    let (ids, ts') := List.pair_typ_loop_split ts
     (id :: ids, ts')
 | t :: ts =>
-    let (ids, ts') := ListSubtyping.loop_split ts
+    let (ids, ts') := List.pair_typ_loop_split ts
     (ids, t :: ts')
 
 def List.to_option {α} : List α → Option α
@@ -1293,33 +1282,33 @@ def List.to_option {α} : List α → Option α
 | x :: [] => .some x
 | _ => .none
 
-def ListSubtyping.remove_by_var (id : String)
+def List.pair_typ_remove_by_var (id : String)
 : List (Typ × Typ) → List (Typ × Typ)
 | [] => []
 | (.var idl, .var idu) :: cs =>
   if idl == id || idu == id then
-    ListSubtyping.remove_by_var id cs
+    List.pair_typ_remove_by_var id cs
   else
-    (.var idl, .var idu) :: ListSubtyping.remove_by_var id cs
+    (.var idl, .var idu) :: List.pair_typ_remove_by_var id cs
 | (.var idl, upper) :: cs =>
   if idl == id  then
-    ListSubtyping.remove_by_var id cs
+    List.pair_typ_remove_by_var id cs
   else
-    (.var idl, upper) :: ListSubtyping.remove_by_var id cs
+    (.var idl, upper) :: List.pair_typ_remove_by_var id cs
 
 | (lower, .var idu) :: cs =>
   if idu == id then
-    ListSubtyping.remove_by_var id cs
+    List.pair_typ_remove_by_var id cs
   else
-    (lower, .var idu) :: ListSubtyping.remove_by_var id cs
+    (lower, .var idu) :: List.pair_typ_remove_by_var id cs
 | c :: cs =>
-    c :: ListSubtyping.remove_by_var id cs
+    c :: List.pair_typ_remove_by_var id cs
 
 
-def ListSubtyping.loop_normal_form (id : String) (assums : List (Typ × Typ))
+def List.pair_typ_loop_normal_form (id : String) (assums : List (Typ × Typ))
 : Option (List (Typ × Typ)) :=
-  let bds :=  ListSubtyping.bounds id .false assums
-  let (ids, ts) := ListSubtyping.loop_split bds
+  let bds :=  List.pair_typ_bounds id .false assums
+  let (ids, ts) := List.pair_typ_loop_split bds
   let all_are_paths := ts.all (fun t =>
     match t with
     | Typ.path _ _ => true
@@ -1329,7 +1318,7 @@ def ListSubtyping.loop_normal_form (id : String) (assums : List (Typ × Typ))
     Option.some []
   else if all_are_paths then
     match List.to_option ids with
-    | some id => .some (ListSubtyping.remove_by_var id assums)
+    | some id => .some (List.pair_typ_remove_by_var id assums)
     | none => .none
   else
     Option.none
@@ -1348,8 +1337,8 @@ inductive LoopSubtyping : List String → String → List Zone → Typ → Prop
 
 | stream {pids id} skolems assums assums' idl r t' l r' l' r'' :
   id ≠ idl →
-  idl ∉ ListSubtyping.free_vars assums →
-  ListSubtyping.invert id assums = .some assums' →
+  idl ∉ List.pair_typ_free_vars assums →
+  List.pair_typ_invert id assums = .some assums' →
   Zone.pack (id :: idl :: pids) .false ⟨skolems, assums', .pair (.var idl) r⟩ = t' →
   Polarity id .true t' →
   Typ.factor id t' "left" = .some l →
@@ -1424,7 +1413,7 @@ mutual
 
   | function {skolems assums context t} f nested_zones :
     Function.Typing.Static skolems assums context [] f nested_zones →
-    ListZone.pack (ListSubtyping.free_vars assums) .true (nested_zones.flatten) = t →
+    ListZone.pack (List.pair_typ_free_vars assums) .true (nested_zones.flatten) = t →
     GuardedTyping skolems assums context (.function f) t skolems assums
 
 
@@ -1441,7 +1430,7 @@ mutual
     (∀ skolems'''' assums''''' body', ⟨skolems'''', assums''''', body'⟩ ∈ zones →
       ∀ skolems''' , List.removeAll skolems''' skolems' = skolems'''' →
       ∀ assums'''' , List.removeAll assums'''' assums' = assums''''' →
-      ∀ assums''' , ListSubtyping.loop_normal_form id assums''' = .some assums'''' →
+      ∀ assums''' , List.pair_typ_loop_normal_form id assums''' = .some assums'''' →
       ∀ skolems'' assums'',
       ZoneInterp [id] .true
         ⟨skolems'', assums'', (Typ.path (.var id_antec) (.var id_consq))⟩
@@ -1454,14 +1443,14 @@ mutual
     (∀ skolems'''' assums''''' body', ⟨skolems'''', assums''''', body'⟩ ∈ zones →
       ∃ skolems''' , List.removeAll skolems''' skolems' = skolems'''' ∧
       ∃ assums'''' , List.removeAll assums'''' assums' = assums''''' ∧
-      ∃ assums''' , ListSubtyping.loop_normal_form id assums''' = .some assums'''' ∧
+      ∃ assums''' , List.pair_typ_loop_normal_form id assums''' = .some assums'''' ∧
       ∃ skolems'' assums'',
       ZoneInterp [id] .true
         ⟨skolems'', assums'', (Typ.path (.var id_antec) (.var id_consq))⟩
         ⟨skolems''', assums''', body'⟩
     ) →
-    LoopSubtyping (ListSubtyping.free_vars assums') id zones t' →
-    id ∉ ListSubtyping.free_vars assums' →
+    LoopSubtyping (List.pair_typ_free_vars assums') id zones t' →
+    id ∉ List.pair_typ_free_vars assums' →
     GuardedTyping skolems assums context (.loop e) t' skolems' assums'
 
   | anno {skolems assums context skolems'' assums''} e ta te skolems' assums' :
