@@ -1,10 +1,6 @@
-import Lean
 import Lang.Util
 import Lang.Basic
 import Lang.Dynamic
-
--- import Mathlib.Data.Set.Basic
--- import Mathlib.Data.List.Basic
 import Mathlib.Tactic.Linarith
 
 set_option eval.pp false
@@ -1268,6 +1264,618 @@ mutual
 
 end
 
+
+
+theorem Typ.lfp_factor_elim_soundness {am id lower upper l fac} :
+  Typ.factor id lower l = .some fac →
+  Subtyping am fac upper →
+  Subtyping am (Typ.lfp id lower) (.entry l upper)
+:= by sorry
+
+
+theorem GuardedMultiSubtyping.aux {skolems assums cs skolems' assums'} :
+  GuardedMultiSubtyping skolems assums cs skolems' assums' →
+  skolems ⊆ skolems' ∧
+  assums ⊆ assums' ∧
+  List.pair_typ_free_vars cs ⊆ List.pair_typ_free_vars assums' ∧
+  (List.removeAll skolems' skolems) ∩ List.pair_typ_free_vars assums = [] ∧
+  (List.removeAll skolems' skolems) ∩ List.pair_typ_free_vars cs = []
+:= by sorry
+
+theorem GuardedSubtyping.aux {skolems assums lower upper skolems' assums'} :
+  GuardedSubtyping skolems assums lower upper skolems' assums' →
+  skolems ⊆ skolems' ∧
+  assums ⊆ assums' ∧
+  Typ.free_vars lower ⊆ List.pair_typ_free_vars assums' ∧
+  Typ.free_vars upper ⊆ List.pair_typ_free_vars assums'  ∧
+  (List.removeAll skolems' skolems) ∩ List.pair_typ_free_vars assums = [] ∧
+  (List.removeAll skolems' skolems) ∩ Typ.free_vars lower = [] ∧
+  (List.removeAll skolems' skolems) ∩ Typ.free_vars upper = []
+:= by sorry
+
+theorem GuardedSubtyping.upper_containment {skolems assums lower upper skolems' assums'} :
+  GuardedSubtyping skolems assums lower upper skolems' assums' →
+  Typ.free_vars upper ⊆ List.pair_typ_free_vars assums'
+:= by
+  intro h
+  have ⟨p0, p1, p2, p3,_,_,_⟩ := GuardedSubtyping.aux h
+  apply p3
+
+
+
+theorem List.pair_typ_restricted_rename {skolems assums ids quals ids' quals'} :
+  List.pair_typ_toBruijn ids quals = List.pair_typ_toBruijn ids' quals' →
+  List.pair_typ_restricted skolems assums quals →
+  List.pair_typ_restricted skolems assums quals'
+:= by sorry
+
+
+theorem List.pair_typ_solution_completeness {skolems assums cs skolems' assums' am am'} :
+  List.pair_typ_restricted skolems assums cs →
+  GuardedMultiSubtyping skolems assums cs skolems' assums' →
+  MultiSubtyping am assums' →
+  MultiSubtyping (am' ++ am) cs →
+  MultiSubtyping (am' ++ am) assums'
+:= by sorry
+
+
+theorem List.pair_typ_dom_disjoint_concat_reorder {am am' am'' cs} :
+  ListPair.dom am ∩ ListPair.dom am' = [] →
+  MultiSubtyping (am ++ (am' ++ am'')) cs →
+  MultiSubtyping (am' ++ (am ++ am'')) cs
+:= by sorry
+
+theorem Subtyping.dom_disjoint_concat_reorder {am am' am'' lower upper} :
+  ListPair.dom am ∩ ListPair.dom am' = [] →
+  Subtyping (am ++ (am' ++ am'')) lower upper →
+  Subtyping (am' ++ (am ++ am'')) lower upper
+:= by sorry
+
+theorem Subtyping.assumptions_independence
+  {skolems assums lower upper skolems' assums' am am'}
+:
+  GuardedSubtyping skolems assums lower upper skolems' assums' →
+  MultiSubtyping am assums' →
+  ListPair.dom am' ⊆ List.pair_typ_free_vars assums →
+  MultiSubtyping (am' ++ am) assums →
+  MultiSubtyping (am' ++ am) assums'
+:= by sorry
+
+theorem Subtyping.pluck {am cs lower upper} :
+  MultiSubtyping am cs →
+  (lower, upper) ∈ cs →
+  Subtyping am lower upper
+:= by sorry
+
+theorem Subtyping.trans {am lower upper} t :
+  Subtyping am lower t → Subtyping am t upper →
+  Subtyping am lower upper
+:= by
+  simp [Subtyping]
+  intros p0 p1
+  intros e p5
+  apply p1
+  apply p0
+  assumption
+
+theorem Subtyping.check_completeness {am lower upper} :
+  Subtyping am lower upper →
+  Subtyping.check lower upper
+:= by sorry
+
+theorem Polarity.soundness {id t} am :
+  Polarity id true t →
+  Monotonic am id t
+:= by sorry
+
+set_option maxHeartbeats 500000 in
+mutual
+  theorem GuardedMultiSubtyping.soundness {skolems assums cs skolems' assums'} :
+    GuardedMultiSubtyping skolems assums cs skolems' assums' →
+    ∃ am, ListPair.dom am ⊆ (List.removeAll skolems' skolems) ∧
+    (∀ {am'},
+      MultiSubtyping (am ++ am') assums' →
+      MultiSubtyping (am ++ am') cs
+    )
+  | .nil => by
+    exists []
+    simp
+    apply And.intro
+    case left =>
+      simp [ListPair.dom]
+    case right =>
+      intro am'
+      intro md
+      simp [MultiSubtyping]
+  | .cons l r cs' skolems_im assums_im ss lss => by
+    have ⟨am0,ih0l,ih0r⟩ := GuardedSubtyping.soundness ss
+    have ⟨am1,ih1l,ih1r⟩ := GuardedMultiSubtyping.soundness lss
+    have ⟨p0,p1,p2,p3,p4,p5,p6⟩ := GuardedSubtyping.aux ss
+    have ⟨p7,p8,p9,p10,p11⟩ := GuardedMultiSubtyping.aux lss
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro
+    { exact dom_concat_removeAll_containment p0 ih0l p7 ih1l }
+    { intro am' p12
+      simp [MultiSubtyping]
+      apply And.intro
+      { apply Subtyping.dom_extension
+        { apply List.disjoint_preservation_left ih1l
+          apply List.disjoint_preservation_right p2
+          apply p10 }
+        { apply List.disjoint_preservation_left ih1l
+          apply List.disjoint_preservation_right p3
+          apply p10 }
+        { apply ih0r
+          apply MultiSubtyping.dom_reduction
+          { apply List.disjoint_preservation_left ih1l p10 }
+          { apply MultiSubtyping.reduction p8 p12 } } }
+      { exact ih1r p12 }
+    }
+  termination_by h => 0
+  decreasing_by
+    all_goals sorry
+
+
+  theorem GuardedSubtyping.soundness {skolems assums lower upper skolems' assums'} :
+    GuardedSubtyping skolems assums lower upper skolems' assums' →
+    ∃ am, ListPair.dom am ⊆ (List.removeAll skolems' skolems) ∧
+    (∀ {am'},
+      MultiSubtyping (am ++ am') assums' →
+      Subtyping (am ++ am') lower upper)
+  | .refl => by
+    exists []
+    simp [*]
+    apply And.intro (by simp [ListPair.dom])
+    intros am0 p1
+    exact Subtyping.refl am0 lower
+
+  | .iso_pres l lower0 upper0 p0 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    exists am0
+    simp [*]
+    intros am' p9
+    exact Subtyping.iso_pres l (ih0r p9)
+
+  | .entry_pres l lower0 upper0 p0 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    exists am0
+    simp [*]
+    intros am' p9
+    exact Subtyping.entry_pres l (ih0r p9)
+
+  | .path_pres lower0 lower1 upper0 upper1 skolems0 assums0 p0 p1 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    have ⟨am1, ih1l, ih1r⟩ := GuardedSubtyping.soundness p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := GuardedSubtyping.aux p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (by exact dom_concat_removeAll_containment p2 ih0l p9 ih1l)
+    intros am' p16
+    apply Subtyping.path_pres
+    { apply Subtyping.dom_extension
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13 }
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13 }
+      { apply ih0r
+        apply MultiSubtyping.dom_reduction
+        { apply List.disjoint_preservation_left ih1l p13 }
+        { apply MultiSubtyping.reduction p10 p16 } } }
+    { exact ih1r p16 }
+  | .bot_elim skolems0 assums0 t => by
+    exists []
+    simp [*]
+    apply And.intro; simp [ListPair.dom]
+    intros am' p0
+    exact Subtyping.bot_elim
+
+  | .top_intro skolems0 assums0 t => by
+    exists []
+    simp [*]
+    apply And.intro; simp [ListPair.dom]
+    intros am' p0
+    exact Subtyping.top_intro
+
+  | .unio_elim left right t skolems0 assums0 p0 p1 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    have ⟨am1, ih1l, ih1r⟩ := GuardedSubtyping.soundness p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := GuardedSubtyping.aux p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (by exact dom_concat_removeAll_containment p2 ih0l p9 ih1l)
+    intros am' p16
+    apply Subtyping.unio_elim
+    { apply Subtyping.dom_extension
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13 }
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13 }
+      { apply ih0r
+        apply MultiSubtyping.dom_reduction
+        { apply List.disjoint_preservation_left ih1l p13 }
+        { apply MultiSubtyping.reduction p10 p16 } } }
+    { exact ih1r p16 }
+
+  | .exi_elim ids quals body t skolems0 assums0 p0 p4 p5 p1 p2 => by
+
+    have ⟨am0,ih0l,ih0r⟩ := GuardedMultiSubtyping.soundness p1
+    have ⟨am1,ih1l,ih1r⟩ := GuardedSubtyping.soundness p2
+
+    have ⟨p12,p13,p14,p15,p16⟩ := GuardedMultiSubtyping.aux p1
+
+    have ⟨p17,p18,p19,p20,p21,p22,p23⟩ := GuardedSubtyping.aux p2
+
+    exists (am1 ++ am0)
+    simp [*]
+
+    apply And.intro
+    { apply dom_concat_removeAll_containment p12 ih0l (concat_right_containment p17)
+      intros x p24
+      apply removeAll_concat_containment_right (ih1l p24) }
+    { intros am' p24
+      apply Subtyping.exi_elim p4
+      intros am2 p25 p26
+
+      have p27 : ListPair.dom am1 ∩ ListPair.dom am2 = [] := by
+        apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p25
+        apply List.disjoint_preservation_left
+        apply removeAll_concat_containment_left
+        apply removeAll_left_sub_refl_disjoint
+
+      apply Subtyping.dom_disjoint_concat_reorder p27
+      apply ih1r
+      apply List.pair_typ_dom_disjoint_concat_reorder (List.disjoint_swap p27)
+
+      apply Subtyping.assumptions_independence p2 p24
+      { intros x p28
+        exact p14 (p5 (p25 p28)) }
+      { apply List.pair_typ_solution_completeness p0 p1
+          (MultiSubtyping.reduction p18 p24) p26 } }
+
+  | .inter_intro t left right skolems0 assums0 p0 p1 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    have ⟨am1, ih1l, ih1r⟩ := GuardedSubtyping.soundness p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := GuardedSubtyping.aux p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (dom_concat_removeAll_containment p2 ih0l p9 ih1l)
+    intros am' p16
+    apply Subtyping.inter_intro
+    { apply Subtyping.dom_extension
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13 }
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13 }
+      { apply ih0r
+        apply MultiSubtyping.dom_reduction
+        { apply List.disjoint_preservation_left ih1l p13 }
+        { apply MultiSubtyping.reduction p10 p16 } } }
+    { exact ih1r p16 }
+
+  | .all_intro t ids quals body skolems0 assums0 p0 p4 p5 p1 p2 => by
+    have ⟨am0,ih0l,ih0r⟩ := GuardedMultiSubtyping.soundness p1
+    have ⟨am1,ih1l,ih1r⟩ := GuardedSubtyping.soundness p2
+
+    have ⟨p12,p13,p14,p15,p16⟩ := GuardedMultiSubtyping.aux p1
+
+    have ⟨p17,p18,p19,p20,p21,p22,p23⟩ := GuardedSubtyping.aux p2
+
+    exists (am1 ++ am0)
+    simp [*]
+
+    apply And.intro
+    { apply dom_concat_removeAll_containment p12 ih0l (concat_right_containment p17)
+      intros x p24
+      apply removeAll_concat_containment_right (ih1l p24) }
+    { intros am' p24
+      apply Subtyping.all_intro p4
+      intros am2 p25 p26
+
+      have p27 : ListPair.dom am1 ∩ ListPair.dom am2 = [] := by
+        apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p25
+        apply List.disjoint_preservation_left
+        apply removeAll_concat_containment_left
+        apply removeAll_left_sub_refl_disjoint
+
+      apply Subtyping.dom_disjoint_concat_reorder p27
+      apply ih1r
+      apply List.pair_typ_dom_disjoint_concat_reorder (List.disjoint_swap p27)
+
+      apply Subtyping.assumptions_independence p2 p24
+      { intros x p28
+        exact p14 (p5 (p25 p28)) }
+      { apply List.pair_typ_solution_completeness p0 p1
+          (MultiSubtyping.reduction p18 p24) p26 } }
+
+  | .placeholder_elim id cs assums' p0 p1 p2 => by
+    exists []
+    simp [ListPair.dom, *]
+    intros am' p30
+    simp [MultiSubtyping] at p30
+    simp [*]
+
+  | .placeholder_intro id cs assums' p0 p1 p2 => by
+    exists []
+    simp [ListPair.dom, *]
+    intros am' p30
+    simp [MultiSubtyping] at p30
+    simp [*]
+
+  | .skolem_placeholder_elim id cs assums' p0 p1 p2 p3 => by
+    exists []
+    simp [ListPair.dom, *]
+    intros am' p30
+    simp [MultiSubtyping] at p30
+    simp [*]
+
+  | .skolem_placeholder_intro id cs assums' p0 p1 p2 p3 => by
+    exists []
+    simp [ListPair.dom, *]
+    intros am' p30
+    simp [MultiSubtyping] at p30
+    simp [*]
+
+  | .skolem_intro t' id p0 p1 p2 p3 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p3
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := GuardedSubtyping.aux p3
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Subtyping.trans t' (ih0r p40) (Subtyping.pluck p40 (p10 p1))
+
+  | .skolem_elim t' id p0 p1 p2 p3 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p3
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := GuardedSubtyping.aux p3
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Subtyping.trans t' (Subtyping.pluck p40 (p10 p1)) (ih0r p40)
+
+  -------------------------------------------------------------------
+  | .unio_antec a b r skolems0 assums0 p0 p1 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    have ⟨am1, ih1l, ih1r⟩ := GuardedSubtyping.soundness p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := GuardedSubtyping.aux p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (dom_concat_removeAll_containment p2 ih0l p9 ih1l)
+    intros am' p16
+
+    apply Subtyping.unio_antec
+    { apply Subtyping.dom_extension
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13 }
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13 }
+      { apply ih0r
+        apply MultiSubtyping.dom_reduction
+        { apply List.disjoint_preservation_left ih1l p13 }
+        { apply MultiSubtyping.reduction p10 p16 } } }
+    { exact ih1r p16 }
+
+  | .inter_conseq upper a b skolems0 assums0 p0 p1 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    have ⟨am1, ih1l, ih1r⟩ := GuardedSubtyping.soundness p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := GuardedSubtyping.aux p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (dom_concat_removeAll_containment p2 ih0l p9 ih1l)
+    intros am' p16
+
+    apply Subtyping.inter_conseq
+    { apply Subtyping.dom_extension
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13 }
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13 }
+      { apply ih0r
+        apply MultiSubtyping.dom_reduction
+        { apply List.disjoint_preservation_left ih1l p13 }
+        { apply MultiSubtyping.reduction p10 p16 } } }
+    { exact ih1r p16 }
+
+  | .inter_entry l a b skolems0 assums0 p0 p1 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    have ⟨am1, ih1l, ih1r⟩ := GuardedSubtyping.soundness p1
+    have ⟨p9,p10,p11,p12,p13,p14,p15⟩ := GuardedSubtyping.aux p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (dom_concat_removeAll_containment p2 ih0l p9 ih1l)
+    intros am' p16
+
+    apply Subtyping.inter_entry
+    { apply Subtyping.dom_extension
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p4 p13 }
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p5 p13 }
+      { apply ih0r
+        apply MultiSubtyping.dom_reduction
+        { apply List.disjoint_preservation_left ih1l p13 }
+        { apply MultiSubtyping.reduction p10 p16 } } }
+    { exact ih1r p16 }
+
+  -------------------------------------------------------------------
+  | .lfp_skip_elim id body p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := GuardedSubtyping.soundness p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := GuardedSubtyping.aux p1
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Subtyping.lfp_skip_elim p0 (ih0r p40)
+
+  | .lfp_induct_elim id lower p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := GuardedSubtyping.soundness p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := GuardedSubtyping.aux p1
+    exists am0
+    simp [*]
+    intros am' p40
+
+    apply Subtyping.lfp_induct_elim (Polarity.soundness (am0 ++ am') p0)
+    intro e typing_dynamic_lower
+    apply Typ.sub.typing.completeness at typing_dynamic_lower
+    unfold Subtyping at ih0r
+    apply ih0r p40 _ typing_dynamic_lower
+
+  | .lfp_factor_elim id lower upper fac p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := GuardedSubtyping.soundness p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := GuardedSubtyping.aux p1
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Typ.lfp_factor_elim_soundness p0 (ih0r p40)
+
+  | .lfp_elim_diff_intro id lower upper sub h p0 p1 p2 p3 p4 p5 p6 => by
+    have ⟨am0,ih0l,ih0r⟩ := GuardedSubtyping.soundness p4
+    have ⟨p10,p15,p20,p25,p30,p35,p40⟩ := GuardedSubtyping.aux p4
+    exists am0
+    simp [*]
+    intros am' p45
+    apply Typ.subfold.subtyping.soundness_and_completeness (Polarity.soundness (am0 ++ am') p3) (ih0r p45)
+    { intros p50
+      apply Subtyping.check_completeness at p50
+      contradiction }
+    { intros p50
+      apply Subtyping.check_completeness at p50
+      contradiction }
+
+  | .diff_intro upper sub p0 p1 p2 p3 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p3
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := GuardedSubtyping.aux p3
+    exists am0
+    simp [*]
+    intro am' p40
+    apply Subtyping.diff_intro (ih0r p40)
+    { intros p50
+      apply Subtyping.check_completeness at p50
+      contradiction }
+    { intros p50
+      apply Subtyping.check_completeness at p50
+      contradiction }
+
+  -------------------------------------------------------------------
+  | .lfp_peel_intro id body p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := GuardedSubtyping.soundness p1
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := GuardedSubtyping.aux p1
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Typ.sub.lfp.soundness (ih0r p40)
+
+  | .lfp_drop_intro id body p0 => by
+    have ⟨am0,ih0l,ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := GuardedSubtyping.aux p0
+    exists am0
+    simp [*]
+    intros am' p40
+    apply Typ.drop.lfp.soundness (ih0r p40)
+  -------------------------------------------------------------------
+
+  | .diff_elim lower sub upper p0  => by
+
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    exists am0
+    simp [*]
+    intros am' p10
+    apply Subtyping.diff_elim (ih0r p10)
+
+  | .unio_left_intro t l r p0  => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    exists am0
+    simp [*]
+    intros am' p9
+    exact Subtyping.unio_left_intro (ih0r p9)
+
+  | .unio_right_intro t l r p0  => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    exists am0
+    simp [*]
+    intros am' p9
+    exact Subtyping.unio_right_intro (ih0r p9)
+
+  | .exi_intro ids quals upper skolems0 assums0 p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := GuardedSubtyping.aux p0
+    have ⟨am1,ih1l,ih1r⟩ := GuardedMultiSubtyping.soundness p1
+    have ⟨p6,p11,p16,p21,p26⟩ := GuardedMultiSubtyping.aux p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (dom_concat_removeAll_containment p5 ih0l p6 ih1l)
+    intros am' p40
+    apply Subtyping.exi_intro (ih1r p40)
+    apply Subtyping.dom_extension
+    { apply List.disjoint_preservation_left ih1l
+      apply List.disjoint_preservation_right p15 p21
+     }
+    { apply List.disjoint_preservation_left ih1l
+      apply List.disjoint_preservation_right p20 p21 }
+    { apply ih0r
+      apply MultiSubtyping.dom_reduction
+      { apply List.disjoint_preservation_left ih1l p21 }
+      { apply MultiSubtyping.reduction p11 p40 } }
+
+  | .inter_left_elim l r t p0 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    exists am0
+    simp[*]
+    intros am' p9
+    exact Subtyping.inter_left_elim (ih0r p9)
+
+  | .inter_right_elim l r t p0 => by
+    have ⟨am0, ih0l, ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p2,p3,p4,p5,p6,p7,p8⟩ := GuardedSubtyping.aux p0
+    exists am0
+    simp [*]
+    intros am' p9
+    exact Subtyping.inter_right_elim (ih0r p9)
+
+  | .all_elim ids quals lower skolems0 assums0 p0 p1 => by
+    have ⟨am0,ih0l,ih0r⟩ := GuardedSubtyping.soundness p0
+    have ⟨p5,p10,p15,p20,p25,p30,p35⟩ := GuardedSubtyping.aux p0
+    have ⟨am1,ih1l,ih1r⟩ := GuardedMultiSubtyping.soundness p1
+    have ⟨p6,p11,p16,p21,p26⟩ := GuardedMultiSubtyping.aux p1
+    exists (am1 ++ am0)
+    simp [*]
+    apply And.intro (dom_concat_removeAll_containment p5 ih0l p6 ih1l)
+    intros am' p40
+    apply Subtyping.all_elim (ih1r p40)
+    apply Subtyping.dom_extension
+    { apply List.disjoint_preservation_left ih1l
+      apply List.disjoint_preservation_right p15 p21
+     }
+    { apply List.disjoint_preservation_left ih1l
+      apply List.disjoint_preservation_right p20 p21 }
+    { apply ih0r
+      apply MultiSubtyping.dom_reduction
+      { apply List.disjoint_preservation_left ih1l p21 }
+      { apply MultiSubtyping.reduction p11 p40 } }
+  termination_by h => 0
+  decreasing_by
+    all_goals sorry
+
+end
+
+
+
+
+
+
+
 def List.pair_typ_loop_split : List Typ → (List String) × (List Typ)
 | [] => ([], [])
 | (.var id) :: ts =>
@@ -1459,5 +2067,1096 @@ mutual
     GuardedSubtyping skolems' assums' te ta skolems'' assums'' →
     GuardedTyping skolems assums context (.anno e ta) ta skolems'' assums''
 
+
+end
+
+
+theorem GuardedTyping.aux {skolems assums context e t skolems' assums'} :
+  GuardedTyping skolems assums context e t skolems' assums' →
+  skolems ⊆ skolems' ∧
+  assums ⊆ assums' ∧
+  ListTyping.free_vars context ⊆ List.pair_typ_free_vars assums ∧
+  Typ.free_vars t ⊆ List.pair_typ_free_vars assums'  ∧
+  (List.removeAll skolems' skolems) ∩ List.pair_typ_free_vars assums = [] ∧
+  (List.removeAll skolems' skolems) ∩ Typ.free_vars t = []
+:= by sorry
+
+
+theorem Function.Typing.Static.aux
+  {skolems assums context f nested_zones subtras skolems' assums' t}
+:
+  Function.Typing.Static skolems assums context subtras f nested_zones →
+  ⟨skolems',assums',t⟩ ∈ nested_zones.flatten →
+  skolems' ∩ skolems = [] ∧
+  skolems' ∩ List.pair_typ_free_vars assums = [] ∧
+  skolems' ∩ ListTyping.free_vars context = [] ∧
+  ListTyping.free_vars context ⊆ List.pair_typ_free_vars assums
+:= by sorry
+
+theorem Record.Typing.Static.aux
+  {skolems assums context r t skolems' assums'}
+:
+  Record.Typing.Static skolems assums context r t skolems' assums' →
+  skolems ⊆ skolems' ∧
+  assums ⊆ assums' ∧
+  ListTyping.free_vars context ⊆ List.pair_typ_free_vars assums ∧
+  Typ.free_vars t ⊆ List.pair_typ_free_vars assums'  ∧
+  (List.removeAll skolems' skolems) ∩ List.pair_typ_free_vars assums = [] ∧
+  (List.removeAll skolems' skolems) ∩ Typ.free_vars t = []
+:= by sorry
+
+
+def Expr.Convergence (a b : Expr) :=
+  ∃ e , ProgressionStar a e ∧ ProgressionStar b e
+
+theorem Expr.Convergence.typing_left_to_right {a b am t} :
+  Expr.Convergence a b →
+  Typing am a t →
+  Typing am b t
+:= by sorry
+
+theorem Expr.Convergence.typing_right_to_left {a b am t} :
+  Expr.Convergence a b →
+  Typing am b t →
+  Typing am a t
+:= by sorry
+
+
+theorem Typ.factor_expansion_soundness {am id t label t' e'} :
+  Typ.factor id t label = some t' →
+  Typing am e' (.lfp id t') →
+  ∃ e ,
+    Expr.Convergence (Expr.proj e label) e' ∧
+    Typing am e (.lfp id t)
+:= by sorry
+
+theorem Typ.factor_reduction_soundness {am id t label t' e' e} :
+  Typ.factor id t label = some t' →
+  Typing am e (.lfp id t) →
+  Expr.Convergence (Expr.proj e label) e' →
+  Typing am e' (.lfp id t')
+:= by sorry
+
+
+
+theorem ListZone.pack_positive_soundness {pids zones t am assums e} :
+  ListZone.pack pids .true zones = t →
+  -- ListZone.pack (List.pair_typ_free_vars assums) .true zones = t →
+  List.pair_typ_free_vars assums ⊆ pids →
+  MultiSubtyping am assums →
+  (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
+    (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
+      (∀ {am'},
+        ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] →
+        MultiSubtyping (am'' ++ am' ++ am) assums' →
+        Typing (am'' ++ am' ++ am) e t' ) ) ) →
+  Typing am e t
+:= by sorry
+
+
+theorem Expr.Convergence.transitivity {a b c} :
+  Expr.Convergence a b →
+  Expr.Convergence b c →
+  Expr.Convergence a c
+:= by sorry
+
+theorem Expr.Convergence.swap {a b} :
+  Expr.Convergence a b →
+  Expr.Convergence b a
+:= by sorry
+
+theorem Expr.Convergence.app_arg_preservation {a b} f :
+  Expr.Convergence a b →
+  Expr.Convergence (.app f a) (.app f b)
+:= by sorry
+
+theorem ListZone.pack_negative_soundness {pids zones t am assums e} :
+  ListZone.pack pids .false zones = t →
+  List.pair_typ_free_vars assums ⊆ pids →
+  -- ListZone.pack (id :: List.pair_typ_free_vars assums) .false zones = t →
+  MultiSubtyping am assums →
+  Typing am e t →
+  (∃ skolems' assums' t', ⟨skolems', assums', t'⟩ ∈ zones ∧
+    (∀ am'', ListPair.dom am'' ⊆ skolems' →
+      (∃ am',
+        ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] ∧
+        MultiSubtyping (am'' ++ am' ++ am) assums' ∧
+        Typing (am'' ++ am' ++ am) e t' ) ) )
+:= by sorry
+
+theorem Zone.pack_negative_soundness {pids t am assums skolems' assums' t'} :
+  Zone.pack pids .false ⟨skolems', assums', t'⟩ = t →
+  List.pair_typ_free_vars assums ⊆ pids →
+  MultiSubtyping am assums →
+  ∀ e, Typing am e t →
+    (∀ am'', ListPair.dom am'' ⊆ skolems' →
+      (∃ am',
+        ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] ∧
+        MultiSubtyping (am'' ++ am' ++ am) assums' ∧
+        Typing (am'' ++ am' ++ am) e t' ) )
+:= by sorry
+
+
+example {P Q R} :
+  ((P -> Q) -> R) -> Q -> R
+:= by
+  intros h0 h1
+  apply h0
+  intro h2
+  exact h1
+
+example {P Q R} :
+  ((P -> Q) -> R) -> Q -> R
+:= by
+  intros h0 h1
+  specialize h0 (by exact fun a ↦ h1)
+  exact h0
+
+
+
+theorem Zone.pack_negative_completeness {pids t am assums skolems' assums' t' e am'} :
+  Zone.pack pids .false ⟨skolems', assums', t'⟩ = t →
+  List.pair_typ_free_vars assums ⊆ pids →
+  MultiSubtyping am assums →
+  MultiSubtyping (am' ++ am) assums' →
+  Typing (am' ++ am) e t' →
+  Typing am e t
+:= by sorry
+--   Zone.pack pids .false ⟨skolems', assums', t'⟩ = t →
+--   List.pair_typ_free_vars assums ⊆ pids →
+--   MultiSubtyping am assums →
+--   ∀ e,
+--     (∀ am'', ListPair.dom am'' ⊆ skolems' →
+--       (∃ am',
+--         ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] ∧
+--         MultiSubtyping (am'' ++ am' ++ am) assums' ∧
+--         Typing (am'' ++ am' ++ am) e t' ) ) →
+--     Typing am e t
+-- := by sorry
+
+theorem ListZone.inversion_soundness {id zones zones' am assums} :
+  ListZone.invert id zones = some zones' →
+  MultiSubtyping am assums →
+  ∀ ef,
+  (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
+    (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
+      (∀ {am'},
+        ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] →
+        MultiSubtyping (am'' ++ am' ++ am) assums' →
+        Typing (am'' ++ am' ++ am) ef t' ) ) )
+  →
+  (∀ ep ,
+    (∃ skolems' assums' t', ⟨skolems', assums', t'⟩ ∈ zones' ∧
+      (∀ am'', ListPair.dom am'' ⊆ skolems' →
+        (∃ am',
+          ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] ∧
+          MultiSubtyping (am'' ++ am' ++ am) assums' ∧
+          Typing (am'' ++ am' ++ am) ep t' ) )
+    ) →
+    Expr.Convergence (.proj ep "right") (.app ef (.proj ep "left"))
+  )
+:= by sorry
+
+
+theorem List.pair_typ_inversion_soundness {id am assums assums0 assums0'} skolems tl tr :
+  List.pair_typ_invert id assums0 = some assums0' →
+  MultiSubtyping am assums →
+  ∀ ef,
+    (∃ am'',
+      ListPair.dom am'' ⊆ skolems ∧
+      ∀ {am' : List (String × Typ)},
+        ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] →
+          MultiSubtyping (am'' ++ am' ++ am) assums0 →
+            Typing (am'' ++ am' ++ am) ef (.path tl tr))
+    →
+    (∀ ep,
+      (∀ am'', ListPair.dom am'' ⊆ skolems →
+        (∃ am',
+          ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] ∧
+          MultiSubtyping (am'' ++ am' ++ am) assums0' ∧
+          Typing (am'' ++ am' ++ am) ep (.pair tl tr) )
+      ) →
+      Expr.Convergence (.proj ep "right") (.app ef (.proj ep "left"))
+    )
+:= by sorry
+
+theorem List.pair_typ_inversion_top_extension {id am assums0 assums1} am' :
+  List.pair_typ_invert id assums0 = some assums1 →
+  MultiSubtyping (am' ++ am) assums0 →
+  MultiSubtyping (am' ++ (id,.top)::am) assums0
+:= by sorry
+
+theorem List.pair_typ_inversion_substance {id am am' assums0 assums1} :
+  List.pair_typ_invert id assums0 = some assums1 →
+  MultiSubtyping (am' ++ (id,.top)::am) assums0 →
+  MultiSubtyping (am' ++ (id,.bot)::am) assums1
+:= by sorry
+
+
+theorem Typing.existential_top_drop
+  {id am skolems' assums assums0 ep}
+  tl tr
+:
+  id ∉ (List.pair_typ_free_vars assums) →
+  (∀ (am'' : List (String × Typ)),
+    ListPair.dom am'' ⊆ skolems' →
+    ∃ am',
+      ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] ∧
+      MultiSubtyping (am'' ++ am' ++ (id,.top)::am) assums0 ∧
+      Typing (am'' ++ am' ++ (id,.top)::am) ep (.pair tl tr)) →
+  (∀ (am'' : List (String × Typ)),
+    ListPair.dom am'' ⊆ skolems' →
+    ∃ am',
+      ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] ∧
+      MultiSubtyping (am'' ++ am' ++ am) assums0 ∧
+      Typing (am'' ++ am' ++ am) ep (.pair tl tr) )
+
+
+:= by sorry
+
+theorem Typing.ListZone.existential_top_drop {id am assums ep} {zones' : List Zone} :
+  id ∉ (List.pair_typ_free_vars assums) →
+  (∃ skolems' assums' t',
+      ⟨skolems',assums', t'⟩ ∈ zones' ∧
+      ∀ (am'' : List (String × Typ)),
+        ListPair.dom am'' ⊆ skolems' →
+        ∃ am',
+          ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] ∧
+          MultiSubtyping (am'' ++ am' ++ (id,.top)::am) assums' ∧
+          Typing (am'' ++ am' ++ (id,.top)::am) ep t'
+  ) →
+  ∃ skolems' assums' t',
+      ⟨skolems',assums', t'⟩ ∈ zones' ∧
+      ∀ (am'' : List (String × Typ)),
+        ListPair.dom am'' ⊆ skolems' →
+        ∃ am',
+          ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] ∧
+          MultiSubtyping (am'' ++ am' ++ am) assums' ∧
+          Typing (am'' ++ am' ++ am) ep t'
+
+
+:= by sorry
+
+
+
+theorem Typ.factor_imp_typing_covariant {am0 am1 id label t0 t0' t1 t1'} :
+  Typ.factor id t0 label = .some t0' →
+  Typ.factor id t1 label = .some t1' →
+  (∀ e , Typing am0 e t0 → Typing am1 e t1) →
+  (∀ e , Typing am0 e t0' → Typing am1 e t1')
+:= by sorry
+
+-- theorem Typ.factor_subtyping_soundness {am id label t0 t0' t1 t1'} :
+--   Typ.factor id t0 label = .some t0' →
+--   Typ.factor id t1 label = .some t1' →
+--   Subtyping am t0 t1 →
+--   Subtyping am t0' t1'
+-- := by sorry
+
+theorem Monotonic.pair {am id t0 t1} :
+  Monotonic am id t0 →
+  Monotonic am id t1 →
+  Monotonic am id (.pair t0 t1)
+:= by sorry
+
+theorem Typ.factor_monotonic {am id label t t'} :
+  Typ.factor id t label = .some t' →
+  Monotonic am id t →
+  Monotonic am id t'
+:= by sorry
+
+
+theorem UpperFounded.soundness {id l l'} am :
+  UpperFounded id l l' →
+  Subtyping am (.lfp id l) (.lfp id l')
+:= by sorry
+
+theorem Typ.sub_weaken_soundness {am idl t0 t1 t2} :
+  Typ.sub [(idl, t0)] t1 = t2 →
+  Monotonic am idl t1 →
+  Subtyping am (.var idl) t0 →
+  Subtyping am t1 t2
+:= by sorry
+
+
+theorem LoopSubtyping.soundness {id zones t am assums e} :
+  LoopSubtyping (List.pair_typ_free_vars assums) id zones t →
+  MultiSubtyping am assums →
+  id ∉ List.pair_typ_free_vars assums →
+  ------------------------------
+  -- substance
+  ------------------------------
+  -- (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
+  --   ∃ am' ,
+  --   ListPair.dom am' ⊆ List.pair_typ_free_vars assums' ∧
+  --   MultiSubtyping (am' ++ am) assums'
+  -- ) →
+  ------------------------------
+  (∀ {skolems' assums' t'}, ⟨skolems', assums', t'⟩ ∈ zones →
+    -------------
+    -- substance
+    -------------
+    (∃ am' ,
+      ListPair.dom am' ⊆ List.pair_typ_free_vars assums' ∧
+      MultiSubtyping (am' ++ am) assums'
+    ) ∧
+    -------------
+    -- soundness
+    -------------
+    (∃ am'', ListPair.dom am'' ⊆ skolems' ∧
+      (∀ {am'},
+        ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] →
+        MultiSubtyping (am'' ++ am' ++ am) assums' →
+        Typing (am'' ++ am' ++ am) e t' ) )
+  ) →
+  ------------------------------
+  Typing am e t
+:= by
+  intros p0 p1 p2 substance_and_soundness
+  cases p0 with
+  | batch zones' t' left right p4 p5 p6 p7 p8 =>
+    unfold Typing
+    intro ea
+    intro p9
+
+    have ⟨ep,p10,p11⟩ := Typ.factor_expansion_soundness p7 p9
+
+    apply Expr.Convergence.typing_left_to_right
+      (Expr.Convergence.app_arg_preservation e p10)
+
+    apply Typ.factor_reduction_soundness p8 p11
+
+    have p3 := (fun {x y z} mem_zones =>
+      let ⟨substance, soundness⟩ := @substance_and_soundness x y z mem_zones
+      soundness
+    )
+    apply ListZone.inversion_soundness p4 p1 at p3
+
+    apply p3 ep
+
+    have p12 : Typing ((id, .top) :: am) ep t' := by
+      apply Typing.lfp_elim_top (Polarity.soundness am p6) p11
+    have p13 : MultiSubtyping ((id,.top) :: am) assums := by
+      apply MultiSubtyping.dom_single_extension p2 p1
+
+    apply Typing.ListZone.existential_top_drop p2
+
+    apply ListZone.pack_negative_soundness p5
+      (List.subset_cons_of_subset id (fun _ x => x)) p13 p12
+
+
+  | stream
+    skolems assums0 assums0' idl r t' l r' l' r''
+    p4 idl_fresh p5 p6 p7 p8 p9 p10 upper_founded sub_eq
+  =>
+    unfold Typing
+    intro ea
+    intro p13
+
+    have ⟨substance, soundness⟩ := substance_and_soundness (Iff.mpr List.mem_singleton rfl)
+    have ⟨am', dom_local_assums, subtyping_local_assums⟩ := substance
+
+    have subtyping_assums0'_bot : MultiSubtyping (am' ++ (id,.bot)::am) assums0' := by
+      apply List.pair_typ_inversion_substance p5
+      apply List.pair_typ_inversion_top_extension am' p5 subtyping_local_assums
+
+    have factor_pair : Typ.factor id (.pair (.var idl) r) "left" = some (Typ.var idl) := by
+      reduce; rfl
+
+    have monotonic_packed : Monotonic ((id, Typ.bot) :: am) id t' := by
+      exact Polarity.soundness ((id, Typ.bot) :: am) p7
+
+    have imp_typing_pair_to_packed :
+      ∀ e ,
+        Typing (am' ++ (id,.bot)::am) e (Typ.pair (Typ.var idl) r) →
+        Typing ((id,.bot)::am) e t'
+    := by
+      intros e_pair typing_pair
+      apply Zone.pack_negative_completeness p6
+        (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
+        (MultiSubtyping.dom_single_extension p2 p1)
+        subtyping_assums0'_bot
+        typing_pair
+
+    have imp_typing_factored_left :
+      ∀ e ,
+        Typing (am' ++ (id,.bot)::am) e (Typ.var idl) →
+        Typing ((id,.bot)::am) e l
+    := by
+      exact fun e a ↦ Typ.factor_imp_typing_covariant factor_pair p8 imp_typing_pair_to_packed e a
+
+    have subtyping_idl_left : Subtyping ((id,.bot)::am) (Typ.var idl) l := by
+      unfold Subtyping
+      intros el typing_idl
+      apply imp_typing_factored_left
+      apply Typing.dom_extension
+      { simp [Typ.free_vars]
+        apply List.disjoint_preservation_left dom_local_assums
+        exact List.nonmem_to_disjoint_right idl (List.pair_typ_free_vars assums0) idl_fresh }
+      { exact typing_idl }
+
+    have typing_idl_bot : Typing ((id,.bot)::am) ea (Typ.var idl) := by
+      apply Typing.dom_single_extension (Iff.mp List.count_eq_zero rfl) p13
+
+    have typing_factor_left_bot : Typing ((id,.bot)::am) ea l := by
+      unfold Subtyping at subtyping_idl_left
+      exact subtyping_idl_left ea typing_idl_bot
+
+    have monotonic_left : Monotonic am id l := by
+      apply Typ.factor_monotonic p8 (Polarity.soundness am p7)
+
+    have typing_factor_left : Typing am ea (.lfp id l) :=
+      Typing.lfp_intro_bot monotonic_left typing_factor_left_bot
+
+
+    have subtyping_left_pre := UpperFounded.soundness am upper_founded
+    unfold Subtyping at subtyping_left_pre
+
+    have subtyping_left : Subtyping am (Typ.var idl) (Typ.lfp id l') := by
+      unfold Subtyping
+      intro el typing_idl
+      apply subtyping_left_pre
+      apply Typing.lfp_intro_bot monotonic_left
+      unfold Subtyping at subtyping_idl_left
+      apply subtyping_idl_left
+      apply Typing.dom_single_extension (Iff.mp List.count_eq_zero rfl)
+      exact typing_idl
+
+    have subtyping_right : Subtyping am (.lfp id r') r'' := by
+      apply Typ.sub_weaken_soundness sub_eq
+        (Polarity.soundness am p10) subtyping_left
+
+    unfold Subtyping at subtyping_right
+    apply subtyping_right
+
+    have ⟨ep,p14,p15⟩ := Typ.factor_expansion_soundness p8 typing_factor_left
+
+    apply Expr.Convergence.typing_left_to_right (Expr.Convergence.app_arg_preservation e p14)
+    apply Typ.factor_reduction_soundness p9 p15
+
+    apply List.pair_typ_inversion_soundness skolems (Typ.var idl) r p5 p1 at soundness
+
+    apply soundness ep
+
+    have p20 : Typing ((id, .top) :: am) ep t' := by
+      apply Typing.lfp_elim_top (Polarity.soundness am p7) p15
+
+    have p22 : MultiSubtyping ((id,.top) :: am) assums := by
+      apply MultiSubtyping.dom_single_extension p2 p1
+
+    apply Typing.existential_top_drop (Typ.var idl) r p2
+
+    apply Zone.pack_negative_soundness p6
+      (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
+      p22 ep p20
+
+-- theorem ListZone.tidy_substance {pids zones0 zones1 am} :
+--   ListZone.tidy pids zones0 = .some zones1 →
+--   (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
+--       ∃ am'' ,
+--         ListPair.dom am'' ⊆ List.pair_typ_free_vars assums0 ∧
+--         MultiSubtyping (am'' ++ am) assums0)
+--   →
+--   (∀ {skolems assums1 t1}, ⟨skolems, assums1, t1⟩ ∈ zones1 →
+--       ∃ am'' ,
+--         ListPair.dom am'' ⊆ List.pair_typ_free_vars assums1 ∧
+--         MultiSubtyping (am'' ++ am) assums1)
+-- := by sorry
+
+
+-- theorem ListZone.tidy_soundness {pids zones0 zones1 am assums e} :
+--   ListZone.tidy pids zones0 = .some zones1 →
+--   (List.pair_typ_free_vars assums) ⊆ pids →
+--   MultiSubtyping am assums →
+--   (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
+--     (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+--       (∀ {am'},
+--         ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] →
+--         MultiSubtyping (am'' ++ am' ++ am) assums0 →
+--         Typing (am'' ++ am' ++ am) e t0 ) ) ) →
+
+--   (∀ {skolems assums1 t1}, ⟨skolems, assums1, t1⟩ ∈ zones1 →
+--     (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+--       (∀ {am'},
+--         ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] →
+--         MultiSubtyping (am'' ++ am' ++ am) assums1 →
+--         Typing (am'' ++ am' ++ am) e t1 ) ) )
+-- := by sorry
+
+-- theorem ListZone.tidy_soundness_alt
+--   {zones0 zones1 e context skolems assums1 t1}
+--   {assums : List (Typ × Typ)}
+-- :
+--   ListZone.tidy (List.pair_typ_free_vars assums) zones0 = .some zones1 →
+--   ⟨skolems, assums1, t1⟩ ∈ zones1 →
+
+--   (∀ {skolems assums0 t0}, ⟨skolems, assums0, t0⟩ ∈ zones0 →
+--     (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+--       (∀ {am'},
+--         MultiSubtyping (am'' ++ am') (assums0 ++ assums) →
+--         ∀ {eam}, MultiTyping am' eam context →
+--         Typing (am'' ++ am') (Expr.sub eam e) t0 ) ) ) →
+
+--   (∃ am'', ListPair.dom am'' ⊆ skolems ∧
+--     (∀ {am'},
+--       MultiSubtyping (am'' ++ am') (assums1 ++ assums) →
+--       ∀ {eam}, MultiTyping am' eam context →
+--       Typing (am'' ++ am') (Expr.sub eam e) t1 ) )
+-- := by sorry
+
+
+theorem MultiSubtyping.concat {am cs cs'} :
+  MultiSubtyping am cs →
+  MultiSubtyping am cs' →
+  MultiSubtyping am (cs ++ cs')
+:= by sorry
+
+theorem MultiSubtyping.union {am cs cs'} :
+  MultiSubtyping am cs →
+  MultiSubtyping am cs' →
+  MultiSubtyping am (cs ∪ cs')
+:= by sorry
+
+theorem MultiSubtyping.concat_elim_left {am cs cs'} :
+  MultiSubtyping am (cs ++ cs') →
+  MultiSubtyping am cs
+:= by sorry
+
+
+
+theorem PatLifting.Static.soundness {assums context p t assums' context'} :
+  PatLifting.Static assums context p t assums' context' →
+  ∀ tam v, Expr.is_value v → Typing tam v t →
+    ∃ eam , Expr.pattern_match v p = .some eam ∧ MultiTyping tam eam context'
+:= by sorry
+
+
+theorem pattern_match_ids_containment {v p eam} :
+  Expr.pattern_match v p = .some eam →
+  Pat.ids p ⊆ ListPair.dom eam
+:= by sorry
+
+
+
+-- theorem PatLifting.Static.aux {assums context p t assums' context'} :
+--   PatLifting.Static assums context p t assums' context' →
+--   assums ⊆ assums' ∧
+--   Typ.free_vars t ⊆ ListTyping.free_vars context' ∧
+--   ListTyping.free_vars context'  ⊆ List.pair_typ_free_vars assums'
+-- := by sorry
+
+theorem Function.Typing.Static.subtra_soundness {
+  skolems assums context f nested_zones subtra subtras skolems' assums' t
+} :
+  Function.Typing.Static skolems assums context  subtras f nested_zones →
+  subtra ∈ subtras →
+  ⟨skolems', assums', t⟩ ∈ nested_zones.flatten →
+  ∀ am , ¬ Subtyping am t (.path subtra .top)
+:= by sorry
+
+mutual
+  theorem GuardedSubtyping.substance {
+    skolems assums lower upper skolems' assums' am
+  } :
+    GuardedSubtyping skolems assums lower upper skolems' assums' →
+    MultiSubtyping am assums →
+    ∃ am'' ,
+    ListPair.dom am'' ⊆ List.pair_typ_free_vars (List.removeAll assums' assums) ∧
+    MultiSubtyping (am'' ++ am) (List.removeAll assums' assums)
+  := by sorry
+end
+
+
+theorem Typ.combine_bounds_positive_soundness {id am assums e} :
+  (∀ am , MultiSubtyping am assums → Typing am e (.var id)) →
+  MultiSubtyping am assums →
+  Typing am e (Typ.combine_bounds id true assums)
+:= by sorry
+
+theorem Typ.combine_bounds_positive_subtyping_path_conseq_soundness {id am am_skol assums t antec} :
+  id ∉ ListPair.dom am_skol →
+  MultiSubtyping (am_skol ++ am) assums →
+  (∀ {am} ,
+    MultiSubtyping (am_skol ++ am) assums →
+    Subtyping (am_skol ++ am) t (.path antec (.var id))
+  ) →
+  Subtyping (am_skol ++ am) t (.path antec (Typ.combine_bounds id true assums))
+:= by sorry
+
+-- theorem Typ.factor_expansion_soundness {am id t label t' e'} :
+--   Typ.factor id t label = some t' →
+--   Typing am e' (.lfp id t') →
+--   ∃ e ,
+--     Expr.Convergence (Expr.proj e label) e' ∧
+--     Typing am e (.lfp id t)
+-- := by sorry
+
+-- theorem Typ.factor_reduction_soundness {am id t label t' e' e} :
+--   Typ.factor id t label = some t' →
+--   Typing am e (.lfp id t) →
+--   Expr.Convergence (Expr.proj e label) e' →
+--   Typing am e' (.lfp id t')
+-- := by sorry
+
+
+
+
+
+mutual
+
+  theorem ZoneInterp.aux {ignore skolems assums t skolems' assums' t'} :
+    ZoneInterp ignore .true ⟨skolems, assums, t⟩ ⟨skolems', assums', t'⟩ →
+    skolems = skolems'
+  := by sorry
+
+
+
+
+  theorem ZoneInterp.integrated_positive_soundness
+  {ignore skolems assums t skolems' assums' t' e skolems_base assums_base context} :
+    ZoneInterp ignore .true ⟨skolems, assums, t⟩ ⟨skolems', assums', t'⟩ →
+    (∃ tam,
+      ListPair.dom tam ⊆ List.removeAll skolems skolems_base ∧
+        ∀ (tam' : List (String × Typ)),
+          MultiSubtyping (tam ++ tam') assums →
+            ∀ (eam : List (String × Expr)),
+              MultiTyping tam' eam context →
+                Typing (tam ++ tam') (Expr.sub eam e) t
+    ) →
+    (∃ tam,
+      ListPair.dom tam ⊆ List.removeAll skolems' skolems_base ∧
+        ∀ (tam' : List (String × Typ)),
+          MultiSubtyping (tam ++ tam') (List.removeAll assums' assums_base ∪ assums_base) →
+            ∀ (eam : List (String × Expr)),
+              MultiTyping tam' eam context →
+                Typing (tam ++ tam') (Expr.sub eam e) t'
+    )
+  := by sorry
+
+
+  -- theorem TypInterp.positive_soundness {ignore skolems assums t t'} :
+  --   TypInterp ignore skolems assums .true t t' →
+  --   ∀ am , MultiSubtyping am assums → Subtyping am t t'
+  -- := by sorry
+
+  theorem TypInterp.integrated_positive_soundness
+  {ignore skolems assums t t' e skolems_base context} :
+    TypInterp ignore skolems assums .true t t' →
+    (∃ tam,
+      ListPair.dom tam ⊆ List.removeAll skolems skolems_base ∧
+        ∀ (tam' : List (String × Typ)),
+          MultiSubtyping (tam ++ tam') assums →
+            ∀ (eam : List (String × Expr)),
+              MultiTyping tam' eam context →
+                Typing (tam ++ tam') (Expr.sub eam e) t
+    ) →
+    (∃ tam,
+      ListPair.dom tam ⊆ List.removeAll skolems skolems_base ∧
+        ∀ (tam' : List (String × Typ)),
+          MultiSubtyping (tam ++ tam') assums →
+            ∀ (eam : List (String × Expr)),
+              MultiTyping tam' eam context →
+                Typing (tam ++ tam') (Expr.sub eam e) t'
+    )
+  := by sorry
+
+end
+
+
+theorem  List.pair_typ_loop_normal_form_integrated_completeness
+{id am assums assums' assums''} :
+  List.pair_typ_loop_normal_form id assums' = some assums'' →
+  (∃ am',
+    ListPair.dom am' ⊆ List.pair_typ_free_vars (List.removeAll assums' assums) ∧
+    MultiSubtyping (am' ++ am) (List.removeAll assums' assums)
+  ) →
+  (∃ am',
+    ListPair.dom am' ⊆ List.pair_typ_free_vars (List.removeAll assums'' assums) ∧
+      MultiSubtyping (am' ++ am) (List.removeAll assums'' assums)
+  )
+:= by sorry
+
+
+theorem  ZoneInterp.assums_integrated_completeness
+{ignore b am assums skolems' assums' t' skolems'' assums'' t''} :
+  ZoneInterp ignore b ⟨skolems', assums', t'⟩ ⟨skolems'', assums'', t''⟩ →
+  (∃ am',
+    ListPair.dom am' ⊆ List.pair_typ_free_vars (List.removeAll assums' assums) ∧
+    MultiSubtyping (am' ++ am) (List.removeAll assums' assums)
+  ) →
+  (∃ am',
+    ListPair.dom am' ⊆ List.pair_typ_free_vars (List.removeAll assums'' assums) ∧
+      MultiSubtyping (am' ++ am) (List.removeAll assums'' assums)
+  )
+:= by sorry
+
+
+
+
+
+theorem  List.pair_typ_loop_normal_form_integrated_soundness
+{id am_base skolems skolems' assums assums' assums'' e t} :
+  List.pair_typ_loop_normal_form id assums' = some assums'' →
+  (∃ am'',
+    ListPair.dom am'' ⊆ List.removeAll skolems' skolems ∧
+    ∀ {am' : List (String × Typ)},
+      ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] →
+      MultiSubtyping (am'' ++ am' ++ am_base) (List.removeAll assums' assums) →
+      Typing (am'' ++ am' ++ am_base) e t
+  ) →
+  (∃ am'',
+    ListPair.dom am'' ⊆ List.removeAll skolems' skolems ∧
+    ∀ {am' : List (String × Typ)},
+      ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] →
+      MultiSubtyping (am'' ++ am' ++ am_base) (List.removeAll assums'' assums) →
+      Typing (am'' ++ am' ++ am_base) e t
+  )
+:= by sorry
+
+
+
+theorem  ZoneInterp.integrated_soundness
+{ignore b am_base skolems skolems' skolems'' assums assums' assums'' e t' t''} :
+  ZoneInterp ignore b ⟨skolems', assums', t'⟩ ⟨skolems'', assums'', t''⟩ →
+  (∃ am'',
+    ListPair.dom am'' ⊆ List.removeAll skolems' skolems ∧
+    ∀ {am' : List (String × Typ)},
+      ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] →
+      MultiSubtyping (am'' ++ am' ++ am_base) (List.removeAll assums' assums) →
+      Typing (am'' ++ am' ++ am_base) e t'
+  ) →
+  (∃ am'',
+    ListPair.dom am'' ⊆ List.removeAll skolems'' skolems ∧
+    ∀ {am' : List (String × Typ)},
+      ListPair.dom am' ∩ List.pair_typ_free_vars assums = [] →
+      MultiSubtyping (am'' ++ am' ++ am_base) (List.removeAll assums'' assums) →
+      Typing (am'' ++ am' ++ am_base) e t''
+  )
+:= by sorry
+
+
+-- set_option maxHeartbeats 1000000 in
+mutual
+
+  theorem Function.Typing.Static.soundness {
+    skolems assums context f nested_zones subtras skolems''' assums'''' t
+  } :
+    Function.Typing.Static skolems assums context subtras f nested_zones →
+    ⟨skolems''', assums'''', t⟩ ∈ nested_zones.flatten →
+    ∃ tam, ListPair.dom tam ⊆ skolems''' ∧
+    (∀ tam', MultiSubtyping (tam ++ tam') (assums'''' ∪ assums) →
+      (∀ eam, MultiTyping tam' eam context →
+        Typing (tam ++ tam') (Expr.sub eam (.function f)) t ) )
+  | .nil => by intros ; contradiction
+  | .cons
+      pat e f assums0 context0 tp zones nested_zones subtras
+      pat_lifting_static typing_static keys function_typing_static
+  => by
+    intro mem_con_zones
+    cases (Iff.mp List.mem_append mem_con_zones) with
+    | inl mem_zones =>
+
+      have ⟨skolems'', removeAll_skolems, assums''', removeAll_assums, skolems', assums'', tr, interp⟩ := (keys _ _ _ mem_zones)
+      specialize typing_static _ _ _ mem_zones skolems'' removeAll_skolems assums''' removeAll_assums skolems' assums'' tr interp
+      clear keys
+
+      rw [← removeAll_skolems]
+      rw [← removeAll_assums]
+
+      apply ZoneInterp.integrated_positive_soundness interp
+
+      have ⟨tam0,ih0l,ih0r⟩ := GuardedTyping.soundness typing_static
+
+      have ⟨p24,p26,p28,p30,p32,p34⟩ := GuardedTyping.aux typing_static
+
+      exists tam0
+
+      apply And.intro ih0l
+
+      intros tam' subtyping_dynamic_assums
+      intros eam typing_dynamic_context
+      apply Typing.function_head_elim
+      intros v p44 p46
+      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p44 p46
+      exists eam0
+      simp [*]
+      rw [Expr.sub_sub_removal (pattern_match_ids_containment p48)]
+
+      apply ih0r subtyping_dynamic_assums
+      apply MultiTyping.dom_reduction
+      { apply List.disjoint_preservation_left ih0l
+        apply List.disjoint_preservation_right p28 p32 }
+      { apply MultiTyping.dom_context_extension p50 }
+
+    | inr p11 =>
+      have ⟨tam0,ih0l,ih0r⟩ := Function.Typing.Static.soundness function_typing_static p11
+      have ⟨p20,p22,p24,p26⟩ := Function.Typing.Static.aux function_typing_static p11
+
+      exists tam0
+      simp [*]
+      intros tam' p30
+      intros eam p32
+
+      apply Typing.function_tail_elim
+      { intros v p40 p42
+        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p40 p42
+        apply Exists.intro eam0 p48 }
+      { apply Function.Typing.Static.subtra_soundness function_typing_static List.mem_cons_self p11 }
+      { apply ih0r _ p30 _ p32 }
+
+
+  theorem Record.Typing.Static.soundness {skolems assums context r t skolems' assums'} :
+    Record.Typing.Static skolems assums context r t skolems' assums' →
+    ∃ tam, ListPair.dom tam ⊆ (List.removeAll skolems' skolems) ∧
+    (∀ {tam'}, MultiSubtyping (tam ++ tam') assums' →
+      (∀ {eam}, MultiTyping tam' eam context →
+        Typing (tam ++ tam') (Expr.sub eam (.record r)) t ) )
+  | .nil => by
+    exists []
+    simp [*, ListPair.dom]
+    intros tam' p10
+    intros eam p20
+    simp [Expr.sub, List.record_sub]
+    apply Typing.empty_record_top
+
+  | .single l e body p0 => by
+    have ⟨tam0,ih0l,ih0r⟩ := GuardedTyping.soundness p0
+    exists tam0
+    simp [*]
+    intros tam' p40
+    intros eam p50
+    apply Typing.entry_intro _ (ih0r p40 p50)
+
+  | .cons l e r body t skolems0 assums0 p0 p1 => by
+
+    have ⟨tam0,ih0l,ih0r⟩ := GuardedTyping.soundness p0
+    have ⟨p5,p10,p15,p20,p25,p30⟩ := GuardedTyping.aux p0
+    have ⟨tam1,ih1l,ih1r⟩ := Record.Typing.Static.soundness p1
+    have ⟨p6,p11,p16,p21,p26,p31⟩ := Record.Typing.Static.aux p1
+
+    exists (tam1 ++ tam0)
+    simp [*]
+    apply And.intro (dom_concat_removeAll_containment p5 ih0l p6 ih1l)
+
+    intros tam' p40
+    intros eam p50
+    apply Typing.inter_entry_intro
+    { apply Typing.dom_extension
+      { apply List.disjoint_preservation_left ih1l
+        apply List.disjoint_preservation_right p20 p26 }
+      { apply ih0r
+        { apply MultiSubtyping.dom_reduction
+          { apply List.disjoint_preservation_left ih1l p26 }
+          { apply MultiSubtyping.reduction p11 p40 } }
+        { apply p50 } } }
+    { apply ih1r p40
+      apply MultiTyping.dom_extension
+      { apply List.disjoint_preservation_left ih0l
+        apply List.disjoint_preservation_right p15 p25 }
+      { apply p50 } }
+
+
+  theorem GuardedTyping.soundness {skolems assums context e t skolems' assums'} :
+    GuardedTyping skolems assums context e t skolems' assums' →
+    ∃ tam, ListPair.dom tam ⊆ (List.removeAll skolems' skolems) ∧
+    (∀ {tam'}, MultiSubtyping (tam ++ tam') assums' →
+      (∀ {eam}, MultiTyping tam' eam context →
+        Typing (tam ++ tam') (Expr.sub eam e) t ) )
+
+  | .var skolems assums context x p0 => by
+    exists []
+    simp [ListPair.dom, *]
+    intros tam' p1
+    intros eam p2
+    unfold MultiTyping at p2
+    have ⟨e,p3,p4⟩ := p2 p0
+    simp [Expr.sub, p3, p4]
+
+  | .record r p0 => by
+    apply Record.Typing.Static.soundness p0
+
+  | .function f zones p0 p1 => by
+      exists []
+      simp [*, ListPair.dom]
+      intros tam' p2
+      intros eam p3
+
+      apply ListZone.pack_positive_soundness p1 (fun _ x => x) p2
+      intros skolesm0 assums0 t0 p4
+      have ⟨tam0,ih0l,ih0r⟩ := Function.Typing.Static.soundness p0 p4
+      have ⟨p10,p11,p12,p13⟩ := Function.Typing.Static.aux p0 p4
+      exists tam0
+      simp [*]
+      intro tam''
+      intros p5 p6
+      apply ih0r
+      { apply MultiSubtyping.union p6
+        apply MultiSubtyping.dom_extension
+        { apply List.disjoint_preservation_left ih0l p11 }
+        { apply MultiSubtyping.dom_extension p5 p2 } }
+      { apply MultiTyping.dom_extension
+        { apply List.disjoint_preservation_right p13 p5 }
+        { apply p3 } }
+
+  | .app ef ea id tf skolems0 assums0 ta skolems1 assums1 t p0 p1 p2 interp => by
+    have ⟨tam0,ih0l,ih0r⟩ := GuardedTyping.soundness p0
+    have ⟨p5,p6,p105,p7,p8,p9⟩ := GuardedTyping.aux p0
+    have ⟨tam1,ih1l,ih1r⟩ := GuardedTyping.soundness p1
+    have ⟨p10,p11,p107,p12,p13,p14⟩ := GuardedTyping.aux p1
+    have ⟨tam2,ih2l,ih2r⟩ := GuardedSubtyping.soundness p2
+    have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := GuardedSubtyping.aux p2
+
+    apply TypInterp.integrated_positive_soundness interp
+
+    exists tam2 ++ (tam1 ++ tam0)
+    apply And.intro
+    { apply dom_concat_removeAll_containment
+      { intro a p30 ; apply p10 (p5 p30) }
+      { apply dom_concat_removeAll_containment p5 ih0l p10 ih1l }
+      { apply p15 }
+      { apply ih2l } }
+
+    { simp [*]
+      intro tam' p30 eam p31
+      apply Typing.path_elim
+      {
+        unfold Subtyping at ih2r
+        apply ih2r p30
+        apply Typing.dom_extension
+        { apply List.disjoint_preservation_left ih2l p20 }
+        {
+          apply Typing.dom_extension
+          {
+            apply List.disjoint_preservation_left ih1l
+            apply List.disjoint_preservation_right p7 p13
+          }
+          {
+            apply ih0r
+            {
+              apply MultiSubtyping.dom_reduction
+              { apply List.disjoint_preservation_left ih1l p13 }
+              {
+                apply MultiSubtyping.dom_reduction
+                { apply List.disjoint_preservation_left ih2l
+                  apply List.disjoint_preservation_right
+                  { apply List.pair_typ_free_vars_containment p11  }
+                  { exact p19 }
+                }
+                { apply MultiSubtyping.reduction p11
+                  apply MultiSubtyping.reduction p16 p30
+                }
+              }
+            }
+            {
+              apply p31
+            }
+          }
+        }
+      }
+      {
+        apply Typing.dom_extension
+        {
+          apply List.disjoint_preservation_left ih2l
+          apply List.disjoint_preservation_right p12 p19
+        }
+        {
+          apply ih1r
+          {
+            apply MultiSubtyping.dom_reduction
+            { apply List.disjoint_preservation_left ih2l p19 }
+            { apply MultiSubtyping.reduction p16 p30 }
+          }
+          {
+            apply MultiTyping.dom_extension
+            { apply List.disjoint_preservation_right p105
+              exact List.disjoint_preservation_left ih0l p8 }
+            { apply p31 }
+          }
+        }
+      }
+    }
+
+  | .loop body t0 id zones id_antec id_consq p0
+    subtyping_static keys subtyping_static_zones id_fresh
+  => by
+
+    have ⟨tam0,ih0l,ih0r⟩ := GuardedTyping.soundness p0
+    have ⟨p5,p6,p7,p8,p9,p10⟩ := GuardedTyping.aux p0
+    exists tam0
+    simp [*]
+
+    intros tam' p20
+    intros eam p30
+
+    apply LoopSubtyping.soundness subtyping_static_zones p20 id_fresh
+    intros skolems'''' assums''''' body' mem_zones
+    have ⟨
+      skolems''', removeAll_skolems, assums'''', removeAll_assums,
+      assums''', loop_normal_form, skolems'', assums'', interp
+    ⟩ := keys _ _ _ mem_zones
+
+    specialize subtyping_static _ _ _ mem_zones
+      skolems''' removeAll_skolems assums'''' removeAll_assums
+      assums''' loop_normal_form skolems'' assums'' interp
+
+    rw [← removeAll_skolems]
+    rw [← removeAll_assums]
+
+    clear keys
+
+    apply And.intro
+    { -- substance / conditional completeness
+      apply List.pair_typ_loop_normal_form_integrated_completeness loop_normal_form
+      apply ZoneInterp.assums_integrated_completeness interp
+      apply GuardedSubtyping.substance subtyping_static p20
+    }
+    { -- soundness
+      apply List.pair_typ_loop_normal_form_integrated_soundness loop_normal_form
+      apply ZoneInterp.integrated_soundness interp
+
+      have ⟨tam1, h33l, h33r⟩ := GuardedSubtyping.soundness subtyping_static
+      have ⟨p41,p42,p43,p44,p45,p46,p47⟩ := GuardedSubtyping.aux subtyping_static
+      exists tam1
+      simp [*]
+
+      intros tam'' p55 p56
+      apply Typing.loop_path_elim id
+
+      unfold Subtyping at h33r
+      apply h33r
+      {
+        apply MultiSubtyping.removeAll_removal
+        {
+          apply MultiSubtyping.dom_extension
+          { apply List.disjoint_preservation_left h33l p45 }
+          { apply MultiSubtyping.dom_extension p55 p20 }
+        }
+        { exact p56 }
+      }
+      {
+        apply Typing.dom_extension (List.disjoint_preservation_left h33l p46)
+        apply Typing.dom_extension (List.disjoint_preservation_right p8 p55)
+        apply ih0r p20 p30
+      }
+    }
+
+  | .anno e ta te skolems0 assums0 p0 p1 p2 => by
+    have ⟨tam0,ih0l,ih0r⟩ := GuardedTyping.soundness p1
+    have ⟨p5,p6,p7,p8,p9,p10⟩ := GuardedTyping.aux p1
+    have ⟨tam1,ih1l,ih1r⟩ := GuardedSubtyping.soundness p2
+    have ⟨p15,p16,p17,p18,p19,p20,p21⟩ := GuardedSubtyping.aux p2
+    exists (tam1 ++ tam0)
+    simp [*]
+    apply And.intro (dom_concat_removeAll_containment p5 ih0l p15 ih1l)
+    intros am' p40
+    intros eam p42
+    apply Typing.anno_intro (ih1r p40)
+    apply Typing.dom_extension
+    { apply List.disjoint_preservation_left ih1l p20 }
+    { apply ih0r
+      { apply MultiSubtyping.dom_reduction
+        { apply List.disjoint_preservation_left ih1l p19 }
+        { apply MultiSubtyping.reduction p16 p40 } }
+      { apply p42 } }
 
 end

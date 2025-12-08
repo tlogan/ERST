@@ -1,6 +1,4 @@
 import Lang.Basic
-import Mathlib.Data.Set.Basic
-import Mathlib.Tactic.Linarith
 
 set_option pp.fieldNotation false
 

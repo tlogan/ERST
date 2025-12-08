@@ -1,7 +1,3 @@
-import Lean
-import Mathlib.Data.Set.Basic
-import Mathlib.Algebra.Order.Ring.Defs
-
 import Lang.Util
 
 
