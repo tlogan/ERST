@@ -607,6 +607,16 @@ theorem SimpleTyping.proj_record.proj_bubble :
 := by sorry
 
 
+theorem SimpleTyping.app_function_beta_expansion :
+  (∀ {v : Expr},
+    Expr.is_value v = true → Typing am v tp →
+    ∃ eam, Expr.pattern_match v p = some eam ∧ Typing am (Expr.sub eam e) tr
+  ) →
+  Typing am cator (ListTyp.diff tp subtras) →
+  Typing am (Expr.app (Expr.function ((p, e) :: f)) cator) tr
+:= by sorry
+
+
 
 theorem SimpleTyping.proj_record_beta_expansion l :
   SimpleTyping e t →
@@ -800,23 +810,19 @@ theorem Typing.entry_intro l :
   unfold Typing
   exact proj_record_beta_expansion l h0
 
-theorem Typing.function_head_elim {am p e f subtras tp tr} :
+theorem Typing.path_intro {am p e f subtras tp tr} :
   (∀ {v} ,
     Expr.is_value v → Typing am v tp →
     ∃ eam , Expr.pattern_match v p = .some eam ∧ Typing am (Expr.sub eam e) tr
   ) →
   Typing am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
-:= by sorry
+:= by
+  intro h0
+  unfold Typing
+  intro e' h1
+  apply SimpleTyping.app_function_beta_expansion h0 h1
 
--- theorem Typing.function_head_elim {am p e f subtras tp tr} :
---   (∀ {v} ,
---     IsValue v → Typing am v tp →
---     ∃ eam , pattern_match v p = .some eam ∧ Typing am (Expr.sub eam e) tr
---   ) →
---   Typing am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
--- := by sorry
-
-theorem Typing.function_tail_elim {am p tp e f t } :
+theorem Typing.function_preservation {am p tp e f t } :
   (∀ {v} , Expr.is_value v → Typing am v tp → ∃ eam , Expr.pattern_match v p = .some eam) →
   ¬ Subtyping am t (.path tp .top) →
   Typing am (.function f) t →

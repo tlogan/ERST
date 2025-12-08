@@ -2875,7 +2875,7 @@ mutual
 
       intros tam' subtyping_dynamic_assums
       intros eam typing_dynamic_context
-      apply Typing.function_head_elim
+      apply Typing.path_intro
       intros v p44 p46
       have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p44 p46
       exists eam0
@@ -2897,7 +2897,7 @@ mutual
       intros tam' p30
       intros eam p32
 
-      apply Typing.function_tail_elim
+      apply Typing.function_preservation
       { intros v p40 p42
         have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p40 p42
         apply Exists.intro eam0 p48 }
