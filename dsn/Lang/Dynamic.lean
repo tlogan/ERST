@@ -77,42 +77,42 @@ theorem Expr.sub_sub_removal :
 := by sorry
 
 
-inductive Progression : Expr → Expr → Prop
+inductive Transition : Expr → Expr → Prop
 | entry l e r e' :
-  Progression e e' →
-  Progression (Expr.record ((l, e) :: r)) (Expr.record ((l, e') :: r))
+  Transition e e' →
+  Transition (Expr.record ((l, e) :: r)) (Expr.record ((l, e') :: r))
 | record : ∀ {r r' l v},
-  Progression (Expr.record r) (Expr.record r') →
+  Transition (Expr.record r) (Expr.record r') →
   v.is_value →
-  Progression (Expr.record ((l, v) :: r)) (Expr.record ((l, v) :: r'))
+  Transition (Expr.record ((l, v) :: r)) (Expr.record ((l, v) :: r'))
 | applicator : ∀ {ef ef' e},
-  Progression ef ef' →
-  Progression (.app ef e) (.app ef' e)
+  Transition ef ef' →
+  Transition (.app ef e) (.app ef' e)
 | applicand f e e' :
-  Progression e e' →
-  Progression (.app (.function f) e) (.app (.function f) e')
+  Transition e e' →
+  Transition (.app (.function f) e) (.app (.function f) e')
 | appmatch : ∀ {p e f v m},
   v.is_value →
   Expr.pattern_match v p = some m →
-  Progression (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
+  Transition (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
 | appskip : ∀ {p e f v},
   v.is_value →
   Expr.pattern_match v p = none →
-  Progression (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
+  Transition (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
 | anno : ∀ {e t},
-  Progression (.anno  e t) e
+  Transition (.anno  e t) e
 | loopbody : ∀ {e e'},
-  Progression e e' →
-  Progression (.loop e) (.loop e')
+  Transition e e' →
+  Transition (.loop e) (.loop e')
 | looppeel : ∀ {id e},
-  Progression
+  Transition
     (.loop (.function [(.var id, e)]))
     (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
 
 
-inductive ProgressionStar : Expr → Expr → Prop
-| refl e : ProgressionStar e e
-| step e e' e'' : Progression e e' → ProgressionStar e' e'' → ProgressionStar e e''
+inductive TransitionStar : Expr → Expr → Prop
+| refl e : TransitionStar e e
+| step e e' e'' : Transition e e' → TransitionStar e' e'' → TransitionStar e e''
 
 
 def SimpleTyping (e : Expr) : Typ → Prop
@@ -155,7 +155,7 @@ mutual
 
   def Typing (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
-  | .top => ∃ e',  Expr.is_value e' ∧ ProgressionStar e e'
+  | .top => ∃ e',  Expr.is_value e' ∧ TransitionStar e e'
   | .iso l τ => Typing am (.extract e l) τ
   | .entry l τ => Typing am (.proj e l) τ
   | .path left right => ∀ e' , Typing am e' left → Typing am (.app e e') right
@@ -485,7 +485,7 @@ theorem Typing.empty_record_top am :
   exists (Expr.record [])
   apply And.intro
   · exact rfl
-  · apply ProgressionStar.refl
+  · apply TransitionStar.refl
 
 theorem Typing.inter_entry_intro {am l e r body t} :
   Typing am e body →
@@ -494,15 +494,15 @@ theorem Typing.inter_entry_intro {am l e r body t} :
 := by sorry
 
 
-theorem ProgressionStar.record_single_elim {e l e' id}:
-  ProgressionStar e e' → Expr.is_value e' →
-  ProgressionStar (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)])) e'
+theorem TransitionStar.record_single_elim {e l e' id}:
+  TransitionStar e e' → Expr.is_value e' →
+  TransitionStar (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)])) e'
 := by
   intro h0 h1
   induction h0 with
   | refl e'' =>
-    apply ProgressionStar.step
-    { apply Progression.appmatch
+    apply TransitionStar.step
+    { apply Transition.appmatch
       { reduce; exact h1 }
       { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
         reduce
@@ -510,26 +510,26 @@ theorem ProgressionStar.record_single_elim {e l e' id}:
       }
     }
     { simp [Expr.sub, find]
-      apply ProgressionStar.refl
+      apply TransitionStar.refl
     }
   | step e e' e'' h3 h4 ih =>
     cases h5 : (Expr.is_value (Expr.record [(l,e)])) with
     | true =>
-      apply ProgressionStar.step
-      { apply Progression.appmatch h5
+      apply TransitionStar.step
+      { apply Transition.appmatch h5
         { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
           reduce
           apply And.intro rfl rfl
         }
       }
       { simp [Expr.sub, find]
-        exact ProgressionStar.step e e' e'' h3 h4
+        exact TransitionStar.step e e' e'' h3 h4
       }
     | false =>
-      apply ProgressionStar.step
+      apply TransitionStar.step
       {
-        apply Progression.applicand
-        apply Progression.entry
+        apply Transition.applicand
+        apply Transition.entry
         apply h3
       }
       { apply ih h1 }
@@ -701,7 +701,7 @@ theorem Typing.proj_record_beta_expansion l :
   unfold Typing
   exists e'
   apply And.intro h1
-  exact ProgressionStar.record_single_elim h2 h1
+  exact TransitionStar.record_single_elim h2 h1
 
 | .iso label body => by
   intro h0
@@ -941,3 +941,58 @@ theorem Typing.lfp_intro_bot {am e id t} :
   Typing ((id, .bot) :: am) e t →
   Typing am e (.lfp id t)
 := by sorry
+
+
+def Convergence (a b : Expr) :=
+  ∃ e , TransitionStar a e ∧ TransitionStar b e
+
+theorem Convergence.typing_left_to_right {a b am t} :
+  Convergence a b →
+  Typing am a t →
+  Typing am b t
+:= by sorry
+
+theorem Expr.Convergence.typing_right_to_left {a b am t} :
+  Convergence a b →
+  Typing am b t →
+  Typing am a t
+:= by sorry
+
+theorem Convergence.transitivity {a b c} :
+  Convergence a b →
+  Convergence b c →
+  Convergence a c
+:= by sorry
+
+theorem Convergence.swap {a b} :
+  Convergence a b →
+  Convergence b a
+:= by sorry
+
+theorem Convergence.app_arg_preservation {a b} f :
+  Convergence a b →
+  Convergence (.app f a) (.app f b)
+:= by sorry
+
+
+theorem Subtyping.entry_preservation :
+  Subtyping am t t' →
+  Subtyping am (.entry l t) (.entry l t')
+:= by
+  unfold Subtyping
+  intro h0 e h1
+  unfold Typing
+  apply h0
+  unfold Typing at h1
+  apply h1
+
+theorem Subtyping.transitivity :
+  Subtyping am t0 t1 →
+  Subtyping am t1 t2 →
+  Subtyping am t0 t2
+:= by
+  unfold Subtyping
+  intro h0 h1 e h3
+  apply h1
+  specialize h0 e h3
+  apply h0

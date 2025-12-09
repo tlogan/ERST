@@ -90,14 +90,14 @@ def Typ.drop (id : String) (t : Typ) : Typ :=
   Typ.combine .false cases'
 
 
-theorem Typ.sub.typing.completeness {am id body e t} :
+theorem Typ.sub_typing_preservation {am id body e t} :
   Typing ((id, t) :: am) e body →
   Typing am e (Typ.sub [(id, t)] body)
 := by sorry
 
 
 -- theorem Subtyping.lfp_elim_diff_intro {am id lower upper sub n} :
-theorem Typ.subfold.subtyping.soundness_and_completeness {am id lower upper sub n} :
+theorem Typ.subfold_subtyping_lfp_diff {am id lower upper sub n} :
   Monotonic am id lower →
   Subtyping am (Typ.lfp id lower) upper →
   ¬ Subtyping am (Typ.subfold id lower 1) sub →
@@ -106,12 +106,12 @@ theorem Typ.subfold.subtyping.soundness_and_completeness {am id lower upper sub 
 := by sorry
 
 
-theorem Typ.sub.lfp.soundness {am t id body} :
+theorem Typ.sub_subtyping_reflection {am t id body} :
   Subtyping am t (Typ.sub [(id, .lfp id body)] body) →
   Subtyping am t (Typ.lfp id body)
 := by sorry
 
-theorem Typ.drop.lfp.soundness {am t id body} :
+theorem Typ.drop_subtyping_reflection {am t id body} :
   Subtyping am t (Typ.drop id body) →
   Subtyping am t (Typ.lfp id body)
 := by sorry
@@ -1266,12 +1266,10 @@ end
 
 
 
-theorem Typ.lfp_factor_elim_soundness {am id lower upper l fac} :
+theorem Typ.factor_subtyping_preservation {id} :
   Typ.factor id lower l = .some fac →
-  Subtyping am fac upper →
-  Subtyping am (Typ.lfp id lower) (.entry l upper)
+  Subtyping am (Typ.lfp id lower) (.entry l fac)
 := by sorry
-
 
 theorem GuardedMultiSubtyping.aux {skolems assums cs skolems' assums'} :
   GuardedMultiSubtyping skolems assums cs skolems' assums' →
@@ -1293,7 +1291,7 @@ theorem GuardedSubtyping.aux {skolems assums lower upper skolems' assums'} :
   (List.removeAll skolems' skolems) ∩ Typ.free_vars upper = []
 := by sorry
 
-theorem GuardedSubtyping.upper_containment {skolems assums lower upper skolems' assums'} :
+theorem GuardedSubtyping.upper_containment :
   GuardedSubtyping skolems assums lower upper skolems' assums' →
   Typ.free_vars upper ⊆ List.pair_typ_free_vars assums'
 := by
@@ -1303,14 +1301,14 @@ theorem GuardedSubtyping.upper_containment {skolems assums lower upper skolems' 
 
 
 
-theorem List.pair_typ_restricted_rename {skolems assums ids quals ids' quals'} :
+theorem List.pair_typ_restricted_rename :
   List.pair_typ_toBruijn ids quals = List.pair_typ_toBruijn ids' quals' →
   List.pair_typ_restricted skolems assums quals →
   List.pair_typ_restricted skolems assums quals'
 := by sorry
 
 
-theorem List.pair_typ_solution_completeness {skolems assums cs skolems' assums' am am'} :
+theorem GuardedMultiSubtyping.preservation :
   List.pair_typ_restricted skolems assums cs →
   GuardedMultiSubtyping skolems assums cs skolems' assums' →
   MultiSubtyping am assums' →
@@ -1535,7 +1533,7 @@ mutual
       apply Subtyping.assumptions_independence p2 p24
       { intros x p28
         exact p14 (p5 (p25 p28)) }
-      { apply List.pair_typ_solution_completeness p0 p1
+      { apply GuardedMultiSubtyping.preservation p0 p1
           (MultiSubtyping.reduction p18 p24) p26 } }
 
   | .inter_intro t left right skolems0 assums0 p0 p1 => by
@@ -1592,7 +1590,7 @@ mutual
       apply Subtyping.assumptions_independence p2 p24
       { intros x p28
         exact p14 (p5 (p25 p28)) }
-      { apply List.pair_typ_solution_completeness p0 p1
+      { apply GuardedMultiSubtyping.preservation p0 p1
           (MultiSubtyping.reduction p18 p24) p26 } }
 
   | .placeholder_elim id cs assums' p0 p1 p2 => by
@@ -1724,7 +1722,7 @@ mutual
 
     apply Subtyping.lfp_induct_elim (Polarity.soundness (am0 ++ am') p0)
     intro e typing_dynamic_lower
-    apply Typ.sub.typing.completeness at typing_dynamic_lower
+    apply Typ.sub_typing_preservation at typing_dynamic_lower
     unfold Subtyping at ih0r
     apply ih0r p40 _ typing_dynamic_lower
 
@@ -1734,7 +1732,13 @@ mutual
     exists am0
     simp [*]
     intros am' p40
-    apply Typ.lfp_factor_elim_soundness p0 (ih0r p40)
+    apply Subtyping.transitivity
+    { apply Typ.factor_subtyping_preservation p0 }
+    { apply Subtyping.entry_preservation (ih0r p40) }
+
+
+
+
 
   | .lfp_elim_diff_intro id lower upper sub h p0 p1 p2 p3 p4 p5 p6 => by
     have ⟨am0,ih0l,ih0r⟩ := GuardedSubtyping.soundness p4
@@ -1742,7 +1746,7 @@ mutual
     exists am0
     simp [*]
     intros am' p45
-    apply Typ.subfold.subtyping.soundness_and_completeness (Polarity.soundness (am0 ++ am') p3) (ih0r p45)
+    apply Typ.subfold_subtyping_lfp_diff (Polarity.soundness (am0 ++ am') p3) (ih0r p45)
     { intros p50
       apply Subtyping.check_completeness at p50
       contradiction }
@@ -1771,7 +1775,7 @@ mutual
     exists am0
     simp [*]
     intros am' p40
-    apply Typ.sub.lfp.soundness (ih0r p40)
+    apply Typ.sub_subtyping_reflection (ih0r p40)
 
   | .lfp_drop_intro id body p0 => by
     have ⟨am0,ih0l,ih0r⟩ := GuardedSubtyping.soundness p0
@@ -1779,7 +1783,7 @@ mutual
     exists am0
     simp [*]
     intros am' p40
-    apply Typ.drop.lfp.soundness (ih0r p40)
+    apply Typ.drop_subtyping_reflection (ih0r p40)
   -------------------------------------------------------------------
 
   | .diff_elim lower sub upper p0  => by
@@ -2105,35 +2109,18 @@ theorem Record.Typing.Static.aux
   (List.removeAll skolems' skolems) ∩ Typ.free_vars t = []
 := by sorry
 
-
-def Expr.Convergence (a b : Expr) :=
-  ∃ e , ProgressionStar a e ∧ ProgressionStar b e
-
-theorem Expr.Convergence.typing_left_to_right {a b am t} :
-  Expr.Convergence a b →
-  Typing am a t →
-  Typing am b t
-:= by sorry
-
-theorem Expr.Convergence.typing_right_to_left {a b am t} :
-  Expr.Convergence a b →
-  Typing am b t →
-  Typing am a t
-:= by sorry
-
-
-theorem Typ.factor_expansion_soundness {am id t label t' e'} :
+theorem Typ.factor_reflection {am id t label t' e'} :
   Typ.factor id t label = some t' →
   Typing am e' (.lfp id t') →
   ∃ e ,
-    Expr.Convergence (Expr.proj e label) e' ∧
+    Convergence (Expr.proj e label) e' ∧
     Typing am e (.lfp id t)
 := by sorry
 
-theorem Typ.factor_reduction_soundness {am id t label t' e' e} :
+theorem Typ.factor_preservation {am id t label t' e' e} :
   Typ.factor id t label = some t' →
   Typing am e (.lfp id t) →
-  Expr.Convergence (Expr.proj e label) e' →
+  Convergence (Expr.proj e label) e' →
   Typing am e' (.lfp id t')
 := by sorry
 
@@ -2154,23 +2141,7 @@ theorem ListZone.pack_positive_soundness {pids zones t am assums e} :
 := by sorry
 
 
-theorem Expr.Convergence.transitivity {a b c} :
-  Expr.Convergence a b →
-  Expr.Convergence b c →
-  Expr.Convergence a c
-:= by sorry
-
-theorem Expr.Convergence.swap {a b} :
-  Expr.Convergence a b →
-  Expr.Convergence b a
-:= by sorry
-
-theorem Expr.Convergence.app_arg_preservation {a b} f :
-  Expr.Convergence a b →
-  Expr.Convergence (.app f a) (.app f b)
-:= by sorry
-
-theorem ListZone.pack_negative_soundness {pids zones t am assums e} :
+theorem ListZone.pack_negative_reflection {pids zones t am assums e} :
   ListZone.pack pids .false zones = t →
   List.pair_typ_free_vars assums ⊆ pids →
   -- ListZone.pack (id :: List.pair_typ_free_vars assums) .false zones = t →
@@ -2184,7 +2155,7 @@ theorem ListZone.pack_negative_soundness {pids zones t am assums e} :
         Typing (am'' ++ am' ++ am) e t' ) ) )
 := by sorry
 
-theorem Zone.pack_negative_soundness {pids t am assums skolems' assums' t'} :
+theorem Zone.pack_negative_reflection {pids t am assums skolems' assums' t'} :
   Zone.pack pids .false ⟨skolems', assums', t'⟩ = t →
   List.pair_typ_free_vars assums ⊆ pids →
   MultiSubtyping am assums →
@@ -2214,7 +2185,7 @@ example {P Q R} :
 
 
 
-theorem Zone.pack_negative_completeness {pids t am assums skolems' assums' t' e am'} :
+theorem Zone.pack_negative_preservation {pids t am assums skolems' assums' t' e am'} :
   Zone.pack pids .false ⟨skolems', assums', t'⟩ = t →
   List.pair_typ_free_vars assums ⊆ pids →
   MultiSubtyping am assums →
@@ -2234,7 +2205,7 @@ theorem Zone.pack_negative_completeness {pids t am assums skolems' assums' t' e 
 --     Typing am e t
 -- := by sorry
 
-theorem ListZone.inversion_soundness {id zones zones' am assums} :
+theorem ListZone.invert_preservation {id zones zones' am assums} :
   ListZone.invert id zones = some zones' →
   MultiSubtyping am assums →
   ∀ ef,
@@ -2253,12 +2224,12 @@ theorem ListZone.inversion_soundness {id zones zones' am assums} :
           MultiSubtyping (am'' ++ am' ++ am) assums' ∧
           Typing (am'' ++ am' ++ am) ep t' ) )
     ) →
-    Expr.Convergence (.proj ep "right") (.app ef (.proj ep "left"))
+    Convergence (.proj ep "right") (.app ef (.proj ep "left"))
   )
 := by sorry
 
 
-theorem List.pair_typ_inversion_soundness {id am assums assums0 assums0'} skolems tl tr :
+theorem List.pair_typ_invert_preservation {id am assums assums0 assums0'} skolems tl tr :
   List.pair_typ_invert id assums0 = some assums0' →
   MultiSubtyping am assums →
   ∀ ef,
@@ -2276,7 +2247,7 @@ theorem List.pair_typ_inversion_soundness {id am assums assums0 assums0'} skolem
           MultiSubtyping (am'' ++ am' ++ am) assums0' ∧
           Typing (am'' ++ am' ++ am) ep (.pair tl tr) )
       ) →
-      Expr.Convergence (.proj ep "right") (.app ef (.proj ep "left"))
+      Convergence (.proj ep "right") (.app ef (.proj ep "left"))
     )
 := by sorry
 
@@ -2366,12 +2337,12 @@ theorem Typ.factor_monotonic {am id label t t'} :
 := by sorry
 
 
-theorem UpperFounded.soundness {id l l'} am :
+theorem UpperFounded.preservation {id l l'} am :
   UpperFounded id l l' →
   Subtyping am (.lfp id l) (.lfp id l')
 := by sorry
 
-theorem Typ.sub_weaken_soundness {am idl t0 t1 t2} :
+theorem Typ.sub_monotonic_preservation {am idl t0 t1 t2} :
   Typ.sub [(idl, t0)] t1 = t2 →
   Monotonic am idl t1 →
   Subtyping am (.var idl) t0 →
@@ -2419,18 +2390,18 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
     intro ea
     intro p9
 
-    have ⟨ep,p10,p11⟩ := Typ.factor_expansion_soundness p7 p9
+    have ⟨ep,p10,p11⟩ := Typ.factor_reflection p7 p9
 
-    apply Expr.Convergence.typing_left_to_right
-      (Expr.Convergence.app_arg_preservation e p10)
+    apply Convergence.typing_left_to_right
+      (Convergence.app_arg_preservation e p10)
 
-    apply Typ.factor_reduction_soundness p8 p11
+    apply Typ.factor_preservation p8 p11
 
     have p3 := (fun {x y z} mem_zones =>
       let ⟨substance, soundness⟩ := @substance_and_soundness x y z mem_zones
       soundness
     )
-    apply ListZone.inversion_soundness p4 p1 at p3
+    apply ListZone.invert_preservation p4 p1 at p3
 
     apply p3 ep
 
@@ -2441,7 +2412,7 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
 
     apply Typing.ListZone.existential_top_drop p2
 
-    apply ListZone.pack_negative_soundness p5
+    apply ListZone.pack_negative_reflection p5
       (List.subset_cons_of_subset id (fun _ x => x)) p13 p12
 
 
@@ -2472,7 +2443,7 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
         Typing ((id,.bot)::am) e t'
     := by
       intros e_pair typing_pair
-      apply Zone.pack_negative_completeness p6
+      apply Zone.pack_negative_preservation p6
         (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
         (MultiSubtyping.dom_single_extension p2 p1)
         subtyping_assums0'_bot
@@ -2509,7 +2480,7 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
       Typing.lfp_intro_bot monotonic_left typing_factor_left_bot
 
 
-    have subtyping_left_pre := UpperFounded.soundness am upper_founded
+    have subtyping_left_pre := UpperFounded.preservation am upper_founded
     unfold Subtyping at subtyping_left_pre
 
     have subtyping_left : Subtyping am (Typ.var idl) (Typ.lfp id l') := by
@@ -2523,18 +2494,18 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
       exact typing_idl
 
     have subtyping_right : Subtyping am (.lfp id r') r'' := by
-      apply Typ.sub_weaken_soundness sub_eq
+      apply Typ.sub_monotonic_preservation sub_eq
         (Polarity.soundness am p10) subtyping_left
 
     unfold Subtyping at subtyping_right
     apply subtyping_right
 
-    have ⟨ep,p14,p15⟩ := Typ.factor_expansion_soundness p8 typing_factor_left
+    have ⟨ep,p14,p15⟩ := Typ.factor_reflection p8 typing_factor_left
 
-    apply Expr.Convergence.typing_left_to_right (Expr.Convergence.app_arg_preservation e p14)
-    apply Typ.factor_reduction_soundness p9 p15
+    apply Convergence.typing_left_to_right (Convergence.app_arg_preservation e p14)
+    apply Typ.factor_preservation p9 p15
 
-    apply List.pair_typ_inversion_soundness skolems (Typ.var idl) r p5 p1 at soundness
+    apply List.pair_typ_invert_preservation skolems (Typ.var idl) r p5 p1 at soundness
 
     apply soundness ep
 
@@ -2546,7 +2517,7 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
 
     apply Typing.existential_top_drop (Typ.var idl) r p2
 
-    apply Zone.pack_negative_soundness p6
+    apply Zone.pack_negative_reflection p6
       (List.subset_cons_of_subset id (List.subset_cons_of_subset idl (fun _ x => x)))
       p22 ep p20
 
@@ -2687,14 +2658,14 @@ theorem Typ.combine_bounds_positive_subtyping_path_conseq_soundness {id am am_sk
 --   Typ.factor id t label = some t' →
 --   Typing am e' (.lfp id t') →
 --   ∃ e ,
---     Expr.Convergence (Expr.proj e label) e' ∧
+--     Convergence (Expr.proj e label) e' ∧
 --     Typing am e (.lfp id t)
 -- := by sorry
 
 -- theorem Typ.factor_reduction_soundness {am id t label t' e' e} :
 --   Typ.factor id t label = some t' →
 --   Typing am e (.lfp id t) →
---   Expr.Convergence (Expr.proj e label) e' →
+--   Convergence (Expr.proj e label) e' →
 --   Typing am e' (.lfp id t')
 -- := by sorry
 
@@ -2763,7 +2734,7 @@ mutual
 end
 
 
-theorem  List.pair_typ_loop_normal_form_integrated_completeness
+theorem  List.pair_typ_loop_normal_form_preservation
 {id am assums assums' assums''} :
   List.pair_typ_loop_normal_form id assums' = some assums'' →
   (∃ am',
@@ -2777,7 +2748,7 @@ theorem  List.pair_typ_loop_normal_form_integrated_completeness
 := by sorry
 
 
-theorem  ZoneInterp.assums_integrated_completeness
+theorem  ZoneInterp.multi_subtyping_preservation
 {ignore b am assums skolems' assums' t' skolems'' assums'' t''} :
   ZoneInterp ignore b ⟨skolems', assums', t'⟩ ⟨skolems'', assums'', t''⟩ →
   (∃ am',
@@ -2794,7 +2765,7 @@ theorem  ZoneInterp.assums_integrated_completeness
 
 
 
-theorem  List.pair_typ_loop_normal_form_integrated_soundness
+theorem  List.pair_typ_loop_normal_form_reflection
 {id am_base skolems skolems' assums assums' assums'' e t} :
   List.pair_typ_loop_normal_form id assums' = some assums'' →
   (∃ am'',
@@ -3105,13 +3076,13 @@ mutual
     clear keys
 
     apply And.intro
-    { -- substance / conditional completeness
-      apply List.pair_typ_loop_normal_form_integrated_completeness loop_normal_form
-      apply ZoneInterp.assums_integrated_completeness interp
+    {
+      apply List.pair_typ_loop_normal_form_preservation loop_normal_form
+      apply ZoneInterp.multi_subtyping_preservation interp
       apply GuardedSubtyping.substance subtyping_static p20
     }
-    { -- soundness
-      apply List.pair_typ_loop_normal_form_integrated_soundness loop_normal_form
+    {
+      apply List.pair_typ_loop_normal_form_reflection loop_normal_form
       apply ZoneInterp.integrated_soundness interp
 
       have ⟨tam1, h33l, h33r⟩ := GuardedSubtyping.soundness subtyping_static
