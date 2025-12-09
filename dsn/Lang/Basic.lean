@@ -1353,9 +1353,9 @@ theorem Typ.diff_drop {l body t l_sub body_sub} :
   (.iso l body) = Typ.do_diff t (Typ.capture (Typ.iso l_sub body_sub))
 := by sorry
 
-def ListTyp.diff (t : Typ) : List Typ → Typ
+def List.typ_diff (t : Typ) : List Typ → Typ
 | .nil => t
-| .cons x xs => ListTyp.diff (Typ.do_diff t (Typ.capture x)) xs
+| .cons x xs => List.typ_diff (Typ.do_diff t (Typ.capture x)) xs
 
 
 #eval (Typ.free_vars [typ| X * <uno/>]).map (fun typ => (typ, Typ.top)) -- .map(fun typ => (typ, .top))

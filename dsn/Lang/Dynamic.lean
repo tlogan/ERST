@@ -607,16 +607,6 @@ theorem SimpleTyping.proj_record.proj_bubble :
 := by sorry
 
 
-theorem SimpleTyping.app_function_beta_expansion :
-  (∀ {v : Expr},
-    Expr.is_value v = true → Typing am v tp →
-    ∃ eam, Expr.pattern_match v p = some eam ∧ Typing am (Expr.sub eam e) tr
-  ) →
-  Typing am cator (ListTyp.diff tp subtras) →
-  Typing am (Expr.app (Expr.function ((p, e) :: f)) cator) tr
-:= by sorry
-
-
 
 theorem SimpleTyping.proj_record_beta_expansion l :
   SimpleTyping e t →
@@ -668,6 +658,7 @@ theorem SimpleTyping.proj_record_beta_expansion l :
     apply And.intro
     { apply SimpleTyping.proj_record_beta_expansion l h1 }
     { apply SimpleTyping.proj_record_beta_expansion l h2 }
+
   | diff left right =>
     intro h0
     unfold SimpleTyping at h0
@@ -680,6 +671,7 @@ theorem SimpleTyping.proj_record_beta_expansion l :
       apply h2
       exact SimpleTyping.proj_record_beta_reduction h3
     }
+
   | _ =>
     intro h0
     unfold SimpleTyping at h0
@@ -810,17 +802,81 @@ theorem Typing.entry_intro l :
   unfold Typing
   exact proj_record_beta_expansion l h0
 
+theorem Subtyping.elimination :
+  Subtyping am t0 t1 →
+  Typing am e t0 →
+  Typing am e t1
+:= by
+  unfold Subtyping
+  intro h0 h1
+  exact h0 e h1
+
+theorem Subtyping.list_typ_diff_elim :
+  Subtyping am (List.typ_diff tp subtras) tp
+:= by
+  sorry
+
+
+theorem Typing.app_function_beta_expansion :
+  Expr.is_value v → Expr.pattern_match v p = some eam →
+  Typing am (Expr.sub eam e) tr →
+  Typing am (Expr.app (Expr.function ((p, e) :: f)) v) tr
+:= match tr with
+| .bot => by
+  intro h0 h1
+  sorry
+
+| .top => by
+  sorry
+
+| .iso label body => by
+  sorry
+
+| .entry label body => by
+  sorry
+
+| .path left right => by
+  sorry
+
+| .unio left right => by
+  sorry
+
+| .inter left right => by
+  sorry
+
+| .diff left right => by
+  sorry
+
+| .exi ids quals body => by
+  sorry
+
+| .all ids quals body => by
+  sorry
+
+| .lfp id body => by
+  sorry
+
+| .var id => by
+  sorry
+
 theorem Typing.path_intro {am p e f subtras tp tr} :
   (∀ {v} ,
     Expr.is_value v → Typing am v tp →
     ∃ eam , Expr.pattern_match v p = .some eam ∧ Typing am (Expr.sub eam e) tr
   ) →
-  Typing am (Expr.function ((p, e) :: f)) (Typ.path (ListTyp.diff tp subtras) tr)
+  Typing am (Expr.function ((p, e) :: f)) (Typ.path (List.typ_diff tp subtras) tr)
 := by
   intro h0
   unfold Typing
   intro e' h1
-  apply SimpleTyping.app_function_beta_expansion h0 h1
+  have h2 := Subtyping.elimination Subtyping.list_typ_diff_elim h1
+  cases h3 : Expr.is_value e' with
+  | true =>
+    have ⟨eam, h4, h5⟩ := h0 h3 h2
+    apply Typing.app_function_beta_expansion h3 h4 h5
+  | false =>
+    -- TODO: figure out lemma in case where argument is non-value but has typing
+    sorry
 
 theorem Typing.function_preservation {am p tp e f t } :
   (∀ {v} , Expr.is_value v → Typing am v tp → ∃ eam , Expr.pattern_match v p = .some eam) →

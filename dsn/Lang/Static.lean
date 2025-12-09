@@ -1979,7 +1979,7 @@ mutual
       ∀ assums''' , List.removeAll assums''' assums = assums'''' →
       ∀ skolems' assums'' tr ,
         ZoneInterp [] .true
-          ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ⟨skolems'', assums''', t⟩ →
+          ⟨skolems', assums'', (.path (List.typ_diff tp subtras) tr)⟩ ⟨skolems'', assums''', t⟩ →
         GuardedTyping skolems assums' context' e tr skolems' assums''
     ) →
 
@@ -1988,7 +1988,7 @@ mutual
       ∃ assums''' , List.removeAll assums''' assums = assums'''' ∧
       ∃ skolems' assums'' tr ,
         ZoneInterp [] .true
-          ⟨skolems', assums'', (.path (ListTyp.diff tp subtras) tr)⟩ ⟨skolems'', assums''', t⟩
+          ⟨skolems', assums'', (.path (List.typ_diff tp subtras) tr)⟩ ⟨skolems'', assums''', t⟩
     ) →
     Function.Typing.Static skolems assums context (tp :: subtras) f nested_zones →
     Function.Typing.Static skolems assums context subtras ((p,e)::f) (zones :: nested_zones)
