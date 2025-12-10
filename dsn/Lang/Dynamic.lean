@@ -576,27 +576,13 @@ theorem SimpleTyping.proj_record_beta_reduction :
 := by sorry
 
 
-theorem Typing.proj_record.app_bubble :
-  Typing am (Expr.proj (Expr.record [(l, Expr.app e e')]) l) body →
-  Typing am (Expr.app (Expr.proj (Expr.record [(l, e)]) l) e') body
-:= by sorry
-
-theorem Typing.proj_record.proj_bubble :
-  Typing am (Expr.proj (Expr.record [(l, Expr.proj e label)]) l) body →
-  Typing am (Expr.proj (Expr.proj (Expr.record [(l, e)]) l) label) body
-:= by sorry
-
-theorem Typing.proj_record.extract_bubble :
-  Typing am (Expr.proj (Expr.record [(l, Expr.extract e label)]) l) body →
-  Typing am (Expr.extract (Expr.proj (Expr.record [(l, e)]) l) label) body
-:= by sorry
 
 theorem SimpleTyping.proj_record.app_bubble :
   SimpleTyping (Expr.proj (Expr.record [(l, Expr.app e e')]) l) body →
   SimpleTyping (Expr.app (Expr.proj (Expr.record [(l, e)]) l) e') body
 := by sorry
 
-theorem SimpleTyping.proj_record.extract_bubble :
+theorem SimpleTyping.proj_record_extract_bubble :
   SimpleTyping (Expr.proj (Expr.record [(l, Expr.extract e label)]) l) body →
   SimpleTyping (Expr.extract (Expr.proj (Expr.record [(l, e)]) l) label) body
 := by sorry
@@ -608,6 +594,45 @@ theorem SimpleTyping.proj_record.proj_bubble :
 
 
 
+theorem Typing.proj_record_app_bubble :
+  Typing am (Expr.proj (Expr.record [(l, Expr.app e e')]) l) body →
+  Typing am (Expr.app (Expr.proj (Expr.record [(l, e)]) l) e') body
+:= by sorry
+
+theorem Typing.proj_record_proj_bubble :
+  Typing am (Expr.proj (Expr.record [(l, Expr.proj e label)]) l) body →
+  Typing am (Expr.proj (Expr.proj (Expr.record [(l, e)]) l) label) body
+:= by sorry
+
+theorem Typing.proj_record_extract_bubble :
+  Typing am (Expr.proj (Expr.record [(l, Expr.extract e label)]) l) body →
+  Typing am (Expr.extract (Expr.proj (Expr.record [(l, e)]) l) label) body
+:= by sorry
+
+--------------
+
+theorem Typing.app_function_extract_bubble :
+  Expr.is_value v →
+  Expr.pattern_match v p = some eam →
+  Typing am (Expr.app (Expr.function ((p, Expr.extract e label) :: f)) v) body →
+  Typing am (Expr.extract (Expr.app (Expr.function ((p, e) :: f)) v) label) body
+:= by sorry
+
+theorem Typing.app_function_proj_bubble :
+  Expr.is_value v →
+  Expr.pattern_match v p = some eam →
+  Typing am (Expr.app (Expr.function ((p, Expr.proj e label) :: f)) v) body →
+  Typing am (Expr.proj (Expr.app (Expr.function ((p, e) :: f)) v) label) body
+:= by sorry
+
+theorem Typing.app_function_app_bubble :
+  Expr.is_value v →
+  Expr.pattern_match v p = some eam →
+  Typing am (Expr.app (Expr.function ((p, Expr.app e e') :: f)) v) body →
+  Typing am (Expr.app (Expr.app (Expr.function ((p, e) :: f)) v) e') body
+:= by sorry
+
+
 theorem SimpleTyping.proj_record_beta_expansion l :
   SimpleTyping e t →
   SimpleTyping (Expr.proj (Expr.record [(l, e)]) l) t
@@ -617,7 +642,7 @@ theorem SimpleTyping.proj_record_beta_expansion l :
     intro h0
     unfold SimpleTyping at h0
     unfold SimpleTyping
-    apply SimpleTyping.proj_record.extract_bubble
+    apply SimpleTyping.proj_record_extract_bubble
     have ih := SimpleTyping.proj_record_beta_expansion l h0
     apply ih
 
@@ -699,8 +724,8 @@ theorem Typing.proj_record_beta_expansion l :
   intro h0
   unfold Typing at h0
   unfold Typing
-  apply Typing.proj_record.extract_bubble
   have ih := Typing.proj_record_beta_expansion l h0
+  apply Typing.proj_record_extract_bubble
   apply ih
 
 | .entry label body => by
@@ -708,7 +733,7 @@ theorem Typing.proj_record_beta_expansion l :
   unfold Typing at h0
   unfold Typing
 
-  apply Typing.proj_record.proj_bubble
+  apply Typing.proj_record_proj_bubble
   have ih := Typing.proj_record_beta_expansion l h0
   apply ih
 
@@ -718,7 +743,7 @@ theorem Typing.proj_record_beta_expansion l :
   unfold Typing
   intro e' h1
   specialize h0 e' h1
-  apply Typing.proj_record.app_bubble
+  apply Typing.proj_record_app_bubble
   have ih := Typing.proj_record_beta_expansion l h0
   apply ih
 
@@ -742,6 +767,7 @@ theorem Typing.proj_record_beta_expansion l :
   apply And.intro
   { apply Typing.proj_record_beta_expansion l h1 }
   { apply Typing.proj_record_beta_expansion l h2 }
+
 | .diff left right => by
   intro h0
   unfold Typing at h0
@@ -845,35 +871,106 @@ theorem Transition.preservation :
   Typing am e' t
 := by sorry
 
-theorem Typing.app_function_value_beta_expansion :
+theorem Typing.sub_extract_cascade :
+  Typing am (Expr.extract (Expr.sub eam e) label) body →
+  Typing am (Expr.sub eam (Expr.extract e label)) body
+:= by sorry
+
+theorem Typing.sub_proj_cascade :
+  Typing am (Expr.proj (Expr.sub eam e) label) body →
+  Typing am (Expr.sub eam (Expr.proj e label)) body
+:= by sorry
+
+theorem Typing.sub_app_cascade :
+  Typing am (Expr.app (Expr.sub eam e) e') body →
+  Typing am (Expr.sub eam (Expr.app e e')) body
+:= by sorry
+
+theorem Typing.app_function_value_beta_reduction f :
+  Expr.is_value v → Expr.pattern_match v p = .some eam →
+  Typing am (Expr.app (Expr.function ((p, e) :: f)) v) tr →
+  Typing am (Expr.sub eam e) tr
+:= by sorry
+
+-- TODO: update naming: namespace should be the type of inducted object; e.g. Typ
+theorem Typing.app_function_value_beta_expansion f :
   Expr.is_value v → Expr.pattern_match v p = .some eam →
   Typing am (Expr.sub eam e) tr →
   Typing am (Expr.app (Expr.function ((p, e) :: f)) v) tr
 := match tr with
 | .bot => by
   intro h0 h1
-  sorry
-
+  unfold Typing
+  simp
 | .top => by
-  sorry
+  intro h0 h1
+  unfold Typing
+  intro h2
+  have ⟨e', h3, h4⟩ := h2
+  exists e'
+  apply And.intro h3
+  apply TransitionStar.step
+  { apply Transition.appmatch h0 h1 }
+  { exact h4 }
 
 | .iso label body => by
-  sorry
+  intro h0 h1
+  unfold Typing
+  intro h2
+  apply Typing.sub_extract_cascade at h2
+  have ih := Typing.app_function_value_beta_expansion f h0 h1 h2
+  apply Typing.app_function_extract_bubble h0 h1 ih
 
 | .entry label body => by
-  sorry
+  intro h0 h1
+  unfold Typing
+  intro h2
+  apply Typing.sub_proj_cascade at h2
+  have ih := Typing.app_function_value_beta_expansion f h0 h1 h2
+  apply Typing.app_function_proj_bubble h0 h1 ih
 
 | .path left right => by
-  sorry
+  intro h0 h1
+  unfold Typing
+  intro h2 e' h3
+  specialize h2 e' h3
+  apply Typing.sub_app_cascade at h2
+  have ih := Typing.app_function_value_beta_expansion f h0 h1 h2
+  apply Typing.app_function_app_bubble h0 h1 ih
 
 | .unio left right => by
-  sorry
+  intro h0 h1
+  unfold Typing
+  intro h2
+  cases h2 with
+  | inl h3 =>
+    have ih := Typing.app_function_value_beta_expansion f h0 h1 h3
+    exact Or.inl ih
+  | inr h3 =>
+    have ih := Typing.app_function_value_beta_expansion f h0 h1 h3
+    exact Or.inr ih
 
 | .inter left right => by
-  sorry
+  intro h0 h1
+  unfold Typing
+  intro h2
+  have ⟨h3,h4⟩ := h2
+  apply And.intro
+  { apply Typing.app_function_value_beta_expansion f h0 h1 h3 }
+  { apply Typing.app_function_value_beta_expansion f h0 h1 h4 }
 
 | .diff left right => by
-  sorry
+  intro h0 h1
+  unfold Typing
+  intro h2
+  have ⟨h3,h4⟩ := h2
+  apply And.intro
+  { apply Typing.app_function_value_beta_expansion f h0 h1 h3 }
+  {
+    intro h5
+    apply h4
+    apply Typing.app_function_value_beta_reduction f h0 h1 h5
+  }
 
 | .exi ids quals body => by
   sorry
@@ -905,10 +1002,11 @@ theorem Typing.app_function_beta_expansion f :
 := by
   intro h0 h1
   have sound := Typing.soundness h1
+
   induction sound with
   | value h2 =>
     have ⟨eam, h3, h4⟩ := h0 h2 h1
-    exact app_function_value_beta_expansion h2 h3 h4
+    exact app_function_value_beta_expansion f h2 h3 h4
   | step  e' e'' h2 h3 ih =>
     have h4 := Transition.preservation h2 h1
     specialize ih h4
