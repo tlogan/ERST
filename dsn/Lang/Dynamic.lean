@@ -114,8 +114,12 @@ inductive TransitionStar : Expr → Expr → Prop
 | refl e : TransitionStar e e
 | step e e' e'' : Transition e e' → TransitionStar e' e'' → TransitionStar e e''
 
+inductive Sound : Expr → Prop
+| fin e e' : TransitionStar e e' → Expr.is_value e' → Sound e
+| inf e : (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'') → Sound e
 
 def SimpleTyping (e : Expr) : Typ → Prop
+| .top => Sound e
 | .iso l body => SimpleTyping (.extract e l) body
 | .entry l body => SimpleTyping (.proj e l) body
 | .path left right => ∀ e' , SimpleTyping e' left → SimpleTyping (.app e e') right
@@ -127,10 +131,6 @@ def SimpleTyping (e : Expr) : Typ → Prop
 
 def Subtyping.Fin (left right : Typ) : Prop :=
   ∀ e, SimpleTyping e left → SimpleTyping e right
-
-inductive Sound : Expr → Prop
-| fin e' : TransitionStar e e' → Expr.is_value e' → Sound e
--- | inf e : (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'') → Sound e
 
 mutual
   def Subtyping (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
@@ -159,11 +159,9 @@ mutual
 
   def Typing (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
-  -- | .top => ∃ e',  Expr.is_value e' ∧ TransitionStar e e'
-  /-  TODO :  remove old version of top typing -/
   | .top => Sound e
-  | .iso l τ => Typing am (.extract e l) τ
-  | .entry l τ => Typing am (.proj e l) τ
+  | .iso l t => Typing am (.extract e l) t
+  | .entry l t => Typing am (.proj e l) t
   | .path left right => ∀ e' , Typing am e' left → Typing am (.app e e') right
   | .unio left right => Typing am e left ∨ Typing am e right
   | .inter left right => Typing am e left ∧ Typing am e right
@@ -190,7 +188,7 @@ mutual
   -- | .lfp id body =>
   --   Typ.Monotonic id true body ∧
   --   ∃ n, SimpleTyping e (Typ.sub am (Typ.subfold id body n))
-  | .var id => ∃ τ, find id am = some τ ∧ SimpleTyping e τ
+  | .var id => ∃ t, find id am = some t ∧ SimpleTyping e t
   termination_by t => (Typ.size t)
   decreasing_by
     all_goals simp_all [Typ.size]
@@ -643,6 +641,16 @@ theorem SimpleTyping.proj_record_beta_expansion l :
   SimpleTyping (Expr.proj (Expr.record [(l, e)]) l) t
 := by
   cases t with
+  | top =>
+    unfold SimpleTyping
+    intro h0
+    cases h0 with
+    | fin e' h1 h2 =>
+      apply Sound.fin
+      { exact TransitionStar.record_single_elim h1 h2 }
+      { exact h2 }
+    | inf h1 =>
+      sorry
   | iso label body =>
     intro h0
     unfold SimpleTyping at h0
@@ -724,6 +732,8 @@ theorem Typing.proj_record_beta_expansion l :
     apply Sound.fin
     { exact TransitionStar.record_single_elim h1 h2 }
     { exact h2 }
+  | inf h1 =>
+    sorry
 
 | .iso label body => by
   intro h0
@@ -915,14 +925,15 @@ theorem Typing.app_function_value_beta_expansion f :
   intro h2
   cases h2 with
   | fin e' h3 h4  =>
-    apply Sound.fin e'
+    apply Sound.fin
     {
       apply TransitionStar.step
       { apply Transition.appmatch h0 h1 }
       { apply h3 }
     }
     { exact h4 }
-
+  | inf h3 =>
+    sorry
 
 | .iso label body => by
   intro h0 h1
@@ -1028,6 +1039,22 @@ theorem Transition.applicand_reflection :
 := by sorry
 
 
+theorem Typing.exists_value :
+  Typing am e t →
+  ∃ v , Expr.is_value v ∧ Typing am v t
+:= by sorry
+
+theorem Typing.applicand_infinite_swap :
+  (∀ e', TransitionStar e_inf e' → ∃ e'', Transition e' e'') →
+  Typing am e t → Typing am e_inf t →
+  Typing am (.app cator e) t' → Typing am (.app cator e_inf) t'
+:= by
+  /-
+  TODO: derive that an applicand can be swapped for any nonterminating applicand of the same type
+  -/
+  sorry
+
+
 theorem Typing.app_function_beta_expansion f :
   (∀ {v} ,
     Expr.is_value v → Typing am v tp →
@@ -1049,6 +1076,12 @@ theorem Typing.app_function_beta_expansion f :
       have h8 := Typing.preservation h6 h1
       specialize ih h8 h5
       exact Transition.applicand_reflection h6 ih
+  | inf h4 =>
+    have ⟨v, h5, h6⟩ := Typing.exists_value h1
+    apply Typing.applicand_infinite_swap h4 h6 h1
+    specialize h0 h5 h6
+    have ⟨eam,h7,h8⟩ := h0
+    exact app_function_value_beta_expansion f h5 h7 h8
 
 
 theorem Typing.path_intro :

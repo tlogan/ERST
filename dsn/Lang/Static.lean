@@ -2846,6 +2846,7 @@ mutual
 
       intros tam' subtyping_dynamic_assums
       intros eam typing_dynamic_context
+
       apply Typing.path_intro
       intros v p44 p46
       have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p44 p46
