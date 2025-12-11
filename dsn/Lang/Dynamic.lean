@@ -129,9 +129,8 @@ def Subtyping.Fin (left right : Typ) : Prop :=
   ∀ e, SimpleTyping e left → SimpleTyping e right
 
 inductive Sound : Expr → Prop
-| value e : Expr.is_value e → Sound e
+| fin e e' : TransitionStar e e' → Expr.is_value e' → Sound e
 | inf e : (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'') → Sound e
-| step e e' : Transition e e' → Sound e' → Sound e
 
 mutual
   def Subtyping (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
@@ -162,7 +161,7 @@ mutual
   | .bot => False
   | .top => ∃ e',  Expr.is_value e' ∧ TransitionStar e e'
   /-  TODO :  update typing TOP with Sound -/
-  -- ∨ (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'')
+  -- | .top => Sound e
   | .iso l τ => Typing am (.extract e l) τ
   | .entry l τ => Typing am (.proj e l) τ
   | .path left right => ∀ e' , Typing am e' left → Typing am (.app e e') right
@@ -848,6 +847,14 @@ theorem Subtyping.list_typ_diff_elim :
   Subtyping am (List.typ_diff tp subtras) tp
 := by
   sorry
+
+
+
+theorem Typing.soundness :
+  Typing am e t →
+  Sound e
+:= by sorry
+
 
 
 theorem Typing.progress :
