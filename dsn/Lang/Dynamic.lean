@@ -129,8 +129,8 @@ def Subtyping.Fin (left right : Typ) : Prop :=
   ∀ e, SimpleTyping e left → SimpleTyping e right
 
 inductive Sound : Expr → Prop
-| fin e e' : TransitionStar e e' → Expr.is_value e' → Sound e
-| inf e : (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'') → Sound e
+| fin e' : TransitionStar e e' → Expr.is_value e' → Sound e
+-- | inf e : (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'') → Sound e
 
 mutual
   def Subtyping (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
@@ -159,9 +159,9 @@ mutual
 
   def Typing (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
-  | .top => ∃ e',  Expr.is_value e' ∧ TransitionStar e e'
-  /-  TODO :  update typing TOP with Sound -/
-  -- | .top => Sound e
+  -- | .top => ∃ e',  Expr.is_value e' ∧ TransitionStar e e'
+  /-  TODO :  remove old version of top typing -/
+  | .top => Sound e
   | .iso l τ => Typing am (.extract e l) τ
   | .entry l τ => Typing am (.proj e l) τ
   | .path left right => ∀ e' , Typing am e' left → Typing am (.app e e') right
@@ -488,10 +488,9 @@ theorem Typing.empty_record_top am :
   Typing am (Expr.record []) Typ.top
 := by
   unfold Typing
-  exists (Expr.record [])
-  apply And.intro
-  · exact rfl
-  · apply TransitionStar.refl
+  apply Sound.fin
+  { exact TransitionStar.refl (Expr.record [])}
+  { exact rfl }
 
 theorem Typing.inter_entry_intro {am l e r body t} :
   Typing am e body →
@@ -718,13 +717,13 @@ theorem Typing.proj_record_beta_expansion l :
   exact False.elim h0
 
 | .top => by
-  intro h0
-  unfold Typing at h0
-  have ⟨e',h1,h2⟩ := h0
   unfold Typing
-  exists e'
-  apply And.intro h1
-  exact TransitionStar.record_single_elim h2 h1
+  intro h0
+  cases h0 with
+  | fin e' h1 h2 =>
+    apply Sound.fin
+    { exact TransitionStar.record_single_elim h1 h2 }
+    { exact h2 }
 
 | .iso label body => by
   intro h0
@@ -849,14 +848,6 @@ theorem Subtyping.list_typ_diff_elim :
   sorry
 
 
-
-theorem Typing.soundness :
-  Typing am e t →
-  Sound e
-:= by sorry
-
-
-
 theorem Typing.progress :
   Typing am e t →
   Expr.is_value e ∨ ∃ e' , Transition e e'
@@ -870,6 +861,12 @@ theorem Typing.preservation :
   Typing am e' t
 := by
   sorry
+
+theorem Typing.soundness :
+  Typing am e t →
+  Sound e
+:= by sorry
+
 
 theorem Transition.not_value :
   Transition e e' →
@@ -916,12 +913,16 @@ theorem Typing.app_function_value_beta_expansion f :
   intro h0 h1
   unfold Typing
   intro h2
-  have ⟨e', h3, h4⟩ := h2
-  exists e'
-  apply And.intro h3
-  apply TransitionStar.step
-  { apply Transition.appmatch h0 h1 }
-  { exact h4 }
+  cases h2 with
+  | fin e' h3 h4  =>
+    apply Sound.fin e'
+    {
+      apply TransitionStar.step
+      { apply Transition.appmatch h0 h1 }
+      { apply h3 }
+    }
+    { exact h4 }
+
 
 | .iso label body => by
   intro h0 h1
@@ -1036,23 +1037,19 @@ theorem Typing.app_function_beta_expansion f :
   Typing am (Expr.app (Expr.function ((p, e) :: f)) e') tr
 := by
   intro h0 h1
+  have h3 := Typing.soundness h1
+  cases h3 with
+  | fin e'' h4 h5 =>
+    induction h4 with
+    | refl e'' =>
+      specialize h0 h5 h1
+      have ⟨eam,h6,h7⟩ := h0
+      exact app_function_value_beta_expansion f h5 h6 h7
+    | step e e' e'' h6 h7 ih =>
+      have h8 := Typing.preservation h6 h1
+      specialize ih h8 h5
+      exact Transition.applicand_reflection h6 ih
 
-  cases h2 : (Expr.is_value e') with
-  | true =>
-    have ⟨eam, h3, h4⟩ := h0 h2 h1
-    exact app_function_value_beta_expansion f h2 h3 h4
-  | false =>
-    /- TODO: figure out how to -/
-    -----------------------
-    -- have h3 := Typing.progress h1
-    -- simp [*] at h3
-    -- have ⟨e'', h4⟩ := h3
-    -- clear h3
-    -----------------------
-    -- have h4 := Typing.preservation h2 h1
-    -- specialize ih h4
-    -- exact Transition.applicand_reflection h2 ih
-    sorry
 
 theorem Typing.path_intro :
   (∀ {v} ,
