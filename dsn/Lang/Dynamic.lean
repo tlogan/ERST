@@ -128,6 +128,10 @@ def SimpleTyping (e : Expr) : Typ → Prop
 def Subtyping.Fin (left right : Typ) : Prop :=
   ∀ e, SimpleTyping e left → SimpleTyping e right
 
+inductive Sound : Expr → Prop
+| value e : Expr.is_value e → Sound e
+| inf e : (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'') → Sound e
+| step e e' : Transition e e' → Sound e' → Sound e
 
 mutual
   def Subtyping (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
@@ -153,9 +157,12 @@ mutual
   decreasing_by
     all_goals sorry
 
+
   def Typing (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
   | .top => ∃ e',  Expr.is_value e' ∧ TransitionStar e e'
+  /-  TODO :  update typing TOP with Sound -/
+  -- ∨ (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'')
   | .iso l τ => Typing am (.extract e l) τ
   | .entry l τ => Typing am (.proj e l) τ
   | .path left right => ∀ e' , Typing am e' left → Typing am (.app e e') right
@@ -843,32 +850,23 @@ theorem Subtyping.list_typ_diff_elim :
   sorry
 
 
-inductive Sound : Expr → Prop
-| value : Expr.is_value e → Sound e
-| step e e' : Transition e e' → Sound e' → Sound e
-
-theorem Typing.soundness :
-  Typing am e t → Sound e
-:= by
-  sorry
-
 theorem Typing.progress :
   Typing am e t →
   Expr.is_value e ∨ ∃ e' , Transition e e'
 := by
-  intro h0
-  apply Typing.soundness at h0
-  cases h0 with
-  | value h1 =>
-    exact (Or.inl h1)
-  | step e e' h1 h2 =>
-    apply Or.inr
-    exists e'
+  sorry
 
-theorem Transition.preservation :
+
+theorem Typing.preservation :
   Transition e e' →
   Typing am e t →
   Typing am e' t
+:= by
+  sorry
+
+theorem Transition.not_value :
+  Transition e e' →
+  ¬ Expr.is_value e
 := by sorry
 
 theorem Typing.sub_extract_cascade :
@@ -892,7 +890,12 @@ theorem Typing.app_function_value_beta_reduction f :
   Typing am (Expr.sub eam e) tr
 := by sorry
 
--- TODO: update naming: namespace should be the type of inducted object; e.g. Typ
+theorem SimpleTyping.app_function_value_beta_expansion f :
+  Expr.is_value v → Expr.pattern_match v p = .some eam →
+  SimpleTyping (Expr.sub eam e) tr →
+  SimpleTyping (Expr.app (Expr.function ((p, e) :: f)) v) tr
+:= by sorry
+
 theorem Typing.app_function_value_beta_expansion f :
   Expr.is_value v → Expr.pattern_match v p = .some eam →
   Typing am (Expr.sub eam e) tr →
@@ -973,16 +976,41 @@ theorem Typing.app_function_value_beta_expansion f :
   }
 
 | .exi ids quals body => by
-  sorry
+  intro h0 h1
+  unfold Typing
+  intro h2
+  have ⟨am', h3, h4, h5⟩ := h2
+  exists am'
+  apply And.intro h3
+  apply And.intro h4
+  apply Typing.app_function_value_beta_expansion f h0 h1 h5
 
 | .all ids quals body => by
-  sorry
+  intro h0 h1
+  unfold Typing
+  intro h2 am' h3 h4
+  specialize h2 am' h3 h4
+  apply Typing.app_function_value_beta_expansion f h0 h1 h2
 
 | .lfp id body => by
-  sorry
+  intro h0 h1
+  unfold Typing
+  intro h2
+  have ⟨h3,t,h4,h5,h6⟩ := h2
+  apply And.intro h3
+  exists t
+  exists h4
+  apply And.intro h5
+  apply Typing.app_function_value_beta_expansion f h0 h1 h6
 
 | .var id => by
-  sorry
+  intro h0 h1
+  unfold Typing
+  intro h2
+  have ⟨t,h3,h4⟩ := h2
+  exists t
+  apply And.intro h3
+  exact SimpleTyping.app_function_value_beta_expansion f h0 h1 h4
 
 
 theorem Transition.applicand_reflection :
@@ -1001,16 +1029,23 @@ theorem Typing.app_function_beta_expansion f :
   Typing am (Expr.app (Expr.function ((p, e) :: f)) e') tr
 := by
   intro h0 h1
-  have sound := Typing.soundness h1
 
-  induction sound with
-  | value h2 =>
+  cases h2 : (Expr.is_value e') with
+  | true =>
     have ⟨eam, h3, h4⟩ := h0 h2 h1
     exact app_function_value_beta_expansion f h2 h3 h4
-  | step  e' e'' h2 h3 ih =>
-    have h4 := Transition.preservation h2 h1
-    specialize ih h4
-    exact Transition.applicand_reflection h2 ih
+  | false =>
+    /- TODO: figure out how to -/
+    -----------------------
+    -- have h3 := Typing.progress h1
+    -- simp [*] at h3
+    -- have ⟨e'', h4⟩ := h3
+    -- clear h3
+    -----------------------
+    -- have h4 := Typing.preservation h2 h1
+    -- specialize ih h4
+    -- exact Transition.applicand_reflection h2 ih
+    sorry
 
 theorem Typing.path_intro :
   (∀ {v} ,
@@ -1031,14 +1066,6 @@ theorem Typing.function_preservation {am p tp e f t } :
   Typing am (.function f) t →
   Typing am (.function ((p,e) :: f)) t
 := by sorry
-
-
-theorem dummy {x : Nat} :
-  x = x
-:= by sorry
-
-theorem test (p q : Prop) (hp : p) (hq : q)
-: p ∧ q ∧ p := by sorry
 
 
 theorem Typing.path_elim {am ef ea t t'} :
