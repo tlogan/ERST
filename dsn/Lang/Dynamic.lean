@@ -1210,35 +1210,35 @@ theorem Typing.lfp_intro_bot {am e id t} :
 := by sorry
 
 
-def Convergence (a b : Expr) :=
+def Confluent (a b : Expr) :=
   ∃ e , TransitionStar a e ∧ TransitionStar b e
 
-theorem Convergence.typing_left_to_right {a b am t} :
-  Convergence a b →
+theorem Confluent.typing_left_to_right {a b am t} :
+  Confluent a b →
   Typing am a t →
   Typing am b t
 := by sorry
 
-theorem Expr.Convergence.typing_right_to_left {a b am t} :
-  Convergence a b →
+theorem Expr.Confluent.typing_right_to_left {a b am t} :
+  Confluent a b →
   Typing am b t →
   Typing am a t
 := by sorry
 
-theorem Convergence.transitivity {a b c} :
-  Convergence a b →
-  Convergence b c →
-  Convergence a c
+theorem Confluent.transitivity {a b c} :
+  Confluent a b →
+  Confluent b c →
+  Confluent a c
 := by sorry
 
-theorem Convergence.swap {a b} :
-  Convergence a b →
-  Convergence b a
+theorem Confluent.swap {a b} :
+  Confluent a b →
+  Confluent b a
 := by sorry
 
-theorem Convergence.app_arg_preservation {a b} f :
-  Convergence a b →
-  Convergence (.app f a) (.app f b)
+theorem Confluent.app_arg_preservation {a b} f :
+  Confluent a b →
+  Confluent (.app f a) (.app f b)
 := by sorry
 
 

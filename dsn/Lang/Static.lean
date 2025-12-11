@@ -2113,14 +2113,14 @@ theorem Typ.factor_reflection {am id t label t' e'} :
   Typ.factor id t label = some t' →
   Typing am e' (.lfp id t') →
   ∃ e ,
-    Convergence (Expr.proj e label) e' ∧
+    Confluent (Expr.proj e label) e' ∧
     Typing am e (.lfp id t)
 := by sorry
 
 theorem Typ.factor_preservation {am id t label t' e' e} :
   Typ.factor id t label = some t' →
   Typing am e (.lfp id t) →
-  Convergence (Expr.proj e label) e' →
+  Confluent (Expr.proj e label) e' →
   Typing am e' (.lfp id t')
 := by sorry
 
@@ -2224,7 +2224,7 @@ theorem ListZone.invert_preservation {id zones zones' am assums} :
           MultiSubtyping (am'' ++ am' ++ am) assums' ∧
           Typing (am'' ++ am' ++ am) ep t' ) )
     ) →
-    Convergence (.proj ep "right") (.app ef (.proj ep "left"))
+    Confluent (.proj ep "right") (.app ef (.proj ep "left"))
   )
 := by sorry
 
@@ -2247,7 +2247,7 @@ theorem List.pair_typ_invert_preservation {id am assums assums0 assums0'} skolem
           MultiSubtyping (am'' ++ am' ++ am) assums0' ∧
           Typing (am'' ++ am' ++ am) ep (.pair tl tr) )
       ) →
-      Convergence (.proj ep "right") (.app ef (.proj ep "left"))
+      Confluent (.proj ep "right") (.app ef (.proj ep "left"))
     )
 := by sorry
 
@@ -2392,8 +2392,8 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
 
     have ⟨ep,p10,p11⟩ := Typ.factor_reflection p7 p9
 
-    apply Convergence.typing_left_to_right
-      (Convergence.app_arg_preservation e p10)
+    apply Confluent.typing_left_to_right
+      (Confluent.app_arg_preservation e p10)
 
     apply Typ.factor_preservation p8 p11
 
@@ -2502,7 +2502,7 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
 
     have ⟨ep,p14,p15⟩ := Typ.factor_reflection p8 typing_factor_left
 
-    apply Convergence.typing_left_to_right (Convergence.app_arg_preservation e p14)
+    apply Confluent.typing_left_to_right (Confluent.app_arg_preservation e p14)
     apply Typ.factor_preservation p9 p15
 
     apply List.pair_typ_invert_preservation skolems (Typ.var idl) r p5 p1 at soundness
@@ -2658,14 +2658,14 @@ theorem Typ.combine_bounds_positive_subtyping_path_conseq_soundness {id am am_sk
 --   Typ.factor id t label = some t' →
 --   Typing am e' (.lfp id t') →
 --   ∃ e ,
---     Convergence (Expr.proj e label) e' ∧
+--     Confluent (Expr.proj e label) e' ∧
 --     Typing am e (.lfp id t)
 -- := by sorry
 
 -- theorem Typ.factor_reduction_soundness {am id t label t' e' e} :
 --   Typ.factor id t label = some t' →
 --   Typing am e (.lfp id t) →
---   Convergence (Expr.proj e label) e' →
+--   Confluent (Expr.proj e label) e' →
 --   Typing am e' (.lfp id t')
 -- := by sorry
 
