@@ -114,12 +114,22 @@ inductive TransitionStar : Expr → Expr → Prop
 | refl e : TransitionStar e e
 | step e e' e'' : Transition e e' → TransitionStar e' e'' → TransitionStar e e''
 
-inductive Sound : Expr → Prop
-| fin e e' : TransitionStar e e' → Expr.is_value e' → Sound e
-| inf e : (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'') → Sound e
+def Convergent (e : Expr) : Prop :=
+  ∃ e' , TransitionStar e e' ∧ Expr.is_value e'
+
+def Divergent (e : Expr) : Prop :=
+  (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'')
+
+
+def Stuck (e : Expr) : Prop :=
+  ¬ Expr.is_value e ∧ ¬ ∃ e', Transition e e'
+
+def Fails (e : Expr) : Prop :=
+  ∃ e' , TransitionStar e e' ∧ Stuck e'
+
 
 def SimpleTyping (e : Expr) : Typ → Prop
-| .top => Sound e
+| .top => Convergent e ∨ Divergent e
 | .iso l body => SimpleTyping (.extract e l) body
 | .entry l body => SimpleTyping (.proj e l) body
 | .path left right => ∀ e' , SimpleTyping e' left → SimpleTyping (.app e e') right
@@ -159,7 +169,7 @@ mutual
 
   def Typing (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
-  | .top => Sound e
+  | .top => Convergent e ∨ Divergent e
   | .iso l t => Typing am (.extract e l) t
   | .entry l t => Typing am (.proj e l) t
   | .path left right => ∀ e' , Typing am e' left → Typing am (.app e e') right
@@ -486,8 +496,11 @@ theorem Typing.empty_record_top am :
   Typing am (Expr.record []) Typ.top
 := by
   unfold Typing
-  apply Sound.fin
-  { exact TransitionStar.refl (Expr.record [])}
+  unfold Convergent
+  apply Or.inl
+  exists Expr.record []
+  apply And.intro
+  { exact TransitionStar.refl (Expr.record []) }
   { exact rfl }
 
 theorem Typing.inter_entry_intro {am l e r body t} :
@@ -636,6 +649,23 @@ theorem Typing.app_function_app_bubble :
 := by sorry
 
 
+theorem Convergent.proj_record_beta_expansion :
+  Convergent e → Convergent (Expr.proj (Expr.record [(l, e)]) l)
+:= by
+  unfold Convergent
+  intro h0
+  have ⟨e',h1,h2⟩ := h0
+  exists e'
+  apply And.intro
+  { apply TransitionStar.record_single_elim  h1 h2 }
+  { exact h2 }
+
+theorem Divergent.proj_record_beta_expansion :
+  Divergent e → Divergent (Expr.proj (Expr.record [(l, e)]) l)
+:= by
+  sorry
+
+
 theorem SimpleTyping.proj_record_beta_expansion l :
   SimpleTyping e t →
   SimpleTyping (Expr.proj (Expr.record [(l, e)]) l) t
@@ -645,12 +675,13 @@ theorem SimpleTyping.proj_record_beta_expansion l :
     unfold SimpleTyping
     intro h0
     cases h0 with
-    | fin e' h1 h2 =>
-      apply Sound.fin
-      { exact TransitionStar.record_single_elim h1 h2 }
-      { exact h2 }
-    | inf h1 =>
-      sorry
+    | inl h1 =>
+      apply Or.inl
+      exact Convergent.proj_record_beta_expansion h1
+    | inr h1 =>
+      apply Or.inr
+      exact Divergent.proj_record_beta_expansion h1
+
   | iso label body =>
     intro h0
     unfold SimpleTyping at h0
@@ -728,12 +759,12 @@ theorem Typing.proj_record_beta_expansion l :
   unfold Typing
   intro h0
   cases h0 with
-  | fin e' h1 h2 =>
-    apply Sound.fin
-    { exact TransitionStar.record_single_elim h1 h2 }
-    { exact h2 }
-  | inf h1 =>
-    sorry
+  | inl h1 =>
+    apply Or.inl
+    exact Convergent.proj_record_beta_expansion h1
+  | inr h1 =>
+    apply Or.inr
+    exact Divergent.proj_record_beta_expansion h1
 
 | .iso label body => by
   intro h0
@@ -874,7 +905,7 @@ theorem Typing.preservation :
 
 theorem Typing.soundness :
   Typing am e t →
-  Sound e
+  Convergent e ∨ Divergent e
 := by sorry
 
 
@@ -910,6 +941,29 @@ theorem SimpleTyping.app_function_value_beta_expansion f :
   SimpleTyping (Expr.app (Expr.function ((p, e) :: f)) v) tr
 := by sorry
 
+theorem Convergent.app_function_value_beta_expansion f :
+  Expr.is_value v → Expr.pattern_match v p = .some eam →
+  Convergent (Expr.sub eam e) →
+  Convergent (Expr.app (Expr.function ((p, e) :: f)) v)
+:= by
+  unfold Convergent
+  intro h0 h1 h2
+  have ⟨e',h3,h4⟩ := h2
+  exists e'
+  apply And.intro
+  {
+    apply TransitionStar.step
+    { apply Transition.appmatch h0 h1 }
+    { apply h3 }
+  }
+  { exact h4 }
+
+theorem Divergent.app_function_value_beta_expansion f :
+  Expr.is_value v → Expr.pattern_match v p = .some eam →
+  Divergent (Expr.sub eam e) →
+  Divergent (Expr.app (Expr.function ((p, e) :: f)) v)
+:= by sorry
+
 theorem Typing.app_function_value_beta_expansion f :
   Expr.is_value v → Expr.pattern_match v p = .some eam →
   Typing am (Expr.sub eam e) tr →
@@ -924,16 +978,12 @@ theorem Typing.app_function_value_beta_expansion f :
   unfold Typing
   intro h2
   cases h2 with
-  | fin e' h3 h4  =>
-    apply Sound.fin
-    {
-      apply TransitionStar.step
-      { apply Transition.appmatch h0 h1 }
-      { apply h3 }
-    }
-    { exact h4 }
-  | inf h3 =>
-    sorry
+  | inl h3 =>
+    apply Or.inl
+    exact Convergent.app_function_value_beta_expansion f h0 h1 h3
+  | inr h3 =>
+    apply Or.inr
+    exact Divergent.app_function_value_beta_expansion f h0 h1 h3
 
 | .iso label body => by
   intro h0 h1
@@ -1044,8 +1094,8 @@ theorem Typing.exists_value :
   ∃ v , Expr.is_value v ∧ Typing am v t
 := by sorry
 
-theorem Typing.applicand_infinite_swap :
-  (∀ e', TransitionStar e_inf e' → ∃ e'', Transition e' e'') →
+theorem Typing.divergent_applicand_swap :
+  Divergent e_inf →
   Typing am e t → Typing am e_inf t →
   Typing am (.app cator e) t' → Typing am (.app cator e_inf) t'
 := by
@@ -1066,19 +1116,22 @@ theorem Typing.app_function_beta_expansion f :
   intro h0 h1
   have h3 := Typing.soundness h1
   cases h3 with
-  | fin e'' h4 h5 =>
-    induction h4 with
+  | inl h4 =>
+    unfold Convergent at h4
+    have ⟨e'', h5, h6⟩ := h4
+    clear h4
+    induction h5 with
     | refl e'' =>
-      specialize h0 h5 h1
-      have ⟨eam,h6,h7⟩ := h0
-      exact app_function_value_beta_expansion f h5 h6 h7
-    | step e e' e'' h6 h7 ih =>
-      have h8 := Typing.preservation h6 h1
-      specialize ih h8 h5
-      exact Transition.applicand_reflection h6 ih
-  | inf h4 =>
+      specialize h0 h6 h1
+      have ⟨eam,h7,h8⟩ := h0
+      exact app_function_value_beta_expansion f h6 h7 h8
+    | step e' e'' e''' h7 h8 ih =>
+      have h9 := Typing.preservation h7 h1
+      apply Transition.applicand_reflection h7
+      apply ih h9 h6
+  | inr h4 =>
     have ⟨v, h5, h6⟩ := Typing.exists_value h1
-    apply Typing.applicand_infinite_swap h4 h6 h1
+    apply Typing.divergent_applicand_swap h4 h6 h1
     specialize h0 h5 h6
     have ⟨eam,h7,h8⟩ := h0
     exact app_function_value_beta_expansion f h5 h7 h8
