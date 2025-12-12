@@ -1088,21 +1088,51 @@ theorem Transition.applicand_reflection :
   Typing am (Expr.app e e') t
 := by sorry
 
-
 theorem Typing.exists_value :
   Typing am e t →
   ∃ v , Expr.is_value v ∧ Typing am v t
 := by sorry
 
+theorem Divergent.applicand f :
+  Divergent e →
+  Divergent (.app (.function f) e)
+:= by
+  unfold Divergent
+  intro h0 e' h1
+
+  cases h1 with
+  | refl =>
+    specialize h0 e (TransitionStar.refl e)
+    have ⟨e', h2⟩ := h0
+    exists (Expr.app (.function f) e')
+    apply Transition.applicand
+    exact h2
+  | step =>
+    sorry
+
+
+
 theorem Typing.divergent_applicand_swap :
   Divergent e_inf →
   Typing am e t → Typing am e_inf t →
-  Typing am (.app cator e) t' → Typing am (.app cator e_inf) t'
-:= by
-  /-
-  TODO: derive that an applicand can be swapped for any nonterminating applicand of the same type
-  -/
-  sorry
+  Typing am (.app (.function f) e) t' → Typing am (.app (.function f) e_inf) t'
+:= match t' with
+| .top => by
+  intro h0 h1 h2
+  unfold Typing
+  intro h3
+  apply Or.inr
+  clear h3
+  exact Divergent.applicand f h0
+| .inter left right => by
+  intro h0 h1 h2
+  unfold Typing
+  intro h3
+  have ⟨h4,h5⟩ := h3
+  apply And.intro
+  { apply Typing.divergent_applicand_swap h0 h1 h2 h4 }
+  { apply Typing.divergent_applicand_swap h0 h1 h2 h5 }
+| _ => by sorry
 
 
 theorem Typing.app_function_beta_expansion f :
