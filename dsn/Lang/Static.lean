@@ -533,41 +533,41 @@ def List.pair_typ_restricted (Θ : List String) (Δ : List (Typ × Typ))
   List.pair_typ_restricted Θ Δ  sts
 
 mutual
-  def Subtyping.proj (id : String) (l : String) : (Typ × Typ) → Option (Typ × Typ)
+  def Subtyping.project (id : String) (l : String) : (Typ × Typ) → Option (Typ × Typ)
   | (key,.var id') =>
     if id == id' then do
-      let p ← Typ.proj id l key
+      let p ← Typ.project id l key
       return (p, .var id)
     else
       failure
   | st => return st
 
-  def List.pair_typ_proj (id : String) (l : String) : List (Typ × Typ) → Option (List (Typ × Typ))
+  def List.pair_typ_project (id : String) (l : String) : List (Typ × Typ) → Option (List (Typ × Typ))
   | .nil => return []
   | .cons st sts => do
-    let st' ← Subtyping.proj id l st
-    let sts' ← List.pair_typ_proj id l sts
+    let st' ← Subtyping.project id l st
+    let sts' ← List.pair_typ_project id l sts
     return st' :: sts'
 
-  def Typ.proj (id : String) (l : String) : Typ → Option Typ
+  def Typ.project (id : String) (l : String) : Typ → Option Typ
   | .entry l' body =>
     if l == l' then
       return body
     else
       failure
   | .inter left right =>
-    let ts := (Option.toList (Typ.proj id l left)) ++ (Option.toList (Typ.proj id l right))
+    let ts := (Option.toList (Typ.project id l left)) ++ (Option.toList (Typ.project id l right))
     return .combine .true ts
   | .diff left right => do
-    let left' ← Typ.proj id l left
-    let right' ← Typ.proj id l right
+    let left' ← Typ.project id l left
+    let right' ← Typ.project id l right
     return .diff left' right'
   | .exi ids quals body =>
     if id ∈ ids then
       failure
     else do
-      let quals' ← List.pair_typ_proj id l quals
-      let body' ← Typ.proj id l body
+      let quals' ← List.pair_typ_project id l quals
+      let body' ← Typ.project id l body
       let ids' := ids ∩ (List.pair_typ_free_vars quals' ∪ Typ.free_vars body')
       return .exi ids' quals' body'
   | _ => .none
@@ -576,7 +576,7 @@ end
 def ListTyp.factor (id : String) (l : String) : List Typ → Option (List Typ)
 | .nil => .some []
 | .cons t ts => do
-  let t' ← Typ.proj id l t
+  let t' ← Typ.project id l t
   let ts' ← ListTyp.factor id l ts
   return t' :: ts'
 
@@ -587,9 +587,9 @@ def Typ.factor (id : String) (t : Typ) (l : String) : Option Typ :=
   return Typ.combine .false ts
 
 -- set_option eval.pp true
-#eval Typ.proj "T970" "left"
+#eval Typ.project "T970" "left"
 [typ| (<succ> T976) * (<cons> T977) ]
-#eval Typ.proj "T970" "left"
+#eval Typ.project "T970" "left"
 [typ| EXI[T976 T977] [ (T976 * T977 <: T970) ] <succ> T976 * <cons> T977 ]
 
 #eval Typ.factor "T970"
@@ -2113,14 +2113,14 @@ theorem Typ.factor_reflection {am id t label t' e'} :
   Typ.factor id t label = some t' →
   Typing am e' (.lfp id t') →
   ∃ e ,
-    Confluent (Expr.proj e label) e' ∧
+    Confluent (Expr.project e label) e' ∧
     Typing am e (.lfp id t)
 := by sorry
 
 theorem Typ.factor_preservation {am id t label t' e' e} :
   Typ.factor id t label = some t' →
   Typing am e (.lfp id t) →
-  Confluent (Expr.proj e label) e' →
+  Confluent (Expr.project e label) e' →
   Typing am e' (.lfp id t')
 := by sorry
 
@@ -2224,7 +2224,7 @@ theorem ListZone.invert_preservation {id zones zones' am assums} :
           MultiSubtyping (am'' ++ am' ++ am) assums' ∧
           Typing (am'' ++ am' ++ am) ep t' ) )
     ) →
-    Confluent (.proj ep "right") (.app ef (.proj ep "left"))
+    Confluent (.project ep "right") (.app ef (.project ep "left"))
   )
 := by sorry
 
@@ -2247,7 +2247,7 @@ theorem List.pair_typ_invert_preservation {id am assums assums0 assums0'} skolem
           MultiSubtyping (am'' ++ am' ++ am) assums0' ∧
           Typing (am'' ++ am' ++ am) ep (.pair tl tr) )
       ) →
-      Confluent (.proj ep "right") (.app ef (.proj ep "left"))
+      Confluent (.project ep "right") (.app ef (.project ep "left"))
     )
 := by sorry
 
@@ -2658,14 +2658,14 @@ theorem Typ.combine_bounds_positive_subtyping_path_conseq_soundness {id am am_sk
 --   Typ.factor id t label = some t' →
 --   Typing am e' (.lfp id t') →
 --   ∃ e ,
---     Confluent (Expr.proj e label) e' ∧
+--     Confluent (Expr.project e label) e' ∧
 --     Typing am e (.lfp id t)
 -- := by sorry
 
 -- theorem Typ.factor_reduction_soundness {am id t label t' e' e} :
 --   Typ.factor id t label = some t' →
 --   Typing am e (.lfp id t) →
---   Confluent (Expr.proj e label) e' →
+--   Confluent (Expr.project e label) e' →
 --   Typing am e' (.lfp id t')
 -- := by sorry
 

@@ -924,7 +924,7 @@ end
 def Expr.extract (e : Expr) (l : String) : Expr :=
   .app (.function [(Pat.iso l (Pat.var "x"), .var "x")]) e
 
-def Expr.proj (e : Expr) (l : String) : Expr :=
+def Expr.project (e : Expr) (l : String) : Expr :=
   .app (.function [(.record [(l, .var "x")], .var "x")]) e
 
 def Expr.def (id : String) (top : Option Typ) (target : Expr) (contin : Expr) : Expr :=
@@ -1265,7 +1265,7 @@ macro_rules
 | `([expr| $i:ident ; $e:expr ]) => `(Expr.record [([id| $i], [expr| $e])])
 | `([expr| $l:expr , $r:expr ]) => `(Expr.pair [expr| $l] [expr| $r])
 | `([expr| $f:function ]) => `(Expr.function [function| $f])
-| `([expr| $e:expr . $i:ident ]) => `(Expr.proj [expr| $e] [id| $i])
+| `([expr| $e:expr . $i:ident ]) => `(Expr.project [expr| $e] [id| $i])
 | `([expr| $f:expr ( $a:expr ) ]) => `(Expr.app [expr| $f] [expr| $a])
 | `([expr| $e:expr as $t:typ ]) => `(Expr.anno [expr| $e] [typ| $t])
 | `([expr| def $i:ident : $t:typ = $a:expr in $c:expr  ]) =>

@@ -568,7 +568,7 @@ mutual
   | (p,e)::f => do
     let (tp, Δ', Γ') ←  PatLifting.Static.compute Δ Γ p
     let nested_zones ← Function.Typing.Static.compute Θ Δ Γ (tp::subtras) f
-    let tl := ListTyp.diff tp subtras
+    let tl := List.typ_diff tp subtras
     let zones ← (← GuardedTyping.compute Θ Δ' Γ' e).mapM (fun ⟨Θ', Δ'', tr ⟩ => do
       let ⟨skolems'', assums''', t⟩ ← Zone.interpret [] .true ⟨Θ', Δ'', (.path tl tr)⟩
       return ⟨List.diff skolems'' Θ, List.diff assums''' Δ, t⟩
@@ -1060,7 +1060,7 @@ elab_rules : tactic
 
 example t : ∃ zones : List Zone ,
 ∀ {skolems' : List String} {assums'' : List (Typ × Typ)} {tr : Typ},
-  { skolems := skolems', assums := assums'', typ := Typ.path (ListTyp.diff t []) tr } ∈ zones →
+  { skolems := skolems', assums := assums'', typ := Typ.path (List.typ_diff t []) tr } ∈ zones →
     GuardedTyping [] [] [] (Expr.record []) tr (skolems' ++ []) (assums'' ++ [])
 := by
   sorry
@@ -1090,7 +1090,7 @@ macro_rules
     -- { apply ListZone.tidy_undo_tidy }
     -- { simp [ListZone.undo_tidy]
     --   intros _ _ _ _ assums_eq t_eq
-    --   simp [*, ListTyp.diff]
+    --   simp [*, List.typ_diff]
     --   apply And.intro
     --   { exact? }
     --   {
