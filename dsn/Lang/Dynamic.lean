@@ -114,13 +114,6 @@ inductive TransitionStar : Expr → Expr → Prop
 | refl e : TransitionStar e e
 | step e e' e'' : Transition e e' → TransitionStar e' e'' → TransitionStar e e''
 
-inductive Expand : Expr → Expr → Prop
-| refl e : Expand e e
-| step e e' e'' : Expand e e' → Transition e' e'' → Expand e e''
-
-theorem TransitionStar.expand :
-  TransitionStar e e' → Expand e e'
-:= by sorry
 
 def Convergent (e : Expr) : Prop :=
   ∃ e' , TransitionStar e e' ∧ Expr.is_value e'
@@ -1120,63 +1113,137 @@ theorem Divergent.transition :
 := by sorry
 
 
-theorem Transition.applicand_only :
-  Transition e e' →
-  Transition (.app (.function f) e) er →
-  (.app (.function f) e') = er
+
+
+inductive ApplicandFocus : (Expr → Expr) → Prop
+| single f : ApplicandFocus (fun e => (.app (.function f) e))
+| nested f E: ApplicandFocus E → ApplicandFocus (fun e => E (.app (.function f) e))
+
+
+theorem ApplicandFocus.transition_preservation :
+  ApplicandFocus E →
+  Transition e e'→
+  Transition (E e) (E e')
 := by sorry
 
-theorem Divergent.applicand f :
-  Divergent e →
-  Divergent (.app (.function f) e)
-:= by
-  intro h0 e' h1
-  generalize h2 : (Expr.app (Expr.function f) e) = eg at h1
 
-  revert h2
-  revert h0
+theorem ApplicandFocus.transition_unique :
+  ApplicandFocus E →
+  Transition e e' → Transition (E e) er →
+  (E e') = er
+:= by sorry
+
+
+
+theorem Divergent.applicand :
+  ApplicandFocus E →
+  Divergent e →
+  Divergent (E e)
+:= by
+  intro h0 h1 e' h2
+  generalize h3 : (E e) = eg at h1
+  rw [h3] at h2
   revert e
-  induction h1 with
+  induction h2 with
   | refl eg =>
-    intro e h0 h1
-    rw [← h1]
-    specialize h0 e (TransitionStar.refl e)
-    have ⟨e', h3⟩ := h0
-    clear h0
-    exists (Expr.app (.function f) e')
-    apply Transition.applicand
+    intro e h1 h2
+    rw [← h2]
+    specialize h1 e (TransitionStar.refl e)
+    have ⟨e', h3⟩ := h1
+    exists (E e')
+    apply ApplicandFocus.transition_preservation h0
     exact h3
+
   | step eg em e' h4 h5 ih =>
-    intro e h0 h1
-    rw [← h1] at h4
-    clear h1
-    apply Divergent.transition at h0
-    have ⟨et, h6,h7⟩ := h0
+
+    intro e h1 h2
+    rw [← h2] at h4
+    clear h2
+    apply Divergent.transition at h1
+    have ⟨et, h6,h7⟩ := h1
     apply ih h7
-    apply Transition.applicand_only h6 h4
+    apply ApplicandFocus.transition_unique h0
+    exact h6
+    exact h4
 
 
 theorem Typing.divergent_applicand_swap :
   Divergent e_inf →
   Typing am e t → Typing am e_inf t →
-  Typing am (.app (.function f) e) t' → Typing am (.app (.function f) e_inf) t'
+  ApplicandFocus E →
+  Typing am (E e) t' → Typing am (E e_inf) t'
 := match t' with
+| .bot => by
+  intro h0 h1 h2 h3
+  unfold Typing
+  intro h4
+  exact h4
+
 | .top => by
-  intro h0 h1 h2
+  intro h0 h1 h2 h3
   unfold Typing
-  intro h3
+  intro h4
   apply Or.inr
-  clear h3
-  exact Divergent.applicand f h0
-| .inter left right => by
+  clear h4
+  exact Divergent.applicand h3 h0
+
+| .iso label body => by
   intro h0 h1 h2
   unfold Typing
   intro h3
-  have ⟨h4,h5⟩ := h3
+
+  -- have ih := Typing.divergent_applicand_swap f h0 h1 h2
+  -- apply ih
+  sorry
+| .entry label body => by
+  intro h0 h1 h2
+  unfold Typing
+  intro h3
+  sorry
+| .path left right => by
+  intro h0 h1 h2
+  unfold Typing
+  intro h3
+  sorry
+| .unio left right => by
+  intro h0 h1 h2
+  unfold Typing
+  intro h3
+  sorry
+| .inter left right => by
+  intro h0 h1 h2 h3
+  unfold Typing
+  intro h4
+  have ⟨h5,h6⟩ := h4
   apply And.intro
-  { apply Typing.divergent_applicand_swap h0 h1 h2 h4 }
-  { apply Typing.divergent_applicand_swap h0 h1 h2 h5 }
-| _ => by sorry
+  { apply Typing.divergent_applicand_swap h0 h1 h2 h3 h5 }
+  { apply Typing.divergent_applicand_swap h0 h1 h2 h3 h6 }
+
+| .diff left right => by
+  intro h0 h1 h2
+  unfold Typing
+  intro h3
+  sorry
+| .exi ids quals body => by
+  intro h0 h1 h2
+  unfold Typing
+  intro h3
+  sorry
+| .all ids quals body => by
+  intro h0 h1 h2
+  unfold Typing
+  intro h3
+  sorry
+| .lfp id body => by
+  intro h0 h1 h2
+  unfold Typing
+  intro h3
+  sorry
+| .var id => by
+  intro h0 h1 h2
+  unfold Typing
+  intro h3
+  sorry
 
 
 theorem Typing.app_function_beta_expansion f :
@@ -1205,7 +1272,8 @@ theorem Typing.app_function_beta_expansion f :
       apply ih h9 h6
   | inr h4 =>
     have ⟨v, h5, h6⟩ := Typing.exists_value h1
-    apply Typing.divergent_applicand_swap h4 h6 h1
+
+    apply Typing.divergent_applicand_swap h4 h6 h1 (ApplicandFocus.single ((p, e) :: f))
     specialize h0 h5 h6
     have ⟨eam,h7,h8⟩ := h0
     exact app_function_value_beta_expansion f h5 h7 h8
