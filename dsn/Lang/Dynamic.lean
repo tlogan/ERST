@@ -114,11 +114,31 @@ inductive TransitionStar : Expr → Expr → Prop
 | refl e : TransitionStar e e
 | step e e' e'' : Transition e e' → TransitionStar e' e'' → TransitionStar e e''
 
+inductive Expand : Expr → Expr → Prop
+| refl e : Expand e e
+| step e e' e'' : Expand e e' → Transition e' e'' → Expand e e''
+
+theorem TransitionStar.expand :
+  TransitionStar e e' → Expand e e'
+:= by sorry
+
 def Convergent (e : Expr) : Prop :=
   ∃ e' , TransitionStar e e' ∧ Expr.is_value e'
 
 def Divergent (e : Expr) : Prop :=
   (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'')
+
+
+def NonDivergent (e : Expr) : Prop :=
+  ∃ e' , TransitionStar e e' ∧ ¬ (∃ e'' , Transition e' e'')
+
+theorem NonDivergent.elim :
+  NonDivergent e → ¬ Divergent e
+:= by sorry
+
+theorem NonDivergent.intro :
+  ¬ Divergent e → NonDivergent e
+:= by sorry
 
 
 def Stuck (e : Expr) : Prop :=
@@ -1093,23 +1113,47 @@ theorem Typing.exists_value :
   ∃ v , Expr.is_value v ∧ Typing am v t
 := by sorry
 
+
+theorem Divergent.transition :
+  Divergent e →
+  ∃ e' , Transition e e' ∧ Divergent e'
+:= by sorry
+
+
+theorem Transition.applicand_only :
+  Transition e e' →
+  Transition (.app (.function f) e) er →
+  (.app (.function f) e') = er
+:= by sorry
+
 theorem Divergent.applicand f :
   Divergent e →
   Divergent (.app (.function f) e)
 := by
-  unfold Divergent
   intro h0 e' h1
+  generalize h2 : (Expr.app (Expr.function f) e) = eg at h1
 
-  cases h1 with
-  | refl =>
+  revert h2
+  revert h0
+  revert e
+  induction h1 with
+  | refl eg =>
+    intro e h0 h1
+    rw [← h1]
     specialize h0 e (TransitionStar.refl e)
-    have ⟨e', h2⟩ := h0
+    have ⟨e', h3⟩ := h0
+    clear h0
     exists (Expr.app (.function f) e')
     apply Transition.applicand
-    exact h2
-  | step =>
-    sorry
-
+    exact h3
+  | step eg em e' h4 h5 ih =>
+    intro e h0 h1
+    rw [← h1] at h4
+    clear h1
+    apply Divergent.transition at h0
+    have ⟨et, h6,h7⟩ := h0
+    apply ih h7
+    apply Transition.applicand_only h6 h4
 
 
 theorem Typing.divergent_applicand_swap :
