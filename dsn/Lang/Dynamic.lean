@@ -1115,47 +1115,47 @@ theorem Divergent.transition :
 
 
 
-inductive EvalContext : (Expr → Expr) → Prop
-| applicator e' : EvalContext (fun e => (.app e e'))
-| applicand f : EvalContext (fun e => (.app (.function f) e))
-| nested E E' : EvalContext E → EvalContext E' → EvalContext (fun e => E (E' e))
+inductive EvalCon : (Expr → Expr) → Prop
+| hole : EvalCon (fun e => e)
+| applicator e' : EvalCon E → EvalCon (fun e => .app (E e) e')
+| applicand f : EvalCon E → EvalCon (fun e => .app (.function f) (E e))
 
 
-theorem EvalContext.transition_preservation :
-  EvalContext E →
+theorem EvalCon.transition_preservation :
+  EvalCon E →
   Transition e e'→
   Transition (E e) (E e')
 := by sorry
 
 
-theorem EvalContext.transition_unique :
-  EvalContext E →
+theorem EvalCon.transition_unique :
+  EvalCon E →
   Transition e e' → Transition (E e) er →
   (E e') = er
 := by sorry
 
-theorem EvalContext.extract_compos l :
-  EvalContext E →
-  EvalContext (fun e => Expr.extract (E e) l)
+theorem EvalCon.extract_compos l :
+  EvalCon E →
+  EvalCon (fun e => Expr.extract (E e) l)
 := by sorry
 
-theorem EvalContext.project_compos l :
-  EvalContext E →
-  EvalContext (fun e => Expr.project (E e) l)
+theorem EvalCon.project_compos l :
+  EvalCon E →
+  EvalCon (fun e => Expr.project (E e) l)
 := by sorry
 
 
 
-theorem EvalContext.app_compos e' :
-  EvalContext E →
-  EvalContext (fun e => Expr.app (E e) e')
+theorem EvalCon.app_compos e' :
+  EvalCon E →
+  EvalCon (fun e => Expr.app (E e) e')
 := by sorry
 
 
 
 
 theorem Divergent.applicand :
-  EvalContext E →
+  EvalCon E →
   Divergent e →
   Divergent (E e)
 := by
@@ -1170,7 +1170,7 @@ theorem Divergent.applicand :
     specialize h1 e (TransitionStar.refl e)
     have ⟨e', h3⟩ := h1
     exists (E e')
-    apply EvalContext.transition_preservation h0
+    apply EvalCon.transition_preservation h0
     exact h3
 
   | step eg em e' h4 h5 ih =>
@@ -1181,7 +1181,7 @@ theorem Divergent.applicand :
     apply Divergent.transition at h1
     have ⟨et, h6,h7⟩ := h1
     apply ih h7
-    apply EvalContext.transition_unique h0
+    apply EvalCon.transition_unique h0
     exact h6
     exact h4
 
@@ -1189,7 +1189,7 @@ theorem Divergent.applicand :
 theorem Typing.divergent_applicand_swap :
   Divergent e_inf →
   Typing am e t → Typing am e_inf t →
-  EvalContext E →
+  EvalCon E →
   Typing am (E e) t' → Typing am (E e_inf) t'
 := match t' with
 | .bot => by
@@ -1209,7 +1209,7 @@ theorem Typing.divergent_applicand_swap :
 | .iso label body => by
   intro h0 h1 h2 h3
   unfold Typing
-  apply EvalContext.extract_compos label at h3
+  apply EvalCon.extract_compos label at h3
   intro h4
 
   apply Typing.divergent_applicand_swap h0 h1 h2 h3 h4
@@ -1218,7 +1218,7 @@ theorem Typing.divergent_applicand_swap :
 
   intro h0 h1 h2 h3
   unfold Typing
-  apply EvalContext.project_compos label at h3
+  apply EvalCon.project_compos label at h3
   intro h4
   apply Typing.divergent_applicand_swap h0 h1 h2 h3 h4
 
@@ -1226,7 +1226,7 @@ theorem Typing.divergent_applicand_swap :
   intro h0 h1 h2 h3
   unfold Typing
   intro h4 e' h5
-  apply EvalContext.app_compos e' at h3
+  apply EvalCon.app_compos e' at h3
   apply Typing.divergent_applicand_swap h0 h1 h2 h3 (h4 e' h5)
 
 | .unio left right => by
@@ -1279,7 +1279,7 @@ theorem Typing.app_function_beta_expansion f :
   | inr h4 =>
     have ⟨v, h5, h6⟩ := Typing.exists_value h1
 
-    apply Typing.divergent_applicand_swap h4 h6 h1 (EvalContext.applicand ((p, e) :: f))
+    apply Typing.divergent_applicand_swap h4 h6 h1 (EvalCon.applicand ((p, e) :: f) .hole)
     specialize h0 h5 h6
     have ⟨eam,h7,h8⟩ := h0
     exact app_function_value_beta_expansion f h5 h7 h8
