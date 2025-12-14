@@ -127,6 +127,19 @@ theorem EvalCon.transition_preservation :
   Transition (E e) (E e')
 := by sorry
 
+theorem EvalCon.is_value_reflection :
+  EvalCon E →
+  Expr.is_value (E e) →
+  Expr.is_value e
+:= by sorry
+
+
+theorem EvalCon.transition :
+  EvalCon E →
+  Transition (E e) e' →
+  ∃ e'' , Transition e e''
+:= by sorry
+
 
 theorem EvalCon.transition_unique :
   EvalCon E →
@@ -557,65 +570,52 @@ theorem Typing.inter_entry_intro {am l e r body t} :
 := by sorry
 
 
+theorem TransitionStar.project_record {id} :
+  TransitionStar (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)])) e
+:= by sorry
+
+
 theorem TransitionStar.project_record_beta_expansion {e l e' id}:
-  TransitionStar e e' → Expr.is_value e' →
-  TransitionStar (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)])) e'
+  EvalCon E →
+  TransitionStar (E e) e' → Expr.is_value e' →
+  TransitionStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
 := by
-  intro h0 h1
-  induction h0 with
-  | refl e'' =>
+  intro h0 h1 h2
+  generalize h3 : (E e) = e0 at h1
+  revert e
+  induction h1 with
+  | refl e0 =>
+    intro e h3
+    rw [← h3] at h2
+    rw [← h3]
     apply TransitionStar.step
-    { apply Transition.appmatch
-      { reduce; exact h1 }
+    {
+      apply EvalCon.transition_preservation h0
+      apply Transition.appmatch
+      { reduce ; apply EvalCon.is_value_reflection h0 h2 }
       { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
         reduce
         apply And.intro rfl rfl
       }
     }
     { simp [Expr.sub, find]
+      simp [*]
       apply TransitionStar.refl
     }
-  | step e e' e'' h3 h4 ih =>
-    cases h5 : (Expr.is_value (Expr.record [(l,e)])) with
-    | true =>
-      apply TransitionStar.step
-      { apply Transition.appmatch h5
-        { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
-          reduce
-          apply And.intro rfl rfl
-        }
-      }
-      { simp [Expr.sub, find]
-        exact TransitionStar.step e e' e'' h3 h4
-      }
-    | false =>
-      apply TransitionStar.step
-      {
-        apply Transition.applicand
-        apply Transition.entry
-        apply h3
-      }
-      { apply ih h1 }
+  | step e0 em e' h3 h4 ih =>
+    intro e h5
+    rw [← h5] at h3
 
-theorem EvalCon.transition_star_project_record_beta_expansion {e l e' id}:
-  EvalCon E →
-  TransitionStar (E e) e' → Expr.is_value e' →
-  TransitionStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
-:= by
-  intro h0
-  induction h0 with
-  | hole =>
-    simp
-    intro h1 h2
-    exact TransitionStar.project_record_beta_expansion h1 h2
-  | applicator e'' evalcon ih =>
-    simp
-    intro h1 h2
-    sorry
-  | applicand f evalcon ih =>
-    simp
-    intro h1 h2
-    sorry
+    have ⟨et, h6⟩ := EvalCon.transition h0 h3
+    apply TransitionStar.step
+    {
+      apply EvalCon.transition_preservation h0
+      apply Transition.applicand
+      apply Transition.entry _ _ _ et h6
+    }
+    { apply ih h2
+      exact EvalCon.transition_unique h0 h6 h3
+    }
 
 
 theorem Typing.project_record_beta_reduction :
@@ -641,7 +641,7 @@ theorem Convergent.project_record_beta_expansion :
   have ⟨e',h2,h3⟩ := h1
   exists e'
   apply And.intro
-  { exact EvalCon.transition_star_project_record_beta_expansion h0 h2 h3 }
+  { exact TransitionStar.project_record_beta_expansion h0 h2 h3 }
   { exact h3 }
 
 theorem Divergent.project_record_beta_expansion :
@@ -1062,7 +1062,7 @@ theorem Divergent.transition :
 := by sorry
 
 
-theorem Divergent.applicand :
+theorem Divergent.evalcon :
   EvalCon E →
   Divergent e →
   Divergent (E e)
@@ -1089,12 +1089,13 @@ theorem Divergent.applicand :
     apply Divergent.transition at h1
     have ⟨et, h6,h7⟩ := h1
     apply ih h7
+
     apply EvalCon.transition_unique h0
     exact h6
     exact h4
 
 
-theorem Typing.divergent_applicand_swap :
+theorem Typing.divergent_evalcon_swap :
   Divergent e_inf →
   Typing am e t → Typing am e_inf t →
   EvalCon E →
@@ -1112,7 +1113,7 @@ theorem Typing.divergent_applicand_swap :
   intro h4
   apply Or.inr
   clear h4
-  exact Divergent.applicand h3 h0
+  exact Divergent.evalcon h3 h0
 
 | .iso label body => by
   intro h0 h1 h2 h3
@@ -1120,7 +1121,7 @@ theorem Typing.divergent_applicand_swap :
   apply EvalCon.extract label at h3
   intro h4
 
-  apply Typing.divergent_applicand_swap h0 h1 h2 h3 h4
+  apply Typing.divergent_evalcon_swap h0 h1 h2 h3 h4
 
 | .entry label body => by
 
@@ -1128,7 +1129,7 @@ theorem Typing.divergent_applicand_swap :
   unfold Typing
   apply EvalCon.project label at h3
   intro h4
-  apply Typing.divergent_applicand_swap h0 h1 h2 h3 h4
+  apply Typing.divergent_evalcon_swap h0 h1 h2 h3 h4
 
 | .path left right => by
   intro h0 h1 h2 h3
@@ -1137,7 +1138,7 @@ theorem Typing.divergent_applicand_swap :
 
   apply EvalCon.applicator e' at h3
 
-  apply Typing.divergent_applicand_swap h0 h1 h2 h3 (h4 e' h5)
+  apply Typing.divergent_evalcon_swap h0 h1 h2 h3 (h4 e' h5)
 
 | .unio left right => by
   sorry
@@ -1147,8 +1148,8 @@ theorem Typing.divergent_applicand_swap :
   intro h4
   have ⟨h5,h6⟩ := h4
   apply And.intro
-  { apply Typing.divergent_applicand_swap h0 h1 h2 h3 h5 }
-  { apply Typing.divergent_applicand_swap h0 h1 h2 h3 h6 }
+  { apply Typing.divergent_evalcon_swap h0 h1 h2 h3 h5 }
+  { apply Typing.divergent_evalcon_swap h0 h1 h2 h3 h6 }
 
 | .diff left right => by
   sorry
@@ -1189,7 +1190,7 @@ theorem Typing.app_function_beta_expansion f :
   | inr h4 =>
     have ⟨v, h5, h6⟩ := Typing.exists_value h1
 
-    apply Typing.divergent_applicand_swap h4 h6 h1 (EvalCon.applicand ((p, e) :: f) .hole)
+    apply Typing.divergent_evalcon_swap h4 h6 h1 (EvalCon.applicand ((p, e) :: f) .hole)
     specialize h0 h5 h6
     have ⟨eam,h7,h8⟩ := h0
     exact app_function_value_beta_expansion f .hole h5 h7 h8
