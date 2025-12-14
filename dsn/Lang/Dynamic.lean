@@ -557,7 +557,7 @@ theorem Typing.inter_entry_intro {am l e r body t} :
 := by sorry
 
 
-theorem TransitionStar.record_single_elim {e l e' id}:
+theorem TransitionStar.project_record_beta_expansion {e l e' id}:
   TransitionStar e e' → Expr.is_value e' →
   TransitionStar (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)])) e'
 := by
@@ -597,11 +597,25 @@ theorem TransitionStar.record_single_elim {e l e' id}:
       }
       { apply ih h1 }
 
-theorem TransitionStar.evalcon_record_single_elim {e l e' id}:
+theorem EvalCon.transition_star_project_record_beta_expansion {e l e' id}:
   EvalCon E →
   TransitionStar (E e) e' → Expr.is_value e' →
   TransitionStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
-:= by sorry
+:= by
+  intro h0
+  induction h0 with
+  | hole =>
+    simp
+    intro h1 h2
+    exact TransitionStar.project_record_beta_expansion h1 h2
+  | applicator e'' evalcon ih =>
+    simp
+    intro h1 h2
+    sorry
+  | applicand f evalcon ih =>
+    simp
+    intro h1 h2
+    sorry
 
 
 theorem Typing.project_record_beta_reduction :
@@ -627,7 +641,7 @@ theorem Convergent.project_record_beta_expansion :
   have ⟨e',h2,h3⟩ := h1
   exists e'
   apply And.intro
-  { apply TransitionStar.evalcon_record_single_elim h0 h2 h3 }
+  { exact EvalCon.transition_star_project_record_beta_expansion h0 h2 h3 }
   { exact h3 }
 
 theorem Divergent.project_record_beta_expansion :
