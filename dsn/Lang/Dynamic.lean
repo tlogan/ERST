@@ -78,14 +78,14 @@ theorem Expr.sub_sub_removal :
 
 
 inductive Transition : Expr → Expr → Prop
-| entry l e r e' :
+| entry l r :
   Transition e e' →
   Transition (Expr.record ((l, e) :: r)) (Expr.record ((l, e') :: r))
-| record : ∀ {r r' l v},
+| record :
   Transition (Expr.record r) (Expr.record r') →
   v.is_value →
   Transition (Expr.record ((l, v) :: r)) (Expr.record ((l, v) :: r'))
-| applicator : ∀ {ef ef' e},
+| applicator :
   Transition ef ef' →
   Transition (.app ef e) (.app ef' e)
 | applicand f e e' :
@@ -95,13 +95,13 @@ inductive Transition : Expr → Expr → Prop
   v.is_value →
   Expr.pattern_match v p = some m →
   Transition (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
-| appskip : ∀ {p e f v},
+| appskip :
   v.is_value →
   Expr.pattern_match v p = none →
   Transition (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
 | anno : ∀ {e t},
   Transition (.anno  e t) e
-| loopbody : ∀ {e e'},
+| loopbody :
   Transition e e' →
   Transition (.loop e) (.loop e')
 | looppeel : ∀ {id e},
@@ -609,9 +609,10 @@ theorem TransitionStar.project_record_beta_expansion {e l e' id}:
     have ⟨et, h6⟩ := EvalCon.transition h0 h3
     apply TransitionStar.step
     {
+
       apply EvalCon.transition_preservation h0
       apply Transition.applicand
-      apply Transition.entry _ _ _ et h6
+      apply Transition.entry _ _ h6
     }
     { apply ih h2
       exact EvalCon.transition_unique h0 h6 h3
@@ -916,7 +917,11 @@ theorem Convergent.app_function_value_beta_expansion f :
   apply And.intro
   {
     apply TransitionStar.step
-    { sorry } -- apply Transition.appmatch h0 h1 }
+    {
+      apply EvalCon.transition_preservation  evalcon
+      apply Transition.appmatch h0
+      exact h1
+    }
     { apply h3 }
   }
   { exact h4 }
@@ -1094,12 +1099,27 @@ theorem Divergent.evalcon :
     exact h6
     exact h4
 
-
-theorem Typing.divergent_evalcon_swap :
+theorem SimpleTyping.divergent_swap :
   Divergent e_inf →
   Typing am e t → Typing am e_inf t →
   EvalCon E →
-  Typing am (E e) t' → Typing am (E e_inf) t'
+  SimpleTyping (E e) t' → SimpleTyping (E e_inf) t'
+:= by sorry
+
+theorem Typing.divergent_swap_back :
+  Divergent e_inf →
+  Typing am e_inf t → Typing am e t →
+  EvalCon E →
+  Typing am' (E e_inf) t' → Typing am' (E e) t'
+:= by sorry
+
+
+
+theorem Typing.divergent_swap :
+  Divergent e_inf →
+  Typing am e t → Typing am e_inf t →
+  EvalCon E →
+  Typing am' (E e) t' → Typing am' (E e_inf) t'
 := match t' with
 | .bot => by
   intro h0 h1 h2 h3
@@ -1121,7 +1141,7 @@ theorem Typing.divergent_evalcon_swap :
   apply EvalCon.extract label at h3
   intro h4
 
-  apply Typing.divergent_evalcon_swap h0 h1 h2 h3 h4
+  apply Typing.divergent_swap h0 h1 h2 h3 h4
 
 | .entry label body => by
 
@@ -1129,7 +1149,7 @@ theorem Typing.divergent_evalcon_swap :
   unfold Typing
   apply EvalCon.project label at h3
   intro h4
-  apply Typing.divergent_evalcon_swap h0 h1 h2 h3 h4
+  apply Typing.divergent_swap h0 h1 h2 h3 h4
 
 | .path left right => by
   intro h0 h1 h2 h3
@@ -1138,29 +1158,74 @@ theorem Typing.divergent_evalcon_swap :
 
   apply EvalCon.applicator e' at h3
 
-  apply Typing.divergent_evalcon_swap h0 h1 h2 h3 (h4 e' h5)
+  apply Typing.divergent_swap h0 h1 h2 h3 (h4 e' h5)
 
 | .unio left right => by
-  sorry
+  intro h0 h1 h2 h3
+  unfold Typing
+  intro h4
+  cases h4 with
+  | inl h5 =>
+    apply Or.inl
+    apply Typing.divergent_swap h0 h1 h2 h3 h5
+  | inr h5 =>
+    apply Or.inr
+    apply Typing.divergent_swap h0 h1 h2 h3 h5
+
 | .inter left right => by
   intro h0 h1 h2 h3
   unfold Typing
   intro h4
   have ⟨h5,h6⟩ := h4
   apply And.intro
-  { apply Typing.divergent_evalcon_swap h0 h1 h2 h3 h5 }
-  { apply Typing.divergent_evalcon_swap h0 h1 h2 h3 h6 }
+  { apply Typing.divergent_swap h0 h1 h2 h3 h5 }
+  { apply Typing.divergent_swap h0 h1 h2 h3 h6 }
 
 | .diff left right => by
-  sorry
+  intro h0 h1 h2 h3
+  unfold Typing
+  intro h4
+  have ⟨h5,h6⟩ := h4
+  apply And.intro
+  { apply Typing.divergent_swap h0 h1 h2 h3 h5 }
+  {
+    intro h7
+    apply h6
+    apply Typing.divergent_swap_back h0 h2 h1 h3 h7
+  }
 | .exi ids quals body => by
-  sorry
+  intro h0 h1 h2 h3
+  unfold Typing
+  intro h4
+  have ⟨am',h5,h6,h7⟩ := h4
+  clear h4
+  exists am'
+  apply And.intro h5
+  apply And.intro h6
+  apply Typing.divergent_swap h0 h1 h2 h3 h7
 | .all ids quals body => by
-  sorry
+  intro h0 h1 h2 h3
+  unfold Typing
+  intro h4 am'' h5 h6
+  apply Typing.divergent_swap h0 h1 h2 h3 (h4 am'' h5 h6)
 | .lfp id body => by
-  sorry
+  intro h0 h1 h2 h3
+  unfold Typing
+  intro h4
+  have ⟨h5,t'',h6,h7,h8⟩ := h4
+  apply And.intro h5
+  exists t''
+  exists h6
+  apply And.intro h7
+  apply Typing.divergent_swap h0 h1 h2 h3 h8
 | .var id => by
-  sorry
+  intro h0 h1 h2 h3
+  unfold Typing
+  intro h4
+  have ⟨t',h5,h6⟩ := h4
+  clear h4
+  simp [*]
+  apply SimpleTyping.divergent_swap h0 h1 h2 h3 h6
 
 
 theorem Typing.app_function_beta_expansion f :
@@ -1190,7 +1255,7 @@ theorem Typing.app_function_beta_expansion f :
   | inr h4 =>
     have ⟨v, h5, h6⟩ := Typing.exists_value h1
 
-    apply Typing.divergent_evalcon_swap h4 h6 h1 (EvalCon.applicand ((p, e) :: f) .hole)
+    apply Typing.divergent_swap h4 h6 h1 (EvalCon.applicand ((p, e) :: f) .hole)
     specialize h0 h5 h6
     have ⟨eam,h7,h8⟩ := h0
     exact app_function_value_beta_expansion f .hole h5 h7 h8
