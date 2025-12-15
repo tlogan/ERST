@@ -1100,101 +1100,86 @@ theorem Divergent.evalcon :
     exact h4
 
 theorem SimpleTyping.divergent_swap :
-  Divergent e_inf →
-  Typing am e t → Typing am e_inf t →
+  Divergent e_dvg →
+  Typing am e t → Typing am e_dvg t →
   EvalCon E →
-  SimpleTyping (E e) t' → SimpleTyping (E e_inf) t'
+  SimpleTyping (E e) t' → SimpleTyping (E e_dvg) t'
 := by sorry
 
 theorem Typing.divergent_swap_back :
-  Divergent e_inf →
-  Typing am e_inf t → Typing am e t →
+  Divergent e_dvg →
+  Typing am e_dvg t → Typing am e t →
   EvalCon E →
-  Typing am' (E e_inf) t' → Typing am' (E e) t'
+  Typing am' (E e_dvg) t' → Typing am' (E e) t'
 := by sorry
 
 
-
-theorem Typing.divergent_swap :
-  Divergent e_inf →
-  Typing am e t → Typing am e_inf t →
-  EvalCon E →
-  Typing am' (E e) t' → Typing am' (E e_inf) t'
-:= match t' with
-| .bot => by
-  intro h0 h1 h2 h3
+theorem Typing.divergent_swap
+  (divergent : Divergent e_dvg)
+  (typing : Typing am e t)
+  (typing_dvg : Typing am e_dvg t)
+  (evalcon : EvalCon E)
+: Typing am' (E e) t' →  Typing am' (E e_dvg) t'
+:= by cases t' with
+| bot =>
   unfold Typing
-  intro h4
-  exact h4
+  simp
 
-| .top => by
-  intro h0 h1 h2 h3
+| top =>
   unfold Typing
-  intro h4
+  intro typing_evalcon
   apply Or.inr
-  clear h4
-  exact Divergent.evalcon h3 h0
+  exact Divergent.evalcon evalcon divergent
 
-| .iso label body => by
-  intro h0 h1 h2 h3
+| iso label body =>
   unfold Typing
-  apply EvalCon.extract label at h3
-  intro h4
+  apply EvalCon.extract label at evalcon
+  intro typing_evalcon
+  apply Typing.divergent_swap divergent typing typing_dvg evalcon typing_evalcon
 
-  apply Typing.divergent_swap h0 h1 h2 h3 h4
-
-| .entry label body => by
-
-  intro h0 h1 h2 h3
+| entry label body =>
   unfold Typing
-  apply EvalCon.project label at h3
-  intro h4
-  apply Typing.divergent_swap h0 h1 h2 h3 h4
+  apply EvalCon.project label at evalcon
+  intro typing_evalcon
+  apply Typing.divergent_swap divergent typing typing_dvg evalcon typing_evalcon
 
-| .path left right => by
-  intro h0 h1 h2 h3
+| path left right =>
   unfold Typing
   intro h4 e' h5
+  apply EvalCon.applicator e' at evalcon
+  apply Typing.divergent_swap divergent typing typing_dvg evalcon (h4 e' h5)
 
-  apply EvalCon.applicator e' at h3
-
-  apply Typing.divergent_swap h0 h1 h2 h3 (h4 e' h5)
-
-| .unio left right => by
-  intro h0 h1 h2 h3
+| unio left right =>
   unfold Typing
   intro h4
   cases h4 with
   | inl h5 =>
     apply Or.inl
-    apply Typing.divergent_swap h0 h1 h2 h3 h5
+    apply Typing.divergent_swap divergent typing typing_dvg evalcon h5
   | inr h5 =>
     apply Or.inr
-    apply Typing.divergent_swap h0 h1 h2 h3 h5
+    apply Typing.divergent_swap divergent typing typing_dvg evalcon h5
 
-| .inter left right => by
-  intro h0 h1 h2 h3
+| inter left right =>
   unfold Typing
   intro h4
   have ⟨h5,h6⟩ := h4
   apply And.intro
-  { apply Typing.divergent_swap h0 h1 h2 h3 h5 }
-  { apply Typing.divergent_swap h0 h1 h2 h3 h6 }
+  { apply Typing.divergent_swap divergent typing typing_dvg evalcon h5 }
+  { apply Typing.divergent_swap divergent typing typing_dvg evalcon h6 }
 
-| .diff left right => by
-  intro h0 h1 h2 h3
+| diff left right =>
   unfold Typing
   intro h4
   have ⟨h5,h6⟩ := h4
   apply And.intro
-  { apply Typing.divergent_swap h0 h1 h2 h3 h5 }
+  { apply Typing.divergent_swap divergent typing typing_dvg evalcon h5 }
   {
     intro h7
     apply h6
-    apply Typing.divergent_swap_back h0 h2 h1 h3 h7
+    apply Typing.divergent_swap_back divergent typing_dvg typing evalcon h7
   }
-| .exi ids quals body => by
-  intro h0 h1 h2 h3
+| exi ids quals body =>
   unfold Typing
   intro h4
   have ⟨am',h5,h6,h7⟩ := h4
@@ -1202,14 +1187,12 @@ theorem Typing.divergent_swap :
   exists am'
   apply And.intro h5
   apply And.intro h6
-  apply Typing.divergent_swap h0 h1 h2 h3 h7
-| .all ids quals body => by
-  intro h0 h1 h2 h3
+  apply Typing.divergent_swap divergent typing typing_dvg evalcon h7
+| all ids quals body =>
   unfold Typing
   intro h4 am'' h5 h6
-  apply Typing.divergent_swap h0 h1 h2 h3 (h4 am'' h5 h6)
-| .lfp id body => by
-  intro h0 h1 h2 h3
+  apply Typing.divergent_swap divergent typing typing_dvg evalcon (h4 am'' h5 h6)
+| lfp id body =>
   unfold Typing
   intro h4
   have ⟨h5,t'',h6,h7,h8⟩ := h4
@@ -1217,15 +1200,14 @@ theorem Typing.divergent_swap :
   exists t''
   exists h6
   apply And.intro h7
-  apply Typing.divergent_swap h0 h1 h2 h3 h8
-| .var id => by
-  intro h0 h1 h2 h3
+  apply Typing.divergent_swap divergent typing typing_dvg evalcon h8
+| var id =>
   unfold Typing
   intro h4
   have ⟨t',h5,h6⟩ := h4
   clear h4
   simp [*]
-  apply SimpleTyping.divergent_swap h0 h1 h2 h3 h6
+  apply SimpleTyping.divergent_swap divergent typing typing_dvg evalcon h6
 
 
 theorem Typing.app_function_beta_expansion f :
