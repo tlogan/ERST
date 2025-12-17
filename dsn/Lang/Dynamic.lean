@@ -575,7 +575,7 @@ theorem TransitionStar.project_record {id} :
 := by sorry
 
 
-theorem TransitionStar.project_record_beta_expansion {e l e' id}:
+theorem TransitionStar.project_beta_expansion {e l e' id}:
   EvalCon E →
   TransitionStar (E e) e' → Expr.is_value e' →
   TransitionStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
@@ -619,20 +619,20 @@ theorem TransitionStar.project_record_beta_expansion {e l e' id}:
     }
 
 
-theorem Typing.project_record_beta_reduction :
-  EvalCon E →
-  Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t →
-  Typing am (E e) t
-:= by sorry
-
-theorem SimpleTyping.project_record_beta_reduction :
+theorem SimpleTyping.project_beta_reduction :
   EvalCon E →
   SimpleTyping (E (Expr.project (Expr.record [(l, e)]) l)) t →
   SimpleTyping (E e) t
 := by sorry
 
 
-theorem Convergent.project_record_beta_expansion :
+theorem Convergent.project_beta_reduction :
+  EvalCon E →
+  Convergent (E (Expr.project (Expr.record [(l, e)]) l)) →
+  Convergent (E e)
+:= by sorry
+
+theorem Convergent.project_beta_expansion :
   EvalCon E →
   Convergent (E e) →
   Convergent (E (Expr.project (Expr.record [(l, e)]) l))
@@ -642,16 +642,23 @@ theorem Convergent.project_record_beta_expansion :
   have ⟨e',h2,h3⟩ := h1
   exists e'
   apply And.intro
-  { exact TransitionStar.project_record_beta_expansion h0 h2 h3 }
+  { exact TransitionStar.project_beta_expansion h0 h2 h3 }
   { exact h3 }
 
-theorem Divergent.project_record_beta_expansion :
+theorem Divergent.project_beta_reduction :
+  EvalCon E →
+  Divergent (E (Expr.project (Expr.record [(l, e)]) l)) →
+  Divergent (E e)
+:= by
+  sorry
+
+theorem Divergent.project_beta_expansion :
   EvalCon E →
   Divergent (E e) → Divergent (E (Expr.project (Expr.record [(l, e)]) l))
 := by
   sorry
 
-theorem SimpleTyping.project_record_beta_expansion l :
+theorem SimpleTyping.project_beta_expansion l :
   EvalCon E →
   SimpleTyping (E e) t →
   SimpleTyping (E (Expr.project (Expr.record [(l, e)]) l)) t
@@ -662,37 +669,37 @@ theorem SimpleTyping.project_record_beta_expansion l :
   cases h1 with
   | inl h2 =>
     apply Or.inl
-    exact Convergent.project_record_beta_expansion h0 h2
+    exact Convergent.project_beta_expansion h0 h2
   | inr h2 =>
     apply Or.inr
-    exact Divergent.project_record_beta_expansion h0 h2
+    exact Divergent.project_beta_expansion h0 h2
 
 | iso label body =>
   intro h0 h1
   apply EvalCon.extract label at h0
-  apply SimpleTyping.project_record_beta_expansion l h0 h1
+  apply SimpleTyping.project_beta_expansion l h0 h1
 
 
 | entry label body =>
   intro h0 h1
   apply EvalCon.project label at h0
-  apply SimpleTyping.project_record_beta_expansion l h0 h1
+  apply SimpleTyping.project_beta_expansion l h0 h1
 
 | path left right =>
   intro h0 h1 e' h2
   specialize h1 e' h2
   apply EvalCon.applicator e' at h0
-  apply SimpleTyping.project_record_beta_expansion l h0 h1
+  apply SimpleTyping.project_beta_expansion l h0 h1
 
 
 | unio left right =>
   intro h0 h1
   cases h1 with
   | inl h1 =>
-    have ih := SimpleTyping.project_record_beta_expansion l h0 h1
+    have ih := SimpleTyping.project_beta_expansion l h0 h1
     exact Or.inl ih
   | inr h1 =>
-    have ih := SimpleTyping.project_record_beta_expansion l h0 h1
+    have ih := SimpleTyping.project_beta_expansion l h0 h1
     exact Or.inr ih
 
 | inter left right =>
@@ -700,19 +707,19 @@ theorem SimpleTyping.project_record_beta_expansion l :
   unfold SimpleTyping at h1
   have ⟨h2,h3⟩ := h1
   apply And.intro
-  { apply SimpleTyping.project_record_beta_expansion l h0 h2 }
-  { apply SimpleTyping.project_record_beta_expansion l h0 h3 }
+  { apply SimpleTyping.project_beta_expansion l h0 h2 }
+  { apply SimpleTyping.project_beta_expansion l h0 h3 }
 
 | diff left right =>
   intro h0 h1
   unfold SimpleTyping at h1
   have ⟨h2,h3⟩ := h1
   apply And.intro
-  { apply SimpleTyping.project_record_beta_expansion l h0 h2 }
+  { apply SimpleTyping.project_beta_expansion l h0 h2 }
   {
     intro h4
     apply h3
-    apply SimpleTyping.project_record_beta_reduction h0 h4
+    apply SimpleTyping.project_beta_reduction h0 h4
   }
 
 | _ =>
@@ -720,109 +727,215 @@ theorem SimpleTyping.project_record_beta_expansion l :
   unfold SimpleTyping at h1
   exact h1
 
-theorem Typing.project_record_beta_expansion l :
-  EvalCon E →
-  Typing am (E e) t →
-  Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t
-:= match t with
-| .bot => by
-  unfold Typing
-  intro h0 h1
-  exact h1
+mutual
+  theorem Typing.project_beta_reduction :
+    EvalCon E →
+    Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t →
+    Typing am (E e) t
+  := match t with
+  | .bot => by
+    unfold Typing
+    intro h0 h1
+    exact h1
 
-| .top => by
-  unfold Typing
-  intro h0 h1
-  cases h1 with
-  | inl h2 =>
-    apply Or.inl
-    exact Convergent.project_record_beta_expansion h0 h2
-  | inr h2 =>
-    apply Or.inr
-    exact Divergent.project_record_beta_expansion h0 h2
+  | .top => by
+    unfold Typing
+    intro h0 h1
+    cases h1 with
+    | inl h2 =>
+      apply Or.inl
+      exact Convergent.project_beta_reduction h0 h2
+    | inr h2 =>
+      apply Or.inr
+      exact Divergent.project_beta_reduction h0 h2
 
-| .iso label body => by
-  unfold Typing
-  intro h0 h1
-  apply EvalCon.extract label at h0
-  apply Typing.project_record_beta_expansion l h0 h1
+  | .iso label body => by
+    unfold Typing
+    intro h0 h1
+    apply EvalCon.extract label at h0
+    apply Typing.project_beta_reduction h0 h1
 
-| .entry label body => by
-  unfold Typing
-  intro h0 h1
-  apply EvalCon.project label at h0
-  apply Typing.project_record_beta_expansion l h0 h1
+  | .entry label body => by
+    unfold Typing
+    intro h0 h1
+    apply EvalCon.project label at h0
+    apply Typing.project_beta_reduction h0 h1
 
-| .path left right => by
-  unfold Typing
-  intro h0 h1 e' h2
-  specialize h1 e' h2
-  apply EvalCon.applicator e' at h0
-  apply Typing.project_record_beta_expansion l h0 h1
+  | .path left right => by
+    unfold Typing
+    intro h0 h1 e' h2
+    specialize h1 e' h2
+    apply EvalCon.applicator e' at h0
+    apply Typing.project_beta_reduction h0 h1
 
-| .unio left right => by
-  unfold Typing
-  intro h0 h1
-  cases h1 with
-  | inl h2 =>
-    apply Or.inl
-    apply Typing.project_record_beta_expansion l h0 h2
-  | inr h2 =>
-    apply Or.inr
-    apply Typing.project_record_beta_expansion l h0 h2
+  | .unio left right => by
+    unfold Typing
+    intro h0 h1
+    cases h1 with
+    | inl h2 =>
+      apply Or.inl
+      apply Typing.project_beta_reduction h0 h2
+    | inr h2 =>
+      apply Or.inr
+      apply Typing.project_beta_reduction h0 h2
 
-| .inter left right => by
-  unfold Typing
-  intro h0 h1
-  have ⟨h2,h3⟩ := h1
-  apply And.intro
-  { apply Typing.project_record_beta_expansion l h0 h2 }
-  { apply Typing.project_record_beta_expansion l h0 h3 }
+  | .inter left right => by
+    unfold Typing
+    intro h0 h1
+    have ⟨h2,h3⟩ := h1
+    apply And.intro
+    { apply Typing.project_beta_reduction h0 h2 }
+    { apply Typing.project_beta_reduction h0 h3 }
 
-| .diff left right => by
-  unfold Typing
-  intro h0 h1
-  have ⟨h2,h3⟩ := h1
-  apply And.intro
-  { apply Typing.project_record_beta_expansion l h0 h2 }
-  {
-    intro h4
-    apply h3
-    exact project_record_beta_reduction h0 h4
-  }
-| .exi ids quals body => by
-  unfold Typing
-  intro h0 h1
+  | .diff left right => by
+    unfold Typing
+    intro h0 h1
+    have ⟨h2,h3⟩ := h1
+    apply And.intro
+    { apply Typing.project_beta_reduction h0 h2 }
+    {
+      intro h4
+      apply h3
+      exact Typing.project_beta_expansion l h0 h4
+    }
+  | .exi ids quals body => by
+    unfold Typing
+    intro h0 h1
 
-  have ⟨am', h2, h3, h4⟩ := h1
-  exists am'
-  apply And.intro h2
-  apply And.intro h3
-  apply Typing.project_record_beta_expansion l h0 h4
+    have ⟨am', h2, h3, h4⟩ := h1
+    exists am'
+    apply And.intro h2
+    apply And.intro h3
+    apply Typing.project_beta_reduction h0 h4
 
-| .all ids quals body => by
-  unfold Typing
-  intro h0 h1 am' dom_subset dynamic_quals
-  specialize h1 am' dom_subset dynamic_quals
-  apply Typing.project_record_beta_expansion l h0 h1
+  | .all ids quals body => by
+    unfold Typing
+    intro h0 h1 am' dom_subset dynamic_quals
+    specialize h1 am' dom_subset dynamic_quals
+    apply Typing.project_beta_reduction h0 h1
 
-| .lfp id body => by
-  unfold Typing
-  intro h0 h1
-  have ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩ := h1
-  apply And.intro monotonic_body
-  exists t
-  exists lt_size
-  apply And.intro imp_dynamic
-  apply Typing.project_record_beta_expansion l h0 dynamic_body
+  | .lfp id body => by
+    unfold Typing
+    intro h0 h1
+    have ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩ := h1
+    apply And.intro monotonic_body
+    exists t
+    exists lt_size
+    apply And.intro imp_dynamic
+    apply Typing.project_beta_reduction h0 dynamic_body
 
-| .var id => by
-  unfold Typing
-  intro h0 h1
-  have ⟨t, h2, h3⟩ := h1
-  exists t
-  apply And.intro h2
-  apply SimpleTyping.project_record_beta_expansion l h0 h3
+  | .var id => by
+    unfold Typing
+    intro h0 h1
+    have ⟨t, h2, h3⟩ := h1
+    exists t
+    apply And.intro h2
+    apply SimpleTyping.project_beta_reduction h0 h3
+
+  theorem Typing.project_beta_expansion l :
+    EvalCon E →
+    Typing am (E e) t →
+    Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t
+  := match t with
+  | .bot => by
+    unfold Typing
+    intro h0 h1
+    exact h1
+
+  | .top => by
+    unfold Typing
+    intro h0 h1
+    cases h1 with
+    | inl h2 =>
+      apply Or.inl
+      exact Convergent.project_beta_expansion h0 h2
+    | inr h2 =>
+      apply Or.inr
+      exact Divergent.project_beta_expansion h0 h2
+
+  | .iso label body => by
+    unfold Typing
+    intro h0 h1
+    apply EvalCon.extract label at h0
+    apply Typing.project_beta_expansion l h0 h1
+
+  | .entry label body => by
+    unfold Typing
+    intro h0 h1
+    apply EvalCon.project label at h0
+    apply Typing.project_beta_expansion l h0 h1
+
+  | .path left right => by
+    unfold Typing
+    intro h0 h1 e' h2
+    specialize h1 e' h2
+    apply EvalCon.applicator e' at h0
+    apply Typing.project_beta_expansion l h0 h1
+
+  | .unio left right => by
+    unfold Typing
+    intro h0 h1
+    cases h1 with
+    | inl h2 =>
+      apply Or.inl
+      apply Typing.project_beta_expansion l h0 h2
+    | inr h2 =>
+      apply Or.inr
+      apply Typing.project_beta_expansion l h0 h2
+
+  | .inter left right => by
+    unfold Typing
+    intro h0 h1
+    have ⟨h2,h3⟩ := h1
+    apply And.intro
+    { apply Typing.project_beta_expansion l h0 h2 }
+    { apply Typing.project_beta_expansion l h0 h3 }
+
+  | .diff left right => by
+    unfold Typing
+    intro h0 h1
+    have ⟨h2,h3⟩ := h1
+    apply And.intro
+    { apply Typing.project_beta_expansion l h0 h2 }
+    {
+      intro h4
+      apply h3
+      exact project_beta_reduction h0 h4
+    }
+  | .exi ids quals body => by
+    unfold Typing
+    intro h0 h1
+
+    have ⟨am', h2, h3, h4⟩ := h1
+    exists am'
+    apply And.intro h2
+    apply And.intro h3
+    apply Typing.project_beta_expansion l h0 h4
+
+  | .all ids quals body => by
+    unfold Typing
+    intro h0 h1 am' dom_subset dynamic_quals
+    specialize h1 am' dom_subset dynamic_quals
+    apply Typing.project_beta_expansion l h0 h1
+
+  | .lfp id body => by
+    unfold Typing
+    intro h0 h1
+    have ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩ := h1
+    apply And.intro monotonic_body
+    exists t
+    exists lt_size
+    apply And.intro imp_dynamic
+    apply Typing.project_beta_expansion l h0 dynamic_body
+
+  | .var id => by
+    unfold Typing
+    intro h0 h1
+    have ⟨t, h2, h3⟩ := h1
+    exists t
+    apply And.intro h2
+    apply SimpleTyping.project_beta_expansion l h0 h3
+end
 
 
 theorem Typing.entry_intro l :
@@ -831,7 +944,7 @@ theorem Typing.entry_intro l :
 := by
   intro h0
   unfold Typing
-  exact project_record_beta_expansion l .hole h0
+  exact project_beta_expansion l .hole h0
 
 theorem Subtyping.elimination :
   Subtyping am t0 t1 →
@@ -935,7 +1048,75 @@ mutual
     f
   : SimpleTyping (E (Expr.app (Expr.function ((p, e) :: f)) v)) tr →
     SimpleTyping (E (Expr.sub eam e)) tr
-  := by sorry
+  := by cases tr with
+  | bot =>
+    unfold SimpleTyping
+    simp
+  | top =>
+    unfold SimpleTyping
+    intro h2
+    cases h2 with
+    | inl h3 =>
+      apply Or.inl
+      apply Convergent.app_value_beta_reduction evalcon isval matching f h3
+    | inr h3 =>
+      apply Or.inr
+      apply Divergent.app_value_beta_reduction evalcon isval matching f h3
+
+  | iso label body =>
+    unfold SimpleTyping
+    intro h2
+    apply EvalCon.extract label at evalcon
+    apply SimpleTyping.app_value_beta_reduction evalcon isval matching f h2
+
+  | entry label body =>
+    unfold SimpleTyping
+    intro h2
+    apply EvalCon.project label at evalcon
+    apply SimpleTyping.app_value_beta_reduction evalcon isval matching f h2
+
+  | path left right =>
+    unfold SimpleTyping
+    intro h2 e' h3
+    specialize h2 e' h3
+    apply EvalCon.applicator e' at evalcon
+    apply SimpleTyping.app_value_beta_reduction evalcon isval matching f h2
+
+  | unio left right =>
+    unfold SimpleTyping
+    intro h2
+    cases h2 with
+    | inl h3 =>
+      apply Or.inl
+      apply SimpleTyping.app_value_beta_reduction evalcon isval matching f h3
+    | inr h3 =>
+      apply Or.inr
+      apply SimpleTyping.app_value_beta_reduction evalcon isval matching f h3
+
+  | inter left right =>
+    unfold SimpleTyping
+    intro h2
+    have ⟨h3,h4⟩ := h2
+    apply And.intro
+    { apply SimpleTyping.app_value_beta_reduction evalcon isval matching f h3 }
+    { apply SimpleTyping.app_value_beta_reduction evalcon isval matching f h4 }
+
+  | diff left right =>
+    unfold SimpleTyping
+    intro h2
+    have ⟨h3,h4⟩ := h2
+    apply And.intro
+    { apply SimpleTyping.app_value_beta_reduction evalcon isval matching f h3 }
+    {
+      intro h5
+      apply h4
+
+      apply SimpleTyping.app_value_beta_expansion evalcon isval matching f h5
+    }
+
+  | _ =>
+    unfold SimpleTyping
+    simp
 
 
 
@@ -1290,18 +1471,19 @@ theorem Divergent.evalcon :
     exact h6
     exact h4
 
-theorem SimpleTyping.evalcon_swap
-  (evalcon : EvalCon E)
-  (typing : Typing am e t)
-  (typing' : Typing am e' t)
-: SimpleTyping (E e) t' →  SimpleTyping (E e') t'
-:= by sorry
-
 
 theorem Typing.convergent_or_divergent
   (typing : Typing am e t)
 : Convergent e ∨ Divergent e
 := sorry
+
+
+theorem SimpleTyping.evalcon_swap
+  (evalcon : EvalCon E)
+  (typing : Typing am e t)
+  (typing' : Typing am e' t)
+: SimpleTyping (E e) t' → SimpleTyping (E e') t'
+:= by sorry
 
 
 theorem Typing.evalcon_swap
