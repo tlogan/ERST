@@ -1512,6 +1512,11 @@ theorem Divergent.evalcon_intro :
     exact h6
     exact h4
 
+theorem SimpleTyping.path_determines_function
+  (typing : SimpleTyping e (.path antec consq))
+: ∃ f , TransitionStar e (.function f)
+:= by sorry
+
 
 theorem Typing.path_determines_function
   (typing : Typing am e (.path antec consq))
@@ -1519,7 +1524,76 @@ theorem Typing.path_determines_function
 := by sorry
 
 
+theorem SimpleTyping.convergent_or_divergent
+  (typing : SimpleTyping e t)
+: Convergent e ∨ Divergent e
+:= by cases t with
+| bot =>
+  unfold SimpleTyping at typing
+  exact False.elim typing
 
+| top =>
+  unfold SimpleTyping at typing
+  exact typing
+
+| iso label body =>
+  unfold SimpleTyping at typing
+  have ih := SimpleTyping.convergent_or_divergent typing
+  cases ih with
+  | inl h =>
+    apply Or.inl
+    apply Convergent.evalcon_elim
+    { apply EvalCon.extract label .hole }
+    { exact h }
+  | inr h =>
+    apply Or.inr
+    apply Divergent.evalcon_elim
+    { apply EvalCon.extract label .hole }
+    { exact h }
+
+| entry label body =>
+  unfold SimpleTyping at typing
+  have ih := SimpleTyping.convergent_or_divergent typing
+  cases ih with
+  | inl h =>
+    apply Or.inl
+    apply Convergent.evalcon_elim
+    { apply EvalCon.project label .hole }
+    { exact h }
+  | inr h =>
+    apply Or.inr
+    apply Divergent.evalcon_elim
+    { apply EvalCon.project label .hole }
+    { exact h }
+
+| path left right =>
+  apply SimpleTyping.path_determines_function at typing
+  have ⟨f, h0⟩ := typing
+  apply Or.inl
+  unfold Convergent
+  exists (.function f)
+
+
+| unio left right =>
+  unfold SimpleTyping at typing
+  cases typing with
+  | inl h =>
+    apply SimpleTyping.convergent_or_divergent h
+  | inr h =>
+    apply SimpleTyping.convergent_or_divergent h
+
+| inter left right =>
+  unfold SimpleTyping at typing
+  have ⟨h0,h1⟩ := typing
+  apply SimpleTyping.convergent_or_divergent h0
+
+| diff left right =>
+  unfold SimpleTyping at typing
+  have ⟨h0,h1⟩ := typing
+  apply SimpleTyping.convergent_or_divergent h0
+| _ =>
+  unfold SimpleTyping at typing
+  exact False.elim typing
 
 
 theorem Typing.convergent_or_divergent
@@ -1572,68 +1646,43 @@ theorem Typing.convergent_or_divergent
   exists (.function f)
 
 
--- | unio left right =>
---   unfold Typing
---   intro h4
---   cases h4 with
---   | inl h5 =>
---     apply Or.inl
---     apply Typing.evalcon_swap evalcon typing typing' h5
---   | inr h5 =>
---     apply Or.inr
---     apply Typing.evalcon_swap evalcon typing typing' h5
+| unio left right =>
+  unfold Typing at typing
+  cases typing with
+  | inl h =>
+    apply Typing.convergent_or_divergent h
+  | inr h =>
+    apply Typing.convergent_or_divergent h
 
--- | inter left right =>
---   unfold Typing
---   intro h4
---   have ⟨h5,h6⟩ := h4
---   apply And.intro
---   { apply Typing.evalcon_swap evalcon typing typing' h5 }
---   { apply Typing.evalcon_swap evalcon typing typing' h6 }
+| inter left right =>
+  unfold Typing at typing
+  have ⟨h0,h1⟩ := typing
+  apply Typing.convergent_or_divergent h0
 
--- | diff left right =>
---   unfold Typing
---   intro h4
---   have ⟨h5,h6⟩ := h4
---   clear h4
---   apply And.intro
---   { apply Typing.evalcon_swap evalcon typing typing' h5 }
---   {
---     intro h7
---     apply h6
---     clear h6
---     apply Typing.evalcon_swap evalcon typing' typing h7
---   }
--- | exi ids quals body =>
---   unfold Typing
---   intro h4
---   have ⟨am',h5,h6,h7⟩ := h4
---   clear h4
---   exists am'
---   apply And.intro h5
---   apply And.intro h6
---   apply Typing.evalcon_swap evalcon typing typing' h7
--- | all ids quals body =>
---   unfold Typing
---   intro h4 am'' h5 h6
---   apply Typing.evalcon_swap evalcon typing typing' (h4 am'' h5 h6)
--- | lfp id body =>
---   unfold Typing
---   intro h4
---   have ⟨h5,t'',h6,h7,h8⟩ := h4
---   apply And.intro h5
---   exists t''
---   exists h6
---   apply And.intro h7
---   apply Typing.evalcon_swap evalcon typing typing' h8
--- | var id =>
---   unfold Typing
---   intro h4
---   have ⟨t',h5,h6⟩ := h4
---   clear h4
---   simp [*]
---   apply SimpleTyping.evalcon_swap evalcon typing typing' h6
-| _ => sorry
+| diff left right =>
+  unfold Typing at typing
+  have ⟨h0,h1⟩ := typing
+  apply Typing.convergent_or_divergent h0
+
+| exi ids quals body =>
+  unfold Typing at typing
+  have ⟨am',h0,h1,h2⟩ := typing
+  apply Typing.convergent_or_divergent h2
+| all ids quals body =>
+  unfold Typing at typing
+  have ⟨h0,am',h1,h2⟩ := typing
+  specialize h0 am' h1 h2
+  apply Typing.convergent_or_divergent h0
+
+| lfp id body =>
+  unfold Typing at typing
+  have ⟨monotonic, t, lt_size, h0,h1⟩ := typing
+  apply Typing.convergent_or_divergent h1
+
+| var id =>
+  unfold Typing at typing
+  have ⟨t, h0,h2⟩ := typing
+  exact SimpleTyping.convergent_or_divergent h2
 
 
 theorem SimpleTyping.evalcon_swap
