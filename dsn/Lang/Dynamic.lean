@@ -121,36 +121,58 @@ inductive EvalCon : (Expr → Expr) → Prop
 | applicand f : EvalCon E → EvalCon (fun e => .app (.function f) (E e))
 
 
-theorem EvalCon.transition_preservation :
-  EvalCon E →
-  Transition e e'→
-  Transition (E e) (E e')
-:= by sorry
-
-theorem EvalCon.transition_star_preservation :
-  EvalCon E →
-  TransitionStar e e'→
-  TransitionStar (E e) (E e')
-:= by sorry
-
-theorem EvalCon.is_value_preservation :
-  EvalCon E →
-  Expr.is_value e →
-  Expr.is_value (E e)
-:= by sorry
-
-theorem EvalCon.is_value_reflection :
-  EvalCon E →
-  Expr.is_value (E e) →
-  Expr.is_value e
-:= by sorry
+theorem EvalCon.soundness
+  (evalcon : EvalCon E)
+  (transition : Transition e e')
+: Transition (E e) (E e')
+:= by induction evalcon with
+| hole =>
+  simp
+  exact transition
+| applicator arg evalcon' ih =>
+  simp
+  apply Transition.applicator
+  exact ih
+| applicand f evalcon' ih =>
+  simp
+  apply Transition.applicand
+  exact ih
 
 
-theorem EvalCon.transition :
-  EvalCon E →
-  Transition (E e) e' →
-  ∃ e'' , Transition e e''
-:= by sorry
+-- theorem EvalCon.transition_reflection :
+--   EvalCon E →
+--   Transition (E e) e' →
+--   ∃ e'' , Transition e e''
+-- := by sorry
+
+theorem TransitionStar.evalcon_preservation
+  (evalcon : EvalCon E)
+  (transition_star : TransitionStar e e')
+: TransitionStar (E e) (E e')
+:= by induction transition_star with
+| refl e =>
+  exact refl (E e)
+| step e e' e'' h0 h1 ih =>
+  apply TransitionStar.step
+  { apply EvalCon.soundness evalcon h0 }
+  { exact ih }
+
+
+
+theorem EvalCon.is_value_determines_hole
+  (evalcon : EvalCon E)
+  (isval : Expr.is_value (E e))
+: E = (fun x => x)
+:= by cases evalcon with
+| hole =>
+  simp
+| applicator arg evalcon' =>
+  reduce at isval
+  simp at isval
+| applicand f evalcon' =>
+  reduce at isval
+  simp at isval
+
 
 
 theorem EvalCon.transition_unique :
@@ -181,38 +203,19 @@ def Divergent (e : Expr) : Prop :=
   (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'')
 
 
-def NonDivergent (e : Expr) : Prop :=
-  ∃ e' , TransitionStar e e' ∧ ¬ (∃ e'' , Transition e' e'')
-
-theorem NonDivergent.elim :
-  NonDivergent e → ¬ Divergent e
-:= by sorry
-
-theorem NonDivergent.intro :
-  ¬ Divergent e → NonDivergent e
-:= by sorry
-
-
-def Stuck (e : Expr) : Prop :=
-  ¬ Expr.is_value e ∧ ¬ ∃ e', Transition e e'
-
-def Fails (e : Expr) : Prop :=
-  ∃ e' , TransitionStar e e' ∧ Stuck e'
-
-
-def SimpleTyping (e : Expr) : Typ → Prop
+def FinTyping (e : Expr) : Typ → Prop
 | .top => Convergent e ∨ Divergent e
-| .iso l body => SimpleTyping (.extract e l) body
-| .entry l body => SimpleTyping (.project e l) body
-| .path left right => ∀ e' , SimpleTyping e' left → SimpleTyping (.app e e') right
-| .unio left right => SimpleTyping e left ∨ SimpleTyping e right
-| .inter left right => SimpleTyping e left ∧ SimpleTyping e right
-| .diff left right => SimpleTyping e left ∧ ¬ (SimpleTyping e right)
+| .iso l body => FinTyping (.extract e l) body
+| .entry l body => FinTyping (.project e l) body
+| .path left right => ∀ e' , FinTyping e' left → FinTyping (.app e e') right
+| .unio left right => FinTyping e left ∨ FinTyping e right
+| .inter left right => FinTyping e left ∧ FinTyping e right
+| .diff left right => FinTyping e left ∧ ¬ (FinTyping e right)
 | _ => False
 
 
 def Subtyping.Fin (left right : Typ) : Prop :=
-  ∀ e, SimpleTyping e left → SimpleTyping e right
+  ∀ e, FinTyping e left → FinTyping e right
 
 mutual
   def Subtyping (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
@@ -269,8 +272,8 @@ mutual
   -- TODO: remove old lfp case
   -- | .lfp id body =>
   --   Typ.Monotonic id true body ∧
-  --   ∃ n, SimpleTyping e (Typ.sub am (Typ.subfold id body n))
-  | .var id => ∃ t, find id am = some t ∧ SimpleTyping e t
+  --   ∃ n, FinTyping e (Typ.sub am (Typ.subfold id body n))
+  | .var id => ∃ t, find id am = some t ∧ FinTyping e t
   termination_by t => (Typ.size t)
   decreasing_by
     all_goals simp_all [Typ.size]
@@ -587,54 +590,57 @@ theorem TransitionStar.project_record {id} :
 := by sorry
 
 
-theorem TransitionStar.record_beta_expansion {e l e' id}:
+-- theorem TransitionStar.record_beta_expansion {e l e' id}:
+--   EvalCon E →
+--   TransitionStar (E e) e' → Expr.is_value e' →
+--   TransitionStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
+-- := by
+--   intro h0 h1 h2
+--   generalize h3 : (E e) = e0 at h1
+--   revert e
+--   induction h1 with
+--   | refl e0 =>
+--     intro e h3
+--     rw [← h3] at h2
+--     rw [← h3]
+--     apply TransitionStar.step
+--     {
+--       apply EvalCon.soundness h0
+--       apply Transition.appmatch
+--       { reduce ;
+--         have h4 := EvalCon.is_value_determines_hole h0 h2
+--         rw [h4] at h2
+--         simp [*]
+--       }
+--       { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
+--         reduce
+--         apply And.intro rfl rfl
+--       }
+--     }
+--     { simp [Expr.sub, find]
+--       simp [*]
+--       apply TransitionStar.refl
+--     }
+--   | step e0 em e' h3 h4 ih =>
+--     sorry
+--     -- intro e h5
+--     -- rw [← h5] at h3
+--     -- have ⟨et, h6⟩ := EvalCon.transition_reflection h0 h3
+--     -- apply TransitionStar.step
+--     -- {
+--     --   apply EvalCon.soundness h0
+--     --   apply Transition.applicand
+--     --   apply Transition.entry _ _ h6
+--     -- }
+--     -- { apply ih h2
+--     --   exact EvalCon.transition_unique h0 h6 h3
+--     -- }
+
+
+theorem FinTyping.record_beta_reduction :
   EvalCon E →
-  TransitionStar (E e) e' → Expr.is_value e' →
-  TransitionStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
-:= by
-  intro h0 h1 h2
-  generalize h3 : (E e) = e0 at h1
-  revert e
-  induction h1 with
-  | refl e0 =>
-    intro e h3
-    rw [← h3] at h2
-    rw [← h3]
-    apply TransitionStar.step
-    {
-      apply EvalCon.transition_preservation h0
-      apply Transition.appmatch
-      { reduce ; apply EvalCon.is_value_reflection h0 h2 }
-      { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
-        reduce
-        apply And.intro rfl rfl
-      }
-    }
-    { simp [Expr.sub, find]
-      simp [*]
-      apply TransitionStar.refl
-    }
-  | step e0 em e' h3 h4 ih =>
-    intro e h5
-    rw [← h5] at h3
-
-    have ⟨et, h6⟩ := EvalCon.transition h0 h3
-    apply TransitionStar.step
-    {
-
-      apply EvalCon.transition_preservation h0
-      apply Transition.applicand
-      apply Transition.entry _ _ h6
-    }
-    { apply ih h2
-      exact EvalCon.transition_unique h0 h6 h3
-    }
-
-
-theorem SimpleTyping.record_beta_reduction :
-  EvalCon E →
-  SimpleTyping (E (Expr.project (Expr.record [(l, e)]) l)) t →
-  SimpleTyping (E e) t
+  FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t →
+  FinTyping (E e) t
 := by sorry
 
 
@@ -654,7 +660,7 @@ theorem Convergent.record_beta_expansion :
   have ⟨e',h2,h3⟩ := h1
   exists e'
   apply And.intro
-  { exact TransitionStar.record_beta_expansion h0 h2 h3 }
+  { sorry } -- exact TransitionStar.record_beta_expansion h0 h2 h3 }
   { exact h3 }
 
 theorem Divergent.record_beta_reduction :
@@ -670,13 +676,13 @@ theorem Divergent.record_beta_expansion :
 := by
   sorry
 
-theorem SimpleTyping.record_beta_expansion l :
+theorem FinTyping.record_beta_expansion l :
   EvalCon E →
-  SimpleTyping (E e) t →
-  SimpleTyping (E (Expr.project (Expr.record [(l, e)]) l)) t
+  FinTyping (E e) t →
+  FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t
 := by cases t with
 | top =>
-  unfold SimpleTyping
+  unfold FinTyping
   intro h0 h1
   cases h1 with
   | inl h2 =>
@@ -689,54 +695,54 @@ theorem SimpleTyping.record_beta_expansion l :
 | iso label body =>
   intro h0 h1
   apply EvalCon.extract label at h0
-  apply SimpleTyping.record_beta_expansion l h0 h1
+  apply FinTyping.record_beta_expansion l h0 h1
 
 
 | entry label body =>
   intro h0 h1
   apply EvalCon.project label at h0
-  apply SimpleTyping.record_beta_expansion l h0 h1
+  apply FinTyping.record_beta_expansion l h0 h1
 
 | path left right =>
   intro h0 h1 e' h2
   specialize h1 e' h2
   apply EvalCon.applicator e' at h0
-  apply SimpleTyping.record_beta_expansion l h0 h1
+  apply FinTyping.record_beta_expansion l h0 h1
 
 
 | unio left right =>
   intro h0 h1
   cases h1 with
   | inl h1 =>
-    have ih := SimpleTyping.record_beta_expansion l h0 h1
+    have ih := FinTyping.record_beta_expansion l h0 h1
     exact Or.inl ih
   | inr h1 =>
-    have ih := SimpleTyping.record_beta_expansion l h0 h1
+    have ih := FinTyping.record_beta_expansion l h0 h1
     exact Or.inr ih
 
 | inter left right =>
   intro h0 h1
-  unfold SimpleTyping at h1
+  unfold FinTyping at h1
   have ⟨h2,h3⟩ := h1
   apply And.intro
-  { apply SimpleTyping.record_beta_expansion l h0 h2 }
-  { apply SimpleTyping.record_beta_expansion l h0 h3 }
+  { apply FinTyping.record_beta_expansion l h0 h2 }
+  { apply FinTyping.record_beta_expansion l h0 h3 }
 
 | diff left right =>
   intro h0 h1
-  unfold SimpleTyping at h1
+  unfold FinTyping at h1
   have ⟨h2,h3⟩ := h1
   apply And.intro
-  { apply SimpleTyping.record_beta_expansion l h0 h2 }
+  { apply FinTyping.record_beta_expansion l h0 h2 }
   {
     intro h4
     apply h3
-    apply SimpleTyping.record_beta_reduction h0 h4
+    apply FinTyping.record_beta_reduction h0 h4
   }
 
 | _ =>
   intro h0 h1
-  unfold SimpleTyping at h1
+  unfold FinTyping at h1
   exact h1
 
 mutual
@@ -847,7 +853,7 @@ mutual
     have ⟨t, h2, h3⟩ := h1
     exists t
     apply And.intro h2
-    apply SimpleTyping.record_beta_reduction h0 h3
+    apply FinTyping.record_beta_reduction h0 h3
 
   theorem Typing.record_beta_expansion l :
     EvalCon E →
@@ -956,7 +962,7 @@ mutual
     have ⟨t, h2, h3⟩ := h1
     exists t
     apply And.intro h2
-    apply SimpleTyping.record_beta_expansion l h0 h3
+    apply FinTyping.record_beta_expansion l h0 h3
 end
 
 
@@ -1028,7 +1034,7 @@ theorem Convergent.function_value_beta_expansion
   {
     apply TransitionStar.step
     {
-      apply EvalCon.transition_preservation  evalcon
+      apply EvalCon.soundness  evalcon
       apply Transition.appmatch isval matching
     }
     { apply h3 }
@@ -1057,19 +1063,19 @@ theorem Divergent.function_value_beta_expansion
 
 
 mutual
-  theorem SimpleTyping.function_value_beta_reduction
+  theorem FinTyping.function_value_beta_reduction
     (evalcon : EvalCon E)
     (isval : Expr.is_value v)
     (matching : Expr.pattern_match v p = .some eam)
     f
-  : SimpleTyping (E (Expr.app (Expr.function ((p, e) :: f)) v)) tr →
-    SimpleTyping (E (Expr.sub eam e)) tr
+  : FinTyping (E (Expr.app (Expr.function ((p, e) :: f)) v)) tr →
+    FinTyping (E (Expr.sub eam e)) tr
   := by cases tr with
   | bot =>
-    unfold SimpleTyping
+    unfold FinTyping
     simp
   | top =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     cases h2 with
     | inl h3 =>
@@ -1080,75 +1086,75 @@ mutual
       apply Divergent.function_value_beta_reduction evalcon isval matching f h3
 
   | iso label body =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     apply EvalCon.extract label at evalcon
-    apply SimpleTyping.function_value_beta_reduction evalcon isval matching f h2
+    apply FinTyping.function_value_beta_reduction evalcon isval matching f h2
 
   | entry label body =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     apply EvalCon.project label at evalcon
-    apply SimpleTyping.function_value_beta_reduction evalcon isval matching f h2
+    apply FinTyping.function_value_beta_reduction evalcon isval matching f h2
 
   | path left right =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2 e' h3
     specialize h2 e' h3
     apply EvalCon.applicator e' at evalcon
-    apply SimpleTyping.function_value_beta_reduction evalcon isval matching f h2
+    apply FinTyping.function_value_beta_reduction evalcon isval matching f h2
 
   | unio left right =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     cases h2 with
     | inl h3 =>
       apply Or.inl
-      apply SimpleTyping.function_value_beta_reduction evalcon isval matching f h3
+      apply FinTyping.function_value_beta_reduction evalcon isval matching f h3
     | inr h3 =>
       apply Or.inr
-      apply SimpleTyping.function_value_beta_reduction evalcon isval matching f h3
+      apply FinTyping.function_value_beta_reduction evalcon isval matching f h3
 
   | inter left right =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     have ⟨h3,h4⟩ := h2
     apply And.intro
-    { apply SimpleTyping.function_value_beta_reduction evalcon isval matching f h3 }
-    { apply SimpleTyping.function_value_beta_reduction evalcon isval matching f h4 }
+    { apply FinTyping.function_value_beta_reduction evalcon isval matching f h3 }
+    { apply FinTyping.function_value_beta_reduction evalcon isval matching f h4 }
 
   | diff left right =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     have ⟨h3,h4⟩ := h2
     apply And.intro
-    { apply SimpleTyping.function_value_beta_reduction evalcon isval matching f h3 }
+    { apply FinTyping.function_value_beta_reduction evalcon isval matching f h3 }
     {
       intro h5
       apply h4
 
-      apply SimpleTyping.function_value_beta_expansion evalcon isval matching f h5
+      apply FinTyping.function_value_beta_expansion evalcon isval matching f h5
     }
 
   | _ =>
-    unfold SimpleTyping
+    unfold FinTyping
     simp
 
 
 
-  theorem SimpleTyping.function_value_beta_expansion
+  theorem FinTyping.function_value_beta_expansion
     (evalcon : EvalCon E)
     (isval : Expr.is_value v)
     (matching : Expr.pattern_match v p = .some eam)
     f
-  : SimpleTyping (E (Expr.sub eam e)) tr →
-    SimpleTyping (E (Expr.app (Expr.function ((p, e) :: f)) v)) tr
+  : FinTyping (E (Expr.sub eam e)) tr →
+    FinTyping (E (Expr.app (Expr.function ((p, e) :: f)) v)) tr
   := by cases tr with
   | bot =>
-    unfold SimpleTyping
+    unfold FinTyping
     simp
   | top =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     cases h2 with
     | inl h3 =>
@@ -1159,58 +1165,58 @@ mutual
       apply Divergent.function_value_beta_expansion evalcon isval matching f h3
 
   | iso label body =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     apply EvalCon.extract label at evalcon
-    apply SimpleTyping.function_value_beta_expansion evalcon isval matching f h2
+    apply FinTyping.function_value_beta_expansion evalcon isval matching f h2
 
   | entry label body =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     apply EvalCon.project label at evalcon
-    apply SimpleTyping.function_value_beta_expansion evalcon isval matching f h2
+    apply FinTyping.function_value_beta_expansion evalcon isval matching f h2
 
   | path left right =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2 e' h3
     specialize h2 e' h3
     apply EvalCon.applicator e' at evalcon
-    apply SimpleTyping.function_value_beta_expansion evalcon isval matching f h2
+    apply FinTyping.function_value_beta_expansion evalcon isval matching f h2
 
   | unio left right =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     cases h2 with
     | inl h3 =>
       apply Or.inl
-      apply SimpleTyping.function_value_beta_expansion evalcon isval matching f h3
+      apply FinTyping.function_value_beta_expansion evalcon isval matching f h3
     | inr h3 =>
       apply Or.inr
-      apply SimpleTyping.function_value_beta_expansion evalcon isval matching f h3
+      apply FinTyping.function_value_beta_expansion evalcon isval matching f h3
 
   | inter left right =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     have ⟨h3,h4⟩ := h2
     apply And.intro
-    { apply SimpleTyping.function_value_beta_expansion evalcon isval matching f h3 }
-    { apply SimpleTyping.function_value_beta_expansion evalcon isval matching f h4 }
+    { apply FinTyping.function_value_beta_expansion evalcon isval matching f h3 }
+    { apply FinTyping.function_value_beta_expansion evalcon isval matching f h4 }
 
   | diff left right =>
-    unfold SimpleTyping
+    unfold FinTyping
     intro h2
     have ⟨h3,h4⟩ := h2
     apply And.intro
-    { apply SimpleTyping.function_value_beta_expansion evalcon isval matching f h3 }
+    { apply FinTyping.function_value_beta_expansion evalcon isval matching f h3 }
     {
       intro h5
       apply h4
 
-      apply SimpleTyping.function_value_beta_reduction evalcon isval matching f h5
+      apply FinTyping.function_value_beta_reduction evalcon isval matching f h5
     }
 
   | _ =>
-    unfold SimpleTyping
+    unfold FinTyping
     simp
 end
 
@@ -1325,7 +1331,7 @@ mutual
     have ⟨t,h3,h4⟩ := h2
     exists t
     apply And.intro h3
-    exact SimpleTyping.function_value_beta_reduction evalcon isval matching f h4
+    exact FinTyping.function_value_beta_reduction evalcon isval matching f h4
 
 
 
@@ -1437,7 +1443,7 @@ mutual
     have ⟨t,h3,h4⟩ := h2
     exists t
     apply And.intro h3
-    exact SimpleTyping.function_value_beta_expansion evalcon isval matching f h4
+    exact FinTyping.function_value_beta_expansion evalcon isval matching f h4
 end
 
 
@@ -1459,27 +1465,14 @@ theorem Convergent.evalcon_elim :
 := by
   sorry
 
-theorem Convergent.evalcon_intro :
-  EvalCon E →
-  Convergent e →
-  Convergent (E e)
-:= by
-  intro h0 h1
-  unfold Convergent
-  have ⟨e',h2,h3⟩ := h1
-  exists (E e')
-  apply And.intro
-  { exact EvalCon.transition_star_preservation h0 h2 }
-  { exact EvalCon.is_value_preservation h0 h3 }
-
-theorem Divergent.evalcon_elim :
+theorem EvalCon.divergent_reflection :
   EvalCon E →
   Divergent (E e) →
   Divergent e
 := by
   sorry
 
-theorem Divergent.evalcon_intro :
+theorem Divergent.evalcon_preservation :
   EvalCon E →
   Divergent e →
   Divergent (E e)
@@ -1496,7 +1489,7 @@ theorem Divergent.evalcon_intro :
     specialize h1 e (TransitionStar.refl e)
     have ⟨e', h3⟩ := h1
     exists (E e')
-    apply EvalCon.transition_preservation h0
+    apply EvalCon.soundness h0
     exact h3
 
   | step eg em e' h4 h5 ih =>
@@ -1512,8 +1505,8 @@ theorem Divergent.evalcon_intro :
     exact h6
     exact h4
 
-theorem SimpleTyping.path_determines_function
-  (typing : SimpleTyping e (.path antec consq))
+theorem FinTyping.path_determines_function
+  (typing : FinTyping e (.path antec consq))
 : ∃ f , TransitionStar e (.function f)
 := by sorry
 
@@ -1524,21 +1517,21 @@ theorem Typing.path_determines_function
 := by sorry
 
 
-theorem SimpleTyping.convergent_or_divergent
-  (typing : SimpleTyping e t)
+theorem FinTyping.convergent_or_divergent
+  (typing : FinTyping e t)
 : Convergent e ∨ Divergent e
 := by cases t with
 | bot =>
-  unfold SimpleTyping at typing
+  unfold FinTyping at typing
   exact False.elim typing
 
 | top =>
-  unfold SimpleTyping at typing
+  unfold FinTyping at typing
   exact typing
 
 | iso label body =>
-  unfold SimpleTyping at typing
-  have ih := SimpleTyping.convergent_or_divergent typing
+  unfold FinTyping at typing
+  have ih := FinTyping.convergent_or_divergent typing
   cases ih with
   | inl h =>
     apply Or.inl
@@ -1547,13 +1540,13 @@ theorem SimpleTyping.convergent_or_divergent
     { exact h }
   | inr h =>
     apply Or.inr
-    apply Divergent.evalcon_elim
+    apply EvalCon.divergent_reflection
     { apply EvalCon.extract label .hole }
     { exact h }
 
 | entry label body =>
-  unfold SimpleTyping at typing
-  have ih := SimpleTyping.convergent_or_divergent typing
+  unfold FinTyping at typing
+  have ih := FinTyping.convergent_or_divergent typing
   cases ih with
   | inl h =>
     apply Or.inl
@@ -1562,12 +1555,12 @@ theorem SimpleTyping.convergent_or_divergent
     { exact h }
   | inr h =>
     apply Or.inr
-    apply Divergent.evalcon_elim
+    apply EvalCon.divergent_reflection
     { apply EvalCon.project label .hole }
     { exact h }
 
 | path left right =>
-  apply SimpleTyping.path_determines_function at typing
+  apply FinTyping.path_determines_function at typing
   have ⟨f, h0⟩ := typing
   apply Or.inl
   unfold Convergent
@@ -1575,24 +1568,24 @@ theorem SimpleTyping.convergent_or_divergent
 
 
 | unio left right =>
-  unfold SimpleTyping at typing
+  unfold FinTyping at typing
   cases typing with
   | inl h =>
-    apply SimpleTyping.convergent_or_divergent h
+    apply FinTyping.convergent_or_divergent h
   | inr h =>
-    apply SimpleTyping.convergent_or_divergent h
+    apply FinTyping.convergent_or_divergent h
 
 | inter left right =>
-  unfold SimpleTyping at typing
+  unfold FinTyping at typing
   have ⟨h0,h1⟩ := typing
-  apply SimpleTyping.convergent_or_divergent h0
+  apply FinTyping.convergent_or_divergent h0
 
 | diff left right =>
-  unfold SimpleTyping at typing
+  unfold FinTyping at typing
   have ⟨h0,h1⟩ := typing
-  apply SimpleTyping.convergent_or_divergent h0
+  apply FinTyping.convergent_or_divergent h0
 | _ =>
-  unfold SimpleTyping at typing
+  unfold FinTyping at typing
   exact False.elim typing
 
 
@@ -1619,7 +1612,7 @@ theorem Typing.convergent_or_divergent
     { exact h }
   | inr h =>
     apply Or.inr
-    apply Divergent.evalcon_elim
+    apply EvalCon.divergent_reflection
     { apply EvalCon.extract label .hole }
     { exact h }
 
@@ -1634,7 +1627,7 @@ theorem Typing.convergent_or_divergent
     { exact h }
   | inr h =>
     apply Or.inr
-    apply Divergent.evalcon_elim
+    apply EvalCon.divergent_reflection
     { apply EvalCon.project label .hole }
     { exact h }
 
@@ -1682,85 +1675,85 @@ theorem Typing.convergent_or_divergent
 | var id =>
   unfold Typing at typing
   have ⟨t, h0,h2⟩ := typing
-  exact SimpleTyping.convergent_or_divergent h2
+  exact FinTyping.convergent_or_divergent h2
 
 
-theorem SimpleTyping.evalcon_swap
+theorem FinTyping.evalcon_swap
   (evalcon : EvalCon E)
   (typing : Typing am e t)
   (typing' : Typing am e' t)
-: SimpleTyping (E e) t' → SimpleTyping (E e') t'
+: FinTyping (E e) t' → FinTyping (E e') t'
 := by cases t' with
 | bot =>
-  unfold SimpleTyping
+  unfold FinTyping
   simp
 
 | top =>
-  unfold SimpleTyping
+  unfold FinTyping
   intro typing_evalcon
   apply Typing.convergent_or_divergent at typing'
   cases typing' with
   | inl h =>
     apply Or.inl
-    apply Convergent.evalcon_intro evalcon h
+    sorry
   | inr h =>
     apply Or.inr
-    apply Divergent.evalcon_intro evalcon h
+    apply Divergent.evalcon_preservation evalcon h
 
 | iso label body =>
-  unfold SimpleTyping
+  unfold FinTyping
   apply EvalCon.extract label at evalcon
   intro typing_evalcon
-  apply SimpleTyping.evalcon_swap  evalcon typing typing' typing_evalcon
+  apply FinTyping.evalcon_swap  evalcon typing typing' typing_evalcon
 
 
 | entry label body =>
-  unfold SimpleTyping
+  unfold FinTyping
   apply EvalCon.project label at evalcon
   intro typing_evalcon
-  apply SimpleTyping.evalcon_swap evalcon typing typing' typing_evalcon
+  apply FinTyping.evalcon_swap evalcon typing typing' typing_evalcon
 
 | path left right =>
-  unfold SimpleTyping
+  unfold FinTyping
   intro h4 e' h5
   apply EvalCon.applicator e' at evalcon
-  apply SimpleTyping.evalcon_swap evalcon typing typing' (h4 e' h5)
+  apply FinTyping.evalcon_swap evalcon typing typing' (h4 e' h5)
 
 
 | unio left right =>
-  unfold SimpleTyping
+  unfold FinTyping
   intro h4
   cases h4 with
   | inl h5 =>
     apply Or.inl
-    apply SimpleTyping.evalcon_swap evalcon typing typing' h5
+    apply FinTyping.evalcon_swap evalcon typing typing' h5
   | inr h5 =>
     apply Or.inr
-    apply SimpleTyping.evalcon_swap evalcon typing typing' h5
+    apply FinTyping.evalcon_swap evalcon typing typing' h5
 
 | inter left right =>
-  unfold SimpleTyping
+  unfold FinTyping
   intro h4
   have ⟨h5,h6⟩ := h4
   apply And.intro
-  { apply SimpleTyping.evalcon_swap evalcon typing typing' h5 }
-  { apply SimpleTyping.evalcon_swap evalcon typing typing' h6 }
+  { apply FinTyping.evalcon_swap evalcon typing typing' h5 }
+  { apply FinTyping.evalcon_swap evalcon typing typing' h6 }
 
 | diff left right =>
-  unfold SimpleTyping
+  unfold FinTyping
   intro h4
   have ⟨h5,h6⟩ := h4
   clear h4
   apply And.intro
-  { apply SimpleTyping.evalcon_swap evalcon typing typing' h5 }
+  { apply FinTyping.evalcon_swap evalcon typing typing' h5 }
   {
     intro h7
     apply h6
     clear h6
-    apply SimpleTyping.evalcon_swap evalcon typing' typing h7
+    apply FinTyping.evalcon_swap evalcon typing' typing h7
   }
 | _ =>
-  unfold SimpleTyping
+  unfold FinTyping
   simp
 
 
@@ -1782,10 +1775,10 @@ theorem Typing.evalcon_swap
   cases typing' with
   | inl h =>
     apply Or.inl
-    apply Convergent.evalcon_intro evalcon h
+    sorry
   | inr h =>
     apply Or.inr
-    apply Divergent.evalcon_intro evalcon h
+    apply Divergent.evalcon_preservation evalcon h
 
 | iso label body =>
   unfold Typing
@@ -1872,7 +1865,7 @@ theorem Typing.evalcon_swap
   have ⟨t',h5,h6⟩ := h4
   clear h4
   simp [*]
-  apply SimpleTyping.evalcon_swap evalcon typing typing' h6
+  apply FinTyping.evalcon_swap evalcon typing typing' h6
 
 
 
