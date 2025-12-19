@@ -174,26 +174,45 @@ theorem EvalCon.is_value_determines_hole
   simp at isval
 
 
-
-theorem EvalCon.transition_unique :
-  EvalCon E →
-  Transition e e' → Transition (E e) er →
-  (E e') = er
+theorem Transition.deterministic
+  (transition : Transition e e')
+  (transition' : Transition e e'')
+: e' = e''
 := by sorry
 
-theorem EvalCon.extract l :
-  EvalCon E →
-  EvalCon (fun e => Expr.extract (E e) l)
-:= by sorry
+theorem EvalCon.extract l
+  (evalcon : EvalCon E)
+: EvalCon (fun e => Expr.extract (E e) l)
+:= by unfold Expr.extract; cases evalcon with
+| hole =>
+  simp
+  apply EvalCon.applicand
+  apply EvalCon.hole
+| applicator arg evalcon' =>
+  simp
+  apply EvalCon.applicand
+  exact applicator arg evalcon'
+| applicand f evalcon' =>
+  simp
+  apply EvalCon.applicand
+  exact applicand f evalcon'
 
-theorem EvalCon.project l :
-  EvalCon E →
-  EvalCon (fun e => Expr.project (E e) l)
-:= by sorry
-
-
-
-
+theorem EvalCon.project l
+  (evalcon : EvalCon E)
+: EvalCon (fun e => Expr.project (E e) l)
+:= by unfold Expr.project; cases evalcon with
+| hole =>
+  simp
+  apply EvalCon.applicand
+  apply EvalCon.hole
+| applicator arg evalcon' =>
+  simp
+  apply EvalCon.applicand
+  exact applicator arg evalcon'
+| applicand f evalcon' =>
+  simp
+  apply EvalCon.applicand
+  exact applicand f evalcon'
 
 
 def Convergent (e : Expr) : Prop :=
@@ -1500,10 +1519,9 @@ theorem Divergent.evalcon_preservation :
     apply Divergent.transition at h1
     have ⟨et, h6,h7⟩ := h1
     apply ih h7
-
-    apply EvalCon.transition_unique h0
-    exact h6
-    exact h4
+    apply Transition.deterministic
+    { apply EvalCon.soundness h0 h6 }
+    { exact h4 }
 
 theorem FinTyping.path_determines_function
   (typing : FinTyping e (.path antec consq))
