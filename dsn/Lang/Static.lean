@@ -2392,7 +2392,7 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
 
     have ⟨ep,p10,p11⟩ := Typ.factor_reflection p7 p9
 
-    apply Confluent.typing_left_to_right
+    apply Typing.confluent_preservation
       (Confluent.app_arg_preservation e p10)
 
     apply Typ.factor_preservation p8 p11
@@ -2502,7 +2502,7 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
 
     have ⟨ep,p14,p15⟩ := Typ.factor_reflection p8 typing_factor_left
 
-    apply Confluent.typing_left_to_right (Confluent.app_arg_preservation e p14)
+    apply Typing.confluent_preservation (Confluent.app_arg_preservation e p14)
     apply Typ.factor_preservation p9 p15
 
     apply List.pair_typ_invert_preservation skolems (Typ.var idl) r p5 p1 at soundness
