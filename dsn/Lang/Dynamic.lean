@@ -773,51 +773,51 @@ theorem TransitionStar.project_record {id} :
 := by sorry
 
 
--- theorem TransitionStar.record_beta_expansion {e l e' id}:
---   EvalCon E →
---   TransitionStar (E e) e' → Expr.is_value e' →
---   TransitionStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
--- := by
---   intro h0 h1 h2
---   generalize h3 : (E e) = e0 at h1
---   revert e
---   induction h1 with
---   | refl e0 =>
---     intro e h3
---     rw [← h3] at h2
---     rw [← h3]
---     apply TransitionStar.step
---     {
---       apply EvalCon.soundness h0
---       apply Transition.appmatch
---       { reduce ;
---         have h4 := EvalCon.is_value_determines_hole h0 h2
---         rw [h4] at h2
---         simp [*]
---       }
---       { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
---         reduce
---         apply And.intro rfl rfl
---       }
---     }
---     { simp [Expr.sub, find]
---       simp [*]
---       apply TransitionStar.refl
---     }
---   | step e0 em e' h3 h4 ih =>
---     sorry
---     -- intro e h5
---     -- rw [← h5] at h3
---     -- have ⟨et, h6⟩ := EvalCon.transition_reflection h0 h3
---     -- apply TransitionStar.step
---     -- {
---     --   apply EvalCon.soundness h0
---     --   apply Transition.applicand
---     --   apply Transition.entry _ _ h6
---     -- }
---     -- { apply ih h2
---     --   exact EvalCon.transition_unique h0 h6 h3
---     -- }
+theorem TransitionStar.record_beta_expansion {e l e' id}:
+  EvalCon E → Expr.is_value e' →
+  TransitionStar (E e) e' →
+  TransitionStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
+:= by
+  intro h0 h1 h2
+  generalize h3 : (E e) = e0 at h2
+  revert e
+  induction h2 with
+  | refl e0 =>
+    intro e h3
+    rw [← h3] at h1
+    rw [← h3]
+    apply TransitionStar.step
+    {
+      apply EvalCon.soundness h0
+      apply Transition.appmatch
+      { reduce ;
+        have h4 := EvalCon.is_value_determines_hole h0 h1
+        rw [h4] at h1
+        simp [*]
+      }
+      { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
+        reduce
+        apply And.intro rfl rfl
+      }
+    }
+    { simp [Expr.sub, find]
+      simp [*]
+      apply TransitionStar.refl
+    }
+  | step e0 em e' h3 h4 ih =>
+    intro e h5
+    rw [← h5] at h3
+    sorry
+    -- have ⟨et, h6⟩ := EvalCon.transition_reflection h0 h3
+    -- apply TransitionStar.step
+    -- {
+    --   apply EvalCon.soundness h0
+    --   apply Transition.applicand
+    --   apply Transition.entry _ _ h6
+    -- }
+    -- { apply ih h2
+    --   exact EvalCon.transition_unique h0 h6 h3
+    -- }
 
 
 theorem FinTyping.record_beta_reduction :
@@ -843,7 +843,7 @@ theorem Convergent.record_beta_expansion :
   have ⟨e',h2,h3⟩ := h1
   exists e'
   apply And.intro
-  { sorry } -- exact TransitionStar.record_beta_expansion h0 h2 h3 }
+  { apply TransitionStar.record_beta_expansion h0 h3 h2 }
   { exact h3 }
 
 theorem Divergent.record_beta_reduction :
@@ -1043,7 +1043,9 @@ mutual
     EvalCon E →
     Typing am (E e) t →
     Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t
-  := match t with
+  :=
+  /- TODO: rewrite by leveraging evalcon_swap and typing subject expansion ; instead of inducting directly -/
+  match t with
   | .bot => by
     unfold Typing
     intro h0 h1
@@ -1647,9 +1649,9 @@ theorem Typing.evalcon_swap
 
 
 theorem Typing.function_beta_expansion f :
-  (∀ {v} ,
-    Expr.is_value v → Typing am v tp →
-    ∃ eam , Expr.pattern_match v p = .some eam ∧ Typing am (Expr.sub eam e) tr
+  (∀ {ev} ,
+    Expr.is_value ev → Typing am ev tp →
+    ∃ eam , Expr.pattern_match ev p = .some eam ∧ Typing am (Expr.sub eam e) tr
   ) →
   Typing am e' tp →
   Typing am (Expr.app (Expr.function ((p, e) :: f)) e') tr
