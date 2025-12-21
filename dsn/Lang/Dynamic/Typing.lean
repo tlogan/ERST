@@ -613,412 +613,388 @@ theorem Expr.sub_sub_removal :
 -- := by sorry
 
 
-theorem TransitionStar.project_record {id} :
-  TransitionStar (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)])) e
-:= by sorry
+-- theorem TransitionStar.project_record {id} :
+--   TransitionStar (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)])) e
+-- := by sorry
 
 
-theorem TransitionStar.record_beta_expansion {e l e' id}:
-  EvalCon E → Expr.is_value e' →
-  TransitionStar (E e) e' →
-  TransitionStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
-:= by
-  intro h0 h1 h2
-  generalize h3 : (E e) = e0 at h2
-  revert e
-  induction h2 with
-  | refl e0 =>
-    intro e h3
-    rw [← h3] at h1
-    rw [← h3]
-    apply TransitionStar.step
-    {
-      apply EvalCon.soundness h0
-      apply Transition.appmatch
-      { reduce ;
-        have h4 := EvalCon.is_value_determines_hole h0 h1
-        rw [h4] at h1
-        simp [*]
-      }
-      { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
-        reduce
-        apply And.intro rfl rfl
-      }
-    }
-    { simp [Expr.sub, find]
-      simp [*]
-      apply TransitionStar.refl
-    }
-  | step e0 em e' h3 h4 ih =>
-    intro e h5
-    rw [← h5] at h3
-    sorry
-    -- have ⟨et, h6⟩ := EvalCon.transition_reflection h0 h3
-    -- apply TransitionStar.step
-    -- {
-    --   apply EvalCon.soundness h0
-    --   apply Transition.applicand
-    --   apply Transition.entry _ _ h6
-    -- }
-    -- { apply ih h2
-    --   exact EvalCon.transition_unique h0 h6 h3
-    -- }
+-- theorem TransitionStar.record_beta_expansion {e l e' id}:
+--   EvalCon E → Expr.is_value e' →
+--   TransitionStar (E e) e' →
+--   TransitionStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
+-- := by
+--   intro h0 h1 h2
+--   generalize h3 : (E e) = e0 at h2
+--   revert e
+--   induction h2 with
+--   | refl e0 =>
+--     intro e h3
+--     rw [← h3] at h1
+--     rw [← h3]
+--     apply TransitionStar.step
+--     {
+--       apply EvalCon.soundness h0
+--       apply Transition.appmatch
+--       { reduce ;
+--         have h4 := EvalCon.is_value_determines_hole h0 h1
+--         rw [h4] at h1
+--         simp [*]
+--       }
+--       { simp [Expr.pattern_match, List.pattern_match_record, Pat.free_vars, List.pattern_match_entry]
+--         reduce
+--         apply And.intro rfl rfl
+--       }
+--     }
+--     { simp [Expr.sub, find]
+--       simp [*]
+--       apply TransitionStar.refl
+--     }
+--   | step e0 em e' h3 h4 ih =>
+--     intro e h5
+--     rw [← h5] at h3
+--     sorry
+--     -- have ⟨et, h6⟩ := EvalCon.transition_reflection h0 h3
+--     -- apply TransitionStar.step
+--     -- {
+--     --   apply EvalCon.soundness h0
+--     --   apply Transition.applicand
+--     --   apply Transition.entry _ _ h6
+--     -- }
+--     -- { apply ih h2
+--     --   exact EvalCon.transition_unique h0 h6 h3
+--     -- }
 
 
-theorem FinTyping.record_beta_reduction :
-  EvalCon E →
-  FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t →
-  FinTyping (E e) t
-:= by sorry
+-- theorem FinTyping.record_beta_reduction :
+--   EvalCon E →
+--   FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t →
+--   FinTyping (E e) t
+-- := by sorry
 
 
-theorem Convergent.record_beta_reduction :
-  EvalCon E →
-  Convergent (E (Expr.project (Expr.record [(l, e)]) l)) →
-  Convergent (E e)
-:= by sorry
+-- theorem Convergent.record_beta_reduction :
+--   EvalCon E →
+--   Convergent (E (Expr.project (Expr.record [(l, e)]) l)) →
+--   Convergent (E e)
+-- := by sorry
 
-theorem Convergent.record_beta_expansion :
-  EvalCon E →
-  Convergent (E e) →
-  Convergent (E (Expr.project (Expr.record [(l, e)]) l))
-:= by
-  unfold Convergent
-  intro h0 h1
-  have ⟨e',h2,h3⟩ := h1
-  exists e'
-  apply And.intro
-  { apply TransitionStar.record_beta_expansion h0 h3 h2 }
-  { exact h3 }
+-- theorem Convergent.record_beta_expansion :
+--   EvalCon E →
+--   Convergent (E e) →
+--   Convergent (E (Expr.project (Expr.record [(l, e)]) l))
+-- := by
+--   unfold Convergent
+--   intro h0 h1
+--   have ⟨e',h2,h3⟩ := h1
+--   exists e'
+--   apply And.intro
+--   { apply TransitionStar.record_beta_expansion h0 h3 h2 }
+--   { exact h3 }
 
-theorem Divergent.record_beta_reduction :
-  EvalCon E →
-  Divergent (E (Expr.project (Expr.record [(l, e)]) l)) →
-  Divergent (E e)
-:= by
-  sorry
+-- theorem Divergent.record_beta_reduction :
+--   EvalCon E →
+--   Divergent (E (Expr.project (Expr.record [(l, e)]) l)) →
+--   Divergent (E e)
+-- := by
+--   sorry
 
-theorem Divergent.record_beta_expansion :
-  EvalCon E →
-  Divergent (E e) → Divergent (E (Expr.project (Expr.record [(l, e)]) l))
-:= by
-  sorry
+-- theorem Divergent.record_beta_expansion :
+--   EvalCon E →
+--   Divergent (E e) → Divergent (E (Expr.project (Expr.record [(l, e)]) l))
+-- := by
+--   sorry
 
-theorem FinTyping.record_beta_expansion l :
-  EvalCon E →
-  FinTyping (E e) t →
-  FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t
-:= by cases t with
-| top =>
-  unfold FinTyping
-  intro h0 h1
-  cases h1 with
-  | inl h2 =>
-    apply Or.inl
-    exact Convergent.record_beta_expansion h0 h2
-  | inr h2 =>
-    apply Or.inr
-    exact Divergent.record_beta_expansion h0 h2
+-- theorem FinTyping.record_beta_expansion l :
+--   EvalCon E →
+--   FinTyping (E e) t →
+--   FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t
+-- := by cases t with
+-- | top =>
+--   unfold FinTyping
+--   intro h0 h1
+--   cases h1 with
+--   | inl h2 =>
+--     apply Or.inl
+--     exact Convergent.record_beta_expansion h0 h2
+--   | inr h2 =>
+--     apply Or.inr
+--     exact Divergent.record_beta_expansion h0 h2
 
-| iso label body =>
-  intro h0 h1
-  apply EvalCon.extract label at h0
-  apply FinTyping.record_beta_expansion l h0 h1
-
-
-| entry label body =>
-  intro h0 h1
-  apply EvalCon.project label at h0
-  apply FinTyping.record_beta_expansion l h0 h1
-
-| path left right =>
-  intro h0 h1 e' h2
-  specialize h1 e' h2
-  apply EvalCon.applicator e' at h0
-  apply FinTyping.record_beta_expansion l h0 h1
+-- | iso label body =>
+--   intro h0 h1
+--   apply EvalCon.extract label at h0
+--   apply FinTyping.record_beta_expansion l h0 h1
 
 
-| unio left right =>
-  intro h0 h1
-  cases h1 with
-  | inl h1 =>
-    have ih := FinTyping.record_beta_expansion l h0 h1
-    exact Or.inl ih
-  | inr h1 =>
-    have ih := FinTyping.record_beta_expansion l h0 h1
-    exact Or.inr ih
+-- | entry label body =>
+--   intro h0 h1
+--   apply EvalCon.project label at h0
+--   apply FinTyping.record_beta_expansion l h0 h1
 
-| inter left right =>
-  intro h0 h1
-  unfold FinTyping at h1
-  have ⟨h2,h3⟩ := h1
-  apply And.intro
-  { apply FinTyping.record_beta_expansion l h0 h2 }
-  { apply FinTyping.record_beta_expansion l h0 h3 }
-
-| diff left right =>
-  intro h0 h1
-  unfold FinTyping at h1
-  have ⟨h2,h3⟩ := h1
-  apply And.intro
-  { apply FinTyping.record_beta_expansion l h0 h2 }
-  {
-    intro h4
-    apply h3
-    apply FinTyping.record_beta_reduction h0 h4
-  }
-
-| _ =>
-  intro h0 h1
-  unfold FinTyping at h1
-  exact h1
+-- | path left right =>
+--   intro h0 h1 e' h2
+--   specialize h1 e' h2
+--   apply EvalCon.applicator e' at h0
+--   apply FinTyping.record_beta_expansion l h0 h1
 
 
-mutual
-  theorem Typing.record_beta_reduction :
-    EvalCon E →
-    Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t →
-    Typing am (E e) t
-  := match t with
-  | .bot => by
-    unfold Typing
-    intro h0 h1
-    exact h1
+-- | unio left right =>
+--   intro h0 h1
+--   cases h1 with
+--   | inl h1 =>
+--     have ih := FinTyping.record_beta_expansion l h0 h1
+--     exact Or.inl ih
+--   | inr h1 =>
+--     have ih := FinTyping.record_beta_expansion l h0 h1
+--     exact Or.inr ih
 
-  | .top => by
-    unfold Typing
-    intro h0 h1
-    cases h1 with
-    | inl h2 =>
-      apply Or.inl
-      exact Convergent.record_beta_reduction h0 h2
-    | inr h2 =>
-      apply Or.inr
-      exact Divergent.record_beta_reduction h0 h2
+-- | inter left right =>
+--   intro h0 h1
+--   unfold FinTyping at h1
+--   have ⟨h2,h3⟩ := h1
+--   apply And.intro
+--   { apply FinTyping.record_beta_expansion l h0 h2 }
+--   { apply FinTyping.record_beta_expansion l h0 h3 }
 
-  | .iso label body => by
-    unfold Typing
-    intro h0 h1
-    apply EvalCon.extract label at h0
-    apply Typing.record_beta_reduction h0 h1
+-- | diff left right =>
+--   intro h0 h1
+--   unfold FinTyping at h1
+--   have ⟨h2,h3⟩ := h1
+--   apply And.intro
+--   { apply FinTyping.record_beta_expansion l h0 h2 }
+--   {
+--     intro h4
+--     apply h3
+--     apply FinTyping.record_beta_reduction h0 h4
+--   }
 
-  | .entry label body => by
-    unfold Typing
-    intro h0 h1
-    apply EvalCon.project label at h0
-    apply Typing.record_beta_reduction h0 h1
-
-  | .path left right => by
-    unfold Typing
-    intro h0 h1 e' h2
-    specialize h1 e' h2
-    apply EvalCon.applicator e' at h0
-    apply Typing.record_beta_reduction h0 h1
-
-  | .unio left right => by
-    unfold Typing
-    intro h0 h1
-    cases h1 with
-    | inl h2 =>
-      apply Or.inl
-      apply Typing.record_beta_reduction h0 h2
-    | inr h2 =>
-      apply Or.inr
-      apply Typing.record_beta_reduction h0 h2
-
-  | .inter left right => by
-    unfold Typing
-    intro h0 h1
-    have ⟨h2,h3⟩ := h1
-    apply And.intro
-    { apply Typing.record_beta_reduction h0 h2 }
-    { apply Typing.record_beta_reduction h0 h3 }
-
-  | .diff left right => by
-    unfold Typing
-    intro h0 h1
-    have ⟨h2,h3⟩ := h1
-    apply And.intro
-    { apply Typing.record_beta_reduction h0 h2 }
-    {
-      intro h4
-      apply h3
-      exact Typing.record_beta_expansion l h0 h4
-    }
-  | .exi ids quals body => by
-    unfold Typing
-    intro h0 h1
-
-    have ⟨am', h2, h3, h4⟩ := h1
-    exists am'
-    apply And.intro h2
-    apply And.intro h3
-    apply Typing.record_beta_reduction h0 h4
-
-  | .all ids quals body => by
-    unfold Typing
-    intro h0 ⟨h1,h2⟩
-    apply And.intro
-    {
-      intro am' dom_subset dynamic_quals
-      specialize h1 am' dom_subset dynamic_quals
-      apply Typing.record_beta_reduction h0 h1
-    }
-    { exact h2}
-
-  | .lfp id body => by
-    unfold Typing
-    intro h0 h1
-    have ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩ := h1
-    apply And.intro monotonic_body
-    exists t
-    exists lt_size
-    apply And.intro imp_dynamic
-    apply Typing.record_beta_reduction h0 dynamic_body
-
-  | .var id => by
-    unfold Typing
-    intro h0 h1
-    have ⟨t, h2, h3⟩ := h1
-    exists t
-    apply And.intro h2
-    apply FinTyping.record_beta_reduction h0 h3
-
-  theorem Typing.record_beta_expansion l :
-    EvalCon E →
-    Typing am (E e) t →
-    Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t
-  :=
-  /- TODO: rewrite by leveraging evalcon_swap and typing subject expansion ; instead of inducting directly -/
-  match t with
-  | .bot => by
-    unfold Typing
-    intro h0 h1
-    exact h1
-
-  | .top => by
-    unfold Typing
-    intro h0 h1
-    cases h1 with
-    | inl h2 =>
-      apply Or.inl
-      exact Convergent.record_beta_expansion h0 h2
-    | inr h2 =>
-      apply Or.inr
-      exact Divergent.record_beta_expansion h0 h2
-
-  | .iso label body => by
-    unfold Typing
-    intro h0 h1
-    apply EvalCon.extract label at h0
-    apply Typing.record_beta_expansion l h0 h1
-
-  | .entry label body => by
-    unfold Typing
-    intro h0 h1
-    apply EvalCon.project label at h0
-    apply Typing.record_beta_expansion l h0 h1
-
-  | .path left right => by
-    unfold Typing
-    intro h0 h1 e' h2
-    specialize h1 e' h2
-    apply EvalCon.applicator e' at h0
-    apply Typing.record_beta_expansion l h0 h1
-
-  | .unio left right => by
-    unfold Typing
-    intro h0 h1
-    cases h1 with
-    | inl h2 =>
-      apply Or.inl
-      apply Typing.record_beta_expansion l h0 h2
-    | inr h2 =>
-      apply Or.inr
-      apply Typing.record_beta_expansion l h0 h2
-
-  | .inter left right => by
-    unfold Typing
-    intro h0 h1
-    have ⟨h2,h3⟩ := h1
-    apply And.intro
-    { apply Typing.record_beta_expansion l h0 h2 }
-    { apply Typing.record_beta_expansion l h0 h3 }
-
-  | .diff left right => by
-    unfold Typing
-    intro h0 h1
-    have ⟨h2,h3⟩ := h1
-    apply And.intro
-    { apply Typing.record_beta_expansion l h0 h2 }
-    {
-      intro h4
-      apply h3
-      exact record_beta_reduction h0 h4
-    }
-  | .exi ids quals body => by
-    unfold Typing
-    intro h0 h1
-
-    have ⟨am', h2, h3, h4⟩ := h1
-    exists am'
-    apply And.intro h2
-    apply And.intro h3
-    apply Typing.record_beta_expansion l h0 h4
-
-  | .all ids quals body => by
-    unfold Typing
-    intro h0 ⟨h1,h2⟩
-    apply And.intro
-    {
-      intro am' dom_subset dynamic_quals
-      specialize h1 am' dom_subset dynamic_quals
-      apply Typing.record_beta_expansion l h0 h1
-    }
-    {exact h2}
-
-  | .lfp id body => by
-    unfold Typing
-    intro h0 h1
-    have ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩ := h1
-    apply And.intro monotonic_body
-    exists t
-    exists lt_size
-    apply And.intro imp_dynamic
-    apply Typing.record_beta_expansion l h0 dynamic_body
-
-  | .var id => by
-    unfold Typing
-    intro h0 h1
-    have ⟨t, h2, h3⟩ := h1
-    exists t
-    apply And.intro h2
-    apply FinTyping.record_beta_expansion l h0 h3
-end
+-- | _ =>
+--   intro h0 h1
+--   unfold FinTyping at h1
+--   exact h1
 
 
+-- mutual
+--   theorem Typing.record_beta_reduction :
+--     EvalCon E →
+--     Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t →
+--     Typing am (E e) t
+--   := match t with
+--   | .bot => by
+--     unfold Typing
+--     intro h0 h1
+--     exact h1
 
-theorem Typing.entry_intro l :
-  Typing am e t →
-  Typing am (Expr.record ((l, e) :: [])) (Typ.entry l t)
-:= by
-  intro h0
-  unfold Typing
-  exact record_beta_expansion l .hole h0
+--   | .top => by
+--     unfold Typing
+--     intro h0 h1
+--     cases h1 with
+--     | inl h2 =>
+--       apply Or.inl
+--       exact Convergent.record_beta_reduction h0 h2
+--     | inr h2 =>
+--       apply Or.inr
+--       exact Divergent.record_beta_reduction h0 h2
 
-theorem Subtyping.elimination :
-  Subtyping am t0 t1 →
-  Typing am e t0 →
-  Typing am e t1
-:= by
-  unfold Subtyping
-  intro h0 h1
-  exact h0 e h1
+--   | .iso label body => by
+--     unfold Typing
+--     intro h0 h1
+--     apply EvalCon.extract label at h0
+--     apply Typing.record_beta_reduction h0 h1
 
-theorem Subtyping.list_typ_diff_elim :
-  Subtyping am (List.typ_diff tp subtras) tp
-:= by
-  sorry
+--   | .entry label body => by
+--     unfold Typing
+--     intro h0 h1
+--     apply EvalCon.project label at h0
+--     apply Typing.record_beta_reduction h0 h1
+
+--   | .path left right => by
+--     unfold Typing
+--     intro h0 h1 e' h2
+--     specialize h1 e' h2
+--     apply EvalCon.applicator e' at h0
+--     apply Typing.record_beta_reduction h0 h1
+
+--   | .unio left right => by
+--     unfold Typing
+--     intro h0 h1
+--     cases h1 with
+--     | inl h2 =>
+--       apply Or.inl
+--       apply Typing.record_beta_reduction h0 h2
+--     | inr h2 =>
+--       apply Or.inr
+--       apply Typing.record_beta_reduction h0 h2
+
+--   | .inter left right => by
+--     unfold Typing
+--     intro h0 h1
+--     have ⟨h2,h3⟩ := h1
+--     apply And.intro
+--     { apply Typing.record_beta_reduction h0 h2 }
+--     { apply Typing.record_beta_reduction h0 h3 }
+
+--   | .diff left right => by
+--     unfold Typing
+--     intro h0 h1
+--     have ⟨h2,h3⟩ := h1
+--     apply And.intro
+--     { apply Typing.record_beta_reduction h0 h2 }
+--     {
+--       intro h4
+--       apply h3
+--       exact Typing.record_beta_expansion l h0 h4
+--     }
+--   | .exi ids quals body => by
+--     unfold Typing
+--     intro h0 h1
+
+--     have ⟨am', h2, h3, h4⟩ := h1
+--     exists am'
+--     apply And.intro h2
+--     apply And.intro h3
+--     apply Typing.record_beta_reduction h0 h4
+
+--   | .all ids quals body => by
+--     unfold Typing
+--     intro h0 ⟨h1,h2⟩
+--     apply And.intro
+--     {
+--       intro am' dom_subset dynamic_quals
+--       specialize h1 am' dom_subset dynamic_quals
+--       apply Typing.record_beta_reduction h0 h1
+--     }
+--     { exact h2}
+
+--   | .lfp id body => by
+--     unfold Typing
+--     intro h0 h1
+--     have ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩ := h1
+--     apply And.intro monotonic_body
+--     exists t
+--     exists lt_size
+--     apply And.intro imp_dynamic
+--     apply Typing.record_beta_reduction h0 dynamic_body
+
+--   | .var id => by
+--     unfold Typing
+--     intro h0 h1
+--     have ⟨t, h2, h3⟩ := h1
+--     exists t
+--     apply And.intro h2
+--     apply FinTyping.record_beta_reduction h0 h3
+
+--   theorem Typing.record_beta_expansion l :
+--     EvalCon E →
+--     Typing am (E e) t →
+--     Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t
+--   :=
+--   /- TODO: rewrite by leveraging evalcon_swap and typing subject expansion ; instead of inducting directly -/
+--   match t with
+--   | .bot => by
+--     unfold Typing
+--     intro h0 h1
+--     exact h1
+
+--   | .top => by
+--     unfold Typing
+--     intro h0 h1
+--     cases h1 with
+--     | inl h2 =>
+--       apply Or.inl
+--       exact Convergent.record_beta_expansion h0 h2
+--     | inr h2 =>
+--       apply Or.inr
+--       exact Divergent.record_beta_expansion h0 h2
+
+--   | .iso label body => by
+--     unfold Typing
+--     intro h0 h1
+--     apply EvalCon.extract label at h0
+--     apply Typing.record_beta_expansion l h0 h1
+
+--   | .entry label body => by
+--     unfold Typing
+--     intro h0 h1
+--     apply EvalCon.project label at h0
+--     apply Typing.record_beta_expansion l h0 h1
+
+--   | .path left right => by
+--     unfold Typing
+--     intro h0 h1 e' h2
+--     specialize h1 e' h2
+--     apply EvalCon.applicator e' at h0
+--     apply Typing.record_beta_expansion l h0 h1
+
+--   | .unio left right => by
+--     unfold Typing
+--     intro h0 h1
+--     cases h1 with
+--     | inl h2 =>
+--       apply Or.inl
+--       apply Typing.record_beta_expansion l h0 h2
+--     | inr h2 =>
+--       apply Or.inr
+--       apply Typing.record_beta_expansion l h0 h2
+
+--   | .inter left right => by
+--     unfold Typing
+--     intro h0 h1
+--     have ⟨h2,h3⟩ := h1
+--     apply And.intro
+--     { apply Typing.record_beta_expansion l h0 h2 }
+--     { apply Typing.record_beta_expansion l h0 h3 }
+
+--   | .diff left right => by
+--     unfold Typing
+--     intro h0 h1
+--     have ⟨h2,h3⟩ := h1
+--     apply And.intro
+--     { apply Typing.record_beta_expansion l h0 h2 }
+--     {
+--       intro h4
+--       apply h3
+--       exact record_beta_reduction h0 h4
+--     }
+--   | .exi ids quals body => by
+--     unfold Typing
+--     intro h0 h1
+
+--     have ⟨am', h2, h3, h4⟩ := h1
+--     exists am'
+--     apply And.intro h2
+--     apply And.intro h3
+--     apply Typing.record_beta_expansion l h0 h4
+
+--   | .all ids quals body => by
+--     unfold Typing
+--     intro h0 ⟨h1,h2⟩
+--     apply And.intro
+--     {
+--       intro am' dom_subset dynamic_quals
+--       specialize h1 am' dom_subset dynamic_quals
+--       apply Typing.record_beta_expansion l h0 h1
+--     }
+--     {exact h2}
+
+--   | .lfp id body => by
+--     unfold Typing
+--     intro h0 h1
+--     have ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩ := h1
+--     apply And.intro monotonic_body
+--     exists t
+--     exists lt_size
+--     apply And.intro imp_dynamic
+--     apply Typing.record_beta_expansion l h0 dynamic_body
+
+--   | .var id => by
+--     unfold Typing
+--     intro h0 h1
+--     have ⟨t, h2, h3⟩ := h1
+--     exists t
+--     apply And.intro h2
+--     apply FinTyping.record_beta_expansion l h0 h3
+-- end
 
 
 theorem Typing.progress :
@@ -1035,11 +1011,6 @@ theorem Transition.not_value :
 := by sorry
 
 
-
-theorem Typing.exists_value :
-  Typing am e t →
-  ∃ v , Expr.is_value v ∧ Typing am v t
-:= by sorry
 
 
 theorem Divergent.transition :
@@ -1272,6 +1243,67 @@ theorem Typing.evalcon_swap
 
 
 
+
+theorem Typing.exists_value :
+  Typing am e t →
+  ∃ v , Expr.is_value v ∧ Typing am v t
+:= by sorry
+
+
+theorem Typing.record_beta_expansion l :
+  Typing am e t →
+  Typing am (Expr.project (Expr.record [(l, e)]) l) t
+:= by
+  intro h0
+  have ⟨ev, h1, h2⟩ := Typing.exists_value h0
+  have evalcon : EvalCon (fun e => (Expr.project (Expr.record [(l, e)]) l)) := by
+    apply EvalCon.project
+    apply EvalCon.record
+    apply RecordCon.head
+    apply EvalCon.hole
+  apply Typing.evalcon_swap evalcon h2 h0
+  { apply Typing.subject_expansion
+    { unfold Expr.project
+      apply Transition.appmatch
+      { reduce ; exact h1 }
+      { simp [
+          Expr.pattern_match, List.pattern_match_record,
+          List.pattern_match_entry, Pat.free_vars,
+          ListPat.free_vars
+        ];
+        reduce
+        simp
+        rfl
+      }
+    }
+    { exact h2 }
+  }
+
+
+theorem Typing.entry_intro l :
+  Typing am e t →
+  Typing am (Expr.record ((l, e) :: [])) (Typ.entry l t)
+:= by
+  intro h0
+  unfold Typing
+  exact record_beta_expansion l h0
+
+theorem Subtyping.elimination :
+  Subtyping am t0 t1 →
+  Typing am e t0 →
+  Typing am e t1
+:= by
+  unfold Subtyping
+  intro h0 h1
+  exact h0 e h1
+
+theorem Subtyping.list_typ_diff_elim :
+  Subtyping am (List.typ_diff tp subtras) tp
+:= by
+  sorry
+
+
+
 theorem Typing.function_beta_expansion f :
   (∀ {ev} ,
     Expr.is_value ev → Typing am ev tp →
@@ -1282,6 +1314,7 @@ theorem Typing.function_beta_expansion f :
 := by
   intro h0 h1
   have ⟨v, h5, h6⟩ := Typing.exists_value h1
+
   apply Typing.evalcon_swap (EvalCon.applicand ((p, e) :: f) .hole) h6 h1
   specialize h0 h5 h6
   have ⟨eam,h7,h8⟩ := h0

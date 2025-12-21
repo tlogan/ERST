@@ -70,37 +70,39 @@ end
 
 
 
-inductive Transition : Expr → Expr → Prop
-| entry l r :
-  Transition e e' →
-  Transition (Expr.record ((l, e) :: r)) (Expr.record ((l, e') :: r))
-| record :
-  Transition (Expr.record r) (Expr.record r') →
-  v.is_value →
-  Transition (Expr.record ((l, v) :: r)) (Expr.record ((l, v) :: r'))
-| applicator :
-  Transition ef ef' →
-  Transition (.app ef e) (.app ef' e)
-| applicand f e e' :
-  Transition e e' →
-  Transition (.app (.function f) e) (.app (.function f) e')
-| appmatch : ∀ {p e f v m},
-  v.is_value →
-  Expr.pattern_match v p = some m →
-  Transition (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
-| appskip :
-  v.is_value →
-  Expr.pattern_match v p = none →
-  Transition (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
-| anno : ∀ {e t},
-  Transition (.anno  e t) e
-| loopbody :
-  Transition e e' →
-  Transition (.loop e) (.loop e')
-| looppeel : ∀ {id e},
-  Transition
-    (.loop (.function [(.var id, e)]))
-    (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
+mutual
+  inductive Transition : Expr → Expr → Prop
+  | entry l r :
+    Transition e e' →
+    Transition (Expr.record ((l, e) :: r)) (Expr.record ((l, e') :: r))
+  | record :
+    Transition (Expr.record r) (Expr.record r') →
+    v.is_value →
+    Transition (Expr.record ((l, v) :: r)) (Expr.record ((l, v) :: r'))
+  | applicator :
+    Transition ef ef' →
+    Transition (.app ef e) (.app ef' e)
+  | applicand f e e' :
+    Transition e e' →
+    Transition (.app (.function f) e) (.app (.function f) e')
+  | appmatch : ∀ {p e f v m},
+    v.is_value →
+    Expr.pattern_match v p = some m →
+    Transition (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
+  | appskip :
+    v.is_value →
+    Expr.pattern_match v p = none →
+    Transition (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
+  | anno : ∀ {e t},
+    Transition (.anno  e t) e
+  | loopbody :
+    Transition e e' →
+    Transition (.loop e) (.loop e')
+  | looppeel : ∀ {id e},
+    Transition
+      (.loop (.function [(.var id, e)]))
+      (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
+end
 
 
 
