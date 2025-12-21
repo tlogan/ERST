@@ -1,241 +1,15 @@
 import Lang.Basic
+import Lang.Dynamic.Transition
+import Lang.Dynamic.EvalCon
+import Lang.Dynamic.TransitionStar
+import Lang.Dynamic.Convergent
+import Lang.Dynamic.Divergent
+import Lang.Dynamic.FinTyping
 
 set_option pp.fieldNotation false
 
+namespace Lang.Dynamic
 
-
-mutual
-  def List.pattern_match_entry (label : String) (pat : Pat)
-  : List (String × Expr) → Option (List (String × Expr))
-  | .nil => none
-  | (l, e) :: args =>
-    if l == label then
-      (Expr.pattern_match e pat)
-    else
-      List.pattern_match_entry label pat args
-
-  def List.pattern_match_record (args : List (String × Expr))
-  : List (String × Pat) → Option (List (String × Expr))
-  | .nil => some []
-  | (label, pat) :: pats => do
-    if Pat.free_vars pat ∩ ListPat.free_vars pats == [] then
-      let m0 ← List.pattern_match_entry label pat args
-      let m1 ← List.pattern_match_record args pats
-      return (m0 ++ m1)
-    else
-      .none
-
-  def Expr.pattern_match : Expr → Pat → Option (List (String × Expr))
-  | e, (.var id) => some [(id, e)]
-  | (.record r), (.record p) => List.pattern_match_record r p
-  | _, _ => none
-end
-
-
-mutual
-  def List.pattern_ids : List (String × Pat) → List String
-  | .nil => .nil
-  | (_, p) :: r =>
-    (Pat.ids p) ++ (List.pattern_ids r)
-
-  def Pat.ids : Pat → List String
-  | .var id => [id]
-  | .iso l body => Pat.ids body
-  | .record r => List.pattern_ids r
-end
-
-
-mutual
-  def List.record_sub (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
-  | .nil => .nil
-  | (l, e) :: r =>
-    (l, Expr.sub m e) :: (List.record_sub m r)
-
-  def List.function_sub (m : List (String × Expr)): List (Pat × Expr) → List (Pat × Expr)
-  | .nil => .nil
-  | (p, e) :: f =>
-    let ids := Pat.ids p
-    (p, Expr.sub (remove_all m ids) e) :: (List.function_sub m f)
-
-  def Expr.sub (m : List (String × Expr)): Expr → Expr
-  | .var id => match (find id m) with
-    | .none => (.var id)
-    | .some e => e
-  | .iso l body => .iso l (Expr.sub m body)
-  | .record r => .record (List.record_sub m r)
-  | .function f => .function (List.function_sub m f)
-  | .app ef ea => .app (Expr.sub m ef) (Expr.sub m ea)
-  | .anno e t => .anno (Expr.sub m e) t
-  | .loop e => .loop (Expr.sub m e)
-end
-
-
-theorem Expr.sub_sub_removal :
-  ids ⊆ ListPair.dom eam0 →
-  (Expr.sub eam0 (Expr.sub (remove_all eam1 ids) e)) =
-  (Expr.sub (eam0 ++ eam1) e)
-:= by sorry
-
-
-inductive Transition : Expr → Expr → Prop
-| entry l r :
-  Transition e e' →
-  Transition (Expr.record ((l, e) :: r)) (Expr.record ((l, e') :: r))
-| record :
-  Transition (Expr.record r) (Expr.record r') →
-  v.is_value →
-  Transition (Expr.record ((l, v) :: r)) (Expr.record ((l, v) :: r'))
-| applicator :
-  Transition ef ef' →
-  Transition (.app ef e) (.app ef' e)
-| applicand f e e' :
-  Transition e e' →
-  Transition (.app (.function f) e) (.app (.function f) e')
-| appmatch : ∀ {p e f v m},
-  v.is_value →
-  Expr.pattern_match v p = some m →
-  Transition (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
-| appskip :
-  v.is_value →
-  Expr.pattern_match v p = none →
-  Transition (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
-| anno : ∀ {e t},
-  Transition (.anno  e t) e
-| loopbody :
-  Transition e e' →
-  Transition (.loop e) (.loop e')
-| looppeel : ∀ {id e},
-  Transition
-    (.loop (.function [(.var id, e)]))
-    (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
-
-
-inductive TransitionStar : Expr → Expr → Prop
-| refl e : TransitionStar e e
-| step e e' e'' : Transition e e' → TransitionStar e' e'' → TransitionStar e e''
-
-
-inductive EvalCon : (Expr → Expr) → Prop
-| hole : EvalCon (fun e => e)
-| applicator e' : EvalCon E → EvalCon (fun e => .app (E e) e')
-| applicand f : EvalCon E → EvalCon (fun e => .app (.function f) (E e))
-
-
-theorem EvalCon.soundness
-  (evalcon : EvalCon E)
-  (transition : Transition e e')
-: Transition (E e) (E e')
-:= by induction evalcon with
-| hole =>
-  simp
-  exact transition
-| applicator arg evalcon' ih =>
-  simp
-  apply Transition.applicator
-  exact ih
-| applicand f evalcon' ih =>
-  simp
-  apply Transition.applicand
-  exact ih
-
-
-
--- theorem EvalCon.transition_reflection :
---   EvalCon E →
---   Transition (E e) e' →
---   ∃ e'' , Transition e e''
--- := by sorry
-
-theorem TransitionStar.evalcon_preservation
-  (evalcon : EvalCon E)
-  (transition_star : TransitionStar e e')
-: TransitionStar (E e) (E e')
-:= by induction transition_star with
-| refl e =>
-  exact refl (E e)
-| step e e' e'' h0 h1 ih =>
-  apply TransitionStar.step
-  { apply EvalCon.soundness evalcon h0 }
-  { exact ih }
-
-
-
-theorem EvalCon.is_value_determines_hole
-  (evalcon : EvalCon E)
-  (isval : Expr.is_value (E e))
-: E = (fun x => x)
-:= by cases evalcon with
-| hole =>
-  simp
-| applicator arg evalcon' =>
-  reduce at isval
-  simp at isval
-| applicand f evalcon' =>
-  reduce at isval
-  simp at isval
-
-
-theorem Transition.deterministic
-  (transition : Transition e e')
-  (transition' : Transition e e'')
-: e' = e''
-:= by sorry
-
-theorem EvalCon.extract l
-  (evalcon : EvalCon E)
-: EvalCon (fun e => Expr.extract (E e) l)
-:= by unfold Expr.extract; cases evalcon with
-| hole =>
-  simp
-  apply EvalCon.applicand
-  apply EvalCon.hole
-| applicator arg evalcon' =>
-  simp
-  apply EvalCon.applicand
-  exact applicator arg evalcon'
-| applicand f evalcon' =>
-  simp
-  apply EvalCon.applicand
-  exact applicand f evalcon'
-
-theorem EvalCon.project l
-  (evalcon : EvalCon E)
-: EvalCon (fun e => Expr.project (E e) l)
-:= by unfold Expr.project; cases evalcon with
-| hole =>
-  simp
-  apply EvalCon.applicand
-  apply EvalCon.hole
-| applicator arg evalcon' =>
-  simp
-  apply EvalCon.applicand
-  exact applicator arg evalcon'
-| applicand f evalcon' =>
-  simp
-  apply EvalCon.applicand
-  exact applicand f evalcon'
-
-
-def Convergent (e : Expr) : Prop :=
-  ∃ e' , TransitionStar e e' ∧ Expr.is_value e'
-
-def Divergent (e : Expr) : Prop :=
-  (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'')
-
-
-def FinTyping (e : Expr) : Typ → Prop
-| .top => Convergent e ∨ Divergent e
-| .iso l body => FinTyping (.extract e l) body
-| .entry l body => FinTyping (.project e l) body
-| .path left right => ∀ e' , FinTyping e' left → FinTyping (.app e e') right
-| .unio left right => FinTyping e left ∨ FinTyping e right
-| .inter left right => FinTyping e left ∧ FinTyping e right
-| .diff left right => FinTyping e left ∧ ¬ (FinTyping e right)
-| _ => False
-
-
-def Subtyping.Fin (left right : Typ) : Prop :=
-  ∀ e, FinTyping e left → FinTyping e right
 
 mutual
   def Subtyping (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
@@ -300,43 +74,6 @@ mutual
     all_goals try linarith
 end
 
-mutual
-
-  theorem Convergent.subject_reduction
-    (transition : Transition e e')
-  : Convergent e → Convergent e'
-  := by sorry
-
-  theorem Convergent.subject_expansion
-    (transition : Transition e e')
-  : Convergent e' → Convergent e
-  := by sorry
-end
-
-mutual
-
-  theorem Divergent.subject_reduction
-    (transition : Transition e e')
-  : Divergent e → Divergent e'
-  := by sorry
-
-  theorem Divergent.subject_expansion
-    (transition : Transition e e')
-  : Divergent e' → Divergent e
-  := by sorry
-end
-
-mutual
-  theorem FinTyping.subject_reduction
-    (transition : Transition e e')
-  : FinTyping e t → FinTyping e' t
-  := by sorry
-
-  theorem FinTyping.subject_expansion
-    (transition : Transition e e')
-  : FinTyping e' t → FinTyping e t
-  := by sorry
-end
 
 mutual
   theorem Typing.subject_reduction :
@@ -467,10 +204,6 @@ def MultiTyping
   (tam : List (String × Typ)) (eam : List (String × Expr)) (context : List (String × Typ)) : Prop
 := ∀ {x t}, find x context = .some t → ∃ e, (find x eam) = .some e ∧ Typing tam e t
 
-
-
---- TODO: consider Typ.sub and other typ manipulations as forms of static semantics
---- rename lemmas to indicate they are either soundness or (conditional) completeness properties
 
 
 theorem MultiSubtyping.removeAll_union {tam cs' cs} :
@@ -766,6 +499,118 @@ theorem Typing.inter_entry_intro {am l e r body t} :
   Typing am (.record r) t  →
   Typing am (Expr.record ((l, e) :: r)) (Typ.inter (Typ.entry l body) t)
 := by sorry
+
+
+
+theorem Typing.path_determines_function
+  (typing : Typing am e (.path antec consq))
+: ∃ f , TransitionStar e (.function f)
+:= by sorry
+
+
+
+
+theorem Typing.convergent_or_divergent
+  (typing : Typing am e t)
+: Convergent e ∨ Divergent e
+:= by cases t with
+| bot =>
+  unfold Typing at typing
+  exact False.elim typing
+
+| top =>
+  unfold Typing at typing
+  exact typing
+
+| iso label body =>
+  unfold Typing at typing
+  have ih := Typing.convergent_or_divergent typing
+  cases ih with
+  | inl h =>
+    apply Or.inl
+    apply Convergent.evalcon_reflection
+    { apply EvalCon.extract label .hole }
+    { exact h }
+  | inr h =>
+    apply Or.inr
+    apply Divergent.evalcon_reflection
+    { apply EvalCon.extract label .hole }
+    { exact h }
+
+| entry label body =>
+  unfold Typing at typing
+  have ih := Typing.convergent_or_divergent typing
+  cases ih with
+  | inl h =>
+    apply Or.inl
+    apply Convergent.evalcon_reflection
+    { apply EvalCon.project label .hole }
+    { exact h }
+  | inr h =>
+    apply Or.inr
+    apply Divergent.evalcon_reflection
+    { apply EvalCon.project label .hole }
+    { exact h }
+
+| path left right =>
+  apply Typing.path_determines_function at typing
+  have ⟨f, h0⟩ := typing
+  apply Or.inl
+  unfold Convergent
+  exists (.function f)
+
+
+| unio left right =>
+  unfold Typing at typing
+  cases typing with
+  | inl h =>
+    apply Typing.convergent_or_divergent h
+  | inr h =>
+    apply Typing.convergent_or_divergent h
+
+| inter left right =>
+  unfold Typing at typing
+  have ⟨h0,h1⟩ := typing
+  apply Typing.convergent_or_divergent h0
+
+| diff left right =>
+  unfold Typing at typing
+  have ⟨h0,h1⟩ := typing
+  apply Typing.convergent_or_divergent h0
+
+| exi ids quals body =>
+  unfold Typing at typing
+  have ⟨am',h0,h1,h2⟩ := typing
+  apply Typing.convergent_or_divergent h2
+| all ids quals body =>
+  unfold Typing at typing
+  have ⟨h0,am',h1,h2⟩ := typing
+  specialize h0 am' h1 h2
+  apply Typing.convergent_or_divergent h0
+
+| lfp id body =>
+  unfold Typing at typing
+  have ⟨monotonic, t, lt_size, h0,h1⟩ := typing
+  apply Typing.convergent_or_divergent h1
+
+| var id =>
+  unfold Typing at typing
+  have ⟨t, h0,h2⟩ := typing
+  exact FinTyping.convergent_or_divergent h2
+
+
+theorem Expr.sub_sub_removal :
+  ids ⊆ ListPair.dom eam0 →
+  (Expr.sub eam0 (Expr.sub (remove_all eam1 ids) e)) =
+  (Expr.sub (eam0 ++ eam1) e)
+:= by sorry
+
+
+-- theorem EvalCon.transition_reflection :
+--   EvalCon E →
+--   Transition (E e) e' →
+--   ∃ e'' , Transition e e''
+-- := by sorry
 
 
 theorem TransitionStar.project_record {id} :
@@ -1152,43 +997,6 @@ mutual
 end
 
 
-def Confluent (a b : Expr) :=
-  ∃ e , TransitionStar a e ∧ TransitionStar b e
-
-theorem Confluent.transitivity {a b c} :
-  Confluent a b →
-  Confluent b c →
-  Confluent a c
-:= by sorry
-
-theorem Confluent.swap {a b} :
-  Confluent a b →
-  Confluent b a
-:= by sorry
-
-theorem Confluent.app_arg_preservation {a b} f :
-  Confluent a b →
-  Confluent (.app f a) (.app f b)
-:= by sorry
-
-theorem Typing.confluent_preservation {a b am t} :
-  Confluent a b →
-  Typing am a t →
-  Typing am b t
-:= by sorry
-
-theorem Typing.confluent_reflection {a b am t} :
-  Confluent a b →
-  Typing am b t →
-  Typing am a t
-:= by
-  intro h0 h1
-  apply Typing.confluent_preservation
-  apply Confluent.swap h0
-  exact h1
-
-
-
 
 theorem Typing.entry_intro l :
   Typing am e t →
@@ -1239,20 +1047,6 @@ theorem Divergent.transition :
   ∃ e' , Transition e e' ∧ Divergent e'
 := by sorry
 
-theorem Convergent.evalcon_elim :
-  EvalCon E →
-  Convergent (E e) →
-  Convergent e
-:= by
-  sorry
-
-theorem EvalCon.divergent_reflection :
-  EvalCon E →
-  Divergent (E e) →
-  Divergent e
-:= by
-  sorry
-
 theorem Divergent.evalcon_preservation :
   EvalCon E →
   Divergent e →
@@ -1285,177 +1079,7 @@ theorem Divergent.evalcon_preservation :
     { apply EvalCon.soundness h0 h6 }
     { exact h4 }
 
-theorem FinTyping.path_determines_function
-  (typing : FinTyping e (.path antec consq))
-: ∃ f , TransitionStar e (.function f)
-:= by sorry
 
-
-theorem Typing.path_determines_function
-  (typing : Typing am e (.path antec consq))
-: ∃ f , TransitionStar e (.function f)
-:= by sorry
-
-
-theorem FinTyping.convergent_or_divergent
-  (typing : FinTyping e t)
-: Convergent e ∨ Divergent e
-:= by cases t with
-| bot =>
-  unfold FinTyping at typing
-  exact False.elim typing
-
-| top =>
-  unfold FinTyping at typing
-  exact typing
-
-| iso label body =>
-  unfold FinTyping at typing
-  have ih := FinTyping.convergent_or_divergent typing
-  cases ih with
-  | inl h =>
-    apply Or.inl
-    apply Convergent.evalcon_elim
-    { apply EvalCon.extract label .hole }
-    { exact h }
-  | inr h =>
-    apply Or.inr
-    apply EvalCon.divergent_reflection
-    { apply EvalCon.extract label .hole }
-    { exact h }
-
-| entry label body =>
-  unfold FinTyping at typing
-  have ih := FinTyping.convergent_or_divergent typing
-  cases ih with
-  | inl h =>
-    apply Or.inl
-    apply Convergent.evalcon_elim
-    { apply EvalCon.project label .hole }
-    { exact h }
-  | inr h =>
-    apply Or.inr
-    apply EvalCon.divergent_reflection
-    { apply EvalCon.project label .hole }
-    { exact h }
-
-| path left right =>
-  apply FinTyping.path_determines_function at typing
-  have ⟨f, h0⟩ := typing
-  apply Or.inl
-  unfold Convergent
-  exists (.function f)
-
-
-| unio left right =>
-  unfold FinTyping at typing
-  cases typing with
-  | inl h =>
-    apply FinTyping.convergent_or_divergent h
-  | inr h =>
-    apply FinTyping.convergent_or_divergent h
-
-| inter left right =>
-  unfold FinTyping at typing
-  have ⟨h0,h1⟩ := typing
-  apply FinTyping.convergent_or_divergent h0
-
-| diff left right =>
-  unfold FinTyping at typing
-  have ⟨h0,h1⟩ := typing
-  apply FinTyping.convergent_or_divergent h0
-| _ =>
-  unfold FinTyping at typing
-  exact False.elim typing
-
-
-theorem Typing.convergent_or_divergent
-  (typing : Typing am e t)
-: Convergent e ∨ Divergent e
-:= by cases t with
-| bot =>
-  unfold Typing at typing
-  exact False.elim typing
-
-| top =>
-  unfold Typing at typing
-  exact typing
-
-| iso label body =>
-  unfold Typing at typing
-  have ih := Typing.convergent_or_divergent typing
-  cases ih with
-  | inl h =>
-    apply Or.inl
-    apply Convergent.evalcon_elim
-    { apply EvalCon.extract label .hole }
-    { exact h }
-  | inr h =>
-    apply Or.inr
-    apply EvalCon.divergent_reflection
-    { apply EvalCon.extract label .hole }
-    { exact h }
-
-| entry label body =>
-  unfold Typing at typing
-  have ih := Typing.convergent_or_divergent typing
-  cases ih with
-  | inl h =>
-    apply Or.inl
-    apply Convergent.evalcon_elim
-    { apply EvalCon.project label .hole }
-    { exact h }
-  | inr h =>
-    apply Or.inr
-    apply EvalCon.divergent_reflection
-    { apply EvalCon.project label .hole }
-    { exact h }
-
-| path left right =>
-  apply Typing.path_determines_function at typing
-  have ⟨f, h0⟩ := typing
-  apply Or.inl
-  unfold Convergent
-  exists (.function f)
-
-
-| unio left right =>
-  unfold Typing at typing
-  cases typing with
-  | inl h =>
-    apply Typing.convergent_or_divergent h
-  | inr h =>
-    apply Typing.convergent_or_divergent h
-
-| inter left right =>
-  unfold Typing at typing
-  have ⟨h0,h1⟩ := typing
-  apply Typing.convergent_or_divergent h0
-
-| diff left right =>
-  unfold Typing at typing
-  have ⟨h0,h1⟩ := typing
-  apply Typing.convergent_or_divergent h0
-
-| exi ids quals body =>
-  unfold Typing at typing
-  have ⟨am',h0,h1,h2⟩ := typing
-  apply Typing.convergent_or_divergent h2
-| all ids quals body =>
-  unfold Typing at typing
-  have ⟨h0,am',h1,h2⟩ := typing
-  specialize h0 am' h1 h2
-  apply Typing.convergent_or_divergent h0
-
-| lfp id body =>
-  unfold Typing at typing
-  have ⟨monotonic, t, lt_size, h0,h1⟩ := typing
-  apply Typing.convergent_or_divergent h1
-
-| var id =>
-  unfold Typing at typing
-  have ⟨t, h0,h2⟩ := typing
-  exact FinTyping.convergent_or_divergent h2
 
 
 theorem FinTyping.evalcon_swap
@@ -1814,3 +1438,8 @@ theorem Subtyping.transitivity :
   apply h1
   specialize h0 e h3
   apply h0
+
+
+
+
+end Lang.Dynamic

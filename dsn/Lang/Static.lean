@@ -1,10 +1,18 @@
 import Lang.Util
 import Lang.Basic
-import Lang.Dynamic
+import Lang.Dynamic.EvalCon
+import Lang.Dynamic.TransitionStar
+import Lang.Dynamic.Convergent
+import Lang.Dynamic.Divergent
+import Lang.Dynamic.FinTyping
+import Lang.Dynamic.Typing
+import Lang.Dynamic.Confluent
 import Mathlib.Tactic.Linarith
 
 set_option eval.pp false
 set_option pp.fieldNotation false
+
+open Lang.Dynamic
 
 mutual
 
