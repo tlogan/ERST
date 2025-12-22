@@ -1,5 +1,4 @@
 import Lang.Basic
-import Lang.Dynamic.Transition
 
 set_option pp.fieldNotation false
 
@@ -19,29 +18,8 @@ mutual
   | record : RecordCon R → EvalCon (fun e => .record (R e))
   | applicator e' : EvalCon E → EvalCon (fun e => .app (E e) e')
   | applicand f : EvalCon E → EvalCon (fun e => .app (.function f) (E e))
+  | loop : EvalCon E → EvalCon (fun e => .loop (E e))
 end
-
-
-theorem EvalCon.soundness
-  (evalcon : EvalCon E)
-  (transition : Transition e e')
-: Transition (E e) (E e')
-:= by sorry
--- by induction evalcon with
--- | hole =>
---   simp
---   exact transition
--- | record _ =>
---   sorry
--- | applicator arg evalcon' ih =>
---   simp
---   apply Transition.applicator
---   exact ih
--- | applicand f evalcon' ih =>
---   simp
---   apply Transition.applicand
---   exact ih
-
 
 
 theorem EvalCon.is_value_determines_hole

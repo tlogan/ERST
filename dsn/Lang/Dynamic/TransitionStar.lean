@@ -22,7 +22,7 @@ theorem TransitionStar.evalcon_preservation
   exact refl (E e)
 | step e e' e'' h0 h1 ih =>
   apply TransitionStar.step
-  { apply EvalCon.soundness evalcon h0 }
+  { exact Transition.evalcon evalcon h0 }
   { exact ih }
 
 

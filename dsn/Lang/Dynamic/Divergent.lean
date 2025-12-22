@@ -1,7 +1,7 @@
 
 import Lang.Basic
-import Lang.Dynamic.Transition
 import Lang.Dynamic.EvalCon
+import Lang.Dynamic.Transition
 import Lang.Dynamic.TransitionStar
 
 set_option pp.fieldNotation false

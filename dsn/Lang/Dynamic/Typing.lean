@@ -1,6 +1,6 @@
 import Lang.Basic
-import Lang.Dynamic.Transition
 import Lang.Dynamic.EvalCon
+import Lang.Dynamic.Transition
 import Lang.Dynamic.TransitionStar
 import Lang.Dynamic.Convergent
 import Lang.Dynamic.Divergent
@@ -106,9 +106,8 @@ mutual
     intro h0
     apply Typing.subject_expansion
     {
-      unfold Expr.extract
-      apply Transition.applicand
-      exact transition
+      have evalcon := EvalCon.extract label .hole
+      apply Transition.evalcon evalcon transition
     }
     { exact h0 }
 
@@ -117,9 +116,8 @@ mutual
     intro h0
     apply Typing.subject_expansion
     {
-      unfold Expr.project
-      apply Transition.applicand
-      exact transition
+      have evalcon := EvalCon.project label .hole
+      apply Transition.evalcon evalcon transition
     }
     { exact h0 }
 
@@ -129,7 +127,10 @@ mutual
     intro h0 e'' h1
     specialize h0 e'' h1
     apply Typing.subject_expansion
-    { apply Transition.applicator transition }
+    {
+      have evalcon := EvalCon.applicator e'' .hole
+      apply Transition.evalcon evalcon transition
+    }
     { exact h0 }
 
   | unio left right =>
@@ -1035,8 +1036,7 @@ theorem Divergent.evalcon_preservation :
     specialize h1 e (TransitionStar.refl e)
     have ⟨e', h3⟩ := h1
     exists (E e')
-    apply EvalCon.soundness h0
-    exact h3
+    exact Transition.evalcon h0 h3
 
   | step eg em e' h4 h5 ih =>
 
@@ -1047,7 +1047,7 @@ theorem Divergent.evalcon_preservation :
     have ⟨et, h6,h7⟩ := h1
     apply ih h7
     apply Transition.deterministic
-    { apply EvalCon.soundness h0 h6 }
+    { exact Transition.evalcon h0 h6 }
     { exact h4 }
 
 
@@ -1263,8 +1263,9 @@ theorem Typing.record_beta_expansion l :
     apply EvalCon.hole
   apply Typing.evalcon_swap evalcon h2 h0
   { apply Typing.subject_expansion
-    { unfold Expr.project
-      apply Transition.appmatch
+    {
+      unfold Expr.project
+      apply Transition.pattern_match
       { reduce ; exact h1 }
       { simp [
           Expr.pattern_match, List.pattern_match_record,
@@ -1319,7 +1320,7 @@ theorem Typing.function_beta_expansion f :
   specialize h0 h5 h6
   have ⟨eam,h7,h8⟩ := h0
   apply Typing.subject_expansion
-  { apply Transition.appmatch  h5  h7}
+  { apply Transition.pattern_match h5 h7}
   { exact h8 }
 
 
