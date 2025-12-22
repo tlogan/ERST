@@ -76,12 +76,118 @@ end
 
 
 mutual
-  theorem Typing.subject_reduction :
-    Transition e e' →
-    Typing am e t →
-    Typing am e' t
-  := by
-    sorry
+  theorem Typing.subject_reduction
+    (transition : Transition e e')
+  : Typing am e t → Typing am e' t
+  := by cases t with
+  | bot =>
+    unfold Typing
+    simp
+  | top =>
+    unfold Typing
+    intro h0
+    cases h0 with
+    | inl h2 =>
+      apply Or.inl
+      exact Convergent.subject_reduction transition h2
+    | inr h2 =>
+      apply Or.inr
+      exact Divergent.subject_reduction transition h2
+
+  | iso label body =>
+    unfold Typing
+    intro h0
+    apply Typing.subject_reduction
+    {
+      have evalcon := EvalCon.extract label .hole
+      apply Transition.evalcon evalcon transition
+    }
+    { exact h0 }
+
+  | entry label body =>
+    unfold Typing
+    intro h0
+    apply Typing.subject_reduction
+    {
+      have evalcon := EvalCon.project label .hole
+      apply Transition.evalcon evalcon transition
+    }
+    { exact h0 }
+
+
+  | path left right =>
+    unfold Typing
+    intro h0 e'' h1
+    specialize h0 e'' h1
+    apply Typing.subject_reduction
+    {
+      have evalcon := EvalCon.applicator e'' .hole
+      apply Transition.evalcon evalcon transition
+    }
+    { exact h0 }
+
+  | unio left right =>
+    unfold Typing
+    intro h0
+    cases h0 with
+    | inl h2 =>
+      apply Or.inl
+      apply Typing.subject_reduction transition h2
+    | inr h2 =>
+      apply Or.inr
+      apply Typing.subject_reduction transition h2
+
+  | inter left right =>
+    unfold Typing
+    intro ⟨h0,h1⟩
+    apply And.intro
+    { apply Typing.subject_reduction transition h0 }
+    { apply Typing.subject_reduction transition h1 }
+
+  | diff left right =>
+    unfold Typing
+    intro ⟨h0,h1⟩
+    apply And.intro
+    { apply Typing.subject_reduction transition h0 }
+    {
+      intro h2
+      apply h1
+      apply Typing.subject_expansion transition h2
+    }
+
+  | exi ids quals body =>
+    unfold Typing
+    intro ⟨am',h0,h1,h2⟩
+    exists am'
+    apply And.intro h0
+    apply And.intro h1
+    apply Typing.subject_reduction transition h2
+
+  | all ids quals body =>
+    unfold Typing
+    intro ⟨h0,h1⟩
+    apply And.intro
+    {
+      intro am' h2 h3
+      apply Typing.subject_reduction transition (h0 am' h2 h3)
+    }
+    { exact h1 }
+
+  | lfp id body =>
+    unfold Typing
+    intro ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩
+    apply And.intro monotonic_body
+    exists t
+    exists lt_size
+    apply And.intro imp_dynamic
+    apply Typing.subject_reduction transition dynamic_body
+
+  | var id =>
+    unfold Typing
+    intro ⟨t, h1, h2⟩
+    exists t
+    apply And.intro h1
+    apply FinTyping.subject_reduction transition h2
 
   theorem Typing.subject_expansion
     (transition : Transition e e')
