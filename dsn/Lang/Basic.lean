@@ -911,7 +911,8 @@ mutual
   def List.is_record_value : List (String × Expr) → Bool
   | [] => .true
   | (l,e) :: r =>
-    List.is_fresh_key l r && Expr.is_value e
+    List.is_fresh_key l r && Expr.is_value e &&
+    List.is_record_value r
 
   def Expr.is_value : Expr → Bool
   | (.iso _ e) => Expr.is_value e

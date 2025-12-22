@@ -1158,7 +1158,6 @@ theorem Divergent.evalcon_preservation :
 
 
 
-
 theorem FinTyping.evalcon_swap
   (evalcon : EvalCon E)
   (typing : Typing am e t)
@@ -1176,6 +1175,7 @@ theorem FinTyping.evalcon_swap
   cases typing' with
   | inl h =>
     apply Or.inl
+    /- TODO -/
     sorry
   | inr h =>
     apply Or.inr
@@ -1255,6 +1255,7 @@ theorem Typing.evalcon_swap
   cases typing' with
   | inl h =>
     apply Or.inl
+    /- TODO -/
     sorry
   | inr h =>
     apply Or.inr
@@ -1372,7 +1373,13 @@ theorem Typing.record_beta_expansion l :
     {
       unfold Expr.project
       apply Transition.pattern_match
-      { reduce ; exact h1 }
+      {
+        simp [Expr.is_value, List.is_record_value ]
+        reduce
+        simp
+        exact h1
+
+      }
       { simp [
           Expr.pattern_match, List.pattern_match_record,
           List.pattern_match_entry, Pat.free_vars,
