@@ -1353,6 +1353,7 @@ for type variables.
 
 % \end{definition}
 
+
 \begin{definition}
   \label{def:model_typing}
   \emph{model typing}
@@ -1446,6 +1447,22 @@ for type variables.
   \end{array}
   \]
 \end{definition}
+
+\TODO{
+RATIONALE -- SEMANTICS-DIRECTED TYPING:
+note that we use semantics-directed typing (i.e. dynamic) rather than syntax-directed typing (i.e. static), in order
+to avoid overly restricting the types of constructions like functions or records.
+That is, in a syntax-directed semantics, we strive to have functions 
+introduce the strongest type possible, which requires combining numerous type forms,
+and parsing the structures of expressions.
+To ensure the semantics of type forms is clear and intuitive, 
+we use sementics-directed typing, which allows
+each type form to be specified separately.
+In essence, the semantics-directed typing is a denotation
+from type syntax to predicate logic.
+By contrast, simple type systems are so simple that the syntax-directed typing definitions
+are intuitive already, and so there is no need for a separate semantics-directed definition.
+}
 
 \begin{definition}
   \label{def:model_finite_typing}
