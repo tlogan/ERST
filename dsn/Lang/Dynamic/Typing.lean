@@ -1173,10 +1173,14 @@ theorem FinTyping.evalcon_swap
   intro typing_evalcon
   apply Typing.convergent_or_divergent at typing'
   cases typing' with
-  | inl h =>
-    apply Or.inl
-    /- TODO -/
-    sorry
+  | inl h0 =>
+    cases typing_evalcon with
+    | inl h1 =>
+      apply Or.inl
+      apply Convergent.evalcon_preservation evalcon h1 h0
+    | inr h1 =>
+      apply Or.inr
+      apply Divergent.evalcon_swap evalcon h1
   | inr h =>
     apply Or.inr
     apply Divergent.evalcon_preservation evalcon h
@@ -1253,10 +1257,14 @@ theorem Typing.evalcon_swap
   intro typing_evalcon
   apply Typing.convergent_or_divergent at typing'
   cases typing' with
-  | inl h =>
-    apply Or.inl
-    /- TODO -/
-    sorry
+  | inl h0 =>
+    cases typing_evalcon with
+    | inl h1 =>
+      apply Or.inl
+      apply Convergent.evalcon_preservation evalcon h1 h0
+    | inr h1 =>
+      apply Or.inr
+      apply Divergent.evalcon_swap evalcon h1
   | inr h =>
     apply Or.inr
     apply Divergent.evalcon_preservation evalcon h

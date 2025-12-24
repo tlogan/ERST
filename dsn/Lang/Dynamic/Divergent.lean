@@ -35,4 +35,11 @@ theorem Divergent.evalcon_reflection :
 := by
   sorry
 
+theorem Divergent.evalcon_swap :
+  EvalCon E →
+  Divergent (E e) →
+  Divergent (E e')
+:= by
+  sorry
+
 end Lang.Dynamic

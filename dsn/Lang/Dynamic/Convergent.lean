@@ -33,5 +33,10 @@ theorem Convergent.evalcon_reflection :
 := by
   sorry
 
+theorem Convergent.evalcon_preservation :
+  EvalCon E → Convergent (E e) →
+  Convergent e' → Convergent (E e')
+:= by sorry
+
 
 end Lang.Dynamic
