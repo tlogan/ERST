@@ -1158,6 +1158,7 @@ theorem Divergent.evalcon_preservation :
 
 
 
+
 theorem FinTyping.evalcon_swap
   (evalcon : EvalCon E)
   (typing : Typing am e t)
@@ -1171,19 +1172,9 @@ theorem FinTyping.evalcon_swap
 | top =>
   unfold FinTyping
   intro typing_evalcon
-  apply Typing.convergent_or_divergent at typing'
-  cases typing' with
-  | inl h0 =>
-    cases typing_evalcon with
-    | inl h1 =>
-      apply Or.inl
-      apply Convergent.evalcon_preservation evalcon h1 h0
-    | inr h1 =>
-      apply Or.inr
-      apply Divergent.evalcon_swap evalcon h1
-  | inr h =>
-    apply Or.inr
-    apply Divergent.evalcon_preservation evalcon h
+  /- TODO -/
+  sorry
+  -- apply Typing.convergent_or_divergent at typing'
 
 | iso label body =>
   unfold FinTyping
@@ -1255,19 +1246,9 @@ theorem Typing.evalcon_swap
 | top =>
   unfold Typing
   intro typing_evalcon
-  apply Typing.convergent_or_divergent at typing'
-  cases typing' with
-  | inl h0 =>
-    cases typing_evalcon with
-    | inl h1 =>
-      apply Or.inl
-      apply Convergent.evalcon_preservation evalcon h1 h0
-    | inr h1 =>
-      apply Or.inr
-      apply Divergent.evalcon_swap evalcon h1
-  | inr h =>
-    apply Or.inr
-    apply Divergent.evalcon_preservation evalcon h
+  /- TODO -/
+  sorry
+  -- apply Typing.convergent_or_divergent at typing'
 
 | iso label body =>
   unfold Typing
