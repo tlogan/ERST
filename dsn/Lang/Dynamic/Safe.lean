@@ -40,37 +40,55 @@ theorem Safe.subject_expansion :
   Safe e
 := by sorry
 
+
+theorem Safe.convergent_swap
+  (econ : EvalCon E)
+  (safe_econ : Safe (E e))
+  (cvg : Convergent e')
+: Safe (E e')
+:= by sorry
+
+theorem Safe.econ_swap
+  (econ : EvalCon E)
+  (econ' : EvalCon E')
+  (safe : Safe (E (E' e)))
+: Safe (E' (E e))
+:= by sorry
+
 mutual
 
-  theorem Safe.evalcon_preservation
-    (evalcon : EvalCon E)
-    (safe_evalcon : Safe (E e))
-  : Safe e' → Safe (E e')
-  := by cases evalcon with
-  | hole =>
-    intro h0
-    simp
-    exact h0
-  | iso l econ =>
-    intro h0
-    simp
-    simp at safe_evalcon
-    have econ' := EvalCon.iso l econ
-    apply Safe.evalcon_preservation econ' safe_evalcon h0
-  -- | record : RecordCon R → EvalCon (fun e => .record (R e))
-  -- | applicator e' : EvalCon E → EvalCon (fun e => .app (E e) e')
-  -- | applicand f : EvalCon E → EvalCon (fun e => .app (.function f) (E e))
-  -- | loopy : EvalCon E → EvalCon (fun e => Expr.loop (E e))
-  | _ => sorry
-  termination_by sizeOf evalcon
-  decreasing_by sorry
+  theorem Safe.rcon_preservation
+    (rcon : RecordCon R)
+    (safe_econ : Safe (.record (R e)))
+  : Safe e' → Safe (.record (R e'))
+  := by sorry
 
-  -- inductive RecordCon : (Expr → List (String × Expr)) → Prop
-  -- | head l r :  EvalCon E → RecordCon (fun e => (l, E e) :: r)
-  -- | tail l :
-  --     RecordCon R →
-  --     Expr.is_value ev →
-  --     RecordCon (fun e => (l,ev) :: (R e))
+  -- inductive RecSafe : List (String × Expr) → Prop
+  -- | nil : RecSafe []
+  -- | cons l e r :
+  --   List.is_fresh_key l r → Safe e →
+  --   RecSafe r → RecSafe ((l,e)::r)
+
+  theorem Safe.evalcon_preservation
+    (econ : EvalCon E)
+    (safe_econ : Safe (E e))
+    (safe : Safe e')
+  : Safe (E e')
+  /- TODO : induct on safe -/
+  := by cases safe with
+  | convergent e cvg =>
+    exact convergent_swap econ safe_econ cvg
+  | iso l body safe_body =>
+    have econ' := EvalCon.iso l .hole
+    apply Safe.econ_swap econ' econ
+    apply Safe.iso l (E body)
+    apply Safe.evalcon_preservation econ safe_econ safe_body
+    -- : Safe body → Safe (.iso l body)
+  -- | record r : RecSafe r → Safe (.record r)
+  -- | function f : Safe (.function f)
+  -- | app e e' : Safe e → Safe e' → Safe (.app e e')
+  -- | loop e : Divergent (.loop e) → Safe (.loop e)
+  | _ => sorry
 
 theorem Safe.evalcon_reflection :
   EvalCon E →
