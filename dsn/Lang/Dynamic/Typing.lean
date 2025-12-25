@@ -94,8 +94,8 @@ mutual
     intro h0
     apply Typing.subject_reduction
     {
-      have evalcon := EvalCon.extract label .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.extract label .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -104,8 +104,8 @@ mutual
     intro h0
     apply Typing.subject_reduction
     {
-      have evalcon := EvalCon.project label .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.project label .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -116,8 +116,8 @@ mutual
     specialize h0 e'' h1
     apply Typing.subject_reduction
     {
-      have evalcon := EvalCon.applicator e'' .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.applicator e'' .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -201,8 +201,8 @@ mutual
     intro h0
     apply Typing.subject_expansion
     {
-      have evalcon := EvalCon.extract label .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.extract label .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -211,8 +211,8 @@ mutual
     intro h0
     apply Typing.subject_expansion
     {
-      have evalcon := EvalCon.project label .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.project label .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -223,8 +223,8 @@ mutual
     specialize h0 e'' h1
     apply Typing.subject_expansion
     {
-      have evalcon := EvalCon.applicator e'' .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.applicator e'' .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -617,14 +617,14 @@ theorem Typing.soundness
 | iso label body =>
   unfold Typing at typing
   have ih := Typing.soundness typing
-  apply Safe.evalcon_reflection
+  apply Safe.econ_reflection
   { apply EvalCon.extract label .hole }
   { exact ih }
 
 | entry label body =>
   unfold Typing at typing
   have ih := Typing.soundness typing
-  apply Safe.evalcon_reflection
+  apply Safe.econ_reflection
   { apply EvalCon.project label .hole }
   { exact ih }
 
@@ -966,7 +966,7 @@ theorem Expr.sub_sub_removal :
 --     Typing am (E e) t →
 --     Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t
 --   :=
---   /- TODO: rewrite by leveraging evalcon_swap and typing subject expansion ; instead of inducting directly -/
+--   /- TODO: rewrite by leveraging econ_swap and typing subject expansion ; instead of inducting directly -/
 --   match t with
 --   | .bot => by
 --     unfold Typing
@@ -1095,7 +1095,7 @@ theorem Divergent.transition :
   ∃ e' , Transition e e' ∧ Divergent e'
 := by sorry
 
-theorem Divergent.evalcon_preservation :
+theorem Divergent.econ_preservation :
   EvalCon E →
   Divergent e →
   Divergent (E e)
@@ -1112,7 +1112,7 @@ theorem Divergent.evalcon_preservation :
     specialize h1 e (TransitionStar.refl e)
     have ⟨e', h3⟩ := h1
     exists (E e')
-    exact Transition.evalcon h0 h3
+    exact Transition.econ h0 h3
 
   | step eg em e' h4 h5 ih =>
 
@@ -1123,14 +1123,14 @@ theorem Divergent.evalcon_preservation :
     have ⟨et, h6,h7⟩ := h1
     apply ih h7
     apply Transition.deterministic
-    { exact Transition.evalcon h0 h6 }
+    { exact Transition.econ h0 h6 }
     { exact h4 }
 
 
 
 
-theorem FinTyping.evalcon_swap
-  (evalcon : EvalCon E)
+theorem FinTyping.econ_swap
+  (econ : EvalCon E)
   (typing : Typing am e t)
   (typing' : Typing am e' t)
 : FinTyping (E e) t' → FinTyping (E e') t'
@@ -1141,28 +1141,28 @@ theorem FinTyping.evalcon_swap
 
 | top =>
   unfold FinTyping
-  intro typing_evalcon
+  intro typing_econ
   apply Typing.soundness at typing'
-  exact Safe.evalcon_preservation evalcon typing_evalcon typing'
+  exact Safe.econ_preservation econ typing_econ typing'
 
 | iso label body =>
   unfold FinTyping
-  apply EvalCon.extract label at evalcon
-  intro typing_evalcon
-  apply FinTyping.evalcon_swap  evalcon typing typing' typing_evalcon
+  apply EvalCon.extract label at econ
+  intro typing_econ
+  apply FinTyping.econ_swap  econ typing typing' typing_econ
 
 
 | entry label body =>
   unfold FinTyping
-  apply EvalCon.project label at evalcon
-  intro typing_evalcon
-  apply FinTyping.evalcon_swap evalcon typing typing' typing_evalcon
+  apply EvalCon.project label at econ
+  intro typing_econ
+  apply FinTyping.econ_swap econ typing typing' typing_econ
 
 | path left right =>
   unfold FinTyping
   intro h4 e' h5
-  apply EvalCon.applicator e' at evalcon
-  apply FinTyping.evalcon_swap evalcon typing typing' (h4 e' h5)
+  apply EvalCon.applicator e' at econ
+  apply FinTyping.econ_swap econ typing typing' (h4 e' h5)
 
 
 | unio left right =>
@@ -1171,18 +1171,18 @@ theorem FinTyping.evalcon_swap
   cases h4 with
   | inl h5 =>
     apply Or.inl
-    apply FinTyping.evalcon_swap evalcon typing typing' h5
+    apply FinTyping.econ_swap econ typing typing' h5
   | inr h5 =>
     apply Or.inr
-    apply FinTyping.evalcon_swap evalcon typing typing' h5
+    apply FinTyping.econ_swap econ typing typing' h5
 
 | inter left right =>
   unfold FinTyping
   intro h4
   have ⟨h5,h6⟩ := h4
   apply And.intro
-  { apply FinTyping.evalcon_swap evalcon typing typing' h5 }
-  { apply FinTyping.evalcon_swap evalcon typing typing' h6 }
+  { apply FinTyping.econ_swap econ typing typing' h5 }
+  { apply FinTyping.econ_swap econ typing typing' h6 }
 
 | diff left right =>
   unfold FinTyping
@@ -1190,20 +1190,20 @@ theorem FinTyping.evalcon_swap
   have ⟨h5,h6⟩ := h4
   clear h4
   apply And.intro
-  { apply FinTyping.evalcon_swap evalcon typing typing' h5 }
+  { apply FinTyping.econ_swap econ typing typing' h5 }
   {
     intro h7
     apply h6
     clear h6
-    apply FinTyping.evalcon_swap evalcon typing' typing h7
+    apply FinTyping.econ_swap econ typing' typing h7
   }
 | _ =>
   unfold FinTyping
   simp
 
 
-theorem Typing.evalcon_swap
-  (evalcon : EvalCon E)
+theorem Typing.econ_swap
+  (econ : EvalCon E)
   (typing : Typing am e t)
   (typing' : Typing am e' t)
 : Typing am' (E e) t' →  Typing am' (E e') t'
@@ -1214,28 +1214,28 @@ theorem Typing.evalcon_swap
 
 | top =>
   unfold Typing
-  intro typing_evalcon
+  intro typing_econ
   apply Typing.soundness at typing'
-  exact Safe.evalcon_preservation evalcon typing_evalcon typing'
+  exact Safe.econ_preservation econ typing_econ typing'
 
 | iso label body =>
   unfold Typing
-  apply EvalCon.extract label at evalcon
-  intro typing_evalcon
-  apply Typing.evalcon_swap  evalcon typing typing' typing_evalcon
+  apply EvalCon.extract label at econ
+  intro typing_econ
+  apply Typing.econ_swap  econ typing typing' typing_econ
 
 
 | entry label body =>
   unfold Typing
-  apply EvalCon.project label at evalcon
-  intro typing_evalcon
-  apply Typing.evalcon_swap evalcon typing typing' typing_evalcon
+  apply EvalCon.project label at econ
+  intro typing_econ
+  apply Typing.econ_swap econ typing typing' typing_econ
 
 | path left right =>
   unfold Typing
   intro h4 e' h5
-  apply EvalCon.applicator e' at evalcon
-  apply Typing.evalcon_swap evalcon typing typing' (h4 e' h5)
+  apply EvalCon.applicator e' at econ
+  apply Typing.econ_swap econ typing typing' (h4 e' h5)
 
 
 | unio left right =>
@@ -1244,18 +1244,18 @@ theorem Typing.evalcon_swap
   cases h4 with
   | inl h5 =>
     apply Or.inl
-    apply Typing.evalcon_swap evalcon typing typing' h5
+    apply Typing.econ_swap econ typing typing' h5
   | inr h5 =>
     apply Or.inr
-    apply Typing.evalcon_swap evalcon typing typing' h5
+    apply Typing.econ_swap econ typing typing' h5
 
 | inter left right =>
   unfold Typing
   intro h4
   have ⟨h5,h6⟩ := h4
   apply And.intro
-  { apply Typing.evalcon_swap evalcon typing typing' h5 }
-  { apply Typing.evalcon_swap evalcon typing typing' h6 }
+  { apply Typing.econ_swap econ typing typing' h5 }
+  { apply Typing.econ_swap econ typing typing' h6 }
 
 | diff left right =>
   unfold Typing
@@ -1263,12 +1263,12 @@ theorem Typing.evalcon_swap
   have ⟨h5,h6⟩ := h4
   clear h4
   apply And.intro
-  { apply Typing.evalcon_swap evalcon typing typing' h5 }
+  { apply Typing.econ_swap econ typing typing' h5 }
   {
     intro h7
     apply h6
     clear h6
-    apply Typing.evalcon_swap evalcon typing' typing h7
+    apply Typing.econ_swap econ typing' typing h7
   }
 | exi ids quals body =>
   unfold Typing
@@ -1278,14 +1278,14 @@ theorem Typing.evalcon_swap
   exists am'
   apply And.intro h5
   apply And.intro h6
-  apply Typing.evalcon_swap evalcon typing typing' h7
+  apply Typing.econ_swap econ typing typing' h7
 | all ids quals body =>
   unfold Typing
   intro ⟨h4,h5⟩
   apply And.intro
   {
     intro am'' h6 h7
-    apply Typing.evalcon_swap evalcon typing typing' (h4 am'' h6 h7)
+    apply Typing.econ_swap econ typing typing' (h4 am'' h6 h7)
   }
   { exact h5 }
 | lfp id body =>
@@ -1296,14 +1296,14 @@ theorem Typing.evalcon_swap
   exists t''
   exists h6
   apply And.intro h7
-  apply Typing.evalcon_swap evalcon typing typing' h8
+  apply Typing.econ_swap econ typing typing' h8
 | var id =>
   unfold Typing
   intro h4
   have ⟨t',h5,h6⟩ := h4
   clear h4
   simp [*]
-  apply FinTyping.evalcon_swap evalcon typing typing' h6
+  apply FinTyping.econ_swap econ typing typing' h6
 
 
 
@@ -1320,12 +1320,12 @@ theorem Typing.record_beta_expansion l :
 := by
   intro h0
   have ⟨ev, h1, h2⟩ := Typing.exists_value h0
-  have evalcon : EvalCon (fun e => (Expr.project (Expr.record [(l, e)]) l)) := by
+  have econ : EvalCon (fun e => (Expr.project (Expr.record [(l, e)]) l)) := by
     apply EvalCon.project
     apply EvalCon.record
     apply RecordCon.head
     apply EvalCon.hole
-  apply Typing.evalcon_swap evalcon h2 h0
+  apply Typing.econ_swap econ h2 h0
   { apply Typing.subject_expansion
     {
       unfold Expr.project
@@ -1386,7 +1386,7 @@ theorem Typing.function_beta_expansion f :
   intro h0 h1
   have ⟨v, h5, h6⟩ := Typing.exists_value h1
 
-  apply Typing.evalcon_swap (EvalCon.applicand ((p, e) :: f) .hole) h6 h1
+  apply Typing.econ_swap (EvalCon.applicand ((p, e) :: f) .hole) h6 h1
   specialize h0 h5 h6
   have ⟨eam,h7,h8⟩ := h0
   apply Typing.subject_expansion

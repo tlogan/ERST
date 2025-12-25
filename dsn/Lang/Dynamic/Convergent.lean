@@ -26,14 +26,14 @@ mutual
 end
 
 
-theorem Convergent.evalcon_reflection :
+theorem Convergent.econ_reflection :
   EvalCon E →
   Convergent (E e) →
   Convergent e
 := by
   sorry
 
-theorem Convergent.evalcon_preservation :
+theorem Convergent.econ_preservation :
   EvalCon E → Convergent (E e) →
   Convergent e' → Convergent (E e')
 := by sorry

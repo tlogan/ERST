@@ -87,7 +87,7 @@ mutual
     Transition
       (.loop (.function [(.var id, e)]))
       (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
-  | evalcon :
+  | econ :
       EvalCon E → Transition e e' →
       Transition (E e) (E e')
 end

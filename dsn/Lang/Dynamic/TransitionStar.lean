@@ -13,8 +13,8 @@ inductive TransitionStar : Expr → Expr → Prop
 
 
 
-theorem TransitionStar.evalcon_preservation
-  (evalcon : EvalCon E)
+theorem TransitionStar.econ_preservation
+  (econ : EvalCon E)
   (transition_star : TransitionStar e e')
 : TransitionStar (E e) (E e')
 := by induction transition_star with
@@ -22,7 +22,7 @@ theorem TransitionStar.evalcon_preservation
   exact refl (E e)
 | step e e' e'' h0 h1 ih =>
   apply TransitionStar.step
-  { exact Transition.evalcon evalcon h0 }
+  { exact Transition.econ econ h0 }
   { exact ih }
 
 

@@ -69,7 +69,7 @@ mutual
   --   List.is_fresh_key l r → Safe e →
   --   RecSafe r → RecSafe ((l,e)::r)
 
-  theorem Safe.evalcon_preservation
+  theorem Safe.econ_preservation
     (econ : EvalCon E)
     (safe_econ : Safe (E e))
     (safe : Safe e')
@@ -82,7 +82,7 @@ mutual
     have econ' := EvalCon.iso l .hole
     apply Safe.econ_swap econ' econ
     apply Safe.iso l (E body)
-    apply Safe.evalcon_preservation econ safe_econ safe_body
+    apply Safe.econ_preservation econ safe_econ safe_body
     -- : Safe body → Safe (.iso l body)
   -- | record r : RecSafe r → Safe (.record r)
   -- | function f : Safe (.function f)
@@ -90,7 +90,7 @@ mutual
   -- | loop e : Divergent (.loop e) → Safe (.loop e)
   | _ => sorry
 
-theorem Safe.evalcon_reflection :
+theorem Safe.econ_reflection :
   EvalCon E →
   Safe (E e) →
   Safe e

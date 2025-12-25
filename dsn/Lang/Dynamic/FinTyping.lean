@@ -43,8 +43,8 @@ mutual
     intro h0
     apply FinTyping.subject_reduction
     {
-      have evalcon := EvalCon.extract label .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.extract label .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -53,8 +53,8 @@ mutual
     intro h0
     apply FinTyping.subject_reduction
     {
-      have evalcon := EvalCon.project label .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.project label .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -65,8 +65,8 @@ mutual
     specialize h0 e'' h1
     apply FinTyping.subject_reduction
     {
-      have evalcon := EvalCon.applicator e'' .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.applicator e'' .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -119,8 +119,8 @@ mutual
     intro h0
     apply FinTyping.subject_expansion
     {
-      have evalcon := EvalCon.extract label .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.extract label .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -129,8 +129,8 @@ mutual
     intro h0
     apply FinTyping.subject_expansion
     {
-      have evalcon := EvalCon.project label .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.project label .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -141,8 +141,8 @@ mutual
     specialize h0 e'' h1
     apply FinTyping.subject_expansion
     {
-      have evalcon := EvalCon.applicator e'' .hole
-      apply Transition.evalcon evalcon transition
+      have econ := EvalCon.applicator e'' .hole
+      apply Transition.econ econ transition
     }
     { exact h0 }
 
@@ -236,14 +236,14 @@ theorem FinTyping.soundness
 | iso label body =>
   unfold FinTyping at typing
   have ih := FinTyping.soundness typing
-  apply Safe.evalcon_reflection
+  apply Safe.econ_reflection
   { apply EvalCon.extract label .hole }
   { exact ih }
 
 | entry label body =>
   unfold FinTyping at typing
   have ih := FinTyping.soundness typing
-  apply Safe.evalcon_reflection
+  apply Safe.econ_reflection
   { apply EvalCon.project label .hole }
   { exact ih }
 

@@ -28,7 +28,7 @@ mutual
 
 end
 
-theorem Divergent.evalcon_reflection :
+theorem Divergent.econ_reflection :
   EvalCon E →
   Divergent (E e) →
   Divergent e
