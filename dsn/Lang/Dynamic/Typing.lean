@@ -4,6 +4,7 @@ import Lang.Dynamic.Transition
 import Lang.Dynamic.TransitionStar
 import Lang.Dynamic.Convergent
 import Lang.Dynamic.Divergent
+import Lang.Dynamic.Sound
 import Lang.Dynamic.FinTyping
 
 set_option pp.fieldNotation false
@@ -37,7 +38,7 @@ mutual
 
   def Typing (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
-  | .top => Convergent e ∨ Divergent e
+  | .top => Sound e
   | .iso l t => Typing am (.extract e l) t
   | .entry l t => Typing am (.project e l) t
   | .path left right => ∀ e' , Typing am e' left → Typing am (.app e e') right
@@ -86,13 +87,7 @@ mutual
   | top =>
     unfold Typing
     intro h0
-    cases h0 with
-    | inl h2 =>
-      apply Or.inl
-      exact Convergent.subject_reduction transition h2
-    | inr h2 =>
-      apply Or.inr
-      exact Divergent.subject_reduction transition h2
+    exact Sound.subject_reduction transition h0
 
   | iso label body =>
     unfold Typing
@@ -199,13 +194,7 @@ mutual
   | top =>
     unfold Typing
     intro h0
-    cases h0 with
-    | inl h2 =>
-      apply Or.inl
-      exact Convergent.subject_expansion transition h2
-    | inr h2 =>
-      apply Or.inr
-      exact Divergent.subject_expansion transition h2
+    exact Sound.subject_expansion transition h0
 
   | iso label body =>
     unfold Typing
@@ -594,12 +583,8 @@ theorem Typing.empty_record_top am :
   Typing am (Expr.record []) Typ.top
 := by
   unfold Typing
-  unfold Convergent
-  apply Or.inl
-  exists Expr.record []
-  apply And.intro
-  { exact TransitionStar.refl (Expr.record []) }
-  { exact rfl }
+  apply Sound.record
+  apply RecSound.nil
 
 theorem Typing.inter_entry_intro {am l e r body t} :
   Typing am e body →
@@ -617,9 +602,9 @@ theorem Typing.path_determines_function
 
 
 
-theorem Typing.convergent_or_divergent
+theorem Typing.soundness
   (typing : Typing am e t)
-: Convergent e ∨ Divergent e
+: Sound e
 := by cases t with
 | bot =>
   unfold Typing at typing
@@ -631,38 +616,22 @@ theorem Typing.convergent_or_divergent
 
 | iso label body =>
   unfold Typing at typing
-  have ih := Typing.convergent_or_divergent typing
-  cases ih with
-  | inl h =>
-    apply Or.inl
-    apply Convergent.evalcon_reflection
-    { apply EvalCon.extract label .hole }
-    { exact h }
-  | inr h =>
-    apply Or.inr
-    apply Divergent.evalcon_reflection
-    { apply EvalCon.extract label .hole }
-    { exact h }
+  have ih := Typing.soundness typing
+  apply Sound.evalcon_reflection
+  { apply EvalCon.extract label .hole }
+  { exact ih }
 
 | entry label body =>
   unfold Typing at typing
-  have ih := Typing.convergent_or_divergent typing
-  cases ih with
-  | inl h =>
-    apply Or.inl
-    apply Convergent.evalcon_reflection
-    { apply EvalCon.project label .hole }
-    { exact h }
-  | inr h =>
-    apply Or.inr
-    apply Divergent.evalcon_reflection
-    { apply EvalCon.project label .hole }
-    { exact h }
+  have ih := Typing.soundness typing
+  apply Sound.evalcon_reflection
+  { apply EvalCon.project label .hole }
+  { exact ih }
 
 | path left right =>
   apply Typing.path_determines_function at typing
   have ⟨f, h0⟩ := typing
-  apply Or.inl
+  apply Sound.convergent
   unfold Convergent
   exists (.function f)
 
@@ -671,39 +640,40 @@ theorem Typing.convergent_or_divergent
   unfold Typing at typing
   cases typing with
   | inl h =>
-    apply Typing.convergent_or_divergent h
+    apply Typing.soundness h
   | inr h =>
-    apply Typing.convergent_or_divergent h
+    apply Typing.soundness h
 
 | inter left right =>
   unfold Typing at typing
   have ⟨h0,h1⟩ := typing
-  apply Typing.convergent_or_divergent h0
+  apply Typing.soundness h0
 
 | diff left right =>
   unfold Typing at typing
   have ⟨h0,h1⟩ := typing
-  apply Typing.convergent_or_divergent h0
+  apply Typing.soundness h0
 
 | exi ids quals body =>
   unfold Typing at typing
   have ⟨am',h0,h1,h2⟩ := typing
-  apply Typing.convergent_or_divergent h2
+  apply Typing.soundness h2
+
 | all ids quals body =>
   unfold Typing at typing
   have ⟨h0,am',h1,h2⟩ := typing
   specialize h0 am' h1 h2
-  apply Typing.convergent_or_divergent h0
+  apply Typing.soundness h0
 
 | lfp id body =>
   unfold Typing at typing
   have ⟨monotonic, t, lt_size, h0,h1⟩ := typing
-  apply Typing.convergent_or_divergent h1
+  apply Typing.soundness h1
 
 | var id =>
   unfold Typing at typing
   have ⟨t, h0,h2⟩ := typing
-  exact FinTyping.convergent_or_divergent h2
+  exact FinTyping.soundness h2
 
 
 theorem Expr.sub_sub_removal :
@@ -1174,7 +1144,6 @@ theorem FinTyping.evalcon_swap
   intro typing_evalcon
   /- TODO -/
   sorry
-  -- apply Typing.convergent_or_divergent at typing'
 
 | iso label body =>
   unfold FinTyping
@@ -1246,7 +1215,11 @@ theorem Typing.evalcon_swap
 | top =>
   unfold Typing
   intro typing_evalcon
-  /- TODO -/
+  /- TODO
+  -- need a stronger definition of divergent
+  -- require that every subexpressions is divergent or convergent
+  - ∄ sub expr e' in e such that ¬ CVG e' AND ¬ DVG e'
+  -/
   sorry
   -- apply Typing.convergent_or_divergent at typing'
 
