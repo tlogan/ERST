@@ -16,11 +16,13 @@ mutual
 
   inductive EvalCon : (Expr → Expr) → Prop
   | hole : EvalCon (fun e => e)
+  | iso l : EvalCon E -> EvalCon (fun e => .iso l (E e))
   | record : RecordCon R → EvalCon (fun e => .record (R e))
   | applicator e' : EvalCon E → EvalCon (fun e => .app (E e) e')
   | applicand f : EvalCon E → EvalCon (fun e => .app (.function f) (E e))
   | loopy : EvalCon E → EvalCon (fun e => Expr.loop (E e))
 end
+
 
 
 -- mutual
@@ -77,6 +79,10 @@ theorem EvalCon.extract l
   simp
   apply EvalCon.applicand
   apply EvalCon.hole
+| iso l econ =>
+  simp
+  apply EvalCon.applicand
+  exact iso l econ
 | record rcon =>
   simp
   apply EvalCon.applicand
@@ -102,6 +108,10 @@ theorem EvalCon.project l
   simp
   apply EvalCon.applicand
   apply EvalCon.hole
+| iso l econ =>
+  simp
+  apply EvalCon.applicand
+  exact iso l econ
 | record rcon =>
   simp
   apply EvalCon.applicand

@@ -4,14 +4,14 @@ import Lang.Dynamic.Transition
 import Lang.Dynamic.TransitionStar
 import Lang.Dynamic.Convergent
 import Lang.Dynamic.Divergent
-import Lang.Dynamic.Sound
+import Lang.Dynamic.Safe
 
 set_option pp.fieldNotation false
 
 namespace Lang.Dynamic
 
 def FinTyping (e : Expr) : Typ → Prop
-| .top => Sound e
+| .top => Safe e
 | .iso l body => FinTyping (.extract e l) body
 | .entry l body => FinTyping (.project e l) body
 | .path left right => ∀ e' , FinTyping e' left → FinTyping (.app e e') right
@@ -36,7 +36,7 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    exact Sound.subject_reduction transition h0
+    exact Safe.subject_reduction transition h0
 
   | iso label body =>
     unfold FinTyping
@@ -112,7 +112,7 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    exact Sound.subject_expansion transition h0
+    exact Safe.subject_expansion transition h0
 
   | iso label body =>
     unfold FinTyping
@@ -223,7 +223,7 @@ theorem FinTyping.path_determines_function
 
 theorem FinTyping.soundness
   (typing : FinTyping e t)
-: Sound e
+: Safe e
 := by cases t with
 | bot =>
   unfold FinTyping at typing
@@ -236,14 +236,14 @@ theorem FinTyping.soundness
 | iso label body =>
   unfold FinTyping at typing
   have ih := FinTyping.soundness typing
-  apply Sound.evalcon_reflection
+  apply Safe.evalcon_reflection
   { apply EvalCon.extract label .hole }
   { exact ih }
 
 | entry label body =>
   unfold FinTyping at typing
   have ih := FinTyping.soundness typing
-  apply Sound.evalcon_reflection
+  apply Safe.evalcon_reflection
   { apply EvalCon.project label .hole }
   { exact ih }
 
@@ -251,7 +251,7 @@ theorem FinTyping.soundness
 | path left right =>
   apply FinTyping.path_determines_function at typing
   have ⟨f, h0⟩ := typing
-  apply Sound.convergent
+  apply Safe.convergent
   unfold Convergent
   exists (.function f)
 
