@@ -217,84 +217,7 @@ end
 -- end
 
 
-mutual
-  theorem FinTyping.record_beta_reduction :
-    EvalCon E →
-    FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t →
-    FinTyping (E e) t
-  := by
-    sorry
 
-  theorem FinTyping.record_beta_expansion l :
-    EvalCon E →
-    FinTyping (E e) t →
-    FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t
-  := by cases t with
-  | top =>
-    unfold FinTyping
-    intro h0 h1
-    cases h1 with
-    | inl h2 =>
-      apply Or.inl
-      sorry
-      -- exact Convergent.record_beta_expansion h0 h2
-    | inr h2 =>
-      apply Or.inr
-      sorry
-      -- exact Divergent.record_beta_expansion h0 h2
-  | iso label body =>
-    intro h0 h1
-    apply EvalCon.extract label at h0
-    apply FinTyping.record_beta_expansion l h0 h1
-
-  | entry label body =>
-    intro h0 h1
-    apply EvalCon.project label at h0
-    apply FinTyping.record_beta_expansion l h0 h1
-
-  | path left right =>
-    intro h0 h1 e' h2
-    specialize h1 e' h2
-    apply EvalCon.applicator e' at h0
-    apply FinTyping.record_beta_expansion l h0 h1
-
-
-  | unio left right =>
-    intro h0 h1
-    cases h1 with
-    | inl h1 =>
-      have ih := FinTyping.record_beta_expansion l h0 h1
-      exact Or.inl ih
-    | inr h1 =>
-      have ih := FinTyping.record_beta_expansion l h0 h1
-      exact Or.inr ih
-
-  | inter left right =>
-    intro h0 h1
-    unfold FinTyping at h1
-    have ⟨h2,h3⟩ := h1
-    apply And.intro
-    { apply FinTyping.record_beta_expansion l h0 h2 }
-    { apply FinTyping.record_beta_expansion l h0 h3 }
-
-  | diff left right =>
-    intro h0 h1
-    unfold FinTyping at h1
-    have ⟨h2,h3⟩ := h1
-    apply And.intro
-    { apply FinTyping.record_beta_expansion l h0 h2 }
-    {
-      intro h4
-      apply h3
-
-      apply FinTyping.record_beta_reduction h0 h4
-    }
-
-  | _ =>
-    intro h0 h1
-    unfold FinTyping at h1
-    exact h1
-end
 
 
 
@@ -371,28 +294,196 @@ theorem FinTyping.soundness
   exact False.elim typing
 
 
-
-mutual
-  theorem FinTyping.function_beta_reduction :
-    (∀ {ev} ,
-      Expr.is_value ev → FinTyping ev tp →
-      ∃ eam , Expr.pattern_match ev p = .some eam ∧ FinTyping (Expr.sub eam e) tr
-    ) →
-    FinTyping (Expr.app (Expr.function ((p, e) :: f)) e') tr →
-    FinTyping e' tp
-  := by sorry
-
-  theorem FinTyping.function_beta_expansion f :
-    (∀ {ev} ,
-      Expr.is_value ev → FinTyping ev tp →
-      ∃ eam , Expr.pattern_match ev p = .some eam ∧ FinTyping (Expr.sub eam e) tr
-    ) →
-    FinTyping e' tp →
-    FinTyping (Expr.app (Expr.function ((p, e) :: f)) e') tr
-  := by sorry
-end
+theorem FinTyping.swap_safe_preservation
+  (econ : EvalCon E)
+  (typing : FinTyping e t)
+  (typing' : FinTyping e' t)
+  (cod : Convergent (E e') ∨ Divergent (E e'))
+: FinTyping (E e) t' → FinTyping (E e') t'
+:= by sorry
 
 
+theorem FinTyping.value_swap_preservation
+  (econ : EvalCon E)
+  (isval : Expr.is_value e)
+  (typing : FinTyping e t)
+  (typing' : FinTyping e' t)
+: FinTyping (E e) t' → FinTyping (E e') t'
+:= by cases t' with
+| bot =>
+  unfold FinTyping
+  simp
+
+| top =>
+  unfold FinTyping
+  intro typing_econ
+  apply FinTyping.soundness at typing'
+  -- exact Safe.econ_preservation econ typing_econ typing'
+  sorry
+
+| iso label body =>
+  unfold FinTyping
+  apply EvalCon.extract label at econ
+  intro typing_econ
+  apply FinTyping.value_swap_preservation econ isval typing typing' typing_econ
+
+
+| entry label body =>
+  unfold FinTyping
+  apply EvalCon.project label at econ
+  intro typing_econ
+  apply FinTyping.value_swap_preservation econ isval typing typing' typing_econ
+
+| path left right =>
+  unfold FinTyping
+  intro h4 e' h5
+  apply EvalCon.applicator e' at econ
+  apply FinTyping.value_swap_preservation econ isval typing typing' (h4 e' h5)
+
+
+| unio left right =>
+  unfold FinTyping
+  intro h4
+  cases h4 with
+  | inl h5 =>
+    apply Or.inl
+    apply FinTyping.value_swap_preservation econ isval typing typing' h5
+  | inr h5 =>
+    apply Or.inr
+    apply FinTyping.value_swap_preservation econ isval typing typing' h5
+
+| inter left right =>
+  unfold FinTyping
+  intro h4
+  have ⟨h5,h6⟩ := h4
+  apply And.intro
+  { apply FinTyping.value_swap_preservation econ isval typing typing' h5 }
+  { apply FinTyping.value_swap_preservation econ isval typing typing' h6 }
+
+| diff left right =>
+  unfold FinTyping
+  intro h4
+  have ⟨h5,h6⟩ := h4
+  clear h4
+
+  apply And.intro
+  { apply FinTyping.value_swap_preservation econ isval typing typing' h5 }
+  {
+    intro h7
+    apply h6
+    clear h6
+
+    apply FinTyping.swap_safe_preservation
+    { exact econ }
+    { exact typing' }
+    { exact typing }
+    { exact soundness h5 }
+    { exact h7 }
+  }
+| _ =>
+  unfold FinTyping
+  simp
+
+
+
+-- mutual
+--   theorem FinTyping.function_beta_reduction :
+--     (∀ {ev} ,
+--       Expr.is_value ev → FinTyping ev tp →
+--       ∃ eam , Expr.pattern_match ev p = .some eam ∧ FinTyping (Expr.sub eam e) tr
+--     ) →
+--     FinTyping (Expr.app (Expr.function ((p, e) :: f)) e') tr →
+--     FinTyping e' tp
+--   := by sorry
+
+--   theorem FinTyping.function_beta_expansion f :
+--     (∀ {ev} ,
+--       Expr.is_value ev → FinTyping ev tp →
+--       ∃ eam , Expr.pattern_match ev p = .some eam ∧ FinTyping (Expr.sub eam e) tr
+--     ) →
+--     FinTyping e' tp →
+--     FinTyping (Expr.app (Expr.function ((p, e) :: f)) e') tr
+--   := by sorry
+-- end
+
+-- mutual
+--   theorem FinTyping.record_beta_reduction :
+--     EvalCon E →
+--     FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t →
+--     FinTyping (E e) t
+--   := by
+--     sorry
+
+--   theorem FinTyping.record_beta_expansion l :
+--     EvalCon E →
+--     FinTyping (E e) t →
+--     FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t
+--   := by cases t with
+--   | top =>
+--     unfold FinTyping
+--     intro h0 h1
+--     cases h1 with
+--     | inl h2 =>
+--       apply Or.inl
+--       sorry
+--       -- exact Convergent.record_beta_expansion h0 h2
+--     | inr h2 =>
+--       apply Or.inr
+--       sorry
+--       -- exact Divergent.record_beta_expansion h0 h2
+--   | iso label body =>
+--     intro h0 h1
+--     apply EvalCon.extract label at h0
+--     apply FinTyping.record_beta_expansion l h0 h1
+
+--   | entry label body =>
+--     intro h0 h1
+--     apply EvalCon.project label at h0
+--     apply FinTyping.record_beta_expansion l h0 h1
+
+--   | path left right =>
+--     intro h0 h1 e' h2
+--     specialize h1 e' h2
+--     apply EvalCon.applicator e' at h0
+--     apply FinTyping.record_beta_expansion l h0 h1
+
+
+--   | unio left right =>
+--     intro h0 h1
+--     cases h1 with
+--     | inl h1 =>
+--       have ih := FinTyping.record_beta_expansion l h0 h1
+--       exact Or.inl ih
+--     | inr h1 =>
+--       have ih := FinTyping.record_beta_expansion l h0 h1
+--       exact Or.inr ih
+
+--   | inter left right =>
+--     intro h0 h1
+--     unfold FinTyping at h1
+--     have ⟨h2,h3⟩ := h1
+--     apply And.intro
+--     { apply FinTyping.record_beta_expansion l h0 h2 }
+--     { apply FinTyping.record_beta_expansion l h0 h3 }
+
+--   | diff left right =>
+--     intro h0 h1
+--     unfold FinTyping at h1
+--     have ⟨h2,h3⟩ := h1
+--     apply And.intro
+--     { apply FinTyping.record_beta_expansion l h0 h2 }
+--     {
+--       intro h4
+--       apply h3
+
+--       apply FinTyping.record_beta_reduction h0 h4
+--     }
+
+--   | _ =>
+--     intro h0 h1
+--     unfold FinTyping at h1
+--     exact h1
+-- end
 
 
 
