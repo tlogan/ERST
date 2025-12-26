@@ -39,4 +39,36 @@ theorem Convergent.econ_preservation :
 := by sorry
 
 
+
+mutual
+  theorem Convergent.record_beta_reduction :
+    EvalCon E →
+    Convergent (E (Expr.project (Expr.record [(l, e)]) l)) →
+    Convergent (E e)
+  := by sorry
+
+  theorem Convergent.record_beta_expansion l :
+    EvalCon E →
+    Convergent (E e) →
+    Convergent (E (Expr.project (Expr.record [(l, e)]) l))
+  := by sorry
+end
+
+mutual
+  theorem Convergent.function_beta_reduction
+    (econ : EvalCon E)
+    (matching : Expr.pattern_match ev p = .some eam)
+  : Convergent (E (Expr.app (Expr.function ((p, e) :: f)) ev)) →
+    Convergent (E (Expr.sub eam e))
+  := by sorry
+
+  theorem Convergent.function_beta_expansion f
+    (econ : EvalCon E)
+    (matching : Expr.pattern_match ev p = .some eam)
+  : Convergent (E (Expr.sub eam e)) →
+    Convergent (E (Expr.app (Expr.function ((p, e) :: f)) ev))
+  := by sorry
+end
+
+
 end Lang.Dynamic

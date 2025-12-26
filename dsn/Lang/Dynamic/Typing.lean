@@ -604,90 +604,90 @@ theorem Typing.path_determines_function
 
 
 
-theorem Typing.soundness
-  (typing : Typing am e t)
-: Convergent e ∨ Divergent e
-:= by cases t with
-| bot =>
-  unfold Typing at typing
-  exact False.elim typing
+-- theorem Typing.soundness
+--   (typing : Typing am e t)
+-- : Convergent e ∨ Divergent e
+-- := by cases t with
+-- | bot =>
+--   unfold Typing at typing
+--   exact False.elim typing
 
-| top =>
-  unfold Typing at typing
-  exact typing
+-- | top =>
+--   unfold Typing at typing
+--   exact typing
 
-| iso label body =>
-  unfold Typing at typing
-  have ih := Typing.soundness typing
-  cases ih with
-  | inl h0 =>
-    apply Or.inl
-    have econ := EvalCon.extract label .hole
-    apply Convergent.econ_reflection econ h0
-  | inr h0 =>
-    apply Or.inr
-    have econ := EvalCon.extract label .hole
-    apply Divergent.econ_reflection econ h0
+-- | iso label body =>
+--   unfold Typing at typing
+--   have ih := Typing.soundness typing
+--   cases ih with
+--   | inl h0 =>
+--     apply Or.inl
+--     have econ := EvalCon.extract label .hole
+--     apply Convergent.econ_reflection econ h0
+--   | inr h0 =>
+--     apply Or.inr
+--     have econ := EvalCon.extract label .hole
+--     apply Divergent.econ_reflection econ h0
 
-| entry label body =>
-  unfold Typing at typing
-  have ih := Typing.soundness typing
-  cases ih with
-  | inl h0 =>
-    apply Or.inl
-    have econ := EvalCon.project label .hole
-    apply Convergent.econ_reflection econ h0
-  | inr h0 =>
-    apply Or.inr
-    have econ := EvalCon.project label .hole
-    apply Divergent.econ_reflection econ h0
+-- | entry label body =>
+--   unfold Typing at typing
+--   have ih := Typing.soundness typing
+--   cases ih with
+--   | inl h0 =>
+--     apply Or.inl
+--     have econ := EvalCon.project label .hole
+--     apply Convergent.econ_reflection econ h0
+--   | inr h0 =>
+--     apply Or.inr
+--     have econ := EvalCon.project label .hole
+--     apply Divergent.econ_reflection econ h0
 
-| path left right =>
-  apply Typing.path_determines_function at typing
-  have ⟨f, h0⟩ := typing
-  apply Or.inl
-  unfold Convergent
-  exists (.function f)
+-- | path left right =>
+--   apply Typing.path_determines_function at typing
+--   have ⟨f, h0⟩ := typing
+--   apply Or.inl
+--   unfold Convergent
+--   exists (.function f)
 
 
-| unio left right =>
-  unfold Typing at typing
-  cases typing with
-  | inl h =>
-    apply Typing.soundness h
-  | inr h =>
-    apply Typing.soundness h
+-- | unio left right =>
+--   unfold Typing at typing
+--   cases typing with
+--   | inl h =>
+--     apply Typing.soundness h
+--   | inr h =>
+--     apply Typing.soundness h
 
-| inter left right =>
-  unfold Typing at typing
-  have ⟨h0,h1⟩ := typing
-  apply Typing.soundness h0
+-- | inter left right =>
+--   unfold Typing at typing
+--   have ⟨h0,h1⟩ := typing
+--   apply Typing.soundness h0
 
-| diff left right =>
-  unfold Typing at typing
-  have ⟨h0,h1⟩ := typing
-  apply Typing.soundness h0
+-- | diff left right =>
+--   unfold Typing at typing
+--   have ⟨h0,h1⟩ := typing
+--   apply Typing.soundness h0
 
-| exi ids quals body =>
-  unfold Typing at typing
-  have ⟨am',h0,h1,h2⟩ := typing
-  apply Typing.soundness h2
+-- | exi ids quals body =>
+--   unfold Typing at typing
+--   have ⟨am',h0,h1,h2⟩ := typing
+--   apply Typing.soundness h2
 
-| all ids quals body =>
-  unfold Typing at typing
-  have ⟨h0,am',h1,h2⟩ := typing
-  specialize h0 am' h1 h2
-  apply Typing.soundness h0
+-- | all ids quals body =>
+--   unfold Typing at typing
+--   have ⟨h0,am',h1,h2⟩ := typing
+--   specialize h0 am' h1 h2
+--   apply Typing.soundness h0
 
-| lfp id body =>
-  unfold Typing at typing
-  have ⟨monotonic, t, lt_size, h0,h1⟩ := typing
-  apply Typing.soundness h1
+-- | lfp id body =>
+--   unfold Typing at typing
+--   have ⟨monotonic, t, lt_size, h0,h1⟩ := typing
+--   apply Typing.soundness h1
 
-| var id =>
-  unfold Typing at typing
-  have ⟨t, h0,h2⟩ := typing
-  exact FinTyping.soundness h2
+-- | var id =>
+--   unfold Typing at typing
+--   have ⟨t, h0,h2⟩ := typing
+--   exact FinTyping.soundness h2
 
 
 theorem Expr.sub_sub_removal :
@@ -1109,36 +1109,36 @@ theorem Divergent.transition :
   ∃ e' , Transition e e' ∧ Divergent e'
 := by sorry
 
-theorem Divergent.econ_preservation :
-  EvalCon E →
-  Divergent e →
-  Divergent (E e)
-:= by
-  intro h0 h1 e' h2
-  generalize h3 : (E e) = eg at h1
-  rw [h3] at h2
-  revert e
+-- theorem Divergent.econ_preservation :
+--   EvalCon E →
+--   Divergent e →
+--   Divergent (E e)
+-- := by
+--   intro h0 h1 e' h2
+--   generalize h3 : (E e) = eg at h1
+--   rw [h3] at h2
+--   revert e
 
-  induction h2 with
-  | refl eg =>
-    intro e h1 h2
-    rw [← h2]
-    specialize h1 e (TransitionStar.refl e)
-    have ⟨e', h3⟩ := h1
-    exists (E e')
-    exact Transition.econ h0 h3
+--   induction h2 with
+--   | refl eg =>
+--     intro e h1 h2
+--     rw [← h2]
+--     specialize h1 e (TransitionStar.refl e)
+--     have ⟨e', h3⟩ := h1
+--     exists (E e')
+--     exact Transition.econ h0 h3
 
-  | step eg em e' h4 h5 ih =>
+--   | step eg em e' h4 h5 ih =>
 
-    intro e h1 h2
-    rw [← h2] at h4
-    clear h2
-    apply Divergent.transition at h1
-    have ⟨et, h6,h7⟩ := h1
-    apply ih h7
-    apply Transition.deterministic
-    { exact Transition.econ h0 h6 }
-    { exact h4 }
+--     intro e h1 h2
+--     rw [← h2] at h4
+--     clear h2
+--     apply Divergent.transition at h1
+--     have ⟨et, h6,h7⟩ := h1
+--     apply ih h7
+--     apply Transition.deterministic
+--     { exact Transition.econ h0 h6 }
+--     { exact h4 }
 
 mutual
   def List.pair_typ_sub (δ : List (String × Typ)) : List (Typ × Typ) → List (Typ × Typ)
@@ -1190,117 +1190,333 @@ theorem Typing.swap_safe_preservation
 := by sorry
 
 
-theorem Typing.value_swap_preservation
-  (econ : EvalCon E)
-  (isval : Expr.is_value e)
-  (typing : Typing am e t)
-  (typing' : Typing am e' t)
-: Typing am' (E e) t' →  Typing am' (E e') t'
-:= by cases t' with
-| bot =>
-  unfold Typing
-  simp
+-- theorem Typing.value_swap_preservation
+--   (econ : EvalCon E)
+--   (isval : Expr.is_value e)
+--   (typing : Typing am e t)
+--   (typing' : Typing am e' t)
+-- : Typing am' (E e) t' →  Typing am' (E e') t'
+-- := by cases t' with
+-- | bot =>
+--   unfold Typing
+--   simp
 
-| top =>
-  unfold Typing
-  intro typing_econ
-  apply Typing.soundness at typing'
-  sorry
-  -- exact Safe.econ_preservation econ typing_econ typing'
+-- | top =>
+--   unfold Typing
+--   intro typing_econ
+--   apply Typing.soundness at typing'
+--   sorry
+--   -- exact Safe.econ_preservation econ typing_econ typing'
 
-| iso label body =>
-  unfold Typing
-  apply EvalCon.extract label at econ
-  intro typing_econ
-  apply Typing.value_swap_preservation econ isval typing typing' typing_econ
-
-
-| entry label body =>
-  unfold Typing
-  apply EvalCon.project label at econ
-  intro typing_econ
-  apply Typing.value_swap_preservation econ isval typing typing' typing_econ
-
-| path left right =>
-  unfold Typing
-  intro h4 e' h5
-  apply EvalCon.applicator e' at econ
-  apply Typing.value_swap_preservation econ isval typing typing' (h4 e' h5)
+-- | iso label body =>
+--   unfold Typing
+--   apply EvalCon.extract label at econ
+--   intro typing_econ
+--   apply Typing.value_swap_preservation econ isval typing typing' typing_econ
 
 
-| unio left right =>
-  unfold Typing
-  intro h4
-  cases h4 with
-  | inl h5 =>
-    apply Or.inl
-    apply Typing.value_swap_preservation econ isval typing typing' h5
-  | inr h5 =>
-    apply Or.inr
-    apply Typing.value_swap_preservation econ isval typing typing' h5
+-- | entry label body =>
+--   unfold Typing
+--   apply EvalCon.project label at econ
+--   intro typing_econ
+--   apply Typing.value_swap_preservation econ isval typing typing' typing_econ
 
-| inter left right =>
-  unfold Typing
-  intro h4
-  have ⟨h5,h6⟩ := h4
-  apply And.intro
-  { apply Typing.value_swap_preservation econ isval typing typing' h5 }
-  { apply Typing.value_swap_preservation econ isval typing typing' h6 }
+-- | path left right =>
+--   unfold Typing
+--   intro h4 e' h5
+--   apply EvalCon.applicator e' at econ
+--   apply Typing.value_swap_preservation econ isval typing typing' (h4 e' h5)
 
-| diff left right =>
-  unfold Typing
-  intro h4
-  have ⟨h5,h6⟩ := h4
-  clear h4
-  apply And.intro
-  { apply Typing.value_swap_preservation econ isval typing typing' h5 }
-  {
-    intro h7
-    apply h6
-    clear h6
-    apply Typing.swap_safe_preservation
-    { exact econ }
-    { exact typing' }
-    { exact typing }
-    { exact soundness h5 }
-    { exact h7 }
-  }
-| exi ids quals body =>
-  unfold Typing
-  intro h4
-  have ⟨am',h5,h6,h7⟩ := h4
-  clear h4
-  exists am'
-  apply And.intro h5
-  apply And.intro h6
-  apply Typing.value_swap_preservation econ isval typing typing' h7
-| all ids quals body =>
-  unfold Typing
-  intro ⟨h4,h5⟩
-  apply And.intro
-  {
-    intro am'' h6 h7
-    apply Typing.value_swap_preservation econ isval typing typing' (h4 am'' h6 h7)
-  }
-  { exact h5 }
-| lfp id body =>
-  unfold Typing
-  intro h4
-  have ⟨h5,t'',h6,h7,h8⟩ := h4
-  apply And.intro h5
-  exists t''
-  exists h6
-  apply And.intro h7
-  apply Typing.value_swap_preservation econ isval typing typing' h8
-| var id =>
-  unfold Typing
-  intro h4
-  have ⟨t',h5,h6⟩ := h4
-  clear h4
-  simp [*]
-  sorry
-  -- apply FinTyping.value_swap_preservation econ isval typing.to_fin typing'.to_fin h6
 
+-- | unio left right =>
+--   unfold Typing
+--   intro h4
+--   cases h4 with
+--   | inl h5 =>
+--     apply Or.inl
+--     apply Typing.value_swap_preservation econ isval typing typing' h5
+--   | inr h5 =>
+--     apply Or.inr
+--     apply Typing.value_swap_preservation econ isval typing typing' h5
+
+-- | inter left right =>
+--   unfold Typing
+--   intro h4
+--   have ⟨h5,h6⟩ := h4
+--   apply And.intro
+--   { apply Typing.value_swap_preservation econ isval typing typing' h5 }
+--   { apply Typing.value_swap_preservation econ isval typing typing' h6 }
+
+-- | diff left right =>
+--   unfold Typing
+--   intro h4
+--   have ⟨h5,h6⟩ := h4
+--   clear h4
+--   apply And.intro
+--   { apply Typing.value_swap_preservation econ isval typing typing' h5 }
+--   {
+--     intro h7
+--     apply h6
+--     clear h6
+--     apply Typing.swap_safe_preservation
+--     { exact econ }
+--     { exact typing' }
+--     { exact typing }
+--     { exact soundness h5 }
+--     { exact h7 }
+--   }
+-- | exi ids quals body =>
+--   unfold Typing
+--   intro h4
+--   have ⟨am',h5,h6,h7⟩ := h4
+--   clear h4
+--   exists am'
+--   apply And.intro h5
+--   apply And.intro h6
+--   apply Typing.value_swap_preservation econ isval typing typing' h7
+-- | all ids quals body =>
+--   unfold Typing
+--   intro ⟨h4,h5⟩
+--   apply And.intro
+--   {
+--     intro am'' h6 h7
+--     apply Typing.value_swap_preservation econ isval typing typing' (h4 am'' h6 h7)
+--   }
+--   { exact h5 }
+-- | lfp id body =>
+--   unfold Typing
+--   intro h4
+--   have ⟨h5,t'',h6,h7,h8⟩ := h4
+--   apply And.intro h5
+--   exists t''
+--   exists h6
+--   apply And.intro h7
+--   apply Typing.value_swap_preservation econ isval typing typing' h8
+-- | var id =>
+--   unfold Typing
+--   intro h4
+--   have ⟨t',h5,h6⟩ := h4
+--   clear h4
+--   simp [*]
+--   sorry
+--   -- apply FinTyping.value_swap_preservation econ isval typing.to_fin typing'.to_fin h6
+
+
+mutual
+  theorem Typing.record_beta_reduction :
+    EvalCon E →
+    Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t →
+    Typing am (E e) t
+  := by cases t with
+  | bot =>
+    unfold Typing
+    simp
+  | top =>
+    unfold Typing
+    intro h0 h1
+    cases h1 with
+    | inl h2 =>
+      apply Or.inl
+      exact Convergent.record_beta_reduction h0 h2
+    | inr h2 =>
+      apply Or.inr
+      exact Divergent.record_beta_reduction h0 h2
+  | iso label body =>
+    unfold Typing
+    intro h0 h1
+    apply EvalCon.extract label at h0
+    apply Typing.record_beta_reduction h0 h1
+
+  | entry label body =>
+    unfold Typing
+    intro h0 h1
+    apply EvalCon.project label at h0
+    apply Typing.record_beta_reduction h0 h1
+
+  | path left right =>
+    unfold Typing
+    intro h0 h1 e' h2
+    specialize h1 e' h2
+    apply EvalCon.applicator e' at h0
+    apply Typing.record_beta_reduction h0 h1
+
+
+  | unio left right =>
+    unfold Typing
+    intro h0 h1
+    cases h1 with
+    | inl h1 =>
+      have ih := Typing.record_beta_reduction h0 h1
+      exact Or.inl ih
+    | inr h1 =>
+      have ih := Typing.record_beta_reduction h0 h1
+      exact Or.inr ih
+
+  | inter left right =>
+    unfold Typing
+    intro h0 h1
+    have ⟨h2,h3⟩ := h1
+    apply And.intro
+    { apply Typing.record_beta_reduction h0 h2 }
+    { apply Typing.record_beta_reduction h0 h3 }
+
+  | diff left right =>
+    unfold Typing
+    intro h0 h1
+    have ⟨h2,h3⟩ := h1
+    apply And.intro
+    { apply Typing.record_beta_reduction h0 h2 }
+    {
+      intro h4
+      apply h3
+      apply Typing.record_beta_expansion l h0 h4
+    }
+
+  | exi ids quals body =>
+    unfold Typing
+    intro h0 h1
+    have ⟨am', h2, h3, h4⟩ := h1
+    exists am'
+    apply And.intro h2
+    apply And.intro h3
+    apply Typing.record_beta_reduction h0 h4
+
+  | all ids quals body =>
+    unfold Typing
+    intro h0 ⟨h1,h2⟩
+    apply And.intro
+    {
+      intro am' dom_subset dynamic_quals
+      specialize h1 am' dom_subset dynamic_quals
+      apply Typing.record_beta_reduction h0 h1
+    }
+    {exact h2}
+
+  | lfp id body =>
+    unfold Typing
+    intro h0 h1
+    have ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩ := h1
+    apply And.intro monotonic_body
+    exists t
+    exists lt_size
+    apply And.intro imp_dynamic
+    apply Typing.record_beta_reduction h0 dynamic_body
+
+  | var id =>
+    unfold Typing
+    intro h0 h1
+    have ⟨t, h2, h3⟩ := h1
+    exists t
+    apply And.intro h2
+    apply FinTyping.record_beta_reduction h0 h3
+
+  theorem Typing.record_beta_expansion l :
+    EvalCon E →
+    Typing am (E e) t →
+    Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t
+  := by cases t with
+  | bot =>
+    unfold Typing
+    simp
+  | top =>
+    unfold Typing
+    intro h0 h1
+    cases h1 with
+    | inl h2 =>
+      apply Or.inl
+      exact Convergent.record_beta_expansion l h0 h2
+    | inr h2 =>
+      apply Or.inr
+      exact Divergent.record_beta_expansion l h0 h2
+  | iso label body =>
+    unfold Typing
+    intro h0 h1
+    apply EvalCon.extract label at h0
+    apply Typing.record_beta_expansion l h0 h1
+
+  | entry label body =>
+    unfold Typing
+    intro h0 h1
+    apply EvalCon.project label at h0
+    apply Typing.record_beta_expansion l h0 h1
+
+  | path left right =>
+    unfold Typing
+    intro h0 h1 e' h2
+    specialize h1 e' h2
+    apply EvalCon.applicator e' at h0
+    apply Typing.record_beta_expansion l h0 h1
+
+
+  | unio left right =>
+    unfold Typing
+    intro h0 h1
+    cases h1 with
+    | inl h1 =>
+      have ih := Typing.record_beta_expansion l h0 h1
+      exact Or.inl ih
+    | inr h1 =>
+      have ih := Typing.record_beta_expansion l h0 h1
+      exact Or.inr ih
+
+  | inter left right =>
+    unfold Typing
+    intro h0 h1
+    have ⟨h2,h3⟩ := h1
+    apply And.intro
+    { apply Typing.record_beta_expansion l h0 h2 }
+    { apply Typing.record_beta_expansion l h0 h3 }
+
+  | diff left right =>
+    unfold Typing
+    intro h0 h1
+    have ⟨h2,h3⟩ := h1
+    apply And.intro
+    { apply Typing.record_beta_expansion l h0 h2 }
+    {
+      intro h4
+      apply h3
+      apply Typing.record_beta_reduction h0 h4
+    }
+
+  | exi ids quals body =>
+    unfold Typing
+    intro h0 h1
+    have ⟨am', h2, h3, h4⟩ := h1
+    exists am'
+    apply And.intro h2
+    apply And.intro h3
+    apply Typing.record_beta_expansion l h0 h4
+
+  | all ids quals body =>
+    unfold Typing
+    intro h0 ⟨h1,h2⟩
+    apply And.intro
+    {
+      intro am' dom_subset dynamic_quals
+      specialize h1 am' dom_subset dynamic_quals
+      apply Typing.record_beta_expansion l h0 h1
+    }
+    {exact h2}
+
+  | lfp id body =>
+    unfold Typing
+    intro h0 h1
+    have ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩ := h1
+    apply And.intro monotonic_body
+    exists t
+    exists lt_size
+    apply And.intro imp_dynamic
+    apply Typing.record_beta_expansion l h0 dynamic_body
+
+  | var id =>
+    unfold Typing
+    intro h0 h1
+    have ⟨t, h2, h3⟩ := h1
+    exists t
+    apply And.intro h2
+    apply FinTyping.record_beta_expansion l h0 h3
+end
 
 
 
@@ -1317,42 +1533,42 @@ theorem Typing.exists_value :
 --   sorry
 
 
-theorem Typing.record_beta_expansion l :
-  Typing am e t →
-  Typing am (Expr.project (Expr.record [(l, e)]) l) t
-:= by
-  intro h0
-  have ⟨ev, h1, h2⟩ := Typing.exists_value h0
-  have econ : EvalCon (fun e => (Expr.project (Expr.record [(l, e)]) l)) := by
-    apply EvalCon.project
-    apply EvalCon.record
-    apply RecordCon.head
-    apply EvalCon.hole
+-- theorem Typing.record_beta_expansion l :
+--   Typing am e t →
+--   Typing am (Expr.project (Expr.record [(l, e)]) l) t
+-- := by
+--   intro h0
+--   have ⟨ev, h1, h2⟩ := Typing.exists_value h0
+--   have econ : EvalCon (fun e => (Expr.project (Expr.record [(l, e)]) l)) := by
+--     apply EvalCon.project
+--     apply EvalCon.record
+--     apply RecordCon.head
+--     apply EvalCon.hole
 
-  apply Typing.value_swap_preservation econ h1 h2 h0
-  { apply Typing.subject_expansion
-    {
-      unfold Expr.project
-      apply Transition.pattern_match
-      {
-        simp [Expr.is_value, List.is_record_value ]
-        reduce
-        simp
-        exact h1
+--   apply Typing.value_swap_preservation econ h1 h2 h0
+--   { apply Typing.subject_expansion
+--     {
+--       unfold Expr.project
+--       apply Transition.pattern_match
+--       {
+--         simp [Expr.is_value, List.is_record_value ]
+--         reduce
+--         simp
+--         exact h1
 
-      }
-      { simp [
-          Expr.pattern_match, List.pattern_match_record,
-          List.pattern_match_entry, Pat.free_vars,
-          ListPat.free_vars
-        ];
-        reduce
-        simp
-        rfl
-      }
-    }
-    { exact h2 }
-  }
+--       }
+--       { simp [
+--           Expr.pattern_match, List.pattern_match_record,
+--           List.pattern_match_entry, Pat.free_vars,
+--           ListPat.free_vars
+--         ];
+--         reduce
+--         simp
+--         rfl
+--       }
+--     }
+--     { exact h2 }
+--   }
 
 
 theorem Typing.entry_intro l :
@@ -1361,7 +1577,7 @@ theorem Typing.entry_intro l :
 := by
   intro h0
   unfold Typing
-  exact record_beta_expansion l h0
+  exact record_beta_expansion l .hole h0
 
 theorem Subtyping.elimination :
   Subtyping am t0 t1 →
@@ -1378,16 +1594,6 @@ theorem Subtyping.list_typ_diff_elim :
   sorry
 
 
--- theorem Typing.function_beta_expansion f :
---   (∀ {ev} ,
---     Expr.is_value ev → Typing am ev tp →
---     ∃ eam , Expr.pattern_match ev p = .some eam ∧ Typing am (Expr.sub eam e) tr
---   ) →
---   Typing am e' tp →
---   Typing am (Expr.app (Expr.function ((p, e) :: f)) e') tr
--- := by sorry
-
-
 theorem Typing.function_beta_expansion f :
   (∀ {ev} ,
     Expr.is_value ev → Typing am ev tp →
@@ -1395,15 +1601,25 @@ theorem Typing.function_beta_expansion f :
   ) →
   Typing am e' tp →
   Typing am (Expr.app (Expr.function ((p, e) :: f)) e') tr
-:= by
-  intro h0 h1
-  have ⟨v, h5, h6⟩ := Typing.exists_value h1
-  apply Typing.value_swap_preservation (EvalCon.applicand ((p, e) :: f) .hole) h5 h6 h1
-  specialize h0 h5 h6
-  have ⟨eam,h7,h8⟩ := h0
-  apply Typing.subject_expansion
-  { apply Transition.pattern_match h5 h7}
-  { exact h8 }
+:= by sorry
+
+
+-- theorem Typing.function_beta_expansion f :
+--   (∀ {ev} ,
+--     Expr.is_value ev → Typing am ev tp →
+--     ∃ eam , Expr.pattern_match ev p = .some eam ∧ Typing am (Expr.sub eam e) tr
+--   ) →
+--   Typing am e' tp →
+--   Typing am (Expr.app (Expr.function ((p, e) :: f)) e') tr
+-- := by
+--   intro h0 h1
+--   have ⟨v, h5, h6⟩ := Typing.exists_value h1
+--   apply Typing.value_swap_preservation (EvalCon.applicand ((p, e) :: f) .hole) h5 h6 h1
+--   specialize h0 h5 h6
+--   have ⟨eam,h7,h8⟩ := h0
+--   apply Typing.subject_expansion
+--   { apply Transition.pattern_match h5 h7}
+--   { exact h8 }
 
 
 theorem Typing.path_intro :
