@@ -35,8 +35,13 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    sorry
-    -- exact Safe.subject_reduction transition h0
+    cases h0 with
+    | inl h1 =>
+      apply Or.inl
+      exact Convergent.subject_reduction transition h1
+    | inr h1 =>
+      apply Or.inr
+      exact Divergent.subject_reduction transition h1
 
   | iso label body =>
     unfold FinTyping
@@ -112,8 +117,13 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    sorry
-    -- exact Safe.subject_expansion transition h0
+    cases h0 with
+    | inl h1 =>
+      apply Or.inl
+      exact Convergent.subject_expansion transition h1
+    | inr h1 =>
+      apply Or.inr
+      exact Divergent.subject_expansion transition h1
 
   | iso label body =>
     unfold FinTyping
@@ -302,7 +312,6 @@ theorem FinTyping.swap_safe_preservation
 : FinTyping (E e) t' → FinTyping (E e') t'
 := by sorry
 
-
 theorem FinTyping.value_swap_preservation
   (econ : EvalCon E)
   (isval : Expr.is_value e)
@@ -318,8 +327,19 @@ theorem FinTyping.value_swap_preservation
   unfold FinTyping
   intro typing_econ
   apply FinTyping.soundness at typing'
-  -- exact Safe.econ_preservation econ typing_econ typing'
-  sorry
+
+  cases typing' with
+  |inl h0 =>
+    cases typing_econ with
+    | inl h1 =>
+      apply Or.inl
+      exact Convergent.econ_preservation econ h1 h0
+    | inr h1 =>
+      apply Or.inr
+      exact Divergent.swap_preservation econ isval h1
+  | inr h0 =>
+    apply Or.inr
+    exact Divergent.econ_preservation econ h0
 
 | iso label body =>
   unfold FinTyping

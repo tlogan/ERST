@@ -28,11 +28,27 @@ mutual
 
 end
 
+theorem Divergent.econ_preservation :
+  EvalCon E →
+  Divergent e →
+  Divergent (E e)
+:= by
+  sorry
+
 theorem Divergent.econ_reflection :
   EvalCon E →
   Divergent (E e) →
   Divergent e
 := by
   sorry
+
+
+theorem Divergent.swap_preservation
+  (econ : EvalCon E)
+  (isval : Expr.is_value e)
+  (dvg_econ : Divergent (E e))
+: Divergent (E e')
+:= by sorry
+
 
 end Lang.Dynamic

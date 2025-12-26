@@ -619,26 +619,35 @@ theorem Typing.soundness
 | iso label body =>
   unfold Typing at typing
   have ih := Typing.soundness typing
-  sorry
-  -- apply Safe.econ_reflection
-  -- { apply EvalCon.extract label .hole }
-  -- { exact ih }
+  cases ih with
+  | inl h0 =>
+    apply Or.inl
+    have econ := EvalCon.extract label .hole
+    apply Convergent.econ_reflection econ h0
+  | inr h0 =>
+    apply Or.inr
+    have econ := EvalCon.extract label .hole
+    apply Divergent.econ_reflection econ h0
 
 | entry label body =>
   unfold Typing at typing
   have ih := Typing.soundness typing
-  sorry
-  -- apply Safe.econ_reflection
-  -- { apply EvalCon.project label .hole }
-  -- { exact ih }
+  cases ih with
+  | inl h0 =>
+    apply Or.inl
+    have econ := EvalCon.project label .hole
+    apply Convergent.econ_reflection econ h0
+  | inr h0 =>
+    apply Or.inr
+    have econ := EvalCon.project label .hole
+    apply Divergent.econ_reflection econ h0
 
 | path left right =>
   apply Typing.path_determines_function at typing
   have ⟨f, h0⟩ := typing
-  sorry
-  -- apply Safe.convergent
-  -- unfold Convergent
-  -- exists (.function f)
+  apply Or.inl
+  unfold Convergent
+  exists (.function f)
 
 
 | unio left right =>
@@ -1160,12 +1169,18 @@ mutual
 end
 
 
-theorem Typing.to_fin
-  (typing : Typing am e t)
-: FinTyping e (Typ.sub am t)
-:= by sorry
+/-
+WARNING!!!!
+THIS IS WRONG:
+counter example :
+(<A> @ <B> @) : <A> TOP, (<A> @ <B> @) : <A> TOP
+(<A> @ <B> @) : <A> TOP & <B> TOP -->
+(<A> @ <C> @) : <A> TOP & <B> TOP ; FAIL
 
+TODO: remove the swap lemmas
+Prove beta reduction lemmas inductively without using swap
 
+-/
 theorem Typing.swap_safe_preservation
   (econ : EvalCon E)
   (typing : Typing am e t)
@@ -1283,7 +1298,8 @@ theorem Typing.value_swap_preservation
   have ⟨t',h5,h6⟩ := h4
   clear h4
   simp [*]
-  apply FinTyping.value_swap_preservation econ isval typing.to_fin typing'.to_fin h6
+  sorry
+  -- apply FinTyping.value_swap_preservation econ isval typing.to_fin typing'.to_fin h6
 
 
 
@@ -1312,6 +1328,7 @@ theorem Typing.record_beta_expansion l :
     apply EvalCon.record
     apply RecordCon.head
     apply EvalCon.hole
+
   apply Typing.value_swap_preservation econ h1 h2 h0
   { apply Typing.subject_expansion
     {
