@@ -10,8 +10,9 @@ mutual
   inductive RecordCon : (Expr → List (String × Expr)) → Prop
   | head l r :  EvalCon E → RecordCon (fun e => (l, E e) :: r)
   | tail l :
-      RecordCon R →
+      List.is_fresh_key l (R e) →
       Expr.is_value ev →
+      RecordCon R →
       RecordCon (fun e => (l,ev) :: (R e))
 
   inductive EvalCon : (Expr → Expr) → Prop

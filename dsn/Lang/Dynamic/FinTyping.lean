@@ -4,14 +4,13 @@ import Lang.Dynamic.Transition
 import Lang.Dynamic.TransitionStar
 import Lang.Dynamic.Convergent
 import Lang.Dynamic.Divergent
-import Lang.Dynamic.Safe
 
 set_option pp.fieldNotation false
 
 namespace Lang.Dynamic
 
 def FinTyping (e : Expr) : Typ → Prop
-| .top => Safe e
+| .top => Convergent e ∨ Divergent e
 | .iso l body => FinTyping (.extract e l) body
 | .entry l body => FinTyping (.project e l) body
 | .path left right => ∀ e' , FinTyping e' left → FinTyping (.app e e') right
@@ -36,7 +35,8 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    exact Safe.subject_reduction transition h0
+    sorry
+    -- exact Safe.subject_reduction transition h0
 
   | iso label body =>
     unfold FinTyping
@@ -112,7 +112,8 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    exact Safe.subject_expansion transition h0
+    sorry
+    -- exact Safe.subject_expansion transition h0
 
   | iso label body =>
     unfold FinTyping
@@ -216,6 +217,87 @@ end
 -- end
 
 
+mutual
+  theorem FinTyping.record_beta_reduction :
+    EvalCon E →
+    FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t →
+    FinTyping (E e) t
+  := by
+    sorry
+
+  theorem FinTyping.record_beta_expansion l :
+    EvalCon E →
+    FinTyping (E e) t →
+    FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t
+  := by cases t with
+  | top =>
+    unfold FinTyping
+    intro h0 h1
+    cases h1 with
+    | inl h2 =>
+      apply Or.inl
+      sorry
+      -- exact Convergent.record_beta_expansion h0 h2
+    | inr h2 =>
+      apply Or.inr
+      sorry
+      -- exact Divergent.record_beta_expansion h0 h2
+  | iso label body =>
+    intro h0 h1
+    apply EvalCon.extract label at h0
+    apply FinTyping.record_beta_expansion l h0 h1
+
+  | entry label body =>
+    intro h0 h1
+    apply EvalCon.project label at h0
+    apply FinTyping.record_beta_expansion l h0 h1
+
+  | path left right =>
+    intro h0 h1 e' h2
+    specialize h1 e' h2
+    apply EvalCon.applicator e' at h0
+    apply FinTyping.record_beta_expansion l h0 h1
+
+
+  | unio left right =>
+    intro h0 h1
+    cases h1 with
+    | inl h1 =>
+      have ih := FinTyping.record_beta_expansion l h0 h1
+      exact Or.inl ih
+    | inr h1 =>
+      have ih := FinTyping.record_beta_expansion l h0 h1
+      exact Or.inr ih
+
+  | inter left right =>
+    intro h0 h1
+    unfold FinTyping at h1
+    have ⟨h2,h3⟩ := h1
+    apply And.intro
+    { apply FinTyping.record_beta_expansion l h0 h2 }
+    { apply FinTyping.record_beta_expansion l h0 h3 }
+
+  | diff left right =>
+    intro h0 h1
+    unfold FinTyping at h1
+    have ⟨h2,h3⟩ := h1
+    apply And.intro
+    { apply FinTyping.record_beta_expansion l h0 h2 }
+    {
+      intro h4
+      apply h3
+
+      apply FinTyping.record_beta_reduction h0 h4
+    }
+
+  | _ =>
+    intro h0 h1
+    unfold FinTyping at h1
+    exact h1
+end
+
+
+
 theorem FinTyping.path_determines_function
   (typing : FinTyping e (.path antec consq))
 : ∃ f , TransitionStar e (.function f)
@@ -223,7 +305,7 @@ theorem FinTyping.path_determines_function
 
 theorem FinTyping.soundness
   (typing : FinTyping e t)
-: Safe e
+: Convergent e ∨ Divergent e
 := by cases t with
 | bot =>
   unfold FinTyping at typing
@@ -235,26 +317,37 @@ theorem FinTyping.soundness
 
 | iso label body =>
   unfold FinTyping at typing
+
   have ih := FinTyping.soundness typing
-  apply Safe.econ_reflection
-  { apply EvalCon.extract label .hole }
-  { exact ih }
+  cases ih with
+  | inl h0 =>
+    apply Or.inl
+    have econ := EvalCon.extract label .hole
+    apply Convergent.econ_reflection econ h0
+  | inr h0 =>
+    apply Or.inr
+    have econ := EvalCon.extract label .hole
+    apply Divergent.econ_reflection econ h0
 
 | entry label body =>
   unfold FinTyping at typing
   have ih := FinTyping.soundness typing
-  apply Safe.econ_reflection
-  { apply EvalCon.project label .hole }
-  { exact ih }
-
+  cases ih with
+  | inl h0 =>
+    apply Or.inl
+    have econ := EvalCon.project label .hole
+    apply Convergent.econ_reflection econ h0
+  | inr h0 =>
+    apply Or.inr
+    have econ := EvalCon.project label .hole
+    apply Divergent.econ_reflection econ h0
 
 | path left right =>
   apply FinTyping.path_determines_function at typing
   have ⟨f, h0⟩ := typing
-  apply Safe.convergent
+  apply Or.inl
   unfold Convergent
   exists (.function f)
-
 
 | unio left right =>
   unfold FinTyping at typing
@@ -278,6 +371,26 @@ theorem FinTyping.soundness
   exact False.elim typing
 
 
+
+mutual
+  theorem FinTyping.function_beta_reduction :
+    (∀ {ev} ,
+      Expr.is_value ev → FinTyping ev tp →
+      ∃ eam , Expr.pattern_match ev p = .some eam ∧ FinTyping (Expr.sub eam e) tr
+    ) →
+    FinTyping (Expr.app (Expr.function ((p, e) :: f)) e') tr →
+    FinTyping e' tp
+  := by sorry
+
+  theorem FinTyping.function_beta_expansion f :
+    (∀ {ev} ,
+      Expr.is_value ev → FinTyping ev tp →
+      ∃ eam , Expr.pattern_match ev p = .some eam ∧ FinTyping (Expr.sub eam e) tr
+    ) →
+    FinTyping e' tp →
+    FinTyping (Expr.app (Expr.function ((p, e) :: f)) e') tr
+  := by sorry
+end
 
 
 
