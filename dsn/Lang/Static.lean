@@ -2,8 +2,7 @@ import Lang.Util
 import Lang.Basic
 import Lang.Dynamic.EvalCon
 import Lang.Dynamic.TransitionStar
-import Lang.Dynamic.Convergent
-import Lang.Dynamic.Divergent
+import Lang.Dynamic.Safe
 import Lang.Dynamic.FinTyping
 import Lang.Dynamic.Typing
 import Lang.Dynamic.Confluent
@@ -2576,8 +2575,8 @@ theorem MultiSubtyping.concat_elim_left {am cs cs'} :
 
 theorem PatLifting.Static.soundness {assums context p t assums' context'} :
   PatLifting.Static assums context p t assums' context' →
-  ∀ tam v, Expr.is_value v → Typing tam v t →
-    ∃ eam , Expr.pattern_match v p = .some eam ∧ MultiTyping tam eam context'
+  ∀ tam e, Typing tam e t →
+    ∃ eam , Expr.pattern_match e p = .some eam ∧ MultiTyping tam eam context'
 := by sorry
 
 
@@ -2827,8 +2826,9 @@ mutual
       intros eam typing_dynamic_context
 
       apply Typing.path_intro
-      intros v p44 p46
-      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p44 p46
+
+      intros arg p46
+      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') arg p46
 
       exists eam0
       simp [*]
@@ -2851,7 +2851,7 @@ mutual
 
       apply Typing.function_preservation
       { intros v p40 p42
-        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p40 p42
+        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p42
         apply Exists.intro eam0 p48 }
       { apply Function.Typing.Static.subtra_soundness function_typing_static List.mem_cons_self p11 }
       { apply ih0r _ p30 _ p32 }

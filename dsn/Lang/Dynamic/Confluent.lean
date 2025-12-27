@@ -2,8 +2,6 @@ import Lang.Basic
 import Lang.Dynamic.EvalCon
 import Lang.Dynamic.Transition
 import Lang.Dynamic.TransitionStar
-import Lang.Dynamic.Convergent
-import Lang.Dynamic.Divergent
 import Lang.Dynamic.FinTyping
 import Lang.Dynamic.Typing
 
