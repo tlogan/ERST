@@ -67,6 +67,7 @@ end
 mutual
   theorem Divergent.function_beta_reduction
     (econ : EvalCon E)
+    (isval : Expr.is_value ev)
     (matching : Expr.pattern_match ev p = .some eam)
   : Divergent (E (Expr.app (Expr.function ((p, e) :: f)) ev)) →
     Divergent (E (Expr.sub eam e))
@@ -74,6 +75,7 @@ mutual
 
   theorem Divergent.function_beta_expansion f
     (econ : EvalCon E)
+    (isval : Expr.is_value ev)
     (matching : Expr.pattern_match ev p = .some eam)
   : Divergent (E (Expr.sub eam e)) →
     Divergent (E (Expr.app (Expr.function ((p, e) :: f)) ev))

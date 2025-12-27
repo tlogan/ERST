@@ -57,6 +57,7 @@ end
 mutual
   theorem Convergent.function_beta_reduction
     (econ : EvalCon E)
+    (isval : Expr.is_value ev)
     (matching : Expr.pattern_match ev p = .some eam)
   : Convergent (E (Expr.app (Expr.function ((p, e) :: f)) ev)) →
     Convergent (E (Expr.sub eam e))
@@ -64,6 +65,7 @@ mutual
 
   theorem Convergent.function_beta_expansion f
     (econ : EvalCon E)
+    (isval : Expr.is_value ev)
     (matching : Expr.pattern_match ev p = .some eam)
   : Convergent (E (Expr.sub eam e)) →
     Convergent (E (Expr.app (Expr.function ((p, e) :: f)) ev))

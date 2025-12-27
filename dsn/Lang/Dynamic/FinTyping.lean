@@ -407,6 +407,7 @@ end
 mutual
   theorem FinTyping.function_beta_reduction
     (econ : EvalCon E)
+    (isval : Expr.is_value ev)
     (matching : Expr.pattern_match ev p = .some eam)
   : FinTyping (E (Expr.app (Expr.function ((p, e) :: f)) ev)) t →
     FinTyping (E (Expr.sub eam e)) t
@@ -417,53 +418,53 @@ mutual
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      exact Convergent.function_beta_reduction econ matching h1
+      exact Convergent.function_beta_reduction econ isval matching h1
     | inr h1 =>
       apply Or.inr
-      exact Divergent.function_beta_reduction econ matching h1
+      exact Divergent.function_beta_reduction econ isval matching h1
   | iso label body =>
     intro h0
     apply EvalCon.extract label at econ
-    apply FinTyping.function_beta_reduction econ matching h0
+    apply FinTyping.function_beta_reduction econ isval matching h0
 
   | entry label body =>
     intro h0
     apply EvalCon.project label at econ
-    apply FinTyping.function_beta_reduction econ matching h0
+    apply FinTyping.function_beta_reduction econ isval matching h0
 
   | path left right =>
     intro h0 e' h1
     specialize h0 e' h1
     apply EvalCon.applicator e' at econ
-    apply FinTyping.function_beta_reduction econ matching h0
+    apply FinTyping.function_beta_reduction econ isval matching h0
 
   | unio left right =>
     intro h0
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      apply FinTyping.function_beta_reduction econ matching h1
+      apply FinTyping.function_beta_reduction econ isval matching h1
 
     | inr h1 =>
       apply Or.inr
-      apply FinTyping.function_beta_reduction econ matching h1
+      apply FinTyping.function_beta_reduction econ isval matching h1
 
   | inter left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_reduction econ matching h1 }
-    { apply FinTyping.function_beta_reduction econ matching h2 }
+    { apply FinTyping.function_beta_reduction econ isval matching h1 }
+    { apply FinTyping.function_beta_reduction econ isval matching h2 }
 
   | diff left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_reduction econ matching h1 }
+    { apply FinTyping.function_beta_reduction econ isval matching h1 }
     {
       intro h3
       apply h2
-      apply FinTyping.function_beta_expansion f econ matching h3
+      apply FinTyping.function_beta_expansion f econ isval matching h3
     }
 
   | _ =>
@@ -471,6 +472,7 @@ mutual
 
   theorem FinTyping.function_beta_expansion f
     (econ : EvalCon E)
+    (isval : Expr.is_value ev)
     (matching : Expr.pattern_match ev p = .some eam)
   : FinTyping (E (Expr.sub eam e)) t →
     FinTyping (E (Expr.app (Expr.function ((p, e) :: f)) ev)) t
@@ -481,53 +483,53 @@ mutual
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      exact Convergent.function_beta_expansion f econ matching h1
+      exact Convergent.function_beta_expansion f econ isval matching h1
     | inr h1 =>
       apply Or.inr
-      exact Divergent.function_beta_expansion f econ matching h1
+      exact Divergent.function_beta_expansion f econ isval matching h1
   | iso label body =>
     intro h0
     apply EvalCon.extract label at econ
-    apply FinTyping.function_beta_expansion f econ matching h0
+    apply FinTyping.function_beta_expansion f econ isval matching h0
 
   | entry label body =>
     intro h0
     apply EvalCon.project label at econ
-    apply FinTyping.function_beta_expansion f econ matching h0
+    apply FinTyping.function_beta_expansion f econ isval matching h0
 
   | path left right =>
     intro h0 e' h1
     specialize h0 e' h1
     apply EvalCon.applicator e' at econ
-    apply FinTyping.function_beta_expansion f econ matching h0
+    apply FinTyping.function_beta_expansion f econ isval matching h0
 
   | unio left right =>
     intro h0
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      apply FinTyping.function_beta_expansion f econ matching h1
+      apply FinTyping.function_beta_expansion f econ isval matching h1
 
     | inr h1 =>
       apply Or.inr
-      apply FinTyping.function_beta_expansion f econ matching h1
+      apply FinTyping.function_beta_expansion f econ isval matching h1
 
   | inter left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_expansion f econ matching h1 }
-    { apply FinTyping.function_beta_expansion f econ matching h2 }
+    { apply FinTyping.function_beta_expansion f econ isval matching h1 }
+    { apply FinTyping.function_beta_expansion f econ isval matching h2 }
 
   | diff left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_expansion f econ matching h1 }
+    { apply FinTyping.function_beta_expansion f econ isval matching h1 }
     {
       intro h3
       apply h2
-      apply FinTyping.function_beta_reduction econ matching h3
+      apply FinTyping.function_beta_reduction econ isval matching h3
     }
 
   | _ =>
