@@ -1314,13 +1314,7 @@ mutual
   | top =>
     unfold Typing
     intro h0 h1
-    cases h1 with
-    | inl h2 =>
-      apply Or.inl
-      exact Convergent.record_beta_reduction h0 h2
-    | inr h2 =>
-      apply Or.inr
-      exact Divergent.record_beta_reduction h0 h2
+    exact Safe.record_beta_reduction h0 h1
   | iso label body =>
     unfold Typing
     intro h0 h1
@@ -1421,13 +1415,8 @@ mutual
   | top =>
     unfold Typing
     intro h0 h1
-    cases h1 with
-    | inl h2 =>
-      apply Or.inl
-      exact Convergent.record_beta_expansion l h0 h2
-    | inr h2 =>
-      apply Or.inr
-      exact Divergent.record_beta_expansion l h0 h2
+    exact Safe.record_beta_expansion l h0 h1
+
   | iso label body =>
     unfold Typing
     intro h0 h1
