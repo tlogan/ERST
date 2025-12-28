@@ -62,143 +62,6 @@ end
 
 
 mutual
-  theorem Convergent.cvg_function_beta_reduction
-    (econ : EvalCon E)
-    (cvg : Convergent arg)
-    (matching : Expr.pattern_match arg p = .some eam)
-  : Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
-    Convergent (E (Expr.sub eam e))
-  := by sorry
-
-  theorem Convergent.cvg_function_beta_expansion f
-    (econ : EvalCon E)
-    (cvg : Convergent arg)
-    (matching : Expr.pattern_match arg p = .some eam)
-  : Convergent (E (Expr.sub eam e)) →
-    Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
-  := by sorry
-end
-
-mutual
-  theorem Convergent.dvg_function_beta_reduction
-    (econ : EvalCon E)
-    (dvg : Divergent arg)
-    (matching : Expr.pattern_match arg p = .some eam)
-  : Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
-    Convergent (E (Expr.sub eam e))
-  := by sorry
-
-  theorem Convergent.dvg_function_beta_expansion f
-    (econ : EvalCon E)
-    (dvg : Divergent arg)
-    (matching : Expr.pattern_match arg p = .some eam)
-  : Convergent (E (Expr.sub eam e)) →
-    Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
-  := by sorry
-end
-
-
-mutual
-  theorem Divergent.cvg_function_beta_reduction
-    (econ : EvalCon E)
-    (cvg : Convergent arg)
-    (matching : Expr.pattern_match arg p = .some eam)
-  : Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
-    Divergent (E (Expr.sub eam e))
-  := by sorry
-
-  theorem Divergent.cvg_function_beta_expansion f
-    (econ : EvalCon E)
-    (cvg : Convergent arg)
-    (matching : Expr.pattern_match arg p = .some eam)
-  : Divergent (E (Expr.sub eam e)) →
-    Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
-  := by sorry
-end
-
-mutual
-  theorem Divergent.dvg_function_beta_reduction
-    (econ : EvalCon E)
-    (dvg : Divergent arg)
-    (matching : Expr.pattern_match arg p = .some eam)
-  : Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
-    Divergent (E (Expr.sub eam e))
-  := by sorry
-
-  theorem Divergent.dvg_function_beta_expansion f
-    (econ : EvalCon E)
-    (dvg : Divergent arg)
-    (matching : Expr.pattern_match arg p = .some eam)
-  : Divergent (E (Expr.sub eam e)) →
-    Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
-  := by sorry
-end
-
-
-theorem Convergent.function_beta_reduction
-  (econ : EvalCon E)
-  (safe : Safe arg)
-  (matching : Expr.pattern_match arg p = .some eam)
-: Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
-  Convergent (E (Expr.sub eam e))
-:= by
-  cases safe with
-  | inl cvg =>
-    intro h0
-    exact cvg_function_beta_reduction econ cvg matching h0
-  | inr dvg =>
-    intro h0
-    exact Convergent.dvg_function_beta_reduction econ dvg matching h0
-
-theorem Convergent.function_beta_expansion f
-  (econ : EvalCon E)
-  (safe : Safe arg)
-  (matching : Expr.pattern_match arg p = .some eam)
-: Convergent (E (Expr.sub eam e)) →
-  Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
-:= by
-  cases safe with
-  | inl cvg =>
-    intro h0
-    exact Convergent.cvg_function_beta_expansion f econ cvg matching h0
-  | inr dvg =>
-    intro h0
-    exact Convergent.dvg_function_beta_expansion f econ dvg matching h0
-
-
-theorem Divergent.function_beta_reduction
-  (econ : EvalCon E)
-  (safe : Safe arg)
-  (matching : Expr.pattern_match arg p = .some eam)
-: Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
-  Divergent (E (Expr.sub eam e))
-:= by
-  cases safe with
-  | inl cvg =>
-    intro h0
-    exact Divergent.cvg_function_beta_reduction econ cvg matching h0
-  | inr dvg =>
-    intro h0
-    exact Divergent.dvg_function_beta_reduction econ dvg matching h0
-
-theorem Divergent.function_beta_expansion f
-  (econ : EvalCon E)
-  (safe : Safe arg)
-  (matching : Expr.pattern_match arg p = .some eam)
-: Divergent (E (Expr.sub eam e)) →
-  Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
-:= by
-  cases safe with
-  | inl cvg =>
-    intro h0
-    exact Divergent.cvg_function_beta_expansion f econ cvg matching h0
-  | inr dvg =>
-    intro h0
-    exact Divergent.dvg_function_beta_expansion f econ dvg matching h0
-
-
-
-mutual
 
   theorem Divergent.subject_reduction
     (transition : Transition e e')
@@ -251,37 +114,43 @@ end
 
 theorem Safe.function_beta_reduction
   (econ : EvalCon E)
-  (safe_arg : Safe arg)
+  -- (safe_arg : Safe arg)
   (matching : Expr.pattern_match arg p = .some eam)
 : Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
   Safe (E (Expr.sub eam e))
 := by
-  unfold Safe
-  intro cod
-  cases cod with
-  | inl h0 =>
+  intro safe_sub
+  cases safe_sub with
+  |inl cvg_sub =>
     apply Or.inl
-    apply Convergent.function_beta_reduction econ safe_arg matching h0
-  | inr h0 =>
+    sorry
+  |inr dvg_sub =>
     apply Or.inr
-    exact Divergent.function_beta_reduction econ safe_arg matching h0
+    sorry
 
-theorem Safe.function_beta_expansion f
-  (econ : EvalCon E)
+
+theorem Safe.function_beta_expansion
+  f
   (safe_arg : Safe arg)
+  (econ : EvalCon E)
   (matching : Expr.pattern_match arg p = .some eam)
 : Safe (E (Expr.sub eam e)) →
   Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg))
 := by
-  unfold Safe
-  intro cod
-  cases cod with
-  | inl h0 =>
-    apply Or.inl
-    exact Convergent.function_beta_expansion f econ safe_arg matching h0
-  | inr h0 =>
+  cases safe_arg with
+  | inl cvg_arg =>
+    intro safe_sub
+    cases safe_sub with
+    |inl cvg_sub =>
+      apply Or.inl
+      sorry
+    |inr dvg_sub =>
+      apply Or.inr
+      sorry
+  | inr dvg_arg =>
+    intro safe_sub
     apply Or.inr
-    exact Divergent.function_beta_expansion f econ safe_arg matching h0
+    sorry
 
 
 
