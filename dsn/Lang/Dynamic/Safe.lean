@@ -111,6 +111,18 @@ mutual
   := by sorry
 end
 
+theorem EvalCon.app_not_value
+  e arg
+  (econ : EvalCon E)
+: ¬ Expr.is_value (E (Expr.app e arg))
+:= by sorry
+
+theorem Transition.econ_pattern_match_deterministic
+  (econ : EvalCon E)
+  (matching : Expr.pattern_match arg p = some eam)
+  (trans : Transition (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e')
+:  e' = E (Expr.sub eam e)
+:= by sorry
 
 theorem Safe.function_beta_reduction
   (econ : EvalCon E)
@@ -123,7 +135,22 @@ theorem Safe.function_beta_reduction
   cases safe_sub with
   |inl cvg_sub =>
     apply Or.inl
-    sorry
+    unfold Convergent at cvg_sub
+    have ⟨e',h0,h1⟩ := cvg_sub
+    unfold Convergent
+    exists e'
+    apply And.intro
+    {
+      cases h0 with
+      | refl _ =>
+        have h2 := EvalCon.app_not_value (Expr.function ((p, e) :: f)) arg econ
+        exact False.elim (h2 h1)
+      | step e0 em e' trans trans_star =>
+        have h2 := Transition.econ_pattern_match_deterministic econ matching trans
+        rw [h2] at trans_star
+        exact trans_star
+    }
+    { exact h1 }
   |inr dvg_sub =>
     apply Or.inr
     sorry
