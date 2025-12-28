@@ -28,6 +28,11 @@ mutual
 
   def Expr.pattern_match : Expr → Pat → Option (List (String × Expr))
   | e, (.var id) => some [(id, e)]
+  | (.iso l e), (.iso label p) =>
+    if l == label then
+      Expr.pattern_match e p
+    else
+      none
   | (.record r), (.record p) => List.pattern_match_record r p
   | _, _ => none
 end
