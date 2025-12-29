@@ -117,26 +117,8 @@ theorem EvalCon.app_not_value
 : ¬ Expr.is_value (E (Expr.app e arg))
 := by sorry
 
-theorem Transition.econ_app_deterministic
-  (value_arg : Expr.is_value arg)
-  (econ : EvalCon E)
-  (matching : Expr.pattern_match arg p = .some eam)
-  (trans : Transition (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e')
-: e' = (E (Expr.sub eam e))
-:= by
-  generalize h0 : (E (Expr.app (Expr.function ((p, e) :: f)) arg)) = e0 at trans
 
-  cases trans with
-  | pattern_match _ =>
-    sorry
-  | skip =>
-    sorry
-  | erase =>
-    sorry
-  | recycle =>
-    sorry
-  | econ econ trans' =>
-    sorry
+
 
 
 theorem TransitionStar.function_beta_reduction
@@ -153,7 +135,11 @@ theorem TransitionStar.function_beta_reduction
     have h2 := EvalCon.app_not_value (Expr.function ((p, e) :: f)) arg econ
     exact False.elim (h2 value_result)
   | step e0 em e' trans trans_star =>
-    have h1 := Transition.econ_app_deterministic value_arg econ matching trans
+    have h0 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
+      apply Transition.pattern_match
+      { exact value_arg }
+      { exact matching }
+    have h1 := Transition.econ_deterministic econ h0 trans
     rw [h1] at trans_star
     exact trans_star
 

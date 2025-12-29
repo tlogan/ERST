@@ -98,6 +98,56 @@ mutual
 end
 
 
+mutual
+  theorem Transition.pattern_match_deterministic
+    (isval : Expr.is_value arg)
+    (matching : Expr.pattern_match v p = some m)
+    (trans : Transition (Expr.app (.function ((p,e) :: f)) arg) e')
+  : e' = (Expr.sub m e)
+  := by sorry
+
+  theorem Transition.skip_deterministic
+    (isval : v.is_value)
+    (nomatching : Expr.pattern_match v p = none)
+    (trans : Transition (.app (.function ((p,e) :: f)) v) e')
+  : e' = (.app (.function f) v)
+  := by sorry
+
+  theorem Transition.erase_deterministic
+    (trans : Transition (.anno e t) e')
+  : e' = e
+  := by sorry
+
+  theorem Transition.recycle_deterministic
+    id
+    (trans : Transition (.loop (.function [(.var id, e)])) e')
+  : e' = (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
+  := by sorry
+
+  theorem Transition.econ_deterministic
+    (econ : EvalCon E)
+    (trans : Transition e e')
+    (trans_econ : Transition (E e) e'')
+  : e'' = (E e')
+  := by
+    generalize h0 : (E e) = e0 at trans_econ
+    cases trans_econ with
+    | pattern_match isval matching =>
+      cases econ with
+      | hole =>
+        simp at h0
+        simp
+        sorry
+      | _ => sorry
+    | _ =>
+      sorry
+end
+
+
+
+
+
+
 
 theorem Transition.deterministic
   (transition : Transition e e')
