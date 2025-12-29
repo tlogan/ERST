@@ -182,7 +182,19 @@ theorem Divergent.function_beta_reduction
   (matching : Expr.pattern_match arg p = .some eam)
 : Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
   Divergent (E (Expr.sub eam e))
-:= by sorry
+:= by
+  unfold Divergent
+  intro h0 e' h1
+  have h2 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
+    apply Transition.pattern_match
+    { exact value_arg }
+    { exact matching }
+
+  have h3 : TransitionStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' := by
+    apply TransitionStar.step
+    { apply Transition.econ econ h2 }
+    { exact h1 }
+  exact h0 e' h3
 
 theorem Divergent.function_beta_expansion
   f
