@@ -111,15 +111,6 @@ mutual
   := by sorry
 end
 
-theorem EvalCon.app_not_value
-  e arg
-  (econ : EvalCon E)
-: ¬ Expr.is_value (E (Expr.app e arg))
-:= by sorry
-
-
-
-
 
 theorem TransitionStar.function_beta_reduction
   (value_arg : Expr.is_value arg = true)
@@ -200,8 +191,22 @@ theorem Divergent.function_beta_expansion
   (matching : Expr.pattern_match arg p = .some eam)
 : Divergent (E (Expr.sub eam e)) →
   Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
-:= by sorry
-
+:= by
+  unfold Divergent
+  intro h0 e' h1
+  cases h1 with
+  | refl _ =>
+    exists (E (Expr.sub eam e))
+    apply Transition.econ econ
+    apply Transition.pattern_match value_arg matching
+  | step e0 em e' trans trans_star =>
+    have h2 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
+      apply Transition.pattern_match
+      { exact value_arg }
+      { exact matching }
+    have h3 := Transition.econ_deterministic econ h2 trans
+    rw [h3] at trans_star
+    exact h0 e' trans_star
 
 
 theorem Safe.function_beta_reduction

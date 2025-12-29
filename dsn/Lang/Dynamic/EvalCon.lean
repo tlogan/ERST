@@ -25,6 +25,13 @@ mutual
 end
 
 
+theorem EvalCon.app_not_value
+  e arg
+  (econ : EvalCon E)
+: ¬ Expr.is_value (E (Expr.app e arg))
+:= by sorry
+
+
 
 -- mutual
 --   theorem RecordCon.is_value_complete
