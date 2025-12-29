@@ -78,7 +78,7 @@ end
 
 mutual
   inductive Transition : Expr → Expr → Prop
-  | pattern_match : ∀ {p e f v m},
+  | pattern_match :
     v.is_value →
     Expr.pattern_match v p = some m →
     Transition (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
@@ -88,7 +88,7 @@ mutual
     Transition (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
   | erase : ∀ {e t},
     Transition (.anno  e t) e
-  | recycle : ∀ {id e},
+  | recycle id :
     Transition
       (.loop (.function [(.var id, e)]))
       (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)

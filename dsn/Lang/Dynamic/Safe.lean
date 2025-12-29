@@ -117,6 +117,107 @@ theorem EvalCon.app_not_value
 : ¬ Expr.is_value (E (Expr.app e arg))
 := by sorry
 
+theorem Transition.econ_app_deterministic
+  (value_arg : Expr.is_value arg)
+  (econ : EvalCon E)
+  (matching : Expr.pattern_match arg p = .some eam)
+  (trans : Transition (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e')
+: e' = (E (Expr.sub eam e))
+:= by
+  generalize h0 : (E (Expr.app (Expr.function ((p, e) :: f)) arg)) = e0 at trans
+
+  cases trans with
+  | pattern_match _ =>
+    sorry
+  | skip =>
+    sorry
+  | erase =>
+    sorry
+  | recycle =>
+    sorry
+  | econ econ trans' =>
+    sorry
+
+
+theorem TransitionStar.function_beta_reduction
+  (value_arg : Expr.is_value arg = true)
+  (econ : EvalCon E)
+  (matching : Expr.pattern_match arg p = some eam)
+  (value_result : Expr.is_value e')
+: TransitionStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' →
+  TransitionStar (E (Expr.sub eam e)) e'
+:= by
+  intro h0
+  cases h0 with
+  | refl _ =>
+    have h2 := EvalCon.app_not_value (Expr.function ((p, e) :: f)) arg econ
+    exact False.elim (h2 value_result)
+  | step e0 em e' trans trans_star =>
+    have h1 := Transition.econ_app_deterministic value_arg econ matching trans
+    rw [h1] at trans_star
+    exact trans_star
+
+
+theorem Convergent.function_beta_reduction
+  (value_arg : Expr.is_value arg)
+  (econ : EvalCon E)
+  (matching : Expr.pattern_match arg p = .some eam)
+: Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
+  Convergent (E (Expr.sub eam e))
+:= by
+  unfold Convergent
+  intro ⟨e',h0,h1⟩
+  exists e'
+  apply And.intro
+  { exact TransitionStar.function_beta_reduction value_arg econ matching h1 h0 }
+  { exact h1 }
+
+theorem Convergent.function_beta_expansion
+  f
+  (value_arg : Expr.is_value arg)
+  (econ : EvalCon E)
+  (matching : Expr.pattern_match arg p = .some eam)
+: Convergent (E (Expr.sub eam e)) →
+  Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
+:= by
+  unfold Convergent
+  intro ⟨e',h0,h1⟩
+  exists e'
+  apply And.intro
+  { apply TransitionStar.step
+    { apply Transition.econ
+      { exact econ }
+      { apply Transition.pattern_match
+        { exact value_arg }
+        { exact matching }
+      }
+    }
+    { exact h0 }
+  }
+  { exact h1 }
+
+
+
+
+theorem Divergent.function_beta_reduction
+  (value_arg : Expr.is_value arg)
+  (econ : EvalCon E)
+  (matching : Expr.pattern_match arg p = .some eam)
+: Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
+  Divergent (E (Expr.sub eam e))
+:= by sorry
+
+theorem Divergent.function_beta_expansion
+  f
+  (value_arg : Expr.is_value arg)
+  (econ : EvalCon E)
+  (matching : Expr.pattern_match arg p = .some eam)
+: Divergent (E (Expr.sub eam e)) →
+  Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
+:= by sorry
+
+
+
 theorem Safe.function_beta_reduction
   (value_arg : Expr.is_value arg)
   (econ : EvalCon E)
@@ -124,7 +225,15 @@ theorem Safe.function_beta_reduction
 : Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
   Safe (E (Expr.sub eam e))
 := by
-  sorry
+  unfold Safe
+  intro h0
+  cases h0 with
+  | inl cvg =>
+    apply Or.inl
+    exact Convergent.function_beta_reduction value_arg econ matching cvg
+  | inr dvg =>
+    apply Or.inr
+    exact Divergent.function_beta_reduction value_arg econ matching dvg
 
 theorem Safe.function_beta_expansion
   f
@@ -134,9 +243,15 @@ theorem Safe.function_beta_expansion
 : Safe (E (Expr.sub eam e)) →
   Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg))
 := by
-  sorry
-
-
+  unfold Safe
+  intro h0
+  cases h0 with
+  | inl cvg =>
+    apply Or.inl
+    exact Convergent.function_beta_expansion f value_arg econ matching cvg
+  | inr dvg =>
+    apply Or.inr
+    exact Divergent.function_beta_expansion f value_arg econ matching dvg
 
 
 theorem Safe.subject_reduction
