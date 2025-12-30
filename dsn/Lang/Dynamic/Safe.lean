@@ -9,14 +9,8 @@ set_option pp.fieldNotation false
 namespace Lang.Dynamic
 
 
-def Expr.is_head_normal : Expr → Bool
-| .iso l body => .true
-| .record r => .true
-| .function f => .true
-| _ => .false
-
 def Convergent (e : Expr) : Prop :=
-  ∃ e' , TransitionStar e e' ∧ Expr.is_head_normal e'
+  ∃ e' , TransitionStar e e' ∧ Expr.is_value e'
 
 def Divergent (e : Expr) : Prop :=
   (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'')
@@ -268,7 +262,10 @@ theorem Safe.function_beta_reduction
   - given that the transition is NOT call-by-value
   - then app diverges iff the function body diverges
   -/
-  /- TODO: safe_arg not necessary for transition without CBV -/
+  /- TODO: safe_arg not necessary for transition without CBV
+  - dvg(app) then dvg(sub)
+  - cvg(app) then cvg(sub)
+  -/
   (safe_arg : Safe arg)
   (econ : EvalCon E)
   (matching : Expr.pattern_match arg p = .some eam)
@@ -283,7 +280,12 @@ theorem Safe.function_beta_expansion
   - given that the transition is NOT call-by-value
   - then app diverges iff the function body diverges
   -/
-  /- TODO: safe_arg not necessary for transition without CBV -/
+  /- TODO:
+  - dvg(arg) and dvg(sub) then dvg(app)
+  - cvg(arg) and dvg(sub) then dvg(app)
+  - dvg(arg) and cvg(sub) then dvg(app) or cvg(app)
+  - cvg(arg) and cvg(sub) then cvg(app)
+  -/
   (safe_arg : Safe arg)
   (econ : EvalCon E)
   (matching : Expr.pattern_match arg p = .some eam)
