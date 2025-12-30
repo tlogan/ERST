@@ -2365,7 +2365,7 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
   | batch zones' t' left right p4 p5 p6 p7 p8 =>
     unfold Typing
     intro ea
-    intro isval p9
+    intro p9
 
     have ⟨ep,p10,p11⟩ := Typ.factor_reflection p7 p9
 
@@ -2398,8 +2398,7 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
     p4 idl_fresh p5 p6 p7 p8 p9 p10 upper_founded sub_eq
   =>
     unfold Typing
-    intro ea
-    intro isval p13
+    intro ea p13
 
     have ⟨substance, soundness⟩ := substance_and_soundness (Iff.mpr List.mem_singleton rfl)
     have ⟨am', dom_local_assums, subtyping_local_assums⟩ := substance
@@ -2574,7 +2573,7 @@ theorem MultiSubtyping.concat_elim_left {am cs cs'} :
 
 theorem PatLifting.Static.soundness {assums context p t assums' context'} :
   PatLifting.Static assums context p t assums' context' →
-  ∀ tam e, Expr.is_value e → Typing tam e t →
+  ∀ tam e, Typing tam e t →
     ∃ eam , Expr.pattern_match e p = .some eam ∧ MultiTyping tam eam context'
 := by sorry
 
@@ -2826,8 +2825,8 @@ mutual
 
       apply Typing.path_intro
 
-      intros arg p44 p46
-      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') arg p44 p46
+      intros arg p46
+      have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') arg p46
 
       exists eam0
       simp [*]
@@ -2849,8 +2848,8 @@ mutual
       intros eam p32
 
       apply Typing.function_preservation
-      { intros v p40 p42
-        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p40 p42
+      { intros v p42
+        have ⟨eam0,p48,p50⟩ := PatLifting.Static.soundness pat_lifting_static (tam0 ++ tam') v p42
         apply Exists.intro eam0 p48 }
       { apply Function.Typing.Static.subtra_soundness function_typing_static List.mem_cons_self p11 }
       { apply ih0r _ p30 _ p32 }

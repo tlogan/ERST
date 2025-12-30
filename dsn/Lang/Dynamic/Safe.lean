@@ -9,8 +9,14 @@ set_option pp.fieldNotation false
 namespace Lang.Dynamic
 
 
+def Expr.is_head_normal : Expr → Bool
+| .iso l body => .true
+| .record r => .true
+| .function f => .true
+| _ => .false
+
 def Convergent (e : Expr) : Prop :=
-  ∃ e' , TransitionStar e e' ∧ Expr.is_value e'
+  ∃ e' , TransitionStar e e' ∧ Expr.is_head_normal e'
 
 def Divergent (e : Expr) : Prop :=
   (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'')
@@ -112,149 +118,179 @@ mutual
 end
 
 
-theorem TransitionStar.function_beta_reduction
-  (value_arg : Expr.is_value arg = true)
-  (econ : EvalCon E)
-  (matching : Expr.pattern_match arg p = some eam)
-  (value_result : Expr.is_value e')
-: TransitionStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' →
-  TransitionStar (E (Expr.sub eam e)) e'
-:= by
-  intro h0
-  cases h0 with
-  | refl _ =>
-    have h2 := EvalCon.app_not_value (Expr.function ((p, e) :: f)) arg econ
-    exact False.elim (h2 value_result)
-  | step e0 em e' trans trans_star =>
-    have h0 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
-      apply Transition.pattern_match
-      { exact value_arg }
-      { exact matching }
-    have h1 := Transition.econ_deterministic econ h0 trans
-    rw [h1] at trans_star
-    exact trans_star
+-- theorem TransitionStar.function_beta_reduction
+--   (value_arg : Expr.is_value arg = true)
+--   (econ : EvalCon E)
+--   (matching : Expr.pattern_match arg p = some eam)
+--   (value_result : Expr.is_value e')
+-- : TransitionStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' →
+--   TransitionStar (E (Expr.sub eam e)) e'
+-- := by
+--   intro h0
+--   cases h0 with
+--   | refl _ =>
+--     have h2 := EvalCon.app_not_value (Expr.function ((p, e) :: f)) arg econ
+--     exact False.elim (h2 value_result)
+--   | step e0 em e' trans trans_star =>
+--     have h0 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
+--       apply Transition.pattern_match
+--       { exact value_arg }
+--       { exact matching }
+--     have h1 := Transition.econ_deterministic econ h0 trans
+--     rw [h1] at trans_star
+--     exact trans_star
 
 
-theorem Convergent.function_beta_reduction
-  (value_arg : Expr.is_value arg)
-  (econ : EvalCon E)
-  (matching : Expr.pattern_match arg p = .some eam)
-: Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
-  Convergent (E (Expr.sub eam e))
-:= by
-  unfold Convergent
-  intro ⟨e',h0,h1⟩
-  exists e'
-  apply And.intro
-  { exact TransitionStar.function_beta_reduction value_arg econ matching h1 h0 }
-  { exact h1 }
+-- theorem Convergent.function_beta_reduction
+--   (value_arg : Expr.is_value arg)
+--   (econ : EvalCon E)
+--   (matching : Expr.pattern_match arg p = .some eam)
+-- : Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
+--   Convergent (E (Expr.sub eam e))
+-- := by
+--   unfold Convergent
+--   intro ⟨e',h0,h1⟩
+--   exists e'
+--   apply And.intro
+--   { exact TransitionStar.function_beta_reduction value_arg econ matching h1 h0 }
+--   { exact h1 }
 
-theorem Convergent.function_beta_expansion
-  f
-  (value_arg : Expr.is_value arg)
-  (econ : EvalCon E)
-  (matching : Expr.pattern_match arg p = .some eam)
-: Convergent (E (Expr.sub eam e)) →
-  Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
-:= by
-  unfold Convergent
-  intro ⟨e',h0,h1⟩
-  exists e'
-  apply And.intro
-  { apply TransitionStar.step
-    { apply Transition.econ
-      { exact econ }
-      { apply Transition.pattern_match
-        { exact value_arg }
-        { exact matching }
-      }
-    }
-    { exact h0 }
-  }
-  { exact h1 }
-
-
+-- theorem Convergent.function_beta_expansion
+--   f
+--   (value_arg : Expr.is_value arg)
+--   (econ : EvalCon E)
+--   (matching : Expr.pattern_match arg p = .some eam)
+-- : Convergent (E (Expr.sub eam e)) →
+--   Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
+-- := by
+--   unfold Convergent
+--   intro ⟨e',h0,h1⟩
+--   exists e'
+--   apply And.intro
+--   { apply TransitionStar.step
+--     { apply Transition.econ
+--       { exact econ }
+--       { apply Transition.pattern_match
+--         { exact value_arg }
+--         { exact matching }
+--       }
+--     }
+--     { exact h0 }
+--   }
+--   { exact h1 }
 
 
-theorem Divergent.function_beta_reduction
-  (value_arg : Expr.is_value arg)
-  (econ : EvalCon E)
-  (matching : Expr.pattern_match arg p = .some eam)
-: Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
-  Divergent (E (Expr.sub eam e))
-:= by
-  unfold Divergent
-  intro h0 e' h1
-  have h2 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
-    apply Transition.pattern_match
-    { exact value_arg }
-    { exact matching }
 
-  have h3 : TransitionStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' := by
-    apply TransitionStar.step
-    { apply Transition.econ econ h2 }
-    { exact h1 }
-  exact h0 e' h3
 
-theorem Divergent.function_beta_expansion
-  f
-  (value_arg : Expr.is_value arg)
-  (econ : EvalCon E)
-  (matching : Expr.pattern_match arg p = .some eam)
-: Divergent (E (Expr.sub eam e)) →
-  Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
-:= by
-  unfold Divergent
-  intro h0 e' h1
-  cases h1 with
-  | refl _ =>
-    exists (E (Expr.sub eam e))
-    apply Transition.econ econ
-    apply Transition.pattern_match value_arg matching
-  | step e0 em e' trans trans_star =>
-    have h2 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
-      apply Transition.pattern_match
-      { exact value_arg }
-      { exact matching }
-    have h3 := Transition.econ_deterministic econ h2 trans
-    rw [h3] at trans_star
-    exact h0 e' trans_star
+-- theorem Divergent.function_beta_reduction
+--   (value_arg : Expr.is_value arg)
+--   (econ : EvalCon E)
+--   (matching : Expr.pattern_match arg p = .some eam)
+-- : Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
+--   Divergent (E (Expr.sub eam e))
+-- := by
+--   unfold Divergent
+--   intro h0 e' h1
+--   have h2 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
+--     apply Transition.pattern_match
+--     { exact value_arg }
+--     { exact matching }
 
+--   have h3 : TransitionStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' := by
+--     apply TransitionStar.step
+--     { apply Transition.econ econ h2 }
+--     { exact h1 }
+--   exact h0 e' h3
+
+-- theorem Divergent.function_beta_expansion
+--   f
+--   (value_arg : Expr.is_value arg)
+--   (econ : EvalCon E)
+--   (matching : Expr.pattern_match arg p = .some eam)
+-- : Divergent (E (Expr.sub eam e)) →
+--   Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
+-- := by
+--   unfold Divergent
+--   intro h0 e' h1
+--   cases h1 with
+--   | refl _ =>
+--     exists (E (Expr.sub eam e))
+--     apply Transition.econ econ
+--     apply Transition.pattern_match value_arg matching
+--   | step e0 em e' trans trans_star =>
+--     have h2 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
+--       apply Transition.pattern_match
+--       { exact value_arg }
+--       { exact matching }
+--     have h3 := Transition.econ_deterministic econ h2 trans
+--     rw [h3] at trans_star
+--     exact h0 e' trans_star
+
+
+
+-- theorem Safe.function_beta_reduction
+--   (value_arg : Expr.is_value arg)
+--   (econ : EvalCon E)
+--   (matching : Expr.pattern_match arg p = .some eam)
+-- : Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
+--   Safe (E (Expr.sub eam e))
+-- := by
+--   unfold Safe
+--   intro h0
+--   cases h0 with
+--   | inl cvg =>
+--     apply Or.inl
+--     exact Convergent.function_beta_reduction value_arg econ matching cvg
+--   | inr dvg =>
+--     apply Or.inr
+--     exact Divergent.function_beta_reduction value_arg econ matching dvg
+
+-- theorem Safe.function_beta_expansion
+--   f
+--   (value_arg : Expr.is_value arg)
+--   (econ : EvalCon E)
+--   (matching : Expr.pattern_match arg p = .some eam)
+-- : Safe (E (Expr.sub eam e)) →
+--   Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg))
+-- := by
+--   unfold Safe
+--   intro h0
+--   cases h0 with
+--   | inl cvg =>
+--     apply Or.inl
+--     exact Convergent.function_beta_expansion f value_arg econ matching cvg
+--   | inr dvg =>
+--     apply Or.inr
+--     exact Divergent.function_beta_expansion f value_arg econ matching dvg
 
 theorem Safe.function_beta_reduction
-  (value_arg : Expr.is_value arg)
+  /- NOTE:
+  - given that the transition is NOT call-by-value
+  - then app diverges iff the function body diverges
+  -/
+  /- TODO: safe_arg not necessary for transition without CBV -/
+  (safe_arg : Safe arg)
   (econ : EvalCon E)
   (matching : Expr.pattern_match arg p = .some eam)
 : Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
   Safe (E (Expr.sub eam e))
 := by
-  unfold Safe
-  intro h0
-  cases h0 with
-  | inl cvg =>
-    apply Or.inl
-    exact Convergent.function_beta_reduction value_arg econ matching cvg
-  | inr dvg =>
-    apply Or.inr
-    exact Divergent.function_beta_reduction value_arg econ matching dvg
+  sorry
 
 theorem Safe.function_beta_expansion
   f
-  (value_arg : Expr.is_value arg)
+  /- NOTE:
+  - given that the transition is NOT call-by-value
+  - then app diverges iff the function body diverges
+  -/
+  /- TODO: safe_arg not necessary for transition without CBV -/
+  (safe_arg : Safe arg)
   (econ : EvalCon E)
   (matching : Expr.pattern_match arg p = .some eam)
 : Safe (E (Expr.sub eam e)) →
   Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg))
 := by
-  unfold Safe
-  intro h0
-  cases h0 with
-  | inl cvg =>
-    apply Or.inl
-    exact Convergent.function_beta_expansion f value_arg econ matching cvg
-  | inr dvg =>
-    apply Or.inr
-    exact Divergent.function_beta_expansion f value_arg econ matching dvg
+  sorry
 
 
 theorem Safe.subject_reduction

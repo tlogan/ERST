@@ -79,14 +79,15 @@ end
 mutual
   inductive Transition : Expr → Expr → Prop
   | pattern_match :
-    v.is_value →
+    /- NOTE: can't have value requirement for divergence to work for safety -/
+    -- v.is_value →
     Expr.pattern_match v p = some m →
     Transition (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
   | skip :
     v.is_value →
     Expr.pattern_match v p = none →
     Transition (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
-  | erase : ∀ {e t},
+  | erase e t :
     Transition (.anno  e t) e
   | recycle id :
     Transition
@@ -132,7 +133,7 @@ mutual
   := by
     generalize h0 : (E e) = e0 at trans_econ
     cases trans_econ with
-    | pattern_match isval matching =>
+    | pattern_match matching =>
       cases econ with
       | hole =>
         simp at h0

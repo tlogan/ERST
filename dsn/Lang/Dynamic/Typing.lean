@@ -40,7 +40,6 @@ mutual
   | .iso l t => Typing am (.extract e l) t
   | .entry l t => Typing am (.project e l) t
   | .path left right => ∀ arg ,
-    Expr.is_value arg →
     Typing am arg left → Typing am (.app e arg) right
   | .unio left right => Typing am e left ∨ Typing am e right
   | .inter left right => Typing am e left ∧ Typing am e right
@@ -113,8 +112,8 @@ mutual
 
   | path left right =>
     unfold Typing
-    intro h0 e'' h1 h2
-    specialize h0 e'' h1 h2
+    intro h0 e'' h1
+    specialize h0 e'' h1
     apply Typing.subject_reduction
     {
       have econ := EvalCon.applicator e'' .hole
@@ -221,8 +220,8 @@ mutual
 
   | path left right =>
     unfold Typing
-    intro h0 e'' h1 h2
-    specialize h0 e'' h1 h2
+    intro h0 e'' h1
+    specialize h0 e'' h1
     apply Typing.subject_expansion
     {
       have econ := EvalCon.applicator e'' .hole
@@ -1331,8 +1330,8 @@ mutual
 
   | path left right =>
     unfold Typing
-    intro h0 h1 e' h2 h3
-    specialize h1 e' h2 h3
+    intro h0 h1 e' h2
+    specialize h1 e' h2
     apply EvalCon.applicator e' at h0
     apply Typing.record_beta_reduction h0 h1
 
@@ -1433,8 +1432,8 @@ mutual
 
   | path left right =>
     unfold Typing
-    intro h0 h1 e' h2 h3
-    specialize h1 e' h2 h3
+    intro h0 h1 e' h2
+    specialize h1 e' h2
     apply EvalCon.applicator e' at h0
     apply Typing.record_beta_expansion l h0 h1
 
@@ -1587,7 +1586,7 @@ theorem Subtyping.list_typ_diff_elim :
 
 mutual
   theorem Typing.function_beta_reduction
-    (value_arg : Expr.is_value arg)
+    (safe_arg : Safe arg)
     (econ : EvalCon E)
     (matching : Expr.pattern_match arg p = .some eam)
   : Typing am (E (Expr.app (Expr.function ((p, e) :: f)) arg)) t →
@@ -1599,25 +1598,25 @@ mutual
   | top =>
     unfold Typing
     intro h0
-    exact Safe.function_beta_reduction value_arg econ matching h0
+    exact Safe.function_beta_reduction safe_arg econ matching h0
   | iso label body =>
     unfold Typing
     intro h0
     apply EvalCon.extract label at econ
-    apply Typing.function_beta_reduction value_arg econ matching h0
+    apply Typing.function_beta_reduction safe_arg econ matching h0
 
   | entry label body =>
     unfold Typing
     intro h0
     apply EvalCon.project label at econ
-    apply Typing.function_beta_reduction value_arg econ matching h0
+    apply Typing.function_beta_reduction safe_arg econ matching h0
 
   | path left right =>
     unfold Typing
-    intro h0 e' h1 h2
-    specialize h0 e' h1 h2
+    intro h0 e' h1
+    specialize h0 e' h1
     apply EvalCon.applicator e' at econ
-    apply Typing.function_beta_reduction value_arg econ matching h0
+    apply Typing.function_beta_reduction safe_arg econ matching h0
 
   | unio left right =>
     unfold Typing
@@ -1625,30 +1624,30 @@ mutual
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      apply Typing.function_beta_reduction value_arg econ matching h1
+      apply Typing.function_beta_reduction safe_arg econ matching h1
 
     | inr h1 =>
       apply Or.inr
-      apply Typing.function_beta_reduction value_arg econ matching h1
+      apply Typing.function_beta_reduction safe_arg econ matching h1
 
   | inter left right =>
     unfold Typing
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply Typing.function_beta_reduction value_arg econ matching h1 }
-    { apply Typing.function_beta_reduction value_arg econ matching h2 }
+    { apply Typing.function_beta_reduction safe_arg econ matching h1 }
+    { apply Typing.function_beta_reduction safe_arg econ matching h2 }
 
   | diff left right =>
     unfold Typing
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply Typing.function_beta_reduction value_arg econ matching h1 }
+    { apply Typing.function_beta_reduction safe_arg econ matching h1 }
     {
       intro h3
       apply h2
-      apply Typing.function_beta_expansion f value_arg econ matching h3
+      apply Typing.function_beta_expansion f safe_arg econ matching h3
     }
 
   | exi ids quals body =>
@@ -1658,7 +1657,7 @@ mutual
     exists am'
     apply And.intro h1
     apply And.intro h2
-    apply Typing.function_beta_reduction value_arg econ matching h3
+    apply Typing.function_beta_reduction safe_arg econ matching h3
 
   | all ids quals body =>
     unfold Typing
@@ -1667,7 +1666,7 @@ mutual
     {
       intro am' dom_subset dynamic_quals
       specialize h0 am' dom_subset dynamic_quals
-      apply Typing.function_beta_reduction value_arg econ matching h0
+      apply Typing.function_beta_reduction safe_arg econ matching h0
     }
     { exact h1 }
 
@@ -1678,18 +1677,18 @@ mutual
     exists t
     exists lt_size
     apply And.intro imp_typing
-    apply Typing.function_beta_reduction value_arg econ matching typing_body
+    apply Typing.function_beta_reduction safe_arg econ matching typing_body
 
   | var id =>
     unfold Typing
     intro ⟨t, h1, h2⟩
     exists t
     apply And.intro h1
-    apply FinTyping.function_beta_reduction value_arg econ matching h2
+    apply FinTyping.function_beta_reduction safe_arg econ matching h2
 
   theorem Typing.function_beta_expansion
     f
-    (value_arg : Expr.is_value arg)
+    (safe_arg : Safe arg)
     (econ : EvalCon E)
     (matching : Expr.pattern_match arg p = .some eam)
   : Typing am (E (Expr.sub eam e)) t →
@@ -1701,26 +1700,26 @@ mutual
   | top =>
     unfold Typing
     intro h0
-    exact Safe.function_beta_expansion f value_arg econ matching h0
+    exact Safe.function_beta_expansion f safe_arg econ matching h0
 
   | iso label body =>
     unfold Typing
     intro h0
     apply EvalCon.extract label at econ
-    apply Typing.function_beta_expansion f value_arg econ matching h0
+    apply Typing.function_beta_expansion f safe_arg econ matching h0
 
   | entry label body =>
     unfold Typing
     intro h0
     apply EvalCon.project label at econ
-    apply Typing.function_beta_expansion f value_arg econ matching h0
+    apply Typing.function_beta_expansion f safe_arg econ matching h0
 
   | path left right =>
     unfold Typing
-    intro h0 e' h1 h2
-    specialize h0 e' h1 h2
+    intro h0 e' h1
+    specialize h0 e' h1
     apply EvalCon.applicator e' at econ
-    apply Typing.function_beta_expansion f value_arg econ matching h0
+    apply Typing.function_beta_expansion f safe_arg econ matching h0
 
   | unio left right =>
     unfold Typing
@@ -1728,30 +1727,30 @@ mutual
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      apply Typing.function_beta_expansion f value_arg econ matching h1
+      apply Typing.function_beta_expansion f safe_arg econ matching h1
 
     | inr h1 =>
       apply Or.inr
-      apply Typing.function_beta_expansion f value_arg econ matching h1
+      apply Typing.function_beta_expansion f safe_arg econ matching h1
 
   | inter left right =>
     unfold Typing
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply Typing.function_beta_expansion f value_arg econ matching h1 }
-    { apply Typing.function_beta_expansion f value_arg econ matching h2 }
+    { apply Typing.function_beta_expansion f safe_arg econ matching h1 }
+    { apply Typing.function_beta_expansion f safe_arg econ matching h2 }
 
   | diff left right =>
     unfold Typing
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply Typing.function_beta_expansion f value_arg econ matching h1 }
+    { apply Typing.function_beta_expansion f safe_arg econ matching h1 }
     {
       intro h3
       apply h2
-      apply Typing.function_beta_reduction value_arg econ matching h3
+      apply Typing.function_beta_reduction safe_arg econ matching h3
     }
 
   | exi ids quals body =>
@@ -1761,7 +1760,7 @@ mutual
     exists am'
     apply And.intro h1
     apply And.intro h2
-    apply Typing.function_beta_expansion f value_arg econ matching h3
+    apply Typing.function_beta_expansion f safe_arg econ matching h3
 
   | all ids quals body =>
     unfold Typing
@@ -1770,7 +1769,7 @@ mutual
     {
       intro am' dom_subset dynamic_quals
       specialize h0 am' dom_subset dynamic_quals
-      apply Typing.function_beta_expansion f value_arg econ matching h0
+      apply Typing.function_beta_expansion f safe_arg econ matching h0
     }
     { exact h1 }
 
@@ -1781,14 +1780,14 @@ mutual
     exists t
     exists lt_size
     apply And.intro imp_typing
-    apply Typing.function_beta_expansion f value_arg econ matching typing_body
+    apply Typing.function_beta_expansion f safe_arg econ matching typing_body
 
   | var id =>
     unfold Typing
     intro ⟨t, h1, h2⟩
     exists t
     apply And.intro h1
-    apply FinTyping.function_beta_expansion f value_arg econ matching h2
+    apply FinTyping.function_beta_expansion f safe_arg econ matching h2
 
 
 end
@@ -1815,33 +1814,57 @@ end
 
 theorem Typing.path_intro :
   (∀ e' ,
-    Expr.is_value e' → Typing am e' tp →
+    Typing am e' tp →
     ∃ eam , Expr.pattern_match e' p = .some eam ∧ Typing am (Expr.sub eam e) tr
   ) →
   Typing am (Expr.function ((p, e) :: f)) (Typ.path (List.typ_diff tp subtras) tr)
 := by
   intro h0
   unfold Typing
-  intro e' h1 h2
-  have h3 := Subtyping.elimination Subtyping.list_typ_diff_elim h2
-  have ⟨eam,h4,h5⟩ := h0 e' h1 h3
-  apply Typing.function_beta_expansion f h1 .hole h4 h5
+  intro e' h1
+  have h3 := Subtyping.elimination Subtyping.list_typ_diff_elim h1
+  have ⟨eam,h4,h5⟩ := h0 e' h3
+
+  apply Typing.function_beta_expansion f (soundness h1) .hole h4 h5
 
 
 theorem Typing.function_preservation {am p tp e f t } :
-  (∀ {v} , Expr.is_value v → Typing am v tp → ∃ eam , Expr.pattern_match v p = .some eam) →
+  (∀ {v} , Typing am v tp → ∃ eam , Expr.pattern_match v p = .some eam) →
   ¬ Subtyping am t (.path tp .top) →
   Typing am (.function f) t →
   Typing am (.function ((p,e) :: f)) t
 := by sorry
 
 
-theorem Typing.path_elim {am ef ea t t'} :
-  Typing am ef (.path t t') →
-  Typing am ea t →
-  Typing am (.app ef ea) t'
+theorem Typing.star_preservation :
+  TransitionStar e e' →
+  Typing am e t →
+  Typing am e' t
+:= by sorry
+
+/-
+
+-------------------------------------------
+HOW TO DEFINE TYPING AND PROVE PROPERTIES
+-------------------------------------------
+-------------------------------------------
+
+TODO:
+- remove value requirement in typing path definition
+- redefine Safe, to simply converge to HNF
+- refine beta-expansion lemmas to assume safe arg, instead of value arg
+
+-/
+
+
+theorem Typing.path_elim
+  (typing_cator : Typing am ef (.path t t'))
+  (typing_arg : Typing am ea t)
+: Typing am (.app ef ea) t'
 := by
-  sorry
+  unfold Typing at typing_cator
+  exact typing_cator ea typing_arg
+
 
 theorem Typing.loop_path_elim {am e t} id :
   Typing am e (.path (.var id) t) →

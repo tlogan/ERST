@@ -9,9 +9,9 @@ namespace Lang.Dynamic
 mutual
   inductive RecordCon : (Expr → List (String × Expr)) → Prop
   | head l r :  EvalCon E → RecordCon (fun e => (l, E e) :: r)
-  | tail l :
+  | tail l ev :
       List.is_fresh_key l (R e) →
-      Expr.is_value ev →
+      -- Expr.is_value ev →
       RecordCon R →
       RecordCon (fun e => (l,ev) :: (R e))
 
@@ -19,8 +19,9 @@ mutual
   | hole : EvalCon (fun e => e)
   | iso l : EvalCon E -> EvalCon (fun e => .iso l (E e))
   | record : RecordCon R → EvalCon (fun e => .record (R e))
-  | applicator e' : EvalCon E → EvalCon (fun e => .app (E e) e')
-  | applicand f : EvalCon E → EvalCon (fun e => .app (.function f) (E e))
+  | applicator arg : EvalCon E → EvalCon (fun e => .app (E e) arg)
+  -- | applicand f : EvalCon E → EvalCon (fun e => .app (.function f) (E e))
+  | applicand cator : EvalCon E → EvalCon (fun e => .app cator (E e))
   | loopy : EvalCon E → EvalCon (fun e => Expr.loop (E e))
 end
 

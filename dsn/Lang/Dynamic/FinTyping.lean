@@ -13,7 +13,6 @@ def FinTyping (e : Expr) : Typ → Prop
 | .iso l body => FinTyping (.extract e l) body
 | .entry l body => FinTyping (.project e l) body
 | .path left right => ∀ arg ,
-  Expr.is_value arg →
   FinTyping arg left → FinTyping (.app e arg) right
 | .unio left right => FinTyping e left ∨ FinTyping e right
 | .inter left right => FinTyping e left ∧ FinTyping e right
@@ -124,8 +123,8 @@ mutual
 
   | path left right =>
     unfold FinTyping
-    intro h0 e'' h1 h2
-    specialize h0 e'' h1 h2
+    intro h0 e'' h1
+    specialize h0 e'' h1
     apply FinTyping.subject_reduction
     {
       have econ := EvalCon.applicator e'' .hole
@@ -206,8 +205,8 @@ mutual
 
   | path left right =>
     unfold FinTyping
-    intro h0 e'' h1 h2
-    specialize h0 e'' h1 h2
+    intro h0 e'' h1
+    specialize h0 e'' h1
     apply FinTyping.subject_expansion
     {
       have econ := EvalCon.applicator e'' .hole
@@ -464,7 +463,7 @@ end
 
 mutual
   theorem FinTyping.function_beta_reduction
-    (value_arg : Expr.is_value arg)
+    (safe_arg : Safe arg)
     (econ : EvalCon E)
     (matching : Expr.pattern_match arg p = .some eam)
   : FinTyping (E (Expr.app (Expr.function ((p, e) :: f)) arg)) t →
@@ -473,50 +472,50 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    exact Safe.function_beta_reduction value_arg econ matching h0
+    exact Safe.function_beta_reduction safe_arg econ matching h0
   | iso label body =>
     intro h0
     apply EvalCon.extract label at econ
-    apply FinTyping.function_beta_reduction value_arg econ matching h0
+    apply FinTyping.function_beta_reduction safe_arg econ matching h0
 
   | entry label body =>
     intro h0
     apply EvalCon.project label at econ
-    apply FinTyping.function_beta_reduction value_arg econ matching h0
+    apply FinTyping.function_beta_reduction safe_arg econ matching h0
 
   | path left right =>
-    intro h0 e' h1 h2
-    specialize h0 e' h1 h2
+    intro h0 e' h1
+    specialize h0 e' h1
     apply EvalCon.applicator e' at econ
-    apply FinTyping.function_beta_reduction value_arg econ matching h0
+    apply FinTyping.function_beta_reduction safe_arg econ matching h0
 
   | unio left right =>
     intro h0
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      apply FinTyping.function_beta_reduction value_arg econ matching h1
+      apply FinTyping.function_beta_reduction safe_arg econ matching h1
 
     | inr h1 =>
       apply Or.inr
-      apply FinTyping.function_beta_reduction value_arg econ matching h1
+      apply FinTyping.function_beta_reduction safe_arg econ matching h1
 
   | inter left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_reduction value_arg econ matching h1 }
-    { apply FinTyping.function_beta_reduction value_arg econ matching h2 }
+    { apply FinTyping.function_beta_reduction safe_arg econ matching h1 }
+    { apply FinTyping.function_beta_reduction safe_arg econ matching h2 }
 
   | diff left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_reduction value_arg econ matching h1 }
+    { apply FinTyping.function_beta_reduction safe_arg econ matching h1 }
     {
       intro h3
       apply h2
-      apply FinTyping.function_beta_expansion f value_arg econ matching h3
+      apply FinTyping.function_beta_expansion f safe_arg econ matching h3
     }
 
   | _ =>
@@ -524,7 +523,7 @@ mutual
 
   theorem FinTyping.function_beta_expansion
     f
-    (value_arg : Expr.is_value arg)
+    (safe_arg : Safe arg)
     (econ : EvalCon E)
     (matching : Expr.pattern_match arg p = .some eam)
   : FinTyping (E (Expr.sub eam e)) t →
@@ -533,51 +532,51 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    exact Safe.function_beta_expansion f value_arg econ matching h0
+    exact Safe.function_beta_expansion f safe_arg econ matching h0
 
   | iso label body =>
     intro h0
     apply EvalCon.extract label at econ
-    apply FinTyping.function_beta_expansion f value_arg econ matching h0
+    apply FinTyping.function_beta_expansion f safe_arg econ matching h0
 
   | entry label body =>
     intro h0
     apply EvalCon.project label at econ
-    apply FinTyping.function_beta_expansion f value_arg econ matching h0
+    apply FinTyping.function_beta_expansion f safe_arg econ matching h0
 
   | path left right =>
-    intro h0 e' h1 h2
-    specialize h0 e' h1 h2
+    intro h0 e' h1
+    specialize h0 e' h1
     apply EvalCon.applicator e' at econ
-    apply FinTyping.function_beta_expansion f value_arg econ matching h0
+    apply FinTyping.function_beta_expansion f safe_arg econ matching h0
 
   | unio left right =>
     intro h0
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      apply FinTyping.function_beta_expansion f value_arg econ matching h1
+      apply FinTyping.function_beta_expansion f safe_arg econ matching h1
 
     | inr h1 =>
       apply Or.inr
-      apply FinTyping.function_beta_expansion f value_arg econ matching h1
+      apply FinTyping.function_beta_expansion f safe_arg econ matching h1
 
   | inter left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_expansion f value_arg econ matching h1 }
-    { apply FinTyping.function_beta_expansion f value_arg econ matching h2 }
+    { apply FinTyping.function_beta_expansion f safe_arg econ matching h1 }
+    { apply FinTyping.function_beta_expansion f safe_arg econ matching h2 }
 
   | diff left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_expansion f value_arg econ matching h1 }
+    { apply FinTyping.function_beta_expansion f safe_arg econ matching h1 }
     {
       intro h3
       apply h2
-      apply FinTyping.function_beta_reduction value_arg econ matching h3
+      apply FinTyping.function_beta_reduction safe_arg econ matching h3
     }
 
   | _ =>
@@ -609,8 +608,8 @@ mutual
     apply FinTyping.record_beta_reduction h0 h1
 
   | path left right =>
-    intro h0 h1 e' h2 h3
-    specialize h1 e' h2 h3
+    intro h0 h1 e' h2
+    specialize h1 e' h2
     apply EvalCon.applicator e' at h0
     apply FinTyping.record_beta_reduction h0 h1
 
@@ -670,8 +669,8 @@ mutual
     apply FinTyping.record_beta_expansion l h0 h1
 
   | path left right =>
-    intro h0 h1 e' h2 h3
-    specialize h1 e' h2 h3
+    intro h0 h1 e' h2
+    specialize h1 e' h2
     apply EvalCon.applicator e' at h0
     apply FinTyping.record_beta_expansion l h0 h1
 
