@@ -1,5 +1,5 @@
 import Lang.Basic
-import Lang.Dynamic.EvalCon
+import Lang.Dynamic.NEvalCxt
 import Lang.Dynamic.NStep
 import Lang.Dynamic.NStepStar
 
@@ -14,7 +14,7 @@ def Safe (e : Expr) : Prop :=
 
 -- theorem NStepStar.function_beta_reduction
 --   (value_arg : Expr.is_value arg = true)
---   (econ : EvalCon E)
+--   (necxt : NEvalCxt E)
 --   (matching : Expr.pattern_match arg p = some eam)
 --   (value_result : Expr.is_value e')
 -- : NStepStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' →
@@ -23,21 +23,21 @@ def Safe (e : Expr) : Prop :=
 --   intro h0
 --   cases h0 with
 --   | refl _ =>
---     have h2 := EvalCon.app_not_value (Expr.function ((p, e) :: f)) arg econ
+--     have h2 := NEvalCxt.app_not_value (Expr.function ((p, e) :: f)) arg necxt
 --     exact False.elim (h2 value_result)
 --   | step e0 em e' trans trans_star =>
 --     have h0 : NStep (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
 --       apply NStep.pattern_match
 --       { exact value_arg }
 --       { exact matching }
---     have h1 := NStep.econ_deterministic econ h0 trans
+--     have h1 := NStep.necxt_deterministic necxt h0 trans
 --     rw [h1] at trans_star
 --     exact trans_star
 
 
 -- theorem Convergent.function_beta_reduction
 --   (value_arg : Expr.is_value arg)
---   (econ : EvalCon E)
+--   (necxt : NEvalCxt E)
 --   (matching : Expr.pattern_match arg p = .some eam)
 -- : Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
 --   Convergent (E (Expr.sub eam e))
@@ -46,13 +46,13 @@ def Safe (e : Expr) : Prop :=
 --   intro ⟨e',h0,h1⟩
 --   exists e'
 --   apply And.intro
---   { exact NStepStar.function_beta_reduction value_arg econ matching h1 h0 }
+--   { exact NStepStar.function_beta_reduction value_arg necxt matching h1 h0 }
 --   { exact h1 }
 
 -- theorem Convergent.function_beta_expansion
 --   f
 --   (value_arg : Expr.is_value arg)
---   (econ : EvalCon E)
+--   (necxt : NEvalCxt E)
 --   (matching : Expr.pattern_match arg p = .some eam)
 -- : Convergent (E (Expr.sub eam e)) →
 --   Convergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
@@ -62,8 +62,8 @@ def Safe (e : Expr) : Prop :=
 --   exists e'
 --   apply And.intro
 --   { apply NStepStar.step
---     { apply NStep.econ
---       { exact econ }
+--     { apply NStep.necxt
+--       { exact necxt }
 --       { apply NStep.pattern_match
 --         { exact value_arg }
 --         { exact matching }
@@ -78,7 +78,7 @@ def Safe (e : Expr) : Prop :=
 
 -- theorem Divergent.function_beta_reduction
 --   (value_arg : Expr.is_value arg)
---   (econ : EvalCon E)
+--   (necxt : NEvalCxt E)
 --   (matching : Expr.pattern_match arg p = .some eam)
 -- : Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
 --   Divergent (E (Expr.sub eam e))
@@ -92,14 +92,14 @@ def Safe (e : Expr) : Prop :=
 
 --   have h3 : NStepStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' := by
 --     apply NStepStar.step
---     { apply NStep.econ econ h2 }
+--     { apply NStep.necxt necxt h2 }
 --     { exact h1 }
 --   exact h0 e' h3
 
 -- theorem Divergent.function_beta_expansion
 --   f
 --   (value_arg : Expr.is_value arg)
---   (econ : EvalCon E)
+--   (necxt : NEvalCxt E)
 --   (matching : Expr.pattern_match arg p = .some eam)
 -- : Divergent (E (Expr.sub eam e)) →
 --   Divergent (E (Expr.app (Expr.function ((p, e) :: f)) arg))
@@ -109,14 +109,14 @@ def Safe (e : Expr) : Prop :=
 --   cases h1 with
 --   | refl _ =>
 --     exists (E (Expr.sub eam e))
---     apply NStep.econ econ
+--     apply NStep.necxt necxt
 --     apply NStep.pattern_match value_arg matching
 --   | step e0 em e' trans trans_star =>
 --     have h2 : NStep (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
 --       apply NStep.pattern_match
 --       { exact value_arg }
 --       { exact matching }
---     have h3 := NStep.econ_deterministic econ h2 trans
+--     have h3 := NStep.necxt_deterministic necxt h2 trans
 --     rw [h3] at trans_star
 --     exact h0 e' trans_star
 
@@ -124,7 +124,7 @@ def Safe (e : Expr) : Prop :=
 
 -- theorem Safe.function_beta_reduction
 --   (value_arg : Expr.is_value arg)
---   (econ : EvalCon E)
+--   (necxt : NEvalCxt E)
 --   (matching : Expr.pattern_match arg p = .some eam)
 -- : Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
 --   Safe (E (Expr.sub eam e))
@@ -134,15 +134,15 @@ def Safe (e : Expr) : Prop :=
 --   cases h0 with
 --   | inl cvg =>
 --     apply Or.inl
---     exact Convergent.function_beta_reduction value_arg econ matching cvg
+--     exact Convergent.function_beta_reduction value_arg necxt matching cvg
 --   | inr dvg =>
 --     apply Or.inr
---     exact Divergent.function_beta_reduction value_arg econ matching dvg
+--     exact Divergent.function_beta_reduction value_arg necxt matching dvg
 
 -- theorem Safe.function_beta_expansion
 --   f
 --   (value_arg : Expr.is_value arg)
---   (econ : EvalCon E)
+--   (necxt : NEvalCxt E)
 --   (matching : Expr.pattern_match arg p = .some eam)
 -- : Safe (E (Expr.sub eam e)) →
 --   Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg))
@@ -152,10 +152,10 @@ def Safe (e : Expr) : Prop :=
 --   cases h0 with
 --   | inl cvg =>
 --     apply Or.inl
---     exact Convergent.function_beta_expansion f value_arg econ matching cvg
+--     exact Convergent.function_beta_expansion f value_arg necxt matching cvg
 --   | inr dvg =>
 --     apply Or.inr
---     exact Divergent.function_beta_expansion f value_arg econ matching dvg
+--     exact Divergent.function_beta_expansion f value_arg necxt matching dvg
 
 theorem Safe.function_beta_reduction
   /- NOTE:
@@ -167,7 +167,7 @@ theorem Safe.function_beta_reduction
   - cvg(app) then cvg(sub)
   -/
   (safe_arg : Safe arg)
-  (econ : EvalCon E)
+  (necxt : NEvalCxt E)
   (matching : Expr.pattern_match arg p = .some eam)
 : Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
   Safe (E (Expr.sub eam e))
@@ -187,7 +187,7 @@ theorem Safe.function_beta_expansion
   - cvg(arg) and cvg(sub) then cvg(app)
   -/
   (safe_arg : Safe arg)
-  (econ : EvalCon E)
+  (necxt : NEvalCxt E)
   (matching : Expr.pattern_match arg p = .some eam)
 : Safe (E (Expr.sub eam e)) →
   Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg))
@@ -206,27 +206,27 @@ theorem Safe.subject_expansion
 := by sorry
 
 
-theorem Safe.econ_reflection :
-  EvalCon E →
+theorem Safe.necxt_reflection :
+  NEvalCxt E →
   Safe (E e) →
   Safe e
 := by
   sorry
 
-theorem Safe.econ_preservation :
-  EvalCon E → Safe (E e) →
+theorem Safe.necxt_preservation :
+  NEvalCxt E → Safe (E e) →
   Safe e' → Safe (E e')
 := by sorry
 
 
 theorem Safe.record_beta_reduction :
-  EvalCon E →
+  NEvalCxt E →
   Safe (E (Expr.project (Expr.record [(l, e)]) l)) →
   Safe (E e)
 := by sorry
 
 theorem Safe.record_beta_expansion l :
-  EvalCon E →
+  NEvalCxt E →
   Safe (E e) →
   Safe (E (Expr.project (Expr.record [(l, e)]) l))
 := by sorry

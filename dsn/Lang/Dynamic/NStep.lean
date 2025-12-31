@@ -1,5 +1,5 @@
 import Lang.Basic
-import Lang.Dynamic.EvalCon
+import Lang.Dynamic.NEvalCxt
 
 set_option pp.fieldNotation false
 
@@ -93,8 +93,8 @@ mutual
     NStep
       (.loop (.function [(.var id, e)]))
       (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
-  | econ :
-      EvalCon E → NStep e e' →
+  | necxt :
+      NEvalCxt E → NStep e e' →
       NStep (E e) (E e')
 end
 
@@ -125,16 +125,16 @@ mutual
   : e' = (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
   := by sorry
 
-  theorem NStep.econ_deterministic
-    (econ : EvalCon E)
+  theorem NStep.necxt_deterministic
+    (necxt : NEvalCxt E)
     (trans : NStep e e')
-    (trans_econ : NStep (E e) e'')
+    (trans_necxt : NStep (E e) e'')
   : e'' = (E e')
   := by
-    generalize h0 : (E e) = e0 at trans_econ
-    cases trans_econ with
+    generalize h0 : (E e) = e0 at trans_necxt
+    cases trans_necxt with
     | pattern_match matching =>
-      cases econ with
+      cases necxt with
       | hole =>
         simp at h0
         simp

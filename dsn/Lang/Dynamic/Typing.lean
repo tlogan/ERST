@@ -1,5 +1,5 @@
 import Lang.Basic
-import Lang.Dynamic.EvalCon
+import Lang.Dynamic.NEvalCxt
 import Lang.Dynamic.NStep
 import Lang.Dynamic.NStepStar
 import Lang.Dynamic.Safe
@@ -94,8 +94,8 @@ mutual
     intro h0
     apply Typing.subject_reduction
     {
-      have econ := EvalCon.extract label .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.extract label .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -104,8 +104,8 @@ mutual
     intro h0
     apply Typing.subject_reduction
     {
-      have econ := EvalCon.project label .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.project label .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -116,8 +116,8 @@ mutual
     specialize h0 e'' h1
     apply Typing.subject_reduction
     {
-      have econ := EvalCon.applicator e'' .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.applicator e'' .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -202,8 +202,8 @@ mutual
     intro h0
     apply Typing.subject_expansion
     {
-      have econ := EvalCon.extract label .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.extract label .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -212,8 +212,8 @@ mutual
     intro h0
     apply Typing.subject_expansion
     {
-      have econ := EvalCon.project label .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.project label .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -224,8 +224,8 @@ mutual
     specialize h0 e'' h1
     apply Typing.subject_expansion
     {
-      have econ := EvalCon.applicator e'' .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.applicator e'' .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -623,12 +623,12 @@ theorem Typing.soundness
 --   cases ih with
 --   | inl h0 =>
 --     apply Or.inl
---     have econ := EvalCon.extract label .hole
---     apply Convergent.econ_reflection econ h0
+--     have necxt := NEvalCxt.extract label .hole
+--     apply Convergent.necxt_reflection necxt h0
 --   | inr h0 =>
 --     apply Or.inr
---     have econ := EvalCon.extract label .hole
---     apply Divergent.econ_reflection econ h0
+--     have necxt := NEvalCxt.extract label .hole
+--     apply Divergent.necxt_reflection necxt h0
 
 -- | entry label body =>
 --   unfold Typing at typing
@@ -636,12 +636,12 @@ theorem Typing.soundness
 --   cases ih with
 --   | inl h0 =>
 --     apply Or.inl
---     have econ := EvalCon.project label .hole
---     apply Convergent.econ_reflection econ h0
+--     have necxt := NEvalCxt.project label .hole
+--     apply Convergent.necxt_reflection necxt h0
 --   | inr h0 =>
 --     apply Or.inr
---     have econ := EvalCon.project label .hole
---     apply Divergent.econ_reflection econ h0
+--     have necxt := NEvalCxt.project label .hole
+--     apply Divergent.necxt_reflection necxt h0
 
 -- | path left right =>
 --   apply Typing.path_determines_function at typing
@@ -698,8 +698,8 @@ theorem Expr.sub_sub_removal :
 := by sorry
 
 
--- theorem EvalCon.transition_reflection :
---   EvalCon E →
+-- theorem NEvalCxt.transition_reflection :
+--   NEvalCxt E →
 --   NStep (E e) e' →
 --   ∃ e'' , NStep e e''
 -- := by sorry
@@ -711,7 +711,7 @@ theorem Expr.sub_sub_removal :
 
 
 -- theorem NStepStar.record_beta_expansion {e l e' id}:
---   EvalCon E → Expr.is_value e' →
+--   NEvalCxt E → Expr.is_value e' →
 --   NStepStar (E e) e' →
 --   NStepStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
 -- := by
@@ -725,10 +725,10 @@ theorem Expr.sub_sub_removal :
 --     rw [← h3]
 --     apply NStepStar.step
 --     {
---       apply EvalCon.soundness h0
+--       apply NEvalCxt.soundness h0
 --       apply NStep.appmatch
 --       { reduce ;
---         have h4 := EvalCon.is_value_determines_hole h0 h1
+--         have h4 := NEvalCxt.is_value_determines_hole h0 h1
 --         rw [h4] at h1
 --         simp [*]
 --       }
@@ -745,33 +745,33 @@ theorem Expr.sub_sub_removal :
 --     intro e h5
 --     rw [← h5] at h3
 --     sorry
---     -- have ⟨et, h6⟩ := EvalCon.transition_reflection h0 h3
+--     -- have ⟨et, h6⟩ := NEvalCxt.transition_reflection h0 h3
 --     -- apply NStepStar.step
 --     -- {
---     --   apply EvalCon.soundness h0
+--     --   apply NEvalCxt.soundness h0
 --     --   apply NStep.applicand
 --     --   apply NStep.entry _ _ h6
 --     -- }
 --     -- { apply ih h2
---     --   exact EvalCon.transition_unique h0 h6 h3
+--     --   exact NEvalCxt.transition_unique h0 h6 h3
 --     -- }
 
 
 -- theorem FinTyping.record_beta_reduction :
---   EvalCon E →
+--   NEvalCxt E →
 --   FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t →
 --   FinTyping (E e) t
 -- := by sorry
 
 
 -- theorem Convergent.record_beta_reduction :
---   EvalCon E →
+--   NEvalCxt E →
 --   Convergent (E (Expr.project (Expr.record [(l, e)]) l)) →
 --   Convergent (E e)
 -- := by sorry
 
 -- theorem Convergent.record_beta_expansion :
---   EvalCon E →
+--   NEvalCxt E →
 --   Convergent (E e) →
 --   Convergent (E (Expr.project (Expr.record [(l, e)]) l))
 -- := by
@@ -784,20 +784,20 @@ theorem Expr.sub_sub_removal :
 --   { exact h3 }
 
 -- theorem Divergent.record_beta_reduction :
---   EvalCon E →
+--   NEvalCxt E →
 --   Divergent (E (Expr.project (Expr.record [(l, e)]) l)) →
 --   Divergent (E e)
 -- := by
 --   sorry
 
 -- theorem Divergent.record_beta_expansion :
---   EvalCon E →
+--   NEvalCxt E →
 --   Divergent (E e) → Divergent (E (Expr.project (Expr.record [(l, e)]) l))
 -- := by
 --   sorry
 
 -- theorem FinTyping.record_beta_expansion l :
---   EvalCon E →
+--   NEvalCxt E →
 --   FinTyping (E e) t →
 --   FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t
 -- := by cases t with
@@ -814,19 +814,19 @@ theorem Expr.sub_sub_removal :
 
 -- | iso label body =>
 --   intro h0 h1
---   apply EvalCon.extract label at h0
+--   apply NEvalCxt.extract label at h0
 --   apply FinTyping.record_beta_expansion l h0 h1
 
 
 -- | entry label body =>
 --   intro h0 h1
---   apply EvalCon.project label at h0
+--   apply NEvalCxt.project label at h0
 --   apply FinTyping.record_beta_expansion l h0 h1
 
 -- | path left right =>
 --   intro h0 h1 e' h2
 --   specialize h1 e' h2
---   apply EvalCon.applicator e' at h0
+--   apply NEvalCxt.applicator e' at h0
 --   apply FinTyping.record_beta_expansion l h0 h1
 
 
@@ -868,7 +868,7 @@ theorem Expr.sub_sub_removal :
 
 -- mutual
 --   theorem Typing.record_beta_reduction :
---     EvalCon E →
+--     NEvalCxt E →
 --     Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t →
 --     Typing am (E e) t
 --   := match t with
@@ -891,20 +891,20 @@ theorem Expr.sub_sub_removal :
 --   | .iso label body => by
 --     unfold Typing
 --     intro h0 h1
---     apply EvalCon.extract label at h0
+--     apply NEvalCxt.extract label at h0
 --     apply Typing.record_beta_reduction h0 h1
 
 --   | .entry label body => by
 --     unfold Typing
 --     intro h0 h1
---     apply EvalCon.project label at h0
+--     apply NEvalCxt.project label at h0
 --     apply Typing.record_beta_reduction h0 h1
 
 --   | .path left right => by
 --     unfold Typing
 --     intro h0 h1 e' h2
 --     specialize h1 e' h2
---     apply EvalCon.applicator e' at h0
+--     apply NEvalCxt.applicator e' at h0
 --     apply Typing.record_beta_reduction h0 h1
 
 --   | .unio left right => by
@@ -977,7 +977,7 @@ theorem Expr.sub_sub_removal :
 --     apply FinTyping.record_beta_reduction h0 h3
 
 --   theorem Typing.record_beta_expansion l :
---     EvalCon E →
+--     NEvalCxt E →
 --     Typing am (E e) t →
 --     Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t
 --   :=
@@ -1002,20 +1002,20 @@ theorem Expr.sub_sub_removal :
 --   | .iso label body => by
 --     unfold Typing
 --     intro h0 h1
---     apply EvalCon.extract label at h0
+--     apply NEvalCxt.extract label at h0
 --     apply Typing.record_beta_expansion l h0 h1
 
 --   | .entry label body => by
 --     unfold Typing
 --     intro h0 h1
---     apply EvalCon.project label at h0
+--     apply NEvalCxt.project label at h0
 --     apply Typing.record_beta_expansion l h0 h1
 
 --   | .path left right => by
 --     unfold Typing
 --     intro h0 h1 e' h2
 --     specialize h1 e' h2
---     apply EvalCon.applicator e' at h0
+--     apply NEvalCxt.applicator e' at h0
 --     apply Typing.record_beta_expansion l h0 h1
 
 --   | .unio left right => by
@@ -1105,13 +1105,8 @@ theorem NStep.not_value :
 
 
 
-theorem Divergent.transition :
-  Divergent e →
-  ∃ e' , NStep e e' ∧ Divergent e'
-:= by sorry
-
--- theorem Divergent.econ_preservation :
---   EvalCon E →
+-- theorem Divergent.necxt_preservation :
+--   NEvalCxt E →
 --   Divergent e →
 --   Divergent (E e)
 -- := by
@@ -1127,7 +1122,7 @@ theorem Divergent.transition :
 --     specialize h1 e (NStepStar.refl e)
 --     have ⟨e', h3⟩ := h1
 --     exists (E e')
---     exact NStep.econ h0 h3
+--     exact NStep.necxt h0 h3
 
 --   | step eg em e' h4 h5 ih =>
 
@@ -1138,7 +1133,7 @@ theorem Divergent.transition :
 --     have ⟨et, h6,h7⟩ := h1
 --     apply ih h7
 --     apply NStep.deterministic
---     { exact NStep.econ h0 h6 }
+--     { exact NStep.necxt h0 h6 }
 --     { exact h4 }
 
 mutual
@@ -1182,17 +1177,18 @@ TODO: remove the swap lemmas
 Prove beta reduction lemmas inductively without using swap
 
 -/
-theorem Typing.swap_safe_preservation
-  (econ : EvalCon E)
-  (typing : Typing am e t)
-  (typing' : Typing am e' t)
-  (cod : Convergent (E e') ∨ Divergent (E e'))
-: Typing am' (E e) t' → Typing am' (E e') t'
-:= by sorry
+
+-- theorem Typing.swap_safe_preservation
+--   (necxt : NEvalCxt E)
+--   (typing : Typing am e t)
+--   (typing' : Typing am e' t)
+--   (cod : Convergent (E e') ∨ Divergent (E e'))
+-- : Typing am' (E e) t' → Typing am' (E e') t'
+-- := by sorry
 
 
 -- theorem Typing.value_swap_preservation
---   (econ : EvalCon E)
+--   (necxt : NEvalCxt E)
 --   (isval : Expr.is_value e)
 --   (typing : Typing am e t)
 --   (typing' : Typing am e' t)
@@ -1204,29 +1200,29 @@ theorem Typing.swap_safe_preservation
 
 -- | top =>
 --   unfold Typing
---   intro typing_econ
+--   intro typing_necxt
 --   apply Typing.soundness at typing'
 --   sorry
---   -- exact Safe.econ_preservation econ typing_econ typing'
+--   -- exact Safe.necxt_preservation necxt typing_necxt typing'
 
 -- | iso label body =>
 --   unfold Typing
---   apply EvalCon.extract label at econ
---   intro typing_econ
---   apply Typing.value_swap_preservation econ isval typing typing' typing_econ
+--   apply NEvalCxt.extract label at necxt
+--   intro typing_necxt
+--   apply Typing.value_swap_preservation necxt isval typing typing' typing_necxt
 
 
 -- | entry label body =>
 --   unfold Typing
---   apply EvalCon.project label at econ
---   intro typing_econ
---   apply Typing.value_swap_preservation econ isval typing typing' typing_econ
+--   apply NEvalCxt.project label at necxt
+--   intro typing_necxt
+--   apply Typing.value_swap_preservation necxt isval typing typing' typing_necxt
 
 -- | path left right =>
 --   unfold Typing
 --   intro h4 e' h5
---   apply EvalCon.applicator e' at econ
---   apply Typing.value_swap_preservation econ isval typing typing' (h4 e' h5)
+--   apply NEvalCxt.applicator e' at necxt
+--   apply Typing.value_swap_preservation necxt isval typing typing' (h4 e' h5)
 
 
 -- | unio left right =>
@@ -1235,18 +1231,18 @@ theorem Typing.swap_safe_preservation
 --   cases h4 with
 --   | inl h5 =>
 --     apply Or.inl
---     apply Typing.value_swap_preservation econ isval typing typing' h5
+--     apply Typing.value_swap_preservation necxt isval typing typing' h5
 --   | inr h5 =>
 --     apply Or.inr
---     apply Typing.value_swap_preservation econ isval typing typing' h5
+--     apply Typing.value_swap_preservation necxt isval typing typing' h5
 
 -- | inter left right =>
 --   unfold Typing
 --   intro h4
 --   have ⟨h5,h6⟩ := h4
 --   apply And.intro
---   { apply Typing.value_swap_preservation econ isval typing typing' h5 }
---   { apply Typing.value_swap_preservation econ isval typing typing' h6 }
+--   { apply Typing.value_swap_preservation necxt isval typing typing' h5 }
+--   { apply Typing.value_swap_preservation necxt isval typing typing' h6 }
 
 -- | diff left right =>
 --   unfold Typing
@@ -1254,13 +1250,13 @@ theorem Typing.swap_safe_preservation
 --   have ⟨h5,h6⟩ := h4
 --   clear h4
 --   apply And.intro
---   { apply Typing.value_swap_preservation econ isval typing typing' h5 }
+--   { apply Typing.value_swap_preservation necxt isval typing typing' h5 }
 --   {
 --     intro h7
 --     apply h6
 --     clear h6
 --     apply Typing.swap_safe_preservation
---     { exact econ }
+--     { exact necxt }
 --     { exact typing' }
 --     { exact typing }
 --     { exact soundness h5 }
@@ -1274,14 +1270,14 @@ theorem Typing.swap_safe_preservation
 --   exists am'
 --   apply And.intro h5
 --   apply And.intro h6
---   apply Typing.value_swap_preservation econ isval typing typing' h7
+--   apply Typing.value_swap_preservation necxt isval typing typing' h7
 -- | all ids quals body =>
 --   unfold Typing
 --   intro ⟨h4,h5⟩
 --   apply And.intro
 --   {
 --     intro am'' h6 h7
---     apply Typing.value_swap_preservation econ isval typing typing' (h4 am'' h6 h7)
+--     apply Typing.value_swap_preservation necxt isval typing typing' (h4 am'' h6 h7)
 --   }
 --   { exact h5 }
 -- | lfp id body =>
@@ -1292,7 +1288,7 @@ theorem Typing.swap_safe_preservation
 --   exists t''
 --   exists h6
 --   apply And.intro h7
---   apply Typing.value_swap_preservation econ isval typing typing' h8
+--   apply Typing.value_swap_preservation necxt isval typing typing' h8
 -- | var id =>
 --   unfold Typing
 --   intro h4
@@ -1300,12 +1296,12 @@ theorem Typing.swap_safe_preservation
 --   clear h4
 --   simp [*]
 --   sorry
---   -- apply FinTyping.value_swap_preservation econ isval typing.to_fin typing'.to_fin h6
+--   -- apply FinTyping.value_swap_preservation necxt isval typing.to_fin typing'.to_fin h6
 
 
 mutual
   theorem Typing.record_beta_reduction :
-    EvalCon E →
+    NEvalCxt E →
     Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t →
     Typing am (E e) t
   := by cases t with
@@ -1319,20 +1315,20 @@ mutual
   | iso label body =>
     unfold Typing
     intro h0 h1
-    apply EvalCon.extract label at h0
+    apply NEvalCxt.extract label at h0
     apply Typing.record_beta_reduction h0 h1
 
   | entry label body =>
     unfold Typing
     intro h0 h1
-    apply EvalCon.project label at h0
+    apply NEvalCxt.project label at h0
     apply Typing.record_beta_reduction h0 h1
 
   | path left right =>
     unfold Typing
     intro h0 h1 e' h2
     specialize h1 e' h2
-    apply EvalCon.applicator e' at h0
+    apply NEvalCxt.applicator e' at h0
     apply Typing.record_beta_reduction h0 h1
 
 
@@ -1406,7 +1402,7 @@ mutual
     apply FinTyping.record_beta_reduction h0 h3
 
   theorem Typing.record_beta_expansion l :
-    EvalCon E →
+    NEvalCxt E →
     Typing am (E e) t →
     Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t
   := by cases t with
@@ -1421,20 +1417,20 @@ mutual
   | iso label body =>
     unfold Typing
     intro h0 h1
-    apply EvalCon.extract label at h0
+    apply NEvalCxt.extract label at h0
     apply Typing.record_beta_expansion l h0 h1
 
   | entry label body =>
     unfold Typing
     intro h0 h1
-    apply EvalCon.project label at h0
+    apply NEvalCxt.project label at h0
     apply Typing.record_beta_expansion l h0 h1
 
   | path left right =>
     unfold Typing
     intro h0 h1 e' h2
     specialize h1 e' h2
-    apply EvalCon.applicator e' at h0
+    apply NEvalCxt.applicator e' at h0
     apply Typing.record_beta_expansion l h0 h1
 
 
@@ -1516,7 +1512,7 @@ theorem Typing.exists_value :
 := by sorry
 
 -- theorem Typing.record_beta_expansion l :
---   EvalCon E →
+--   NEvalCxt E →
 --   Typing am (E e) t →
 --   Typing am (E (Expr.project (Expr.record [(l, e)]) l)) t
 -- := by
@@ -1529,13 +1525,13 @@ theorem Typing.exists_value :
 -- := by
 --   intro h0
 --   have ⟨ev, h1, h2⟩ := Typing.exists_value h0
---   have econ : EvalCon (fun e => (Expr.project (Expr.record [(l, e)]) l)) := by
---     apply EvalCon.project
---     apply EvalCon.record
+--   have necxt : NEvalCxt (fun e => (Expr.project (Expr.record [(l, e)]) l)) := by
+--     apply NEvalCxt.project
+--     apply NEvalCxt.record
 --     apply RecordCon.head
---     apply EvalCon.hole
+--     apply NEvalCxt.hole
 
---   apply Typing.value_swap_preservation econ h1 h2 h0
+--   apply Typing.value_swap_preservation necxt h1 h2 h0
 --   { apply Typing.subject_expansion
 --     {
 --       unfold Expr.project
@@ -1587,7 +1583,7 @@ theorem Subtyping.list_typ_diff_elim :
 mutual
   theorem Typing.function_beta_reduction
     (safe_arg : Safe arg)
-    (econ : EvalCon E)
+    (necxt : NEvalCxt E)
     (matching : Expr.pattern_match arg p = .some eam)
   : Typing am (E (Expr.app (Expr.function ((p, e) :: f)) arg)) t →
     Typing am (E (Expr.sub eam e)) t
@@ -1598,25 +1594,25 @@ mutual
   | top =>
     unfold Typing
     intro h0
-    exact Safe.function_beta_reduction safe_arg econ matching h0
+    exact Safe.function_beta_reduction safe_arg necxt matching h0
   | iso label body =>
     unfold Typing
     intro h0
-    apply EvalCon.extract label at econ
-    apply Typing.function_beta_reduction safe_arg econ matching h0
+    apply NEvalCxt.extract label at necxt
+    apply Typing.function_beta_reduction safe_arg necxt matching h0
 
   | entry label body =>
     unfold Typing
     intro h0
-    apply EvalCon.project label at econ
-    apply Typing.function_beta_reduction safe_arg econ matching h0
+    apply NEvalCxt.project label at necxt
+    apply Typing.function_beta_reduction safe_arg necxt matching h0
 
   | path left right =>
     unfold Typing
     intro h0 e' h1
     specialize h0 e' h1
-    apply EvalCon.applicator e' at econ
-    apply Typing.function_beta_reduction safe_arg econ matching h0
+    apply NEvalCxt.applicator e' at necxt
+    apply Typing.function_beta_reduction safe_arg necxt matching h0
 
   | unio left right =>
     unfold Typing
@@ -1624,30 +1620,30 @@ mutual
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      apply Typing.function_beta_reduction safe_arg econ matching h1
+      apply Typing.function_beta_reduction safe_arg necxt matching h1
 
     | inr h1 =>
       apply Or.inr
-      apply Typing.function_beta_reduction safe_arg econ matching h1
+      apply Typing.function_beta_reduction safe_arg necxt matching h1
 
   | inter left right =>
     unfold Typing
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply Typing.function_beta_reduction safe_arg econ matching h1 }
-    { apply Typing.function_beta_reduction safe_arg econ matching h2 }
+    { apply Typing.function_beta_reduction safe_arg necxt matching h1 }
+    { apply Typing.function_beta_reduction safe_arg necxt matching h2 }
 
   | diff left right =>
     unfold Typing
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply Typing.function_beta_reduction safe_arg econ matching h1 }
+    { apply Typing.function_beta_reduction safe_arg necxt matching h1 }
     {
       intro h3
       apply h2
-      apply Typing.function_beta_expansion f safe_arg econ matching h3
+      apply Typing.function_beta_expansion f safe_arg necxt matching h3
     }
 
   | exi ids quals body =>
@@ -1657,7 +1653,7 @@ mutual
     exists am'
     apply And.intro h1
     apply And.intro h2
-    apply Typing.function_beta_reduction safe_arg econ matching h3
+    apply Typing.function_beta_reduction safe_arg necxt matching h3
 
   | all ids quals body =>
     unfold Typing
@@ -1666,7 +1662,7 @@ mutual
     {
       intro am' dom_subset dynamic_quals
       specialize h0 am' dom_subset dynamic_quals
-      apply Typing.function_beta_reduction safe_arg econ matching h0
+      apply Typing.function_beta_reduction safe_arg necxt matching h0
     }
     { exact h1 }
 
@@ -1677,19 +1673,19 @@ mutual
     exists t
     exists lt_size
     apply And.intro imp_typing
-    apply Typing.function_beta_reduction safe_arg econ matching typing_body
+    apply Typing.function_beta_reduction safe_arg necxt matching typing_body
 
   | var id =>
     unfold Typing
     intro ⟨t, h1, h2⟩
     exists t
     apply And.intro h1
-    apply FinTyping.function_beta_reduction safe_arg econ matching h2
+    apply FinTyping.function_beta_reduction safe_arg necxt matching h2
 
   theorem Typing.function_beta_expansion
     f
     (safe_arg : Safe arg)
-    (econ : EvalCon E)
+    (necxt : NEvalCxt E)
     (matching : Expr.pattern_match arg p = .some eam)
   : Typing am (E (Expr.sub eam e)) t →
     Typing am (E (Expr.app (Expr.function ((p, e) :: f)) arg)) t
@@ -1700,26 +1696,26 @@ mutual
   | top =>
     unfold Typing
     intro h0
-    exact Safe.function_beta_expansion f safe_arg econ matching h0
+    exact Safe.function_beta_expansion f safe_arg necxt matching h0
 
   | iso label body =>
     unfold Typing
     intro h0
-    apply EvalCon.extract label at econ
-    apply Typing.function_beta_expansion f safe_arg econ matching h0
+    apply NEvalCxt.extract label at necxt
+    apply Typing.function_beta_expansion f safe_arg necxt matching h0
 
   | entry label body =>
     unfold Typing
     intro h0
-    apply EvalCon.project label at econ
-    apply Typing.function_beta_expansion f safe_arg econ matching h0
+    apply NEvalCxt.project label at necxt
+    apply Typing.function_beta_expansion f safe_arg necxt matching h0
 
   | path left right =>
     unfold Typing
     intro h0 e' h1
     specialize h0 e' h1
-    apply EvalCon.applicator e' at econ
-    apply Typing.function_beta_expansion f safe_arg econ matching h0
+    apply NEvalCxt.applicator e' at necxt
+    apply Typing.function_beta_expansion f safe_arg necxt matching h0
 
   | unio left right =>
     unfold Typing
@@ -1727,30 +1723,30 @@ mutual
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      apply Typing.function_beta_expansion f safe_arg econ matching h1
+      apply Typing.function_beta_expansion f safe_arg necxt matching h1
 
     | inr h1 =>
       apply Or.inr
-      apply Typing.function_beta_expansion f safe_arg econ matching h1
+      apply Typing.function_beta_expansion f safe_arg necxt matching h1
 
   | inter left right =>
     unfold Typing
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply Typing.function_beta_expansion f safe_arg econ matching h1 }
-    { apply Typing.function_beta_expansion f safe_arg econ matching h2 }
+    { apply Typing.function_beta_expansion f safe_arg necxt matching h1 }
+    { apply Typing.function_beta_expansion f safe_arg necxt matching h2 }
 
   | diff left right =>
     unfold Typing
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply Typing.function_beta_expansion f safe_arg econ matching h1 }
+    { apply Typing.function_beta_expansion f safe_arg necxt matching h1 }
     {
       intro h3
       apply h2
-      apply Typing.function_beta_reduction safe_arg econ matching h3
+      apply Typing.function_beta_reduction safe_arg necxt matching h3
     }
 
   | exi ids quals body =>
@@ -1760,7 +1756,7 @@ mutual
     exists am'
     apply And.intro h1
     apply And.intro h2
-    apply Typing.function_beta_expansion f safe_arg econ matching h3
+    apply Typing.function_beta_expansion f safe_arg necxt matching h3
 
   | all ids quals body =>
     unfold Typing
@@ -1769,7 +1765,7 @@ mutual
     {
       intro am' dom_subset dynamic_quals
       specialize h0 am' dom_subset dynamic_quals
-      apply Typing.function_beta_expansion f safe_arg econ matching h0
+      apply Typing.function_beta_expansion f safe_arg necxt matching h0
     }
     { exact h1 }
 
@@ -1780,14 +1776,14 @@ mutual
     exists t
     exists lt_size
     apply And.intro imp_typing
-    apply Typing.function_beta_expansion f safe_arg econ matching typing_body
+    apply Typing.function_beta_expansion f safe_arg necxt matching typing_body
 
   | var id =>
     unfold Typing
     intro ⟨t, h1, h2⟩
     exists t
     apply And.intro h1
-    apply FinTyping.function_beta_expansion f safe_arg econ matching h2
+    apply FinTyping.function_beta_expansion f safe_arg necxt matching h2
 
 
 end
@@ -1804,7 +1800,7 @@ end
 -- := by
 --   intro h0 h1
 --   have ⟨v, h5, h6⟩ := Typing.exists_value h1
---   apply Typing.value_swap_preservation (EvalCon.applicand ((p, e) :: f) .hole) h5 h6 h1
+--   apply Typing.value_swap_preservation (NEvalCxt.applicand ((p, e) :: f) .hole) h5 h6 h1
 --   specialize h0 h5 h6
 --   have ⟨eam,h7,h8⟩ := h0
 --   apply Typing.subject_expansion

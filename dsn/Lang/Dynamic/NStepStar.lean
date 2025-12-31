@@ -1,5 +1,5 @@
 import Lang.Basic
-import Lang.Dynamic.EvalCon
+import Lang.Dynamic.NEvalCxt
 import Lang.Dynamic.NStep
 
 set_option pp.fieldNotation false
@@ -13,8 +13,8 @@ inductive NStepStar : Expr → Expr → Prop
 
 
 
-theorem NStepStar.econ_preservation
-  (econ : EvalCon E)
+theorem NStepStar.necxt_preservation
+  (necxt : NEvalCxt E)
   (transition_star : NStepStar e e')
 : NStepStar (E e) (E e')
 := by induction transition_star with
@@ -22,7 +22,7 @@ theorem NStepStar.econ_preservation
   exact refl (E e)
 | step e e' e'' h0 h1 ih =>
   apply NStepStar.step
-  { exact NStep.econ econ h0 }
+  { exact NStep.necxt necxt h0 }
   { exact ih }
 
 

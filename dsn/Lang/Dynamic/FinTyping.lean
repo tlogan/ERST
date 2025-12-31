@@ -1,5 +1,5 @@
 import Lang.Basic
-import Lang.Dynamic.EvalCon
+import Lang.Dynamic.NEvalCxt
 import Lang.Dynamic.NStep
 import Lang.Dynamic.NStepStar
 import Lang.Dynamic.Safe
@@ -25,55 +25,55 @@ def FinTyping (e : Expr) : Typ → Prop
   (Pat.iso "hello" (Pat.var "x"))
 
 
-example : FinTyping (
-  Expr.app (
-    Expr.function [
-      (Pat.var "x", Expr.iso "hello" (Expr.var "x"))
-    ]
-  ) (
-    Expr.app (.function [(Pat.var "x", Expr.var "x")]) (.record [])
-  )
-) (
-  (.iso "hello" .top)
-)
-:= by
-  unfold FinTyping
-  unfold FinTyping
-  apply Or.inl
-  unfold Convergent
-  exists (.record [])
-  apply And.intro
-  { apply NStepStar.step
-    { unfold Expr.extract
-      apply NStep.econ
-      { apply EvalCon.applicand ; exact EvalCon.hole }
-      { apply NStep.econ
-        { apply EvalCon.applicand ; exact EvalCon.hole }
-        {
-          apply NStep.pattern_match
-          simp [Expr.pattern_match]
-          rfl
-        }
-      }
-    }
-    { apply NStepStar.step
-      { apply NStep.econ
-        { apply EvalCon.applicand ; exact EvalCon.hole}
-        { apply NStep.pattern_match
-          simp [Expr.pattern_match]
-          rfl
-        }
-      }
-      { apply NStepStar.step
-        {
-          apply NStep.pattern_match
-          { reduce ;  simp [Expr.pattern_match]; rfl }
-        }
-        { apply NStepStar.refl }
-      }
-    }
-  }
-  { exact rfl }
+-- example : FinTyping (
+--   Expr.app (
+--     Expr.function [
+--       (Pat.var "x", Expr.iso "hello" (Expr.var "x"))
+--     ]
+--   ) (
+--     Expr.app (.function [(Pat.var "x", Expr.var "x")]) (.record [])
+--   )
+-- ) (
+--   (.iso "hello" .top)
+-- )
+-- := by
+--   unfold FinTyping
+--   unfold FinTyping
+--   apply Or.inl
+--   unfold Convergent
+--   exists (.record [])
+--   apply And.intro
+--   { apply NStepStar.step
+--     { unfold Expr.extract
+--       apply NStep.necxt
+--       { apply NEvalCxt.applicand ; exact NEvalCxt.hole }
+--       { apply NStep.necxt
+--         { apply NEvalCxt.applicand ; exact NEvalCxt.hole }
+--         {
+--           apply NStep.pattern_match
+--           simp [Expr.pattern_match]
+--           rfl
+--         }
+--       }
+--     }
+--     { apply NStepStar.step
+--       { apply NStep.necxt
+--         { apply NEvalCxt.applicand ; exact NEvalCxt.hole}
+--         { apply NStep.pattern_match
+--           simp [Expr.pattern_match]
+--           rfl
+--         }
+--       }
+--       { apply NStepStar.step
+--         {
+--           apply NStep.pattern_match
+--           { reduce ;  simp [Expr.pattern_match]; rfl }
+--         }
+--         { apply NStepStar.refl }
+--       }
+--     }
+--   }
+--   { exact rfl }
 
 
 
@@ -92,21 +92,15 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    cases h0 with
-    | inl h1 =>
-      apply Or.inl
-      exact Convergent.subject_reduction transition h1
-    | inr h1 =>
-      apply Or.inr
-      exact Divergent.subject_reduction transition h1
+    exact Safe.subject_reduction transition h0
 
   | iso label body =>
     unfold FinTyping
     intro h0
     apply FinTyping.subject_reduction
     {
-      have econ := EvalCon.extract label .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.extract label .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -115,8 +109,8 @@ mutual
     intro h0
     apply FinTyping.subject_reduction
     {
-      have econ := EvalCon.project label .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.project label .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -127,8 +121,8 @@ mutual
     specialize h0 e'' h1
     apply FinTyping.subject_reduction
     {
-      have econ := EvalCon.applicator e'' .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.applicator e'' .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -174,21 +168,15 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    cases h0 with
-    | inl h1 =>
-      apply Or.inl
-      exact Convergent.subject_expansion transition h1
-    | inr h1 =>
-      apply Or.inr
-      exact Divergent.subject_expansion transition h1
+    exact Safe.subject_expansion transition h0
 
   | iso label body =>
     unfold FinTyping
     intro h0
     apply FinTyping.subject_expansion
     {
-      have econ := EvalCon.extract label .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.extract label .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -197,8 +185,8 @@ mutual
     intro h0
     apply FinTyping.subject_expansion
     {
-      have econ := EvalCon.project label .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.project label .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -209,8 +197,8 @@ mutual
     specialize h0 e'' h1
     apply FinTyping.subject_expansion
     {
-      have econ := EvalCon.applicator e'' .hole
-      apply NStep.econ econ transition
+      have necxt := NEvalCxt.applicator e'' .hole
+      apply NStep.necxt necxt transition
     }
     { exact h0 }
 
@@ -312,12 +300,12 @@ end
 --   cases ih with
 --   | inl h0 =>
 --     apply Or.inl
---     have econ := EvalCon.extract label .hole
---     apply Convergent.econ_reflection econ h0
+--     have necxt := NEvalCxt.extract label .hole
+--     apply Convergent.necxt_reflection necxt h0
 --   | inr h0 =>
 --     apply Or.inr
---     have econ := EvalCon.extract label .hole
---     apply Divergent.econ_reflection econ h0
+--     have necxt := NEvalCxt.extract label .hole
+--     apply Divergent.necxt_reflection necxt h0
 
 -- | entry label body =>
 --   unfold FinTyping at typing
@@ -325,12 +313,12 @@ end
 --   cases ih with
 --   | inl h0 =>
 --     apply Or.inl
---     have econ := EvalCon.project label .hole
---     apply Convergent.econ_reflection econ h0
+--     have necxt := NEvalCxt.project label .hole
+--     apply Convergent.necxt_reflection necxt h0
 --   | inr h0 =>
 --     apply Or.inr
---     have econ := EvalCon.project label .hole
---     apply Divergent.econ_reflection econ h0
+--     have necxt := NEvalCxt.project label .hole
+--     apply Divergent.necxt_reflection necxt h0
 
 -- | path left right =>
 --   apply FinTyping.path_determines_function at typing
@@ -362,7 +350,7 @@ end
 
 
 -- theorem FinTyping.swap_safe_preservation
---   (econ : EvalCon E)
+--   (necxt : NEvalCxt E)
 --   (typing : FinTyping e t)
 --   (typing' : FinTyping e' t)
 --   (cod : Convergent (E e') ∨ Divergent (E e'))
@@ -370,7 +358,7 @@ end
 -- := by sorry
 
 -- theorem FinTyping.value_swap_preservation
---   (econ : EvalCon E)
+--   (necxt : NEvalCxt E)
 --   (isval : Expr.is_value e)
 --   (typing : FinTyping e t)
 --   (typing' : FinTyping e' t)
@@ -382,40 +370,40 @@ end
 
 -- | top =>
 --   unfold FinTyping
---   intro typing_econ
+--   intro typing_necxt
 --   apply FinTyping.soundness at typing'
 
 --   cases typing' with
 --   |inl h0 =>
---     cases typing_econ with
+--     cases typing_necxt with
 --     | inl h1 =>
 --       apply Or.inl
---       exact Convergent.econ_preservation econ h1 h0
+--       exact Convergent.necxt_preservation necxt h1 h0
 --     | inr h1 =>
 --       apply Or.inr
---       exact Divergent.swap_preservation econ isval h1
+--       exact Divergent.swap_preservation necxt isval h1
 --   | inr h0 =>
 --     apply Or.inr
---     exact Divergent.econ_preservation econ h0
+--     exact Divergent.necxt_preservation necxt h0
 
 -- | iso label body =>
 --   unfold FinTyping
---   apply EvalCon.extract label at econ
---   intro typing_econ
---   apply FinTyping.value_swap_preservation econ isval typing typing' typing_econ
+--   apply NEvalCxt.extract label at necxt
+--   intro typing_necxt
+--   apply FinTyping.value_swap_preservation necxt isval typing typing' typing_necxt
 
 
 -- | entry label body =>
 --   unfold FinTyping
---   apply EvalCon.project label at econ
---   intro typing_econ
---   apply FinTyping.value_swap_preservation econ isval typing typing' typing_econ
+--   apply NEvalCxt.project label at necxt
+--   intro typing_necxt
+--   apply FinTyping.value_swap_preservation necxt isval typing typing' typing_necxt
 
 -- | path left right =>
 --   unfold FinTyping
 --   intro h4 e' h5
---   apply EvalCon.applicator e' at econ
---   apply FinTyping.value_swap_preservation econ isval typing typing' (h4 e' h5)
+--   apply NEvalCxt.applicator e' at necxt
+--   apply FinTyping.value_swap_preservation necxt isval typing typing' (h4 e' h5)
 
 
 -- | unio left right =>
@@ -424,18 +412,18 @@ end
 --   cases h4 with
 --   | inl h5 =>
 --     apply Or.inl
---     apply FinTyping.value_swap_preservation econ isval typing typing' h5
+--     apply FinTyping.value_swap_preservation necxt isval typing typing' h5
 --   | inr h5 =>
 --     apply Or.inr
---     apply FinTyping.value_swap_preservation econ isval typing typing' h5
+--     apply FinTyping.value_swap_preservation necxt isval typing typing' h5
 
 -- | inter left right =>
 --   unfold FinTyping
 --   intro h4
 --   have ⟨h5,h6⟩ := h4
 --   apply And.intro
---   { apply FinTyping.value_swap_preservation econ isval typing typing' h5 }
---   { apply FinTyping.value_swap_preservation econ isval typing typing' h6 }
+--   { apply FinTyping.value_swap_preservation necxt isval typing typing' h5 }
+--   { apply FinTyping.value_swap_preservation necxt isval typing typing' h6 }
 
 -- | diff left right =>
 --   unfold FinTyping
@@ -444,14 +432,14 @@ end
 --   clear h4
 
 --   apply And.intro
---   { apply FinTyping.value_swap_preservation econ isval typing typing' h5 }
+--   { apply FinTyping.value_swap_preservation necxt isval typing typing' h5 }
 --   {
 --     intro h7
 --     apply h6
 --     clear h6
 
 --     apply FinTyping.swap_safe_preservation
---     { exact econ }
+--     { exact necxt }
 --     { exact typing' }
 --     { exact typing }
 --     { exact soundness h5 }
@@ -464,7 +452,7 @@ end
 mutual
   theorem FinTyping.function_beta_reduction
     (safe_arg : Safe arg)
-    (econ : EvalCon E)
+    (necxt : NEvalCxt E)
     (matching : Expr.pattern_match arg p = .some eam)
   : FinTyping (E (Expr.app (Expr.function ((p, e) :: f)) arg)) t →
     FinTyping (E (Expr.sub eam e)) t
@@ -472,50 +460,50 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    exact Safe.function_beta_reduction safe_arg econ matching h0
+    exact Safe.function_beta_reduction safe_arg necxt matching h0
   | iso label body =>
     intro h0
-    apply EvalCon.extract label at econ
-    apply FinTyping.function_beta_reduction safe_arg econ matching h0
+    apply NEvalCxt.extract label at necxt
+    apply FinTyping.function_beta_reduction safe_arg necxt matching h0
 
   | entry label body =>
     intro h0
-    apply EvalCon.project label at econ
-    apply FinTyping.function_beta_reduction safe_arg econ matching h0
+    apply NEvalCxt.project label at necxt
+    apply FinTyping.function_beta_reduction safe_arg necxt matching h0
 
   | path left right =>
     intro h0 e' h1
     specialize h0 e' h1
-    apply EvalCon.applicator e' at econ
-    apply FinTyping.function_beta_reduction safe_arg econ matching h0
+    apply NEvalCxt.applicator e' at necxt
+    apply FinTyping.function_beta_reduction safe_arg necxt matching h0
 
   | unio left right =>
     intro h0
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      apply FinTyping.function_beta_reduction safe_arg econ matching h1
+      apply FinTyping.function_beta_reduction safe_arg necxt matching h1
 
     | inr h1 =>
       apply Or.inr
-      apply FinTyping.function_beta_reduction safe_arg econ matching h1
+      apply FinTyping.function_beta_reduction safe_arg necxt matching h1
 
   | inter left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_reduction safe_arg econ matching h1 }
-    { apply FinTyping.function_beta_reduction safe_arg econ matching h2 }
+    { apply FinTyping.function_beta_reduction safe_arg necxt matching h1 }
+    { apply FinTyping.function_beta_reduction safe_arg necxt matching h2 }
 
   | diff left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_reduction safe_arg econ matching h1 }
+    { apply FinTyping.function_beta_reduction safe_arg necxt matching h1 }
     {
       intro h3
       apply h2
-      apply FinTyping.function_beta_expansion f safe_arg econ matching h3
+      apply FinTyping.function_beta_expansion f safe_arg necxt matching h3
     }
 
   | _ =>
@@ -524,7 +512,7 @@ mutual
   theorem FinTyping.function_beta_expansion
     f
     (safe_arg : Safe arg)
-    (econ : EvalCon E)
+    (necxt : NEvalCxt E)
     (matching : Expr.pattern_match arg p = .some eam)
   : FinTyping (E (Expr.sub eam e)) t →
     FinTyping (E (Expr.app (Expr.function ((p, e) :: f)) arg)) t
@@ -532,51 +520,51 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    exact Safe.function_beta_expansion f safe_arg econ matching h0
+    exact Safe.function_beta_expansion f safe_arg necxt matching h0
 
   | iso label body =>
     intro h0
-    apply EvalCon.extract label at econ
-    apply FinTyping.function_beta_expansion f safe_arg econ matching h0
+    apply NEvalCxt.extract label at necxt
+    apply FinTyping.function_beta_expansion f safe_arg necxt matching h0
 
   | entry label body =>
     intro h0
-    apply EvalCon.project label at econ
-    apply FinTyping.function_beta_expansion f safe_arg econ matching h0
+    apply NEvalCxt.project label at necxt
+    apply FinTyping.function_beta_expansion f safe_arg necxt matching h0
 
   | path left right =>
     intro h0 e' h1
     specialize h0 e' h1
-    apply EvalCon.applicator e' at econ
-    apply FinTyping.function_beta_expansion f safe_arg econ matching h0
+    apply NEvalCxt.applicator e' at necxt
+    apply FinTyping.function_beta_expansion f safe_arg necxt matching h0
 
   | unio left right =>
     intro h0
     cases h0 with
     | inl h1 =>
       apply Or.inl
-      apply FinTyping.function_beta_expansion f safe_arg econ matching h1
+      apply FinTyping.function_beta_expansion f safe_arg necxt matching h1
 
     | inr h1 =>
       apply Or.inr
-      apply FinTyping.function_beta_expansion f safe_arg econ matching h1
+      apply FinTyping.function_beta_expansion f safe_arg necxt matching h1
 
   | inter left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_expansion f safe_arg econ matching h1 }
-    { apply FinTyping.function_beta_expansion f safe_arg econ matching h2 }
+    { apply FinTyping.function_beta_expansion f safe_arg necxt matching h1 }
+    { apply FinTyping.function_beta_expansion f safe_arg necxt matching h2 }
 
   | diff left right =>
     intro h0
     have ⟨h1,h2⟩ := h0
     apply And.intro
-    { apply FinTyping.function_beta_expansion f safe_arg econ matching h1 }
+    { apply FinTyping.function_beta_expansion f safe_arg necxt matching h1 }
     {
       intro h3
       apply h2
-      apply FinTyping.function_beta_reduction safe_arg econ matching h3
+      apply FinTyping.function_beta_reduction safe_arg necxt matching h3
     }
 
   | _ =>
@@ -588,7 +576,7 @@ end
 
 mutual
   theorem FinTyping.record_beta_reduction :
-    EvalCon E →
+    NEvalCxt E →
     FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t →
     FinTyping (E e) t
   := by cases t with
@@ -599,18 +587,18 @@ mutual
 
   | iso label body =>
     intro h0 h1
-    apply EvalCon.extract label at h0
+    apply NEvalCxt.extract label at h0
     apply FinTyping.record_beta_reduction h0 h1
 
   | entry label body =>
     intro h0 h1
-    apply EvalCon.project label at h0
+    apply NEvalCxt.project label at h0
     apply FinTyping.record_beta_reduction h0 h1
 
   | path left right =>
     intro h0 h1 e' h2
     specialize h1 e' h2
-    apply EvalCon.applicator e' at h0
+    apply NEvalCxt.applicator e' at h0
     apply FinTyping.record_beta_reduction h0 h1
 
 
@@ -650,7 +638,7 @@ mutual
     exact h1
 
   theorem FinTyping.record_beta_expansion l :
-    EvalCon E →
+    NEvalCxt E →
     FinTyping (E e) t →
     FinTyping (E (Expr.project (Expr.record [(l, e)]) l)) t
   := by cases t with
@@ -660,18 +648,18 @@ mutual
     exact Safe.record_beta_expansion l h0 h1
   | iso label body =>
     intro h0 h1
-    apply EvalCon.extract label at h0
+    apply NEvalCxt.extract label at h0
     apply FinTyping.record_beta_expansion l h0 h1
 
   | entry label body =>
     intro h0 h1
-    apply EvalCon.project label at h0
+    apply NEvalCxt.project label at h0
     apply FinTyping.record_beta_expansion l h0 h1
 
   | path left right =>
     intro h0 h1 e' h2
     specialize h1 e' h2
-    apply EvalCon.applicator e' at h0
+    apply NEvalCxt.applicator e' at h0
     apply FinTyping.record_beta_expansion l h0 h1
 
 
