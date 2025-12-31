@@ -1,7 +1,7 @@
 import Lang.Basic
 import Lang.Dynamic.EvalCon
-import Lang.Dynamic.Transition
-import Lang.Dynamic.TransitionStar
+import Lang.Dynamic.NStep
+import Lang.Dynamic.NStepStar
 import Lang.Dynamic.Safe
 
 set_option pp.fieldNotation false
@@ -43,33 +43,33 @@ example : FinTyping (
   unfold Convergent
   exists (.record [])
   apply And.intro
-  { apply TransitionStar.step
+  { apply NStepStar.step
     { unfold Expr.extract
-      apply Transition.econ
+      apply NStep.econ
       { apply EvalCon.applicand ; exact EvalCon.hole }
-      { apply Transition.econ
+      { apply NStep.econ
         { apply EvalCon.applicand ; exact EvalCon.hole }
-        { apply Transition.pattern_match
-          { reduce ; simp }
-          { simp [Expr.pattern_match]
-            rfl
-          }
+        {
+          apply NStep.pattern_match
+          simp [Expr.pattern_match]
+          rfl
         }
       }
     }
-    { apply TransitionStar.step
-      { apply Transition.econ
+    { apply NStepStar.step
+      { apply NStep.econ
         { apply EvalCon.applicand ; exact EvalCon.hole}
-        { apply Transition.pattern_match
-          { reduce ; simp}
-          { simp [Expr.pattern_match] ; rfl }
+        { apply NStep.pattern_match
+          simp [Expr.pattern_match]
+          rfl
         }
       }
-      { apply TransitionStar.step
-        apply Transition.pattern_match
-        { reduce ; simp}
-        { reduce ;  simp [Expr.pattern_match]; rfl }
-        { apply TransitionStar.refl }
+      { apply NStepStar.step
+        {
+          apply NStep.pattern_match
+          { reduce ;  simp [Expr.pattern_match]; rfl }
+        }
+        { apply NStepStar.refl }
       }
     }
   }
@@ -83,7 +83,7 @@ def Subtyping.Fin (left right : Typ) : Prop :=
 
 mutual
   theorem FinTyping.subject_reduction
-    (transition : Transition e e')
+    (transition : NStep e e')
   : FinTyping e t → FinTyping e' t
   := by cases t with
   | bot =>
@@ -106,7 +106,7 @@ mutual
     apply FinTyping.subject_reduction
     {
       have econ := EvalCon.extract label .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -116,7 +116,7 @@ mutual
     apply FinTyping.subject_reduction
     {
       have econ := EvalCon.project label .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -128,7 +128,7 @@ mutual
     apply FinTyping.subject_reduction
     {
       have econ := EvalCon.applicator e'' .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -165,7 +165,7 @@ mutual
     simp
 
   theorem FinTyping.subject_expansion
-    (transition : Transition e e')
+    (transition : NStep e e')
   : FinTyping e' t → FinTyping e t
   := by cases t with
   | bot =>
@@ -188,7 +188,7 @@ mutual
     apply FinTyping.subject_expansion
     {
       have econ := EvalCon.extract label .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -198,7 +198,7 @@ mutual
     apply FinTyping.subject_expansion
     {
       have econ := EvalCon.project label .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -210,7 +210,7 @@ mutual
     apply FinTyping.subject_expansion
     {
       have econ := EvalCon.applicator e'' .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -290,7 +290,7 @@ end
 
 -- theorem FinTyping.path_determines_function
 --   (typing : FinTyping e (.path antec consq))
--- : ∃ f , TransitionStar e (.function f)
+-- : ∃ f , NStepStar e (.function f)
 -- := by sorry
 
 -- theorem FinTyping.soundness

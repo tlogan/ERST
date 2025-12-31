@@ -1,7 +1,7 @@
 import Lang.Basic
 import Lang.Dynamic.EvalCon
-import Lang.Dynamic.Transition
-import Lang.Dynamic.TransitionStar
+import Lang.Dynamic.NStep
+import Lang.Dynamic.NStepStar
 import Lang.Dynamic.Safe
 import Lang.Dynamic.FinTyping
 
@@ -77,7 +77,7 @@ end
 
 mutual
   theorem Typing.subject_reduction
-    (transition : Transition e e')
+    (transition : NStep e e')
   : Typing am e t → Typing am e' t
   := by cases t with
   | bot =>
@@ -95,7 +95,7 @@ mutual
     apply Typing.subject_reduction
     {
       have econ := EvalCon.extract label .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -105,7 +105,7 @@ mutual
     apply Typing.subject_reduction
     {
       have econ := EvalCon.project label .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -117,7 +117,7 @@ mutual
     apply Typing.subject_reduction
     {
       have econ := EvalCon.applicator e'' .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -185,7 +185,7 @@ mutual
     apply FinTyping.subject_reduction transition h2
 
   theorem Typing.subject_expansion
-    (transition : Transition e e')
+    (transition : NStep e e')
   : Typing am e' t → Typing am e t
   := by cases t with
   | bot =>
@@ -203,7 +203,7 @@ mutual
     apply Typing.subject_expansion
     {
       have econ := EvalCon.extract label .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -213,7 +213,7 @@ mutual
     apply Typing.subject_expansion
     {
       have econ := EvalCon.project label .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -225,7 +225,7 @@ mutual
     apply Typing.subject_expansion
     {
       have econ := EvalCon.applicator e'' .hole
-      apply Transition.econ econ transition
+      apply NStep.econ econ transition
     }
     { exact h0 }
 
@@ -598,7 +598,7 @@ theorem Typing.inter_entry_intro {am l e r body t} :
 
 theorem Typing.path_determines_function
   (typing : Typing am e (.path antec consq))
-: ∃ f , TransitionStar e (.function f)
+: ∃ f , NStepStar e (.function f)
 := by sorry
 
 
@@ -700,20 +700,20 @@ theorem Expr.sub_sub_removal :
 
 -- theorem EvalCon.transition_reflection :
 --   EvalCon E →
---   Transition (E e) e' →
---   ∃ e'' , Transition e e''
+--   NStep (E e) e' →
+--   ∃ e'' , NStep e e''
 -- := by sorry
 
 
--- theorem TransitionStar.project_record {id} :
---   TransitionStar (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)])) e
+-- theorem NStepStar.project_record {id} :
+--   NStepStar (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)])) e
 -- := by sorry
 
 
--- theorem TransitionStar.record_beta_expansion {e l e' id}:
+-- theorem NStepStar.record_beta_expansion {e l e' id}:
 --   EvalCon E → Expr.is_value e' →
---   TransitionStar (E e) e' →
---   TransitionStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
+--   NStepStar (E e) e' →
+--   NStepStar (E (Expr.app (Expr.function [(Pat.record [(l, Pat.var id)], Expr.var id)]) (Expr.record [(l, e)]))) e'
 -- := by
 --   intro h0 h1 h2
 --   generalize h3 : (E e) = e0 at h2
@@ -723,10 +723,10 @@ theorem Expr.sub_sub_removal :
 --     intro e h3
 --     rw [← h3] at h1
 --     rw [← h3]
---     apply TransitionStar.step
+--     apply NStepStar.step
 --     {
 --       apply EvalCon.soundness h0
---       apply Transition.appmatch
+--       apply NStep.appmatch
 --       { reduce ;
 --         have h4 := EvalCon.is_value_determines_hole h0 h1
 --         rw [h4] at h1
@@ -739,18 +739,18 @@ theorem Expr.sub_sub_removal :
 --     }
 --     { simp [Expr.sub, find]
 --       simp [*]
---       apply TransitionStar.refl
+--       apply NStepStar.refl
 --     }
 --   | step e0 em e' h3 h4 ih =>
 --     intro e h5
 --     rw [← h5] at h3
 --     sorry
 --     -- have ⟨et, h6⟩ := EvalCon.transition_reflection h0 h3
---     -- apply TransitionStar.step
+--     -- apply NStepStar.step
 --     -- {
 --     --   apply EvalCon.soundness h0
---     --   apply Transition.applicand
---     --   apply Transition.entry _ _ h6
+--     --   apply NStep.applicand
+--     --   apply NStep.entry _ _ h6
 --     -- }
 --     -- { apply ih h2
 --     --   exact EvalCon.transition_unique h0 h6 h3
@@ -780,7 +780,7 @@ theorem Expr.sub_sub_removal :
 --   have ⟨e',h2,h3⟩ := h1
 --   exists e'
 --   apply And.intro
---   { apply TransitionStar.record_beta_expansion h0 h3 h2 }
+--   { apply NStepStar.record_beta_expansion h0 h3 h2 }
 --   { exact h3 }
 
 -- theorem Divergent.record_beta_reduction :
@@ -1091,14 +1091,14 @@ theorem Expr.sub_sub_removal :
 
 theorem Typing.progress :
   Typing am e t →
-  Expr.is_value e ∨ ∃ e' , Transition e e'
+  Expr.is_value e ∨ ∃ e' , NStep e e'
 := by
   sorry
 
 
 
-theorem Transition.not_value :
-  Transition e e' →
+theorem NStep.not_value :
+  NStep e e' →
   ¬ Expr.is_value e
 := by sorry
 
@@ -1107,7 +1107,7 @@ theorem Transition.not_value :
 
 theorem Divergent.transition :
   Divergent e →
-  ∃ e' , Transition e e' ∧ Divergent e'
+  ∃ e' , NStep e e' ∧ Divergent e'
 := by sorry
 
 -- theorem Divergent.econ_preservation :
@@ -1124,10 +1124,10 @@ theorem Divergent.transition :
 --   | refl eg =>
 --     intro e h1 h2
 --     rw [← h2]
---     specialize h1 e (TransitionStar.refl e)
+--     specialize h1 e (NStepStar.refl e)
 --     have ⟨e', h3⟩ := h1
 --     exists (E e')
---     exact Transition.econ h0 h3
+--     exact NStep.econ h0 h3
 
 --   | step eg em e' h4 h5 ih =>
 
@@ -1137,8 +1137,8 @@ theorem Divergent.transition :
 --     apply Divergent.transition at h1
 --     have ⟨et, h6,h7⟩ := h1
 --     apply ih h7
---     apply Transition.deterministic
---     { exact Transition.econ h0 h6 }
+--     apply NStep.deterministic
+--     { exact NStep.econ h0 h6 }
 --     { exact h4 }
 
 mutual
@@ -1539,7 +1539,7 @@ theorem Typing.exists_value :
 --   { apply Typing.subject_expansion
 --     {
 --       unfold Expr.project
---       apply Transition.pattern_match
+--       apply NStep.pattern_match
 --       {
 --         simp [Expr.is_value, List.is_record_value ]
 --         reduce
@@ -1808,7 +1808,7 @@ end
 --   specialize h0 h5 h6
 --   have ⟨eam,h7,h8⟩ := h0
 --   apply Typing.subject_expansion
---   { apply Transition.pattern_match h5 h7}
+--   { apply NStep.pattern_match h5 h7}
 --   { exact h8 }
 
 
@@ -1837,24 +1837,10 @@ theorem Typing.function_preservation {am p tp e f t } :
 
 
 theorem Typing.star_preservation :
-  TransitionStar e e' →
+  NStepStar e e' →
   Typing am e t →
   Typing am e' t
 := by sorry
-
-/-
-
--------------------------------------------
-HOW TO DEFINE TYPING AND PROVE PROPERTIES
--------------------------------------------
--------------------------------------------
-
-TODO:
-- remove value requirement in typing path definition
-- redefine Safe, to simply converge to HNF
-- refine beta-expansion lemmas to assume safe arg, instead of value arg
-
--/
 
 
 theorem Typing.path_elim

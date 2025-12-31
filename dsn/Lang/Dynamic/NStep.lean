@@ -77,58 +77,58 @@ end
 
 
 mutual
-  inductive Transition : Expr → Expr → Prop
+  inductive NStep : Expr → Expr → Prop
   | pattern_match :
     /- NOTE: can't have value requirement for divergence to work for safety -/
     -- v.is_value →
     Expr.pattern_match v p = some m →
-    Transition (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
+    NStep (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
   | skip :
     v.is_value →
     Expr.pattern_match v p = none →
-    Transition (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
+    NStep (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
   | erase e t :
-    Transition (.anno  e t) e
+    NStep (.anno  e t) e
   | recycle id :
-    Transition
+    NStep
       (.loop (.function [(.var id, e)]))
       (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
   | econ :
-      EvalCon E → Transition e e' →
-      Transition (E e) (E e')
+      EvalCon E → NStep e e' →
+      NStep (E e) (E e')
 end
 
 
 mutual
-  theorem Transition.pattern_match_deterministic
+  theorem NStep.pattern_match_deterministic
     (isval : Expr.is_value arg)
     (matching : Expr.pattern_match v p = some m)
-    (trans : Transition (Expr.app (.function ((p,e) :: f)) arg) e')
+    (trans : NStep (Expr.app (.function ((p,e) :: f)) arg) e')
   : e' = (Expr.sub m e)
   := by sorry
 
-  theorem Transition.skip_deterministic
+  theorem NStep.skip_deterministic
     (isval : v.is_value)
     (nomatching : Expr.pattern_match v p = none)
-    (trans : Transition (.app (.function ((p,e) :: f)) v) e')
+    (trans : NStep (.app (.function ((p,e) :: f)) v) e')
   : e' = (.app (.function f) v)
   := by sorry
 
-  theorem Transition.erase_deterministic
-    (trans : Transition (.anno e t) e')
+  theorem NStep.erase_deterministic
+    (trans : NStep (.anno e t) e')
   : e' = e
   := by sorry
 
-  theorem Transition.recycle_deterministic
+  theorem NStep.recycle_deterministic
     id
-    (trans : Transition (.loop (.function [(.var id, e)])) e')
+    (trans : NStep (.loop (.function [(.var id, e)])) e')
   : e' = (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
   := by sorry
 
-  theorem Transition.econ_deterministic
+  theorem NStep.econ_deterministic
     (econ : EvalCon E)
-    (trans : Transition e e')
-    (trans_econ : Transition (E e) e'')
+    (trans : NStep e e')
+    (trans_econ : NStep (E e) e'')
   : e'' = (E e')
   := by
     generalize h0 : (E e) = e0 at trans_econ
@@ -143,19 +143,6 @@ mutual
     | _ =>
       sorry
 end
-
-
-
-
-
-
-
-theorem Transition.deterministic
-  (transition : Transition e e')
-  (transition' : Transition e e'')
-: e' = e''
-:= by sorry
-
 
 
 end Lang.Dynamic

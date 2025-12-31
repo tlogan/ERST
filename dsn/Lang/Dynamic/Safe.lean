@@ -1,7 +1,7 @@
 import Lang.Basic
 import Lang.Dynamic.EvalCon
-import Lang.Dynamic.Transition
-import Lang.Dynamic.TransitionStar
+import Lang.Dynamic.NStep
+import Lang.Dynamic.NStepStar
 
 set_option pp.fieldNotation false
 
@@ -10,22 +10,22 @@ namespace Lang.Dynamic
 
 
 def Convergent (e : Expr) : Prop :=
-  ∃ e' , TransitionStar e e' ∧ Expr.is_value e'
+  ∃ e' , NStepStar e e' ∧ Expr.is_value e'
 
 def Divergent (e : Expr) : Prop :=
-  (∀ e', TransitionStar e e' → ∃ e'' , Transition e' e'')
+  (∀ e', NStepStar e e' → ∃ e'' , NStep e' e'')
 
 def Safe (e : Expr) : Prop := Convergent e ∨ Divergent e
 
 mutual
 
   theorem Convergent.subject_reduction
-    (transition : Transition e e')
+    (transition : NStep e e')
   : Convergent e → Convergent e'
   := by sorry
 
   theorem Convergent.subject_expansion
-    (transition : Transition e e')
+    (transition : NStep e e')
   : Convergent e' → Convergent e
   := by sorry
 
@@ -64,12 +64,12 @@ end
 mutual
 
   theorem Divergent.subject_reduction
-    (transition : Transition e e')
+    (transition : NStep e e')
   : Divergent e → Divergent e'
   := by sorry
 
   theorem Divergent.subject_expansion
-    (transition : Transition e e')
+    (transition : NStep e e')
   : Divergent e' → Divergent e
   := by sorry
 
@@ -112,13 +112,13 @@ mutual
 end
 
 
--- theorem TransitionStar.function_beta_reduction
+-- theorem NStepStar.function_beta_reduction
 --   (value_arg : Expr.is_value arg = true)
 --   (econ : EvalCon E)
 --   (matching : Expr.pattern_match arg p = some eam)
 --   (value_result : Expr.is_value e')
--- : TransitionStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' →
---   TransitionStar (E (Expr.sub eam e)) e'
+-- : NStepStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' →
+--   NStepStar (E (Expr.sub eam e)) e'
 -- := by
 --   intro h0
 --   cases h0 with
@@ -126,11 +126,11 @@ end
 --     have h2 := EvalCon.app_not_value (Expr.function ((p, e) :: f)) arg econ
 --     exact False.elim (h2 value_result)
 --   | step e0 em e' trans trans_star =>
---     have h0 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
---       apply Transition.pattern_match
+--     have h0 : NStep (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
+--       apply NStep.pattern_match
 --       { exact value_arg }
 --       { exact matching }
---     have h1 := Transition.econ_deterministic econ h0 trans
+--     have h1 := NStep.econ_deterministic econ h0 trans
 --     rw [h1] at trans_star
 --     exact trans_star
 
@@ -146,7 +146,7 @@ end
 --   intro ⟨e',h0,h1⟩
 --   exists e'
 --   apply And.intro
---   { exact TransitionStar.function_beta_reduction value_arg econ matching h1 h0 }
+--   { exact NStepStar.function_beta_reduction value_arg econ matching h1 h0 }
 --   { exact h1 }
 
 -- theorem Convergent.function_beta_expansion
@@ -161,10 +161,10 @@ end
 --   intro ⟨e',h0,h1⟩
 --   exists e'
 --   apply And.intro
---   { apply TransitionStar.step
---     { apply Transition.econ
+--   { apply NStepStar.step
+--     { apply NStep.econ
 --       { exact econ }
---       { apply Transition.pattern_match
+--       { apply NStep.pattern_match
 --         { exact value_arg }
 --         { exact matching }
 --       }
@@ -185,14 +185,14 @@ end
 -- := by
 --   unfold Divergent
 --   intro h0 e' h1
---   have h2 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
---     apply Transition.pattern_match
+--   have h2 : NStep (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
+--     apply NStep.pattern_match
 --     { exact value_arg }
 --     { exact matching }
 
---   have h3 : TransitionStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' := by
---     apply TransitionStar.step
---     { apply Transition.econ econ h2 }
+--   have h3 : NStepStar (E (Expr.app (Expr.function ((p, e) :: f)) arg)) e' := by
+--     apply NStepStar.step
+--     { apply NStep.econ econ h2 }
 --     { exact h1 }
 --   exact h0 e' h3
 
@@ -209,14 +209,14 @@ end
 --   cases h1 with
 --   | refl _ =>
 --     exists (E (Expr.sub eam e))
---     apply Transition.econ econ
---     apply Transition.pattern_match value_arg matching
+--     apply NStep.econ econ
+--     apply NStep.pattern_match value_arg matching
 --   | step e0 em e' trans trans_star =>
---     have h2 : Transition (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
---       apply Transition.pattern_match
+--     have h2 : NStep (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.sub eam e) := by
+--       apply NStep.pattern_match
 --       { exact value_arg }
 --       { exact matching }
---     have h3 := Transition.econ_deterministic econ h2 trans
+--     have h3 := NStep.econ_deterministic econ h2 trans
 --     rw [h3] at trans_star
 --     exact h0 e' trans_star
 
@@ -296,12 +296,12 @@ theorem Safe.function_beta_expansion
 
 
 theorem Safe.subject_reduction
-  (transition : Transition e e')
+  (transition : NStep e e')
 : Safe e → Safe e'
 := by sorry
 
 theorem Safe.subject_expansion
-  (transition : Transition e e')
+  (transition : NStep e e')
 : Safe e' → Safe e
 := by sorry
 
