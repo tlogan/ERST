@@ -195,14 +195,37 @@ theorem Safe.function_beta_expansion
     generalize h5 : E (Expr.app (Expr.function ((p, e) :: f)) arg) = ec at h3
 
     cases h3 with
-    | pattern_match =>
+    | pattern_match matching' =>
       cases necxt with
-      | hole => sorry
-      | iso _ _ => sorry
-      | record => sorry
-      | applicator => sorry
-      | applicand => sorry
-      | loopy => sorry
+      | hole =>
+        simp at h5
+        simp at h0
+        have ⟨⟨⟨h6,h7⟩,h8⟩,h9⟩ := h5
+        apply h0
+        rw [h7]
+        rw [← h9,←h6] at matching'
+        simp [matching] at matching'
+        simp [*]
+      | iso =>
+        simp at h5
+      | record =>
+        simp at h5
+      | applicator cator necxt' =>
+        simp at h5
+        simp at h0
+        have ⟨h6,h7⟩ := h5
+        apply NEvalCxt.not_function necxt' at h6
+        exact False.elim h6
+      | applicand arg' necxt' =>
+        simp at h5
+        simp at h0
+        have ⟨h6,h7⟩ := h5
+        clear h5
+        rw [← h7] at matching'
+        apply Expr.pattern_match_no_app necxt' at matching'
+        exact False.elim matching'
+      | loopy =>
+        simp at h5
     | skip => sorry
     | erase => sorry
     | recycle => sorry

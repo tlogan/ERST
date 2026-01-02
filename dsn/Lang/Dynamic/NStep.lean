@@ -79,14 +79,12 @@ end
 mutual
   inductive NStep : Expr → Expr → Prop
   | pattern_match :
-    /- NOTE: can't have value requirement for divergence to work for safety -/
-    -- v.is_value →
-    Expr.pattern_match v p = some m →
-    NStep (.app (.function ((p,e) :: f)) v) (Expr.sub m e)
+    Expr.pattern_match arg p = some m →
+    NStep (.app (.function ((p,e) :: f)) arg) (Expr.sub m e)
   | skip :
-    v.is_value →
-    Expr.pattern_match v p = none →
-    NStep (.app (.function ((p,e) :: f)) v) (.app (.function f) v)
+    arg.is_value →
+    Expr.pattern_match arg p = none →
+    NStep (.app (.function ((p,e) :: f)) arg) (.app (.function f) arg)
   | erase e t :
     NStep (.anno  e t) e
   | recycle id :
@@ -97,6 +95,18 @@ mutual
       NEvalCxt E → NStep e e' →
       NStep (E e) (E e')
 end
+
+theorem Expr.pattern_match_app_none
+  (necxt : NEvalCxt E)
+: (Expr.pattern_match (E (.app cator arg)) p) = Option.none
+:= by sorry
+
+theorem Expr.pattern_match_no_app
+  (necxt : NEvalCxt E)
+: (Expr.pattern_match (E (.app cator arg)) p) ≠ Option.some m
+:= by sorry
+
+
 
 
 -- mutual

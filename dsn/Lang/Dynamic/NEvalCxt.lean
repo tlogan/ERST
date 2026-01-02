@@ -24,12 +24,16 @@ mutual
 end
 
 
-theorem NEvalCxt.app_not_value
-  e arg
-  (necxt : NEvalCxt E)
-: ¬ Expr.is_value (E (Expr.app e arg))
-:= by sorry
+-- theorem NEvalCxt.app_not_value
+--   e arg
+--   (necxt : NEvalCxt E)
+-- : ¬ Expr.is_value (E (Expr.app e arg))
+-- := by sorry
 
+theorem NEvalCxt.not_function
+  (necxt : NEvalCxt E)
+: E e ≠ .function f
+:= by sorry
 
 
 -- mutual
