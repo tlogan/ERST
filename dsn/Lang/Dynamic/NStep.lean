@@ -99,50 +99,50 @@ mutual
 end
 
 
-mutual
-  theorem NStep.pattern_match_deterministic
-    (isval : Expr.is_value arg)
-    (matching : Expr.pattern_match v p = some m)
-    (trans : NStep (Expr.app (.function ((p,e) :: f)) arg) e')
-  : e' = (Expr.sub m e)
-  := by sorry
+-- mutual
+--   theorem NStep.pattern_match_deterministic
+--     (isval : Expr.is_value arg)
+--     (matching : Expr.pattern_match v p = some m)
+--     (trans : NStep (Expr.app (.function ((p,e) :: f)) arg) e')
+--   : e' = (Expr.sub m e)
+--   := by sorry
 
-  theorem NStep.skip_deterministic
-    (isval : v.is_value)
-    (nomatching : Expr.pattern_match v p = none)
-    (trans : NStep (.app (.function ((p,e) :: f)) v) e')
-  : e' = (.app (.function f) v)
-  := by sorry
+--   theorem NStep.skip_deterministic
+--     (isval : v.is_value)
+--     (nomatching : Expr.pattern_match v p = none)
+--     (trans : NStep (.app (.function ((p,e) :: f)) v) e')
+--   : e' = (.app (.function f) v)
+--   := by sorry
 
-  theorem NStep.erase_deterministic
-    (trans : NStep (.anno e t) e')
-  : e' = e
-  := by sorry
+--   theorem NStep.erase_deterministic
+--     (trans : NStep (.anno e t) e')
+--   : e' = e
+--   := by sorry
 
-  theorem NStep.recycle_deterministic
-    id
-    (trans : NStep (.loop (.function [(.var id, e)])) e')
-  : e' = (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
-  := by sorry
+--   theorem NStep.recycle_deterministic
+--     id
+--     (trans : NStep (.loop (.function [(.var id, e)])) e')
+--   : e' = (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
+--   := by sorry
 
-  theorem NStep.necxt_deterministic
-    (necxt : NEvalCxt E)
-    (trans : NStep e e')
-    (trans_necxt : NStep (E e) e'')
-  : e'' = (E e')
-  := by
-    generalize h0 : (E e) = e0 at trans_necxt
-    cases trans_necxt with
-    | pattern_match matching =>
-      cases necxt with
-      | hole =>
-        simp at h0
-        simp
-        sorry
-      | _ => sorry
-    | _ =>
-      sorry
-end
+--   theorem NStep.necxt_deterministic
+--     (necxt : NEvalCxt E)
+--     (trans : NStep e e')
+--     (trans_necxt : NStep (E e) e'')
+--   : e'' = (E e')
+--   := by
+--     generalize h0 : (E e) = e0 at trans_necxt
+--     cases trans_necxt with
+--     | pattern_match matching =>
+--       cases necxt with
+--       | hole =>
+--         simp at h0
+--         simp
+--         sorry
+--       | _ => sorry
+--     | _ =>
+--       sorry
+-- end
 
 
 end Lang.Dynamic

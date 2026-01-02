@@ -460,7 +460,7 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    exact Safe.function_beta_reduction safe_arg necxt matching h0
+    exact Safe.function_beta_reduction necxt matching h0
   | iso label body =>
     intro h0
     apply NEvalCxt.extract label at necxt

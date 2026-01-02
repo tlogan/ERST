@@ -11,7 +11,6 @@ mutual
   | head l r :  NEvalCxt E → NRcdCxt (fun e => (l, E e) :: r)
   | tail l ev :
       List.is_fresh_key l (R e) →
-      -- Expr.is_value ev →
       NRcdCxt R →
       NRcdCxt (fun e => (l,ev) :: (R e))
 
@@ -20,7 +19,6 @@ mutual
   | iso l : NEvalCxt E -> NEvalCxt (fun e => .iso l (E e))
   | record : NRcdCxt R → NEvalCxt (fun e => .record (R e))
   | applicator arg : NEvalCxt E → NEvalCxt (fun e => .app (E e) arg)
-  -- | applicand f : NEvalCxt E → NEvalCxt (fun e => .app (.function f) (E e))
   | applicand cator : NEvalCxt E → NEvalCxt (fun e => .app cator (E e))
   | loopy : NEvalCxt E → NEvalCxt (fun e => Expr.loop (E e))
 end

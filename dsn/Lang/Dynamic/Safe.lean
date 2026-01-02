@@ -158,41 +158,56 @@ def Safe (e : Expr) : Prop :=
 --     exact Divergent.function_beta_expansion f value_arg necxt matching dvg
 
 theorem Safe.function_beta_reduction
-  /- NOTE:
-  - given that the transition is NOT call-by-value
-  - then app diverges iff the function body diverges
-  -/
-  /- TODO: safe_arg not necessary for transition without CBV
-  - dvg(app) then dvg(sub)
-  - cvg(app) then cvg(sub)
-  -/
-  (safe_arg : Safe arg)
   (necxt : NEvalCxt E)
   (matching : Expr.pattern_match arg p = .some eam)
 : Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg)) →
   Safe (E (Expr.sub eam e))
 := by
-  sorry
+  unfold Safe
+  intro h0 e' h1
+  specialize h0 e'
+  apply h0
+  apply NStepStar.step
+  {
+    apply NStep.necxt necxt
+    apply NStep.pattern_match matching
+  }
+  { exact h1 }
 
 theorem Safe.function_beta_expansion
   f
-  /- NOTE:
-  - given that the transition is NOT call-by-value
-  - then app diverges iff the function body diverges
-  -/
-  /- TODO:
-  - dvg(arg) and dvg(sub) then dvg(app)
-  - cvg(arg) and dvg(sub) then dvg(app)
-  - dvg(arg) and cvg(sub) then dvg(app) or cvg(app)
-  - cvg(arg) and cvg(sub) then cvg(app)
-  -/
   (safe_arg : Safe arg)
   (necxt : NEvalCxt E)
   (matching : Expr.pattern_match arg p = .some eam)
 : Safe (E (Expr.sub eam e)) →
   Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg))
 := by
-  sorry
+  unfold Safe
+  intro h0 e' h1
+  cases h1 with
+  | refl =>
+    apply Or.inr
+    exists (E (Expr.sub eam e))
+    apply NStep.necxt necxt
+    apply NStep.pattern_match
+    exact matching
+  | step _ em _ h3 h4 =>
+    generalize h5 : E (Expr.app (Expr.function ((p, e) :: f)) arg) = ec at h3
+
+    cases h3 with
+    | pattern_match =>
+      cases necxt with
+      | hole => sorry
+      | iso _ _ => sorry
+      | record => sorry
+      | applicator => sorry
+      | applicand => sorry
+      | loopy => sorry
+    | skip => sorry
+    | erase => sorry
+    | recycle => sorry
+    | necxt => sorry
+
 
 
 theorem Safe.subject_reduction

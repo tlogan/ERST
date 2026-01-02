@@ -1594,7 +1594,7 @@ mutual
   | top =>
     unfold Typing
     intro h0
-    exact Safe.function_beta_reduction safe_arg necxt matching h0
+    exact Safe.function_beta_reduction necxt matching h0
   | iso label body =>
     unfold Typing
     intro h0
