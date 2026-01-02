@@ -98,16 +98,17 @@ end
 
 theorem Expr.pattern_match_app_none
   (necxt : NEvalCxt E)
+  cator arg p
 : (Expr.pattern_match (E (.app cator arg)) p) = Option.none
 := by sorry
 
 theorem Expr.pattern_match_no_app
   (necxt : NEvalCxt E)
 : (Expr.pattern_match (E (.app cator arg)) p) ≠ Option.some m
-:= by sorry
-
-
-
+:= by
+  intro h0
+  have h1 := Expr.pattern_match_app_none necxt cator arg p
+  simp [h0] at h1
 
 -- mutual
 --   theorem NStep.pattern_match_deterministic
