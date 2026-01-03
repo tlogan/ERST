@@ -174,7 +174,73 @@ theorem Safe.function_beta_reduction
   }
   { exact h1 }
 
+
 theorem Safe.function_beta_expansion
+  f
+  (safe_arg : Safe arg)
+  (matching : Expr.pattern_match arg p = .some eam)
+: Safe (Expr.sub eam e) →
+  Safe (Expr.app (Expr.function ((p, e) :: f)) arg)
+:= by
+  unfold Safe
+  intro h0 e' h1
+  cases h1 with
+  | refl =>
+    apply Or.inr
+    exists (Expr.sub eam e)
+    exact NStep.pattern_match matching
+  | step _ em _ h3 h4 =>
+    generalize h5 : (Expr.app (Expr.function ((p, e) :: f)) arg) = ec at h3
+
+    cases h3 with
+    | pattern_match matching' =>
+      simp at h5
+      have ⟨⟨⟨h6,h7⟩,h8⟩,h9⟩ := h5
+      apply h0
+      rw [h7]
+      rw [←h9,←h6] at matching'
+      simp [matching] at matching'
+      simp [*]
+    | skip isval no_match =>
+      simp at h5
+      have ⟨⟨⟨h6,h7⟩,h8⟩,h9⟩ := h5
+      rw [←h9,←h6] at no_match
+      rw [no_match] at matching
+      simp at matching
+    | erase =>
+      simp at h5
+    | recycle =>
+      simp at h5
+    | @necxt E e' e'' necxt step =>
+      -- TODO ...
+      cases necxt with
+      | hole => sorry
+      | iso => sorry
+      | record => sorry
+      | applicator arg' necxt' => sorry
+      | @applicand E' cator necxt' =>
+        simp at h4
+        simp at h5
+        have ⟨h6,h7⟩ := h5
+        clear h5
+        unfold Safe at safe_arg
+        sorry
+      | loopy => sorry
+
+
+theorem Safe.necxt_preservation
+  (necxt : NEvalCxt E)
+  (safe_cxt : Safe (E b))
+:  Safe e → Safe (E e)
+:= by sorry
+
+theorem Safe.necxt_reflection
+  (necxt : NEvalCxt E)
+:  Safe (E e) → Safe e
+:= by sorry
+
+
+theorem Safe.contextual_function_beta_expansion
   f
   (safe_arg : Safe arg)
   (necxt : NEvalCxt E)
@@ -182,54 +248,100 @@ theorem Safe.function_beta_expansion
 : Safe (E (Expr.sub eam e)) →
   Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg))
 := by
-  unfold Safe
-  intro h0 e' h1
-  cases h1 with
-  | refl =>
-    apply Or.inr
-    exists (E (Expr.sub eam e))
-    apply NStep.necxt necxt
-    apply NStep.pattern_match
-    exact matching
-  | step _ em _ h3 h4 =>
-    generalize h5 : E (Expr.app (Expr.function ((p, e) :: f)) arg) = ec at h3
+  intro h0
+  have h1 := Safe.necxt_reflection necxt h0
+  apply Safe.necxt_preservation necxt h0
+  exact function_beta_expansion f safe_arg matching h1
 
-    cases h3 with
-    | pattern_match matching' =>
-      cases necxt with
-      | hole =>
-        simp at h5
-        simp at h0
-        have ⟨⟨⟨h6,h7⟩,h8⟩,h9⟩ := h5
-        apply h0
-        rw [h7]
-        rw [← h9,←h6] at matching'
-        simp [matching] at matching'
-        simp [*]
-      | iso =>
-        simp at h5
-      | record =>
-        simp at h5
-      | applicator cator necxt' =>
-        simp at h5
-        simp at h0
-        have ⟨h6,h7⟩ := h5
-        apply NEvalCxt.not_function necxt' at h6
-        exact False.elim h6
-      | applicand arg' necxt' =>
-        simp at h5
-        simp at h0
-        have ⟨h6,h7⟩ := h5
-        clear h5
-        rw [← h7] at matching'
-        apply Expr.pattern_match_no_app necxt' at matching'
-        exact False.elim matching'
-      | loopy =>
-        simp at h5
-    | skip => sorry
-    | erase => sorry
-    | recycle => sorry
-    | necxt => sorry
+
+-- theorem Safe.function_beta_expansion
+--   f
+--   (safe_arg : Safe arg)
+--   (necxt : NEvalCxt E)
+--   (matching : Expr.pattern_match arg p = .some eam)
+-- : Safe (E (Expr.sub eam e)) →
+--   Safe (E (Expr.app (Expr.function ((p, e) :: f)) arg))
+-- := by
+--   unfold Safe
+--   intro h0 e' h1
+--   cases h1 with
+--   | refl =>
+--     apply Or.inr
+--     exists (E (Expr.sub eam e))
+--     apply NStep.necxt necxt
+--     apply NStep.pattern_match
+--     exact matching
+--   | step _ em _ h3 h4 =>
+--     generalize h5 : E (Expr.app (Expr.function ((p, e) :: f)) arg) = ec at h3
+
+--     cases h3 with
+--     | pattern_match matching' =>
+--       cases necxt with
+--       | hole =>
+--         simp at h5
+--         simp at h0
+--         have ⟨⟨⟨h6,h7⟩,h8⟩,h9⟩ := h5
+--         apply h0
+--         rw [h7]
+--         rw [← h9,←h6] at matching'
+--         simp [matching] at matching'
+--         simp [*]
+--       | iso =>
+--         simp at h5
+--       | record =>
+--         simp at h5
+--       | applicator cator necxt' =>
+--         simp at h5
+--         simp at h0
+--         have ⟨h6,h7⟩ := h5
+--         apply NEvalCxt.not_function necxt' at h6
+--         exact False.elim h6
+--       | applicand arg' necxt' =>
+--         simp at h5
+--         simp at h0
+--         have ⟨h6,h7⟩ := h5
+--         clear h5
+--         rw [← h7] at matching'
+--         apply Expr.pattern_match_no_app necxt' at matching'
+--         exact False.elim matching'
+--       | loopy =>
+--         simp at h5
+--     | skip =>
+--       -- cases necxt with
+--       -- | hole =>
+--       -- | iso =>
+--       -- | record =>
+--       -- | applicator cator necxt' =>
+--       -- | applicand arg' necxt' =>
+--       -- | loopy =>
+--       sorry
+--     | erase =>
+--       -- cases necxt with
+--       -- | hole =>
+--       -- | iso =>
+--       -- | record =>
+--       -- | applicator cator necxt' =>
+--       -- | applicand arg' necxt' =>
+--       -- | loopy =>
+--       sorry
+--     | recycle =>
+--       -- cases necxt with
+--       -- | hole =>
+--       -- | iso =>
+--       -- | record =>
+--       -- | applicator cator necxt' =>
+--       -- | applicand arg' necxt' =>
+--       -- | loopy =>
+--       sorry
+--     | necxt necxt' =>
+--       -- cases necxt with
+--       -- | hole =>
+--       -- | iso =>
+--       -- | record =>
+--       -- | applicator cator necxt' =>
+--       -- | applicand arg' necxt' =>
+--       -- | loopy =>
+--       sorry
 
 
 
@@ -241,19 +353,6 @@ theorem Safe.subject_reduction
 theorem Safe.subject_expansion
   (transition : NStep e e')
 : Safe e' → Safe e
-:= by sorry
-
-
-theorem Safe.necxt_reflection :
-  NEvalCxt E →
-  Safe (E e) →
-  Safe e
-:= by
-  sorry
-
-theorem Safe.necxt_preservation :
-  NEvalCxt E → Safe (E e) →
-  Safe e' → Safe (E e')
 := by sorry
 
 

@@ -520,7 +520,7 @@ mutual
   | top =>
     unfold FinTyping
     intro h0
-    exact Safe.function_beta_expansion f safe_arg necxt matching h0
+    exact Safe.contextual_function_beta_expansion f safe_arg necxt matching h0
 
   | iso label body =>
     intro h0
