@@ -96,6 +96,20 @@ mutual
       NStep (E e) (E e')
 end
 
+
+theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
+  unfold Expr.project
+  have h0 : Expr.pattern_match
+    (Expr.record [(l, e)]) (Pat.record [(l, Pat.var "x")]) = some [("x", e)]
+  := by
+    simp [Expr.pattern_match, List.pattern_match_record, List.pattern_match_entry]
+    rfl
+  have h1 : e = Expr.sub [("x", e)] (.var "x") := by exact rfl
+  rw [h1]
+  apply NStep.pattern_match h0
+
+
+
 theorem Expr.pattern_match_app_none
   (necxt : NEvalCxt E)
   cator arg p
@@ -109,6 +123,7 @@ theorem Expr.pattern_match_no_app
   intro h0
   have h1 := Expr.pattern_match_app_none necxt cator arg p
   simp [h0] at h1
+
 
 -- mutual
 --   theorem NStep.pattern_match_deterministic
