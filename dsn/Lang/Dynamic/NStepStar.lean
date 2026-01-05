@@ -30,6 +30,8 @@ theorem NStepStar.necxt_preservation
 def Confluent (a b : Expr) :=
   ∃ e , NStepStar a e ∧ NStepStar b e
 
+
+
 theorem Confluent.transitivity {a b c} :
   Confluent a b →
   Confluent b c →

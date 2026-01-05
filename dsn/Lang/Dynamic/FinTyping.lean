@@ -20,63 +20,6 @@ def FinTyping (e : Expr) : Typ → Prop
 | _ => False
 
 
-#eval Expr.pattern_match
-  (Expr.iso "hello" (Expr.record []))
-  (Pat.iso "hello" (Pat.var "x"))
-
-
--- example : FinTyping (
---   Expr.app (
---     Expr.function [
---       (Pat.var "x", Expr.iso "hello" (Expr.var "x"))
---     ]
---   ) (
---     Expr.app (.function [(Pat.var "x", Expr.var "x")]) (.record [])
---   )
--- ) (
---   (.iso "hello" .top)
--- )
--- := by
---   unfold FinTyping
---   unfold FinTyping
---   apply Or.inl
---   unfold Convergent
---   exists (.record [])
---   apply And.intro
---   { apply NStepStar.step
---     { unfold Expr.extract
---       apply NStep.necxt
---       { apply NEvalCxt.applicand ; exact NEvalCxt.hole }
---       { apply NStep.necxt
---         { apply NEvalCxt.applicand ; exact NEvalCxt.hole }
---         {
---           apply NStep.pattern_match
---           simp [Expr.pattern_match]
---           rfl
---         }
---       }
---     }
---     { apply NStepStar.step
---       { apply NStep.necxt
---         { apply NEvalCxt.applicand ; exact NEvalCxt.hole}
---         { apply NStep.pattern_match
---           simp [Expr.pattern_match]
---           rfl
---         }
---       }
---       { apply NStepStar.step
---         {
---           apply NStep.pattern_match
---           { reduce ;  simp [Expr.pattern_match]; rfl }
---         }
---         { apply NStepStar.refl }
---       }
---     }
---   }
---   { exact rfl }
-
-
-
 def Subtyping.Fin (left right : Typ) : Prop :=
   ∀ e, FinTyping e left → FinTyping e right
 

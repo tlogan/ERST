@@ -186,88 +186,55 @@ theorem Safe.necxt_reflection
 := by sorry
 
 
-theorem Safe.subject_expansion
-  (step : NStep e e')
-: Safe e' → Safe e
+theorem NStepStar.universal_nexus :
+  ∃ en,  ∀ em , NStepStar e em → NStepStar em en
 := by sorry
 
-  -- intro h0 e' h1
-  -- cases h1 with
-  -- | refl =>
-  --   apply Or.inr
-  --   exists (Expr.sub eam e)
-  --   exact NStep.pattern_match matching
-  -- | step _ em _ h3 h4 =>
 
-  --   generalize h5 : (Expr.app (Expr.function ((p, e) :: f)) arg) = ec at h3
+theorem Safe.subject_star_reduction
+  (step_star : NStepStar e e')
+: Safe e → Safe e'
+:= by
+  sorry
 
-  --   cases h3 with
-  --   | pattern_match matching' =>
-  --     simp at h5
-  --     have ⟨⟨⟨h6,h7⟩,h8⟩,h9⟩ := h5
-  --     apply h0
-  --     rw [h7]
-  --     rw [←h9,←h6] at matching'
-  --     simp [matching] at matching'
-  --     simp [*]
-  --   | skip isval no_match =>
-  --     simp at h5
-  --     have ⟨⟨⟨h6,h7⟩,h8⟩,h9⟩ := h5
-  --     rw [←h9,←h6] at no_match
-  --     rw [no_match] at matching
-  --     simp at matching
-  --   | erase =>
-  --     simp at h5
-  --   | recycle =>
-  --     simp at h5
-  --   | @necxt E cent cent' necxt step =>
-
-  --     cases necxt with
-  --     | hole => sorry
-  --     | iso => sorry
-  --     | record => sorry
-  --     | applicator arg' necxt' => sorry
-  --     | @applicand E' cator necxt' =>
-  --       simp at h4
-  --       simp at h5
-  --       have ⟨h6,h7⟩ := h5
-  --       clear h5
-  --       unfold Safe at safe_arg
-  --       rw [h7] at safe_arg
-
-  --       sorry
-  --       -- have h8 : NStep (E' cent) (E' cent') := by sorry
-  --       -- have h9 : NStepStar (E' cent) (E' cent') := by
-  --       --   apply NStepStar.step _ _ _ h8
-  --       --   exact NStepStar.refl (E' cent')
-  --       -- specialize safe_arg (E' cent') h9
-  --       -- cases safe_arg with
-  --       -- | inl h10 =>
-  --       --   sorry
-  --       -- | inr h10 =>
-  --       --   apply Or.inr
-  --       --   have ⟨e'', h11⟩ := h10
-  --       --   have h12 : NStep (Expr.app cator (E' cent')) (Expr.app cator e'') := by sorry
-  --       --   exists (Expr.app cator e'')
-
-
-  --       --   exact?
-
-  --       -- unfold Safe at safe_arg
-
-  --       -- apply safe_arg (E' cent')
-
-  --       -- sorry
-  --       -- unfold Safe at safe_arg
-  --       -- sorry
-  --     | loopy => sorry
-
+theorem Safe.subject_star_expansion
+  (step_star : NStepStar e en)
+  (nexus : ∀ em , NStepStar e em → NStepStar em en)
+: Safe en → Safe e
+:= by
+  sorry
 
 theorem Safe.subject_reduction
   (step : NStep e e')
 : Safe e → Safe e'
-:= by sorry
+:= by
+  sorry
 
+theorem Safe.subject_expansion
+  (step : NStep e e')
+: Safe e' → Safe e
+:= by
+  intro h0
+  have ⟨en,nexus⟩ := @NStepStar.universal_nexus e
+  have step_star : NStepStar e' en := by
+    apply nexus
+    apply NStepStar.step
+    exact step
+    exact NStepStar.refl e'
 
+  have h1 := Safe.subject_star_reduction step_star h0
+  apply Safe.subject_star_expansion
+  {
+    apply NStepStar.step
+    { apply step }
+    {
+      apply nexus
+      apply NStepStar.step
+      exact step
+      exact NStepStar.refl e'
+    }
+  }
+  { exact nexus }
+  { exact h1 }
 
 end Lang.Dynamic

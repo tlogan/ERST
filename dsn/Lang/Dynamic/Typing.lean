@@ -86,8 +86,7 @@ mutual
   | top =>
     unfold Typing
     intro h0
-    sorry
-    -- exact Safe.subject_reduction transition h0
+    exact Safe.subject_reduction transition h0
 
   | iso label body =>
     unfold Typing

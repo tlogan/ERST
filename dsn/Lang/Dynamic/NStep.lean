@@ -85,12 +85,12 @@ mutual
     arg.is_value →
     Expr.pattern_match arg p = none →
     NStep (.app (.function ((p,e) :: f)) arg) (.app (.function f) arg)
-  | erase e t :
-    NStep (.anno  e t) e
-  | recycle id :
+  | erase :
+    NStep (.anno e t) e
+  | recycle :
     NStep
-      (.loop (.function [(.var id, e)]))
-      (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
+      (.loop (.function [(.var x, e)]))
+      (Expr.sub [(x, (.loop (.function [(.var x, e)])))] e)
   | necxt :
       NEvalCxt E → NStep e e' →
       NStep (E e) (E e')
