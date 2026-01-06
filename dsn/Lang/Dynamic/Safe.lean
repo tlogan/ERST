@@ -197,44 +197,49 @@ theorem Safe.subject_star_reduction
 := by
   sorry
 
-theorem Safe.subject_star_expansion
-  (step_star : NStepStar e en)
-  (nexus : ∀ em , NStepStar e em → NStepStar em en)
+theorem Safe.nexus_expansion
+  (nexus : ∀ (em : Expr), NStepStar e em → NStepStar em en)
 : Safe en → Safe e
 := by
-  sorry
+  unfold Safe
+  intro h0 e' h1
+  have h2 := nexus e' h1
+  cases h2 with
+  | refl =>
+    apply h0
+    exact nexus en h1
+  | @step e' em en h3 h4 =>
+    apply Or.inr
+    exists em
+
+theorem Safe.subject_star_expansion
+  (step_star : NStepStar e e')
+: Safe e' → Safe e
+:= by
+  have ⟨en,h0⟩ := @NStepStar.universal_nexus e
+  intro h1
+  have h2 : NStepStar e' en := by
+    apply h0 _ step_star
+  apply Safe.subject_star_reduction h2 at h1
+  clear step_star
+  clear h2
+  exact nexus_expansion h0 h1
+
 
 theorem Safe.subject_reduction
   (step : NStep e e')
 : Safe e → Safe e'
 := by
-  sorry
+  apply Safe.subject_star_reduction
+  apply NStepStar.step
+  exact step
+  exact NStepStar.refl
 
 theorem Safe.subject_expansion
   (step : NStep e e')
 : Safe e' → Safe e
 := by
-  intro h0
-  have ⟨en,nexus⟩ := @NStepStar.universal_nexus e
-  have step_star : NStepStar e' en := by
-    apply nexus
-    apply NStepStar.step
-    exact step
-    exact NStepStar.refl e'
-
-  have h1 := Safe.subject_star_reduction step_star h0
   apply Safe.subject_star_expansion
-  {
-    apply NStepStar.step
-    { apply step }
-    {
-      apply nexus
-      apply NStepStar.step
-      exact step
-      exact NStepStar.refl e'
-    }
-  }
-  { exact nexus }
-  { exact h1 }
+  apply NStepStar.step step NStepStar.refl
 
 end Lang.Dynamic

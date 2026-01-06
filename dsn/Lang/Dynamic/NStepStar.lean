@@ -8,8 +8,8 @@ set_option pp.fieldNotation false
 namespace Lang.Dynamic
 
 inductive NStepStar : Expr → Expr → Prop
-| refl e : NStepStar e e
-| step e e' e'' : NStep e e' → NStepStar e' e'' → NStepStar e e''
+| refl : NStepStar e e
+| step : NStep e e' → NStepStar e' e'' → NStepStar e e''
 
 
 
@@ -18,12 +18,25 @@ theorem NStepStar.necxt_preservation
   (transition_star : NStepStar e e')
 : NStepStar (E e) (E e')
 := by induction transition_star with
-| refl e =>
-  exact refl (E e)
-| step e e' e'' h0 h1 ih =>
+| @refl e =>
+  exact refl
+| @step e e' e'' h0 h1 ih =>
   apply NStepStar.step
   { exact NStep.necxt necxt h0 }
   { exact ih }
+
+
+inductive StarNStep : Expr → Expr → Prop
+| refl : StarNStep e e
+| step : StarNStep e e' → NStep e' e'' → StarNStep e e''
+
+theorem NStepStar.reverse :
+  NStepStar e e' → StarNStep e e'
+:= by sorry
+
+theorem StarNStep.reverse :
+  StarNStep e e' → NStepStar e e'
+:= by sorry
 
 
 
@@ -47,6 +60,8 @@ theorem Confluent.app_arg_preservation {a b} f :
   Confluent a b →
   Confluent (.app f a) (.app f b)
 := by sorry
+
+
 
 
 end Lang.Dynamic
