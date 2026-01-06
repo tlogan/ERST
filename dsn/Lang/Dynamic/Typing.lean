@@ -1,5 +1,4 @@
 import Lang.Basic
-import Lang.Dynamic.NEvalCxt
 import Lang.Dynamic.NStep
 import Lang.Dynamic.NStepStar
 import Lang.Dynamic.Safe
@@ -92,20 +91,14 @@ mutual
     unfold Typing
     intro h0
     apply Typing.subject_reduction
-    {
-      have necxt := NEvalCxt.extract label .hole
-      apply NStep.necxt necxt transition
-    }
+    { apply NStep.applicand transition }
     { exact h0 }
 
   | entry label body =>
     unfold Typing
     intro h0
     apply Typing.subject_reduction
-    {
-      have necxt := NEvalCxt.project label .hole
-      apply NStep.necxt necxt transition
-    }
+    { apply NStep.applicand transition }
     { exact h0 }
 
 
@@ -114,10 +107,7 @@ mutual
     intro h0 e'' h1
     specialize h0 e'' h1
     apply Typing.subject_reduction
-    {
-      have necxt := NEvalCxt.applicator e'' .hole
-      apply NStep.necxt necxt transition
-    }
+    { apply NStep.applicator transition }
     { exact h0 }
 
   | unio left right =>
@@ -200,20 +190,14 @@ mutual
     unfold Typing
     intro h0
     apply Typing.subject_expansion
-    {
-      have necxt := NEvalCxt.extract label .hole
-      apply NStep.necxt necxt transition
-    }
+    { apply NStep.applicand transition }
     { exact h0 }
 
   | entry label body =>
     unfold Typing
     intro h0
     apply Typing.subject_expansion
-    {
-      have necxt := NEvalCxt.project label .hole
-      apply NStep.necxt necxt transition
-    }
+    { apply NStep.applicand transition }
     { exact h0 }
 
 
@@ -222,10 +206,7 @@ mutual
     intro h0 e'' h1
     specialize h0 e'' h1
     apply Typing.subject_expansion
-    {
-      have necxt := NEvalCxt.applicator e'' .hole
-      apply NStep.necxt necxt transition
-    }
+    { apply NStep.applicator transition }
     { exact h0 }
 
   | unio left right =>

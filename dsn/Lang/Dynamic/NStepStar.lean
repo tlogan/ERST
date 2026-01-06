@@ -1,5 +1,4 @@
 import Lang.Basic
-import Lang.Dynamic.NEvalCxt
 import Lang.Dynamic.NStep
 
 set_option pp.fieldNotation false
@@ -24,17 +23,25 @@ theorem NStepStar.transitive :
 
 
 
-theorem NStepStar.necxt_preservation
-  (necxt : NEvalCxt E)
-  (transition_star : NStepStar e e')
-: NStepStar (E e) (E e')
-:= by induction transition_star with
-| @refl e =>
-  exact refl
-| @step e e' e'' h0 h1 ih =>
-  apply NStepStar.step
-  { exact NStep.necxt necxt h0 }
-  { exact ih }
+
+theorem NStepStar.universal_nexus :
+  ∃ en,  ∀ em , NStepStar e em → NStepStar em en
+:= by cases e with
+| var x =>
+  exists (Expr.var x)
+  intro em h0
+  cases h0 with
+  | refl => exact refl
+  | step h1 h2 =>
+    apply NStep.var_no_step at h1
+    exact False.elim h1
+| _ => sorry
+-- | iso : String → Expr → Expr
+-- | record : List (String × Expr) → Expr
+-- | function : List (Pat × Expr) → Expr
+-- | app : Expr → Expr → Expr
+-- | anno : Expr → Typ → Expr
+-- | loop : Expr → Expr
 
 
 

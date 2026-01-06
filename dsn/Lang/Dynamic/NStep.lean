@@ -1,5 +1,4 @@
 import Lang.Basic
-import Lang.Dynamic.NEvalCxt
 
 set_option pp.fieldNotation false
 
@@ -77,7 +76,12 @@ end
 
 
 mutual
+  inductive NRcdStep : List (String × Expr) → List (String × Expr) → Prop
+  | head :  NStep e e' →  NRcdStep ((l, e) :: r) ((l, e') :: r)
+  | tail : List.is_fresh_key l r → NRcdStep r r' → NRcdStep ((l,ev) :: r) ((l,ev) :: r')
+
   inductive NStep : Expr → Expr → Prop
+  /- redex forms -/
   | pattern_match :
     Expr.pattern_match arg p = some m →
     NStep (.app (.function ((p,e) :: f)) arg) (Expr.sub m e)
@@ -91,9 +95,13 @@ mutual
     NStep
       (.loop (.function [(.var x, e)]))
       (Expr.sub [(x, (.loop (.function [(.var x, e)])))] e)
-  | necxt :
-      NEvalCxt E → NStep e e' →
-      NStep (E e) (E e')
+
+  /- head normal forms -/
+  | iso : NStep body body' → NStep (.iso l body) (.iso l body')
+  | record : NRcdStep r r' →  NStep (.record r) (.record r')
+  | applicator : NStep cator cator' → NStep (.app cator arg) (.app cator' arg)
+  | applicand : NStep arg arg' → NStep (.app cator arg) (.app cator arg')
+  | loop : NStep body body' → NStep (.loop body) (.loop body')
 end
 
 
@@ -109,66 +117,12 @@ theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
   apply NStep.pattern_match h0
 
 
-
-theorem Expr.pattern_match_app_none
-  (necxt : NEvalCxt E)
-  cator arg p
-: (Expr.pattern_match (E (.app cator arg)) p) = Option.none
-:= by sorry
-
-theorem Expr.pattern_match_no_app
-  (necxt : NEvalCxt E)
-: (Expr.pattern_match (E (.app cator arg)) p) ≠ Option.some m
+theorem NStep.var_no_step :
+  ¬ NStep (Expr.var x) e
 := by
   intro h0
-  have h1 := Expr.pattern_match_app_none necxt cator arg p
-  simp [h0] at h1
-
-
--- mutual
---   theorem NStep.pattern_match_deterministic
---     (isval : Expr.is_value arg)
---     (matching : Expr.pattern_match v p = some m)
---     (trans : NStep (Expr.app (.function ((p,e) :: f)) arg) e')
---   : e' = (Expr.sub m e)
---   := by sorry
-
---   theorem NStep.skip_deterministic
---     (isval : v.is_value)
---     (nomatching : Expr.pattern_match v p = none)
---     (trans : NStep (.app (.function ((p,e) :: f)) v) e')
---   : e' = (.app (.function f) v)
---   := by sorry
-
---   theorem NStep.erase_deterministic
---     (trans : NStep (.anno e t) e')
---   : e' = e
---   := by sorry
-
---   theorem NStep.recycle_deterministic
---     id
---     (trans : NStep (.loop (.function [(.var id, e)])) e')
---   : e' = (Expr.sub [(id, (.loop (.function [(.var id, e)])))] e)
---   := by sorry
-
---   theorem NStep.necxt_deterministic
---     (necxt : NEvalCxt E)
---     (trans : NStep e e')
---     (trans_necxt : NStep (E e) e'')
---   : e'' = (E e')
---   := by
---     generalize h0 : (E e) = e0 at trans_necxt
---     cases trans_necxt with
---     | pattern_match matching =>
---       cases necxt with
---       | hole =>
---         simp at h0
---         simp
---         sorry
---       | _ => sorry
---     | _ =>
---       sorry
--- end
+  generalize h1 : (Expr.var x) = e0 at h0
+  cases h0 <;> try simp at h1
 
 
 end Lang.Dynamic
