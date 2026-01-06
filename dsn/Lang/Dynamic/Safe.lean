@@ -195,7 +195,10 @@ theorem Safe.subject_star_reduction
   (step_star : NStepStar e e')
 : Safe e → Safe e'
 := by
-  sorry
+  unfold Safe
+  intro h0 em h1
+  apply h0
+  apply NStepStar.transitive step_star h1
 
 theorem Safe.nexus_expansion
   (nexus : ∀ (em : Expr), NStepStar e em → NStepStar em en)

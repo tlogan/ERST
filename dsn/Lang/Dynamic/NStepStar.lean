@@ -12,6 +12,17 @@ inductive NStepStar : Expr → Expr → Prop
 | step : NStep e e' → NStepStar e' e'' → NStepStar e e''
 
 
+theorem NStepStar.transitive :
+  NStepStar e e' → NStepStar e' e'' → NStepStar e e''
+:= by
+  intro h0 h1
+  induction h0 with
+  | refl =>
+    exact h1
+  | step h2 h3 ih =>
+    exact step h2 (ih h1)
+
+
 
 theorem NStepStar.necxt_preservation
   (necxt : NEvalCxt E)
@@ -26,23 +37,9 @@ theorem NStepStar.necxt_preservation
   { exact ih }
 
 
-inductive StarNStep : Expr → Expr → Prop
-| refl : StarNStep e e
-| step : StarNStep e e' → NStep e' e'' → StarNStep e e''
-
-theorem NStepStar.reverse :
-  NStepStar e e' → StarNStep e e'
-:= by sorry
-
-theorem StarNStep.reverse :
-  StarNStep e e' → NStepStar e e'
-:= by sorry
-
-
 
 def Confluent (a b : Expr) :=
   ∃ e , NStepStar a e ∧ NStepStar b e
-
 
 
 theorem Confluent.transitivity {a b c} :
