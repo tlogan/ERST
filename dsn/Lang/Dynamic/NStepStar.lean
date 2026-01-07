@@ -22,6 +22,16 @@ theorem NStepStar.transitive :
     exact step h2 (ih h1)
 
 
+theorem NStepStar.iso :
+  NStepStar body body' →
+  NStepStar (Expr.iso label body) (Expr.iso label body')
+:= by sorry
+
+
+theorem NStepStar.iso_choice :
+  NStepStar (Expr.iso label body) e →
+  ∃ body_choice , e = (Expr.iso label body_choice) ∧  NStepStar body body_choice
+:= by sorry
 
 
 theorem NStepStar.universal_nexus :
@@ -33,10 +43,17 @@ theorem NStepStar.universal_nexus :
   cases h0 with
   | refl => exact refl
   | step h1 h2 =>
-    apply NStep.var_no_step at h1
-    exact False.elim h1
+    cases h1
+| iso label body =>
+  have ⟨body',ih⟩ := @NStepStar.universal_nexus body
+  exists (.iso label body')
+  intro em h0
+  have ⟨bodym,h1,h2⟩ := NStepStar.iso_choice h0
+  rw [h1]
+  specialize ih bodym h2
+  apply NStepStar.iso ih
+
 | _ => sorry
--- | iso : String → Expr → Expr
 -- | record : List (String × Expr) → Expr
 -- | function : List (Pat × Expr) → Expr
 -- | app : Expr → Expr → Expr

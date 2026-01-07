@@ -117,12 +117,4 @@ theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
   apply NStep.pattern_match h0
 
 
-theorem NStep.var_no_step :
-  ¬ NStep (Expr.var x) e
-:= by
-  intro h0
-  generalize h1 : (Expr.var x) = e0 at h0
-  cases h0 <;> try simp at h1
-
-
 end Lang.Dynamic
