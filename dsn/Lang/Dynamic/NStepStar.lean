@@ -59,9 +59,9 @@ theorem NStepStar.iso :
   | step h1 h2 ih =>
     apply NStepStar.step (NStep.iso h1) ih
 
-theorem NStepStar.iso_choice :
+theorem NStepStar.iso_inversion :
   NStepStar (Expr.iso label body) e →
-  ∃ body_choice , e = (Expr.iso label body_choice) ∧  NStepStar body body_choice
+  ∃ body' , e = (Expr.iso label body') ∧  NStepStar body body'
 := by
   intro h0
   apply NStepStar.reverse at h0
@@ -72,13 +72,13 @@ theorem NStepStar.iso_choice :
     simp
     apply NStepStar.refl
   | @step em en h1 h2 ih =>
-    have ⟨body_choice,h3,h4⟩ := ih
+    have ⟨body',h3,h4⟩ := ih
     clear ih
     rw [h3] at h2
 
     cases h2 with
-    | @iso body_choice body_choice' _ step =>
-      exists body_choice'
+    | @iso body' body'' _ step =>
+      exists body''
       simp
       apply NStepStar.transitive h4
       apply NStepStar.step step
@@ -100,7 +100,7 @@ theorem NStepStar.universal_nexus :
   have ⟨body',ih⟩ := @NStepStar.universal_nexus body
   exists (.iso label body')
   intro em h0
-  have ⟨bodym,h1,h2⟩ := NStepStar.iso_choice h0
+  have ⟨bodym,h1,h2⟩ := NStepStar.iso_inversion h0
   rw [h1]
   specialize ih bodym h2
   apply NStepStar.iso ih
