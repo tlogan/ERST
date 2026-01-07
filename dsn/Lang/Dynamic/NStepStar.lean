@@ -10,6 +10,20 @@ inductive NStepStar : Expr → Expr → Prop
 | refl : NStepStar e e
 | step : NStep e e' → NStepStar e' e'' → NStepStar e e''
 
+inductive StarNStep : Expr → Expr → Prop
+| refl : StarNStep e e
+| step : StarNStep e e' → NStep e' e'' → StarNStep e e''
+
+theorem StarNStep.transitive :
+  StarNStep e e' → StarNStep e' e'' → StarNStep e e''
+:= by
+  intro h0 h1
+  induction h1 with
+  | refl =>
+    exact h0
+  | step h2 h3 ih =>
+    exact step ih h3
+
 
 theorem NStepStar.transitive :
   NStepStar e e' → NStepStar e' e'' → NStepStar e e''
@@ -21,17 +35,51 @@ theorem NStepStar.transitive :
   | step h2 h3 ih =>
     exact step h2 (ih h1)
 
+theorem NStepStar.reverse :
+  NStepStar e e' → StarNStep e e'
+:= by
+  intro h0
+  induction h0 with
+  | refl =>
+    exact StarNStep.refl
+  | @step e em e' h1 h2 ih =>
+    apply StarNStep.transitive
+    { apply StarNStep.step StarNStep.refl h1 }
+    { exact ih }
+
 
 theorem NStepStar.iso :
   NStepStar body body' →
   NStepStar (Expr.iso label body) (Expr.iso label body')
-:= by sorry
-
+:= by
+  intro h0
+  induction h0 with
+  | refl =>
+    apply NStepStar.refl
+  | step h1 h2 ih =>
+    apply NStepStar.step (NStep.iso h1) ih
 
 theorem NStepStar.iso_choice :
   NStepStar (Expr.iso label body) e →
   ∃ body_choice , e = (Expr.iso label body_choice) ∧  NStepStar body body_choice
-:= by sorry
+:= by
+  intro h0
+  apply NStepStar.reverse at h0
+
+  induction h0 with
+  | refl =>
+    exists body
+    simp
+    apply NStepStar.refl
+  | @step em en h1 h2 ih =>
+    have ⟨body_choice,h3,h4⟩ := ih
+    clear ih
+    rw  [h3] at h2
+    have ⟨body_choice',h5,h6⟩ := NStep.iso_choice h2
+    exists body_choice'
+    apply And.intro h5
+    apply NStepStar.transitive h4
+    apply NStepStar.step h6 refl
 
 
 theorem NStepStar.universal_nexus :
