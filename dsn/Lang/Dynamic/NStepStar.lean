@@ -71,7 +71,7 @@ theorem NStepStar.iso_inversion :
     exists body
     simp
     apply NStepStar.refl
-  | @step em en h1 h2 ih =>
+  | step h1 h2 ih =>
     have ⟨body',h3,h4⟩ := ih
     clear ih
     rw [h3] at h2
@@ -89,32 +89,88 @@ inductive NRcdStepStar : List (String × Expr) → List (String × Expr) → Pro
 | refl : NRcdStepStar r r
 | step : NRcdStep r r' → NRcdStepStar r' r'' → NRcdStepStar r r''
 
-inductive StarNRcdStep : List (String × Expr) → List (String × Expr) → Prop
-| refl : StarNRcdStep r r
-| step : StarNRcdStep r r' → NRcdStep r' r'' → StarNRcdStep r r''
-
--- inductive NStepStar : Expr → Expr → Prop
-
--- inductive StarNStep : Expr → Expr → Prop
--- | refl : StarNStep e e
--- | step : StarNStep e e' → NStep e' e'' → StarNStep e e''
+theorem NRcdStepStar.transitive :
+  NRcdStepStar e e' → NRcdStepStar e' e'' → NRcdStepStar e e''
+:= by
+  intro h0 h1
+  induction h0 with
+  | refl =>
+    exact h1
+  | step h2 h3 ih =>
+    exact step h2 (ih h1)
 
 
 
 theorem NStepStar.record :
   NRcdStepStar r r' →
   NStepStar (.record r) (.record r')
+:= by
+  intro h0
+  induction h0 with
+  | refl =>
+    exact NStepStar.refl
+  | step h1 h2 ih =>
+    apply NStepStar.step
+    { apply NStep.record h1 }
+    { exact ih }
+
+theorem NRcdStepStar.tail :
+  NStepStar e e' →
+  NRcdStepStar r r' →
+  NRcdStepStar ((l,e) :: r) ((l,e') :: r')
 := by sorry
+
+
+theorem NRcdStepStar.tail_inversion :
+  NRcdStepStar ((l,e) :: r) r' →
+  ∃ e' r'' , r' = ((l,e') :: r'')  ∧ NStepStar e e' ∧ NRcdStepStar r r''
+:= by sorry
+
 
 theorem NStepStar.record_inversion :
   NStepStar (.record r) e →
   ∃ r' , e = .record r' ∧ NRcdStepStar r r'
-:= by sorry
+:= by
+  intro h0
+  apply NStepStar.reverse at h0
+
+  induction h0 with
+  | refl =>
+    exists r
+    simp
+    exact NRcdStepStar.refl
+  | step h1 h2 ih =>
+    have ⟨r',h3,h4⟩ := ih
+    rw [h3] at h2
+    cases h2 with
+    | @record r' r'' step =>
+      exists r''
+      simp
+      apply NRcdStepStar.transitive h4
+      apply NRcdStepStar.step step
+      exact NRcdStepStar.refl
 
 mutual
   theorem NRcdStepStar.universal_nexus :
     ∃ rn,  ∀ rm , NRcdStepStar r rm → NRcdStepStar rm rn
-  := by sorry
+  := by cases r with
+  | nil =>
+    exists []
+    intro rm h0
+    cases h0 with
+    | refl => exact NRcdStepStar.refl
+    | step h1 h2 =>
+      cases h1
+  | cons head r =>
+    have (l,e) := head
+    have ⟨e',h0⟩ := @NStepStar.universal_nexus e
+    have ⟨r',ih⟩ := @NRcdStepStar.universal_nexus r
+    exists ((l,e') :: r')
+    intro rm h1
+    have ⟨em,rm',h2,h3,h4⟩ := NRcdStepStar.tail_inversion h1
+    rw [h2]
+    apply NRcdStepStar.tail (h0 em h3) (ih rm' h4)
+
 
   theorem NStepStar.universal_nexus :
     ∃ en,  ∀ em , NStepStar e em → NStepStar em en
