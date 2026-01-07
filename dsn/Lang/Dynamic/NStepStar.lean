@@ -171,7 +171,12 @@ mutual
     rw [h2]
     apply NRcdStepStar.tail (h0 em h3) (ih rm' h4)
 
-
+  /- TODO: not sure,
+    but this definition might be too strong to prove;
+    there is a common nexus for every finite subset of paths,
+    but there may not be a way to construct a nexus for an infinite set of paths.
+    may need to switch to pair-wise (finite-paths) confluence
+  -/
   theorem NStepStar.universal_nexus :
     ∃ en,  ∀ em , NStepStar e em → NStepStar em en
   := by cases e with
@@ -197,34 +202,35 @@ mutual
     have ⟨rm,h1,h2⟩ := NStepStar.record_inversion h0
     rw [h1]
     apply NStepStar.record (ih rm h2)
-
+  -- | function f =>
+  --   sorry
+  -- | app cator arg =>
+  --   sorry
+  -- | anno _ t =>
+  --   sorry
   | _ => sorry
-  -- | function : List (Pat × Expr) → Expr
-  -- | app : Expr → Expr → Expr
-  -- | anno : Expr → Typ → Expr
-  -- | loop : Expr → Expr
 end
 
 
 
-def Confluent (a b : Expr) :=
+def Joinable (a b : Expr) :=
   ∃ e , NStepStar a e ∧ NStepStar b e
 
 
-theorem Confluent.transitivity {a b c} :
-  Confluent a b →
-  Confluent b c →
-  Confluent a c
+theorem Joinable.transitivity {a b c} :
+  Joinable a b →
+  Joinable b c →
+  Joinable a c
 := by sorry
 
-theorem Confluent.swap {a b} :
-  Confluent a b →
-  Confluent b a
+theorem Joinable.swap {a b} :
+  Joinable a b →
+  Joinable b a
 := by sorry
 
-theorem Confluent.app_arg_preservation {a b} f :
-  Confluent a b →
-  Confluent (.app f a) (.app f b)
+theorem Joinable.app_arg_preservation {a b} f :
+  Joinable a b →
+  Joinable (.app f a) (.app f b)
 := by sorry
 
 

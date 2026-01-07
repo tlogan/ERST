@@ -863,20 +863,20 @@ theorem Subtyping.transitivity :
 
 
 
-theorem Typing.confluent_preservation {a b am t} :
-  Confluent a b →
+theorem Typing.joinable_preservation {a b am t} :
+  Joinable a b →
   Typing am a t →
   Typing am b t
 := by sorry
 
-theorem Typing.confluent_reflection {a b am t} :
-  Confluent a b →
+theorem Typing.joinable_reflection {a b am t} :
+  Joinable a b →
   Typing am b t →
   Typing am a t
 := by
   intro h0 h1
-  apply Typing.confluent_preservation
-  apply Confluent.swap h0
+  apply Typing.joinable_preservation
+  apply Joinable.swap h0
   exact h1
 
 
