@@ -74,12 +74,16 @@ theorem NStepStar.iso_choice :
   | @step em en h1 h2 ih =>
     have ⟨body_choice,h3,h4⟩ := ih
     clear ih
-    rw  [h3] at h2
-    have ⟨body_choice',h5,h6⟩ := NStep.iso_choice h2
-    exists body_choice'
-    apply And.intro h5
-    apply NStepStar.transitive h4
-    apply NStepStar.step h6 refl
+    rw [h3] at h2
+
+    cases h2 with
+    | @iso body_choice body_choice' _ step =>
+      exists body_choice'
+      simp
+      apply NStepStar.transitive h4
+      apply NStepStar.step step
+      exact refl
+
 
 
 theorem NStepStar.universal_nexus :

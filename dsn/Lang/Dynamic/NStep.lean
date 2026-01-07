@@ -105,12 +105,6 @@ mutual
 end
 
 
-theorem NStep.iso_choice :
-  NStep (Expr.iso label body) e →
-  ∃ body_choice , e = (Expr.iso label body_choice) ∧  NStep body body_choice
-:= by
-  sorry
-
 theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
   unfold Expr.project
   have h0 : Expr.pattern_match
