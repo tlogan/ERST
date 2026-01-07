@@ -85,32 +85,69 @@ theorem NStepStar.iso_inversion :
       exact refl
 
 
+inductive NRcdStepStar : List (String × Expr) → List (String × Expr) → Prop
+| refl : NRcdStepStar r r
+| step : NRcdStep r r' → NRcdStepStar r' r'' → NRcdStepStar r r''
 
-theorem NStepStar.universal_nexus :
-  ∃ en,  ∀ em , NStepStar e em → NStepStar em en
-:= by cases e with
-| var x =>
-  exists (Expr.var x)
-  intro em h0
-  cases h0 with
-  | refl => exact refl
-  | step h1 h2 =>
-    cases h1
-| iso label body =>
-  have ⟨body',ih⟩ := @NStepStar.universal_nexus body
-  exists (.iso label body')
-  intro em h0
-  have ⟨bodym,h1,h2⟩ := NStepStar.iso_inversion h0
-  rw [h1]
-  specialize ih bodym h2
-  apply NStepStar.iso ih
+inductive StarNRcdStep : List (String × Expr) → List (String × Expr) → Prop
+| refl : StarNRcdStep r r
+| step : StarNRcdStep r r' → NRcdStep r' r'' → StarNRcdStep r r''
 
-| _ => sorry
--- | record : List (String × Expr) → Expr
--- | function : List (Pat × Expr) → Expr
--- | app : Expr → Expr → Expr
--- | anno : Expr → Typ → Expr
--- | loop : Expr → Expr
+-- inductive NStepStar : Expr → Expr → Prop
+
+-- inductive StarNStep : Expr → Expr → Prop
+-- | refl : StarNStep e e
+-- | step : StarNStep e e' → NStep e' e'' → StarNStep e e''
+
+
+
+theorem NStepStar.record :
+  NRcdStepStar r r' →
+  NStepStar (.record r) (.record r')
+:= by sorry
+
+theorem NStepStar.record_inversion :
+  NStepStar (.record r) e →
+  ∃ r' , e = .record r' ∧ NRcdStepStar r r'
+:= by sorry
+
+mutual
+  theorem NRcdStepStar.universal_nexus :
+    ∃ rn,  ∀ rm , NRcdStepStar r rm → NRcdStepStar rm rn
+  := by sorry
+
+  theorem NStepStar.universal_nexus :
+    ∃ en,  ∀ em , NStepStar e em → NStepStar em en
+  := by cases e with
+  | var x =>
+    exists (Expr.var x)
+    intro em h0
+    cases h0 with
+    | refl => exact NStepStar.refl
+    | step h1 h2 =>
+      cases h1
+  | iso label body =>
+    have ⟨body',ih⟩ := @NStepStar.universal_nexus body
+    exists (.iso label body')
+    intro em h0
+    have ⟨bodym,h1,h2⟩ := NStepStar.iso_inversion h0
+    rw [h1]
+    apply NStepStar.iso (ih bodym h2)
+
+  | record r =>
+    have ⟨r',ih⟩ := @NRcdStepStar.universal_nexus r
+    exists (.record r')
+    intro em h0
+    have ⟨rm,h1,h2⟩ := NStepStar.record_inversion h0
+    rw [h1]
+    apply NStepStar.record (ih rm h2)
+
+  | _ => sorry
+  -- | function : List (Pat × Expr) → Expr
+  -- | app : Expr → Expr → Expr
+  -- | anno : Expr → Typ → Expr
+  -- | loop : Expr → Expr
+end
 
 
 
