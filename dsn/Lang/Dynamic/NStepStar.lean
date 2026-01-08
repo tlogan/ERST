@@ -100,6 +100,16 @@ theorem NRcdStepStar.transitive :
     exact step h2 (ih h1)
 
 
+theorem NStepStar.applicand :
+  NStepStar e e' →
+  NStepStar (.app f e) (.app f e')
+:= by
+  intro h0
+  induction h0 with
+  | refl =>
+    apply NStepStar.refl
+  | step h1 h2 ih =>
+    apply NStepStar.step (NStep.applicand h1) ih
 
 theorem NStepStar.record :
   NRcdStepStar r r' →
@@ -154,6 +164,9 @@ theorem NStepStar.record_inversion :
 def Joinable (a b : Expr) :=
   ∃ e , NStepStar a e ∧ NStepStar b e
 
+def RcdJoinable (a b : List (String × Expr)) :=
+  ∃ e , NRcdStepStar a e ∧ NRcdStepStar b e
+
 theorem Joinable.transitivity {a b c} :
   Joinable a b →
   Joinable b c →
@@ -165,15 +178,43 @@ theorem Joinable.swap {a b} :
   Joinable b a
 := by sorry
 
-theorem Joinable.app_arg_preservation {a b} f :
+theorem Joinable.applicand {a b} f :
   Joinable a b →
   Joinable (.app f a) (.app f b)
-:= by sorry
+:= by
+  unfold Joinable
+  intro h0
+  have ⟨c,h1,h2⟩ := h0
+  exists (.app f c)
+  apply And.intro
+  {exact NStepStar.applicand h1}
+  {exact NStepStar.applicand h2}
 
-theorem Joinable.iso_preservation :
+theorem Joinable.iso :
   Joinable a b →
   Joinable (.iso l a) (.iso l b)
-:= by sorry
+:= by
+  unfold Joinable
+  intro h0
+  have ⟨c,h1,h2⟩ := h0
+  exists (.iso l c)
+  apply And.intro
+  {exact NStepStar.iso h1}
+  {exact NStepStar.iso h2}
+
+theorem Joinable.record :
+  RcdJoinable ra rb →
+  Joinable (.record ra) (.record rb)
+:= by
+  unfold RcdJoinable
+  unfold Joinable
+  intro h0
+  have ⟨rc,h1,h2⟩ := h0
+  exists (.record rc)
+  apply And.intro
+  {exact NStepStar.record h1}
+  {exact NStepStar.record h2}
+
 
 
 theorem NStep.local_confluence :
@@ -183,17 +224,31 @@ theorem NStep.local_confluence :
 := by
   sorry
 
-theorem NStep.semi_confluence
-  (step : NStep e ea)
-  (step_star : NStepStar e eb)
-: Joinable ea eb
-:= by cases step with
-| @iso body body_a l step' =>
-  have ⟨body_b, h0,step_star'⟩ := NStepStar.iso_inversion step_star
-  rw [h0]
-  have ih := NStep.semi_confluence step' step_star'
-  exact Joinable.iso_preservation ih
-| _ => sorry
+mutual
+
+  theorem NRcdStep.semi_confluence
+    (step : NRcdStep r ra)
+    (step_star : NRcdStepStar r rb)
+  : RcdJoinable ra rb
+  := by sorry
+  theorem NStep.semi_confluence
+    (step : NStep e ea)
+    (step_star : NStepStar e eb)
+  : Joinable ea eb
+  := by cases step with
+  | @iso body body_a l step' =>
+    have ⟨body_b,h0,step_star'⟩ := NStepStar.iso_inversion step_star
+    rw [h0]
+    have ih := NStep.semi_confluence step' step_star'
+    exact Joinable.iso ih
+  | @record r ra step' =>
+    have ⟨rb,h0,step_star'⟩ := NStepStar.record_inversion step_star
+    rw [h0]
+
+    have ih := NRcdStep.semi_confluence step' step_star'
+    exact Joinable.record ih
+  | _ => sorry
+end
 
 
 theorem NStepStar.confluence :
