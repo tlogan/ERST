@@ -171,11 +171,40 @@ theorem Joinable.app_arg_preservation {a b} f :
 := by sorry
 
 
+theorem NStepStar.semi_confluence :
+  NStep e a →
+  NStepStar e b →
+  Joinable a b
+:= by
+  sorry
+
+
 theorem NStepStar.confluence :
   NStepStar e a →
   NStepStar e b →
   Joinable a b
-:= by sorry
+:= by
+  intro h0 h1
+  apply NStepStar.reverse at h0
+  induction h0 with
+  | refl =>
+    unfold Joinable
+    exists b
+    apply And.intro h1 .refl
+  | @step m a h2 h3 ih =>
+    have ⟨b',h4,h5⟩ := ih
+    clear ih
+    have ⟨n,h6,h7⟩ := NStepStar.semi_confluence h3 h4
+
+
+    -- specialize ih
+
+    -- specialize ih h3
+    -- have ⟨n,h4,h5⟩ := ih
+    -- clear ih
+    -- unfold Joinable
+
+    sorry
 
 -- mutual
 --   theorem NRcdStepStar.universal_nexus :
