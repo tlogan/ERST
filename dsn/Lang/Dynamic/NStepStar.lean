@@ -217,20 +217,56 @@ theorem Joinable.record :
 
 
 
-theorem NStep.local_confluence :
-  NStep e a →
-  NStep e b →
-  Joinable a b
+theorem NRcdStepStar.cons_inversion :
+  NRcdStepStar ((l,e)::r) r' →
+  (∃ e' r'' , r' = ((l,e')::r'') ∧ NStepStar e e' ∧ NRcdStepStar r r'')
+:= by sorry
+
+theorem RcdJoinable.cons :
+  Joinable ea eb →
+  RcdJoinable ra rb →
+  RcdJoinable ((l,ea)::ra) ((l,eb)::rb)
+:= by sorry
+
+theorem NStepStar.joinable :
+  NStepStar e e' →
+  Joinable e e'
 := by
-  sorry
+  intro h0
+  unfold Joinable
+  exists e'
+  apply And.intro h0 NStepStar.refl
+
+theorem NRcdStepStar.joinable :
+  NRcdStepStar r r' →
+  RcdJoinable r r'
+:= by
+  intro h0
+  unfold RcdJoinable
+  exists r'
+  apply And.intro h0 NRcdStepStar.refl
 
 mutual
-
   theorem NRcdStep.semi_confluence
     (step : NRcdStep r ra)
     (step_star : NRcdStepStar r rb)
   : RcdJoinable ra rb
-  := by sorry
+  := by
+  cases step with
+  | @head e ea l r' step' =>
+    have ⟨eb,r'',h0,h1,h2⟩ := NRcdStepStar.cons_inversion step_star
+    rw [h0]
+    have joinable := NStep.semi_confluence step' h1
+    have rjoinable := NRcdStepStar.joinable h2
+    apply RcdJoinable.cons joinable rjoinable
+
+  | @tail l r ra' e fresh step' =>
+    have ⟨e',rb',h0,h1,h2⟩ := NRcdStepStar.cons_inversion step_star
+    rw [h0]
+    have joinable := NStepStar.joinable h1
+    have rjoinable := NRcdStep.semi_confluence step' h2
+    apply RcdJoinable.cons joinable rjoinable
+
   theorem NStep.semi_confluence
     (step : NStep e ea)
     (step_star : NStepStar e eb)
