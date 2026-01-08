@@ -150,72 +150,9 @@ theorem NStepStar.record_inversion :
       apply NRcdStepStar.step step
       exact NRcdStepStar.refl
 
-mutual
-  theorem NRcdStepStar.universal_nexus :
-    ∃ rn,  ∀ rm , NRcdStepStar r rm → NRcdStepStar rm rn
-  := by cases r with
-  | nil =>
-    exists []
-    intro rm h0
-    cases h0 with
-    | refl => exact NRcdStepStar.refl
-    | step h1 h2 =>
-      cases h1
-  | cons head r =>
-    have (l,e) := head
-    have ⟨e',h0⟩ := @NStepStar.universal_nexus e
-    have ⟨r',ih⟩ := @NRcdStepStar.universal_nexus r
-    exists ((l,e') :: r')
-    intro rm h1
-    have ⟨em,rm',h2,h3,h4⟩ := NRcdStepStar.tail_inversion h1
-    rw [h2]
-    apply NRcdStepStar.tail (h0 em h3) (ih rm' h4)
-
-  /- TODO: not sure,
-    but this definition might be too strong to prove;
-    there is a common nexus for every finite subset of paths,
-    but there may not be a way to construct a nexus for an infinite set of paths.
-    may need to switch to pair-wise (finite-paths) confluence
-  -/
-  theorem NStepStar.universal_nexus :
-    ∃ en,  ∀ em , NStepStar e em → NStepStar em en
-  := by cases e with
-  | var x =>
-    exists (Expr.var x)
-    intro em h0
-    cases h0 with
-    | refl => exact NStepStar.refl
-    | step h1 h2 =>
-      cases h1
-  | iso label body =>
-    have ⟨body',ih⟩ := @NStepStar.universal_nexus body
-    exists (.iso label body')
-    intro em h0
-    have ⟨bodym,h1,h2⟩ := NStepStar.iso_inversion h0
-    rw [h1]
-    apply NStepStar.iso (ih bodym h2)
-
-  | record r =>
-    have ⟨r',ih⟩ := @NRcdStepStar.universal_nexus r
-    exists (.record r')
-    intro em h0
-    have ⟨rm,h1,h2⟩ := NStepStar.record_inversion h0
-    rw [h1]
-    apply NStepStar.record (ih rm h2)
-  -- | function f =>
-  --   sorry
-  -- | app cator arg =>
-  --   sorry
-  -- | anno _ t =>
-  --   sorry
-  | _ => sorry
-end
-
-
 
 def Joinable (a b : Expr) :=
   ∃ e , NStepStar a e ∧ NStepStar b e
-
 
 theorem Joinable.transitivity {a b c} :
   Joinable a b →
@@ -232,6 +169,76 @@ theorem Joinable.app_arg_preservation {a b} f :
   Joinable a b →
   Joinable (.app f a) (.app f b)
 := by sorry
+
+
+theorem NStepStar.confluence :
+  NStepStar e a →
+  NStepStar e b →
+  Joinable a b
+:= by sorry
+
+-- mutual
+--   theorem NRcdStepStar.universal_nexus :
+--     ∃ rn,  ∀ rm , NRcdStepStar r rm → NRcdStepStar rm rn
+--   := by cases r with
+--   | nil =>
+--     exists []
+--     intro rm h0
+--     cases h0 with
+--     | refl => exact NRcdStepStar.refl
+--     | step h1 h2 =>
+--       cases h1
+--   | cons head r =>
+--     have (l,e) := head
+--     have ⟨e',h0⟩ := @NStepStar.universal_nexus e
+--     have ⟨r',ih⟩ := @NRcdStepStar.universal_nexus r
+--     exists ((l,e') :: r')
+--     intro rm h1
+--     have ⟨em,rm',h2,h3,h4⟩ := NRcdStepStar.tail_inversion h1
+--     rw [h2]
+--     apply NRcdStepStar.tail (h0 em h3) (ih rm' h4)
+
+--   /- TODO: not sure,
+--     but this definition might be too strong to prove;
+--     there is a common nexus for every finite subset of paths,
+--     but there may not be a way to construct a nexus for an infinite set of paths.
+--     may need to switch to pair-wise (finite-paths) confluence
+--   -/
+--   theorem NStepStar.universal_nexus :
+--     ∃ en,  ∀ em , NStepStar e em → NStepStar em en
+--   := by cases e with
+--   | var x =>
+--     exists (Expr.var x)
+--     intro em h0
+--     cases h0 with
+--     | refl => exact NStepStar.refl
+--     | step h1 h2 =>
+--       cases h1
+--   | iso label body =>
+--     have ⟨body',ih⟩ := @NStepStar.universal_nexus body
+--     exists (.iso label body')
+--     intro em h0
+--     have ⟨bodym,h1,h2⟩ := NStepStar.iso_inversion h0
+--     rw [h1]
+--     apply NStepStar.iso (ih bodym h2)
+
+--   | record r =>
+--     have ⟨r',ih⟩ := @NRcdStepStar.universal_nexus r
+--     exists (.record r')
+--     intro em h0
+--     have ⟨rm,h1,h2⟩ := NStepStar.record_inversion h0
+--     rw [h1]
+--     apply NStepStar.record (ih rm h2)
+--   -- | function f =>
+--   --   sorry
+--   -- | app cator arg =>
+--   --   sorry
+--   -- | anno _ t =>
+--   --   sorry
+--   | _ => sorry
+-- end
+
+
 
 
 
