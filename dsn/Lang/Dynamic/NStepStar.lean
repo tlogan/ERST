@@ -170,13 +170,30 @@ theorem Joinable.app_arg_preservation {a b} f :
   Joinable (.app f a) (.app f b)
 := by sorry
 
+theorem Joinable.iso_preservation :
+  Joinable a b →
+  Joinable (.iso l a) (.iso l b)
+:= by sorry
 
-theorem NStepStar.semi_confluence :
+
+theorem NStep.local_confluence :
   NStep e a →
-  NStepStar e b →
+  NStep e b →
   Joinable a b
 := by
   sorry
+
+theorem NStep.semi_confluence
+  (step : NStep e ea)
+  (step_star : NStepStar e eb)
+: Joinable ea eb
+:= by cases step with
+| @iso body body_a l step' =>
+  have ⟨body_b, h0,step_star'⟩ := NStepStar.iso_inversion step_star
+  rw [h0]
+  have ih := NStep.semi_confluence step' step_star'
+  exact Joinable.iso_preservation ih
+| _ => sorry
 
 
 theorem NStepStar.confluence :
@@ -194,17 +211,10 @@ theorem NStepStar.confluence :
   | @step m a h2 h3 ih =>
     have ⟨b',h4,h5⟩ := ih
     clear ih
-    have ⟨n,h6,h7⟩ := NStepStar.semi_confluence h3 h4
-
-
-    -- specialize ih
-
-    -- specialize ih h3
-    -- have ⟨n,h4,h5⟩ := ih
-    -- clear ih
-    -- unfold Joinable
-
-    sorry
+    have ⟨n,h6,h7⟩ := NStep.semi_confluence h3 h4
+    exists n
+    apply And.intro h6
+    apply NStepStar.transitive h5 h7
 
 -- mutual
 --   theorem NRcdStepStar.universal_nexus :

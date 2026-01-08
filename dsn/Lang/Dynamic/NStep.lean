@@ -81,6 +81,13 @@ mutual
   | tail : List.is_fresh_key l r → NRcdStep r r' → NRcdStep ((l,ev) :: r) ((l,ev) :: r')
 
   inductive NStep : Expr → Expr → Prop
+  /- head normal forms -/
+  | iso : NStep body body' → NStep (.iso l body) (.iso l body')
+  | record : NRcdStep r r' →  NStep (.record r) (.record r')
+  | applicator : NStep cator cator' → NStep (.app cator arg) (.app cator' arg)
+  | applicand : NStep arg arg' → NStep (.app cator arg) (.app cator arg')
+  | loop : NStep body body' → NStep (.loop body) (.loop body')
+
   /- redex forms -/
   | pattern_match :
     Expr.pattern_match arg p = some m →
@@ -96,12 +103,6 @@ mutual
       (.loop (.function [(.var x, e)]))
       (Expr.sub [(x, (.loop (.function [(.var x, e)])))] e)
 
-  /- head normal forms -/
-  | iso : NStep body body' → NStep (.iso l body) (.iso l body')
-  | record : NRcdStep r r' →  NStep (.record r) (.record r')
-  | applicator : NStep cator cator' → NStep (.app cator arg) (.app cator' arg)
-  | applicand : NStep arg arg' → NStep (.app cator arg) (.app cator arg')
-  | loop : NStep body body' → NStep (.loop body) (.loop body')
 end
 
 
