@@ -206,52 +206,99 @@ theorem Joinable.record :
 
 theorem NRcdStepStar.cons_inversion :
   NRcdStepStar ((l,e)::r) r' →
-  (∃ e' r'' , r' = ((l,e')::r'') ∧ NStepStar e e' ∧ NRcdStepStar r r'')
+  (∃ e' r'' , r' = ((l,e')::r'') ∧ List.is_fresh_key l r ∧ NStepStar e e' ∧ NRcdStepStar r r'')
 := by sorry
 
 theorem NRcdStepStar.head :
   NStepStar e e' →
   NRcdStepStar ((l,e)::r) ((l,e')::r)
 := by
-  sorry
+  intro h0
+  induction h0 with
+  | refl =>
+    exact NRcdStepStar.refl
+  | @step e em e' h1 h2 ih =>
+    apply NRcdStepStar.step
+    { apply NRcdStep.head h1 }
+    { exact ih }
 
-theorem NRcdStepStar.tail :
+theorem List.is_fresh_key_nrcd_reduction :
+  NRcdStep r r' →
+  List.is_fresh_key l r →
+  List.is_fresh_key l r'
+:= by sorry
+
+theorem List.is_fresh_key_nrcd_star_reduction :
   NRcdStepStar r r' →
-  NRcdStepStar ((l,e)::r) ((l,e)::r')
-:= by
-  sorry
+  List.is_fresh_key l r →
+  List.is_fresh_key l r'
+:= by sorry
+
+theorem List.is_fresh_key_nrcd_star_expansion :
+  NRcdStepStar r r' →
+  List.is_fresh_key l r' →
+  List.is_fresh_key l r
+:= by sorry
+
 
 theorem NRcdStepStar.cons :
+  List.is_fresh_key l r →
   NStepStar e e' →
   NRcdStepStar r r' →
   NRcdStepStar ((l,e)::r) ((l,e')::r')
 := by
-  intro h0 h1
-
-  induction h1 with
+  intro h0 h1 h2
+  induction h2 with
   | @refl r =>
-    exact NRcdStepStar.head h0
+    exact NRcdStepStar.head h1
   | @step r rm r' h2 h3 ih =>
-    apply NRcdStepStar.transitive
-    {
-
+    apply NRcdStepStar.step
+    { apply NRcdStep.tail
+      { exact h0 }
+      { exact h2 }
     }
-    { exact ih }
+    {
+      apply ih
+      exact List.is_fresh_key_nrcd_reduction h2 h0
+    }
+
+theorem NRcdStepStar.tail :
+  List.is_fresh_key l r →
+  NRcdStepStar r r' →
+  NRcdStepStar ((l,e)::r) ((l,e)::r')
+:= by
+  intro h0 h1
+  apply NRcdStepStar.cons h0 NStepStar.refl h1
 
 theorem RcdJoinable.cons :
+  (List.is_fresh_key l ra ∨ List.is_fresh_key l rb) →
   Joinable ea eb →
   RcdJoinable ra rb →
   RcdJoinable ((l,ea)::ra) ((l,eb)::rb)
 := by
   unfold Joinable
   unfold RcdJoinable
-  intro h0 h1
-  have ⟨ec,h3,h4⟩ := h0
-  have ⟨rc,h5,h6⟩ := h1
+  intro h0 h1 h2
+  have ⟨ec,h4,h5⟩ := h1
+  have ⟨rc,h6,h7⟩ := h2
   exists ((l,ec)::rc)
-  apply And.intro
-  { exact NRcdStepStar.cons h3 h5 }
-  { exact NRcdStepStar.cons h4 h6 }
+  cases h0 with
+  | inl h8 =>
+    apply And.intro
+    { exact NRcdStepStar.cons h8 h4 h6 }
+    {
+      have h9 := List.is_fresh_key_nrcd_star_reduction h6 h8
+      have h10 := List.is_fresh_key_nrcd_star_expansion h7 h9
+      exact NRcdStepStar.cons h10 h5 h7
+    }
+  | inr h8 =>
+    apply And.intro
+    {
+      have h9 := List.is_fresh_key_nrcd_star_reduction h7 h8
+      have h10 := List.is_fresh_key_nrcd_star_expansion h6 h9
+      exact NRcdStepStar.cons h10 h4 h6
+    }
+    { exact NRcdStepStar.cons h8 h5 h7 }
 
 
 theorem NStepStar.joinable :
@@ -280,18 +327,19 @@ mutual
   := by
   cases step with
   | @head e ea l r' step' =>
-    have ⟨eb,r'',h0,h1,h2⟩ := NRcdStepStar.cons_inversion step_star
+    have ⟨eb,r'',h0,h1,h2,h3⟩ := NRcdStepStar.cons_inversion step_star
     rw [h0]
-    have joinable := NStep.semi_confluence step' h1
-    have rjoinable := NRcdStepStar.joinable h2
-    apply RcdJoinable.cons joinable rjoinable
+    have joinable := NStep.semi_confluence step' h2
+    have rjoinable := NRcdStepStar.joinable h3
+    apply RcdJoinable.cons (Or.inl h1) joinable rjoinable
 
   | @tail l r ra' e fresh step' =>
-    have ⟨e',rb',h0,h1,h2⟩ := NRcdStepStar.cons_inversion step_star
+    have ⟨e',rb',h0,h1,h2,h3⟩ := NRcdStepStar.cons_inversion step_star
     rw [h0]
-    have joinable := NStepStar.joinable h1
-    have rjoinable := NRcdStep.semi_confluence step' h2
-    apply RcdJoinable.cons joinable rjoinable
+    have joinable := NStepStar.joinable h2
+    have rjoinable := NRcdStep.semi_confluence step' h3
+    have h4 := List.is_fresh_key_nrcd_star_reduction h3 h1
+    apply RcdJoinable.cons (Or.inr h4) joinable rjoinable
 
   theorem NStep.semi_confluence
     (step : NStep e ea)
