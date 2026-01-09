@@ -124,18 +124,6 @@ theorem NStepStar.record :
     { apply NStep.record h1 }
     { exact ih }
 
-theorem NRcdStepStar.tail :
-  NStepStar e e' →
-  NRcdStepStar r r' →
-  NRcdStepStar ((l,e) :: r) ((l,e') :: r')
-:= by sorry
-
-
-theorem NRcdStepStar.tail_inversion :
-  NRcdStepStar ((l,e) :: r) r' →
-  ∃ e' r'' , r' = ((l,e') :: r'')  ∧ NStepStar e e' ∧ NRcdStepStar r r''
-:= by sorry
-
 
 theorem NStepStar.record_inversion :
   NStepStar (.record r) e →
@@ -167,16 +155,15 @@ def Joinable (a b : Expr) :=
 def RcdJoinable (a b : List (String × Expr)) :=
   ∃ e , NRcdStepStar a e ∧ NRcdStepStar b e
 
-theorem Joinable.transitivity {a b c} :
-  Joinable a b →
-  Joinable b c →
-  Joinable a c
-:= by sorry
 
 theorem Joinable.swap {a b} :
   Joinable a b →
   Joinable b a
-:= by sorry
+:= by
+  unfold Joinable
+  intro h0
+  have ⟨e,h1,h2⟩ := h0
+  exists e
 
 theorem Joinable.applicand {a b} f :
   Joinable a b →
@@ -222,11 +209,50 @@ theorem NRcdStepStar.cons_inversion :
   (∃ e' r'' , r' = ((l,e')::r'') ∧ NStepStar e e' ∧ NRcdStepStar r r'')
 := by sorry
 
+theorem NRcdStepStar.head :
+  NStepStar e e' →
+  NRcdStepStar ((l,e)::r) ((l,e')::r)
+:= by
+  sorry
+
+theorem NRcdStepStar.tail :
+  NRcdStepStar r r' →
+  NRcdStepStar ((l,e)::r) ((l,e)::r')
+:= by
+  sorry
+
+theorem NRcdStepStar.cons :
+  NStepStar e e' →
+  NRcdStepStar r r' →
+  NRcdStepStar ((l,e)::r) ((l,e')::r')
+:= by
+  intro h0 h1
+
+  induction h1 with
+  | @refl r =>
+    exact NRcdStepStar.head h0
+  | @step r rm r' h2 h3 ih =>
+    apply NRcdStepStar.transitive
+    {
+
+    }
+    { exact ih }
+
 theorem RcdJoinable.cons :
   Joinable ea eb →
   RcdJoinable ra rb →
   RcdJoinable ((l,ea)::ra) ((l,eb)::rb)
-:= by sorry
+:= by
+  unfold Joinable
+  unfold RcdJoinable
+  intro h0 h1
+  have ⟨ec,h3,h4⟩ := h0
+  have ⟨rc,h5,h6⟩ := h1
+  exists ((l,ec)::rc)
+  apply And.intro
+  { exact NRcdStepStar.cons h3 h5 }
+  { exact NRcdStepStar.cons h4 h6 }
+
 
 theorem NStepStar.joinable :
   NStepStar e e' →
@@ -307,6 +333,19 @@ theorem NStepStar.confluence :
     apply And.intro h6
     apply NStepStar.transitive h5 h7
 
+
+
+theorem NStep.local_confluence :
+  NStep e a →
+  NStep e b →
+  Joinable a b
+:= by
+  intro h0 h1
+  apply NStep.semi_confluence
+  { exact h0 }
+  { apply NStepStar.step h1 NStepStar.refl }
+
+
 -- mutual
 --   theorem NRcdStepStar.universal_nexus :
 --     ∃ rn,  ∀ rm , NRcdStepStar r rm → NRcdStepStar rm rn
@@ -370,7 +409,19 @@ theorem NStepStar.confluence :
 
 
 
-
-
+theorem Joinable.transitivity {a b c} :
+  Joinable a b →
+  Joinable b c →
+  Joinable a c
+:= by
+  unfold Joinable
+  intro h0 h1
+  have ⟨e0,h2,h3⟩ := h0
+  have ⟨e1,h4,h5⟩ := h1
+  have ⟨e',h6,h7⟩ := NStepStar.confluence h3 h4
+  exists e'
+  apply And.intro
+  { exact NStepStar.transitive h2 h6 }
+  { exact NStepStar.transitive h5 h7 }
 
 end Lang.Dynamic
