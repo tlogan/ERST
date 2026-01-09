@@ -224,21 +224,74 @@ theorem NRcdStepStar.head :
 
 theorem List.is_fresh_key_nrcd_reduction :
   NRcdStep r r' →
+  ∀ {l},
   List.is_fresh_key l r →
   List.is_fresh_key l r'
-:= by sorry
+:= by
+  intro h0
+  cases h0 with
+  | head step' =>
+    intro l fresh
+    exact fresh
+  | tail fresh' step' =>
+    intro l fresh
+    have ih := @List.is_fresh_key_nrcd_reduction _ _ step'
+    simp [List.is_fresh_key] at fresh
+    have ⟨h1,h2⟩ := fresh
+    clear fresh
+    simp [List.is_fresh_key]
+    apply And.intro h1
+    exact ih h2
+
 
 theorem List.is_fresh_key_nrcd_star_reduction :
   NRcdStepStar r r' →
   List.is_fresh_key l r →
   List.is_fresh_key l r'
-:= by sorry
+:= by
+  intro h0 h1
+  induction h0 with
+  | refl =>
+    exact h1
+  | step h2 h3 ih =>
+    apply ih
+    exact is_fresh_key_nrcd_reduction h2 h1
+
+
+theorem List.is_fresh_key_nrcd_expansion :
+  NRcdStep r r' →
+  ∀ {l},
+  List.is_fresh_key l r' →
+  List.is_fresh_key l r
+:= by
+  intro h0
+  cases h0 with
+  | head step' =>
+    intro l fresh
+    exact fresh
+  | tail fresh' step' =>
+    intro l fresh
+    have ih := @List.is_fresh_key_nrcd_expansion _ _ step'
+    simp [List.is_fresh_key] at fresh
+    have ⟨h1,h2⟩ := fresh
+    clear fresh
+    simp [List.is_fresh_key]
+    apply And.intro h1
+    exact ih h2
 
 theorem List.is_fresh_key_nrcd_star_expansion :
   NRcdStepStar r r' →
   List.is_fresh_key l r' →
   List.is_fresh_key l r
-:= by sorry
+:= by
+  intro h0 h1
+  induction h0 with
+  | refl =>
+    exact h1
+  | step h2 h3 ih =>
+    apply List.is_fresh_key_nrcd_expansion
+    { exact h2 }
+    { exact ih h1 }
 
 
 theorem NRcdStepStar.cons :
