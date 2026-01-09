@@ -25,6 +25,8 @@ inductive Typ
 | lfp :  String → Typ → Typ
 deriving Lean.ToExpr
 
+
+
 -- , Ord
 
 -- <uno> thing <dos> thing
