@@ -89,6 +89,10 @@ inductive NRcdStepStar : List (String × Expr) → List (String × Expr) → Pro
 | refl : NRcdStepStar r r
 | step : NRcdStep r r' → NRcdStepStar r' r'' → NRcdStepStar r r''
 
+inductive StarNRcdStep : List (String × Expr) → List (String × Expr) → Prop
+| refl : StarNRcdStep r r
+| step : StarNRcdStep r r' → NRcdStep r' r'' → StarNRcdStep r r''
+
 theorem NRcdStepStar.transitive :
   NRcdStepStar e e' → NRcdStepStar e' e'' → NRcdStepStar e e''
 := by
@@ -98,6 +102,29 @@ theorem NRcdStepStar.transitive :
     exact h1
   | step h2 h3 ih =>
     exact step h2 (ih h1)
+
+theorem StarNRcdStep.transitive :
+  StarNRcdStep r r' → StarNRcdStep r' r'' → StarNRcdStep r r''
+:= by
+  intro h0 h1
+  induction h1 with
+  | refl =>
+    exact h0
+  | step h2 h3 ih =>
+    exact step ih h3
+
+theorem NRcdStepStar.reverse :
+  NRcdStepStar r r' → StarNRcdStep r r'
+:= by
+  intro h0
+  induction h0 with
+  | refl =>
+    exact StarNRcdStep.refl
+  | @step e em e' h1 h2 ih =>
+
+    apply StarNRcdStep.transitive
+    { apply StarNRcdStep.step StarNRcdStep.refl h1 }
+    { exact ih }
 
 
 theorem NStepStar.applicand :
@@ -206,20 +233,52 @@ theorem Joinable.record :
 
 theorem NRcdStepStar.cons_inversion :
   NRcdStepStar ((l,e)::r) r' →
-  (∃ e' r'' , r' = ((l,e')::r'') ∧ List.is_fresh_key l r ∧ NStepStar e e' ∧ NRcdStepStar r r'')
-:= by sorry
+  (∃ e' r'' , r' = ((l,e')::r'') ∧ NStepStar e e' ∧ NRcdStepStar r r'')
+  -- (∃ e' r'' , r' = ((l,e')::r'') ∧ List.is_fresh_key l r ∧ NStepStar e e' ∧ NRcdStepStar r r'')
+:= by
+  intro h0
+  apply NRcdStepStar.reverse at h0
+  induction h0 with
+  | refl =>
+    exists e
+    exists r
+    simp
+    apply And.intro NStepStar.refl NRcdStepStar.refl
+  | step h1 h2 ih =>
+    have ⟨e',r'',h3,h4,h5⟩ := ih
+    rw [h3] at h2
+    cases h2 with
+    | @head l r''' e' e'' fresh step' =>
+      exists e''
+      exists r''
+      simp
+      apply And.intro
+      {
+        apply NStepStar.transitive h4
+        apply NStepStar.step step' NStepStar.refl
+      }
+      { exact h5 }
+    | @tail l r'' r''' ev fresh step' =>
+      exists e'
+      exists r'''
+      simp
+      apply And.intro h4
+      apply NRcdStepStar.transitive h5
+      apply NRcdStepStar.step step' NRcdStepStar.refl
+
 
 theorem NRcdStepStar.head :
+  List.is_fresh_key l r →
   NStepStar e e' →
   NRcdStepStar ((l,e)::r) ((l,e')::r)
 := by
-  intro h0
-  induction h0 with
+  intro h0 h1
+  induction h1 with
   | refl =>
     exact NRcdStepStar.refl
   | @step e em e' h1 h2 ih =>
     apply NRcdStepStar.step
-    { apply NRcdStep.head h1 }
+    { apply NRcdStep.head h0 h1 }
     { exact ih }
 
 theorem List.is_fresh_key_nrcd_reduction :
@@ -303,7 +362,7 @@ theorem NRcdStepStar.cons :
   intro h0 h1 h2
   induction h2 with
   | @refl r =>
-    exact NRcdStepStar.head h1
+    exact NRcdStepStar.head h0 h1
   | @step r rm r' h2 h3 ih =>
     apply NRcdStepStar.step
     { apply NRcdStep.tail
@@ -379,19 +438,19 @@ mutual
   : RcdJoinable ra rb
   := by
   cases step with
-  | @head e ea l r' step' =>
-    have ⟨eb,r'',h0,h1,h2,h3⟩ := NRcdStepStar.cons_inversion step_star
+  | @head l r' e ea fresh step' =>
+    have ⟨eb,r'',h0,h1,h2⟩ := NRcdStepStar.cons_inversion step_star
     rw [h0]
-    have joinable := NStep.semi_confluence step' h2
-    have rjoinable := NRcdStepStar.joinable h3
-    apply RcdJoinable.cons (Or.inl h1) joinable rjoinable
+    have joinable := NStep.semi_confluence step' h1
+    have rjoinable := NRcdStepStar.joinable h2
+    apply RcdJoinable.cons (Or.inl fresh) joinable rjoinable
 
   | @tail l r ra' e fresh step' =>
-    have ⟨e',rb',h0,h1,h2,h3⟩ := NRcdStepStar.cons_inversion step_star
+    have ⟨e',rb',h0,h1,h2⟩ := NRcdStepStar.cons_inversion step_star
     rw [h0]
-    have joinable := NStepStar.joinable h2
-    have rjoinable := NRcdStep.semi_confluence step' h3
-    have h4 := List.is_fresh_key_nrcd_star_reduction h3 h1
+    have joinable := NStepStar.joinable h1
+    have rjoinable := NRcdStep.semi_confluence step' h2
+    have h4 := List.is_fresh_key_nrcd_star_reduction h2 fresh
     apply RcdJoinable.cons (Or.inr h4) joinable rjoinable
 
   theorem NStep.semi_confluence
@@ -445,69 +504,6 @@ theorem NStep.local_confluence :
   apply NStep.semi_confluence
   { exact h0 }
   { apply NStepStar.step h1 NStepStar.refl }
-
-
--- mutual
---   theorem NRcdStepStar.universal_nexus :
---     ∃ rn,  ∀ rm , NRcdStepStar r rm → NRcdStepStar rm rn
---   := by cases r with
---   | nil =>
---     exists []
---     intro rm h0
---     cases h0 with
---     | refl => exact NRcdStepStar.refl
---     | step h1 h2 =>
---       cases h1
---   | cons head r =>
---     have (l,e) := head
---     have ⟨e',h0⟩ := @NStepStar.universal_nexus e
---     have ⟨r',ih⟩ := @NRcdStepStar.universal_nexus r
---     exists ((l,e') :: r')
---     intro rm h1
---     have ⟨em,rm',h2,h3,h4⟩ := NRcdStepStar.tail_inversion h1
---     rw [h2]
---     apply NRcdStepStar.tail (h0 em h3) (ih rm' h4)
-
---   /- TODO: not sure,
---     but this definition might be too strong to prove;
---     there is a common nexus for every finite subset of paths,
---     but there may not be a way to construct a nexus for an infinite set of paths.
---     may need to switch to pair-wise (finite-paths) confluence
---   -/
---   theorem NStepStar.universal_nexus :
---     ∃ en,  ∀ em , NStepStar e em → NStepStar em en
---   := by cases e with
---   | var x =>
---     exists (Expr.var x)
---     intro em h0
---     cases h0 with
---     | refl => exact NStepStar.refl
---     | step h1 h2 =>
---       cases h1
---   | iso label body =>
---     have ⟨body',ih⟩ := @NStepStar.universal_nexus body
---     exists (.iso label body')
---     intro em h0
---     have ⟨bodym,h1,h2⟩ := NStepStar.iso_inversion h0
---     rw [h1]
---     apply NStepStar.iso (ih bodym h2)
-
---   | record r =>
---     have ⟨r',ih⟩ := @NRcdStepStar.universal_nexus r
---     exists (.record r')
---     intro em h0
---     have ⟨rm,h1,h2⟩ := NStepStar.record_inversion h0
---     rw [h1]
---     apply NStepStar.record (ih rm h2)
---   -- | function f =>
---   --   sorry
---   -- | app cator arg =>
---   --   sorry
---   -- | anno _ t =>
---   --   sorry
---   | _ => sorry
--- end
-
 
 
 theorem Joinable.transitivity {a b c} :

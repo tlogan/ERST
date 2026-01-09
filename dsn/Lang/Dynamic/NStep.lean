@@ -77,7 +77,7 @@ end
 
 mutual
   inductive NRcdStep : List (String × Expr) → List (String × Expr) → Prop
-  | head :  NStep e e' →  NRcdStep ((l, e) :: r) ((l, e') :: r)
+  | head : List.is_fresh_key l r → NStep e e' →  NRcdStep ((l, e) :: r) ((l, e') :: r)
   | tail : List.is_fresh_key l r → NRcdStep r r' → NRcdStep ((l,ev) :: r) ((l,ev) :: r')
 
   inductive NStep : Expr → Expr → Prop
