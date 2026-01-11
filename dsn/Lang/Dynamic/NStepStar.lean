@@ -85,6 +85,23 @@ theorem NStepStar.iso_inversion :
       exact refl
 
 
+
+theorem NStepStar.app_inversion :
+  NStepStar (Expr.app cator arg) e →
+  (∃ cator' arg' , e = (Expr.app cator' arg') ∧
+    NStepStar cator cator' ∧ NStepStar arg arg'
+  ) ∨
+  (∃ p body f m, e = Expr.sub m body ∧
+    NStepStar cator (.function ((p,body)::f)) ∧
+    Expr.pattern_match arg p = some m
+  ) ∨
+  (arg.is_value ∧ (∃ p body f, e = (.app (.function f) arg) ∧
+    NStepStar cator (.function ((p,body)::f)) ∧
+    Expr.pattern_match arg p = none
+  ))
+:= by sorry
+
+
 inductive NRcdStepStar : List (String × Expr) → List (String × Expr) → Prop
 | refl : NRcdStepStar r r
 | step : NRcdStep r r' → NRcdStepStar r' r'' → NRcdStepStar r r''
@@ -469,6 +486,28 @@ mutual
 
     have ih := NRcdStep.semi_confluence step' step_star'
     exact Joinable.record ih
+  | @applicator cator cator' arg step' =>
+    cases NStepStar.app_inversion step_star with
+    | inl h0 =>
+      sorry
+    | inr h0 =>
+      cases h0 with
+      | inl h1 =>
+        sorry
+      | inr h1 =>
+        sorry
+
+  | @applicand arg arg' cator step' =>
+    cases NStepStar.app_inversion step_star with
+    | inl h0 =>
+      sorry
+    | inr h0 =>
+      cases h0 with
+      | inl h1 =>
+        sorry
+      | inr h1 =>
+        sorry
+
   | _ => sorry
 end
 
