@@ -192,6 +192,11 @@ theorem NStepStar.record_inversion :
       apply NRcdStepStar.step step
       exact NRcdStepStar.refl
 
+theorem NStepStar.function_inversion :
+  NStepStar (.function f) e →
+  e = (.function f)
+:= by sorry
+
 
 def Joinable (a b : Expr) :=
   ∃ e , NStepStar a e ∧ NStepStar b e
@@ -208,18 +213,6 @@ theorem Joinable.swap {a b} :
   intro h0
   have ⟨e,h1,h2⟩ := h0
   exists e
-
-theorem Joinable.applicand {a b} f :
-  Joinable a b →
-  Joinable (.app f a) (.app f b)
-:= by
-  unfold Joinable
-  intro h0
-  have ⟨c,h1,h2⟩ := h0
-  exists (.app f c)
-  apply And.intro
-  {exact NStepStar.applicand h1}
-  {exact NStepStar.applicand h2}
 
 theorem Joinable.iso :
   Joinable a b →
@@ -246,6 +239,90 @@ theorem Joinable.record :
   {exact NStepStar.record h1}
   {exact NStepStar.record h2}
 
+theorem Joinable.applicator :
+  Joinable a b →
+  Joinable (.app a arg) (.app b arg)
+:= by
+  unfold Joinable
+  intro h0
+  have ⟨c,h1,h2⟩ := h0
+  exists (.app c arg)
+  sorry
+  -- apply And.intro
+  -- {exact NStepStar.applicator h1}
+  -- {exact NStepStar.applicator h2}
+
+theorem Joinable.applicand {a b} f :
+  Joinable a b →
+  Joinable (.app f a) (.app f b)
+:= by
+  unfold Joinable
+  intro h0
+  have ⟨c,h1,h2⟩ := h0
+  exists (.app f c)
+  apply And.intro
+  {exact NStepStar.applicand h1}
+  {exact NStepStar.applicand h2}
+
+
+theorem Joinable.app :
+  Joinable cator_a cator_b →
+  Joinable arg_a arg_b →
+  Joinable (.app cator_a arg_a) (.app cator_b arg_b)
+:= by
+  intro h0 h1
+  sorry
+
+
+theorem NStepStar.pattern_match :
+  Expr.pattern_match arg p = some m →
+  NStepStar cator (Expr.function ((p, body) :: f)) →
+  NStepStar (Expr.app cator arg) (Expr.sub m body)
+:= by sorry
+
+theorem Joinable.pattern_match :
+  Expr.pattern_match arg p = some m →
+  Joinable cator (Expr.function ((p, body) :: f)) →
+  Joinable (Expr.app cator arg) (Expr.sub m body)
+:= by
+  unfold Joinable
+  intro h0 h1
+  have ⟨en,h2,h3⟩ := h1
+  clear h1
+  have h4 := NStepStar.function_inversion h3
+  rw [h4] at h2
+  clear h3 h4
+  exists (Expr.sub m body)
+  apply And.intro
+  { exact NStepStar.pattern_match h0 h2 }
+  { exact NStepStar.refl }
+
+
+
+theorem NStepStar.skip :
+  arg.is_value →
+  Expr.pattern_match arg p = none →
+  NStepStar cator (Expr.function ((p, body) :: f)) →
+  NStepStar (Expr.app cator arg) (Expr.app (Expr.function f) arg)
+:= by
+  sorry
+
+theorem Joinable.skip :
+  arg.is_value →
+  Expr.pattern_match arg p = none →
+  Joinable cator (Expr.function ((p, body) :: f)) →
+  Joinable (Expr.app cator arg) (Expr.app (Expr.function f) arg)
+:= by
+  unfold Joinable
+  intro h0 h1 h2
+  have ⟨en,h3,h4⟩ := h2
+  have h5 := NStepStar.function_inversion h4
+  rw [h5] at h3
+  clear h4 h5
+  exists ((Expr.app (Expr.function f) arg))
+  apply And.intro
+  { exact NStepStar.skip h0 h1 h3}
+  { exact NStepStar.refl }
 
 
 theorem NRcdStepStar.cons_inversion :
@@ -430,6 +507,17 @@ theorem RcdJoinable.cons :
     { exact NRcdStepStar.cons h8 h5 h7 }
 
 
+theorem NStep.joinable :
+  NStep e e' →
+  Joinable e e'
+:= by
+  intro h0
+  unfold Joinable
+  exists e'
+  apply And.intro
+  { apply NStepStar.step h0 NStepStar.refl }
+  { exact NStepStar.refl}
+
 theorem NStepStar.joinable :
   NStepStar e e' →
   Joinable e e'
@@ -486,24 +574,48 @@ mutual
 
     have ih := NRcdStep.semi_confluence step' step_star'
     exact Joinable.record ih
-  | @applicator cator cator' arg step' =>
+  | @applicator cator cator_a arg step' =>
     cases NStepStar.app_inversion step_star with
     | inl h0 =>
-      sorry
+      have ⟨cator_b,arg',h1,h2,h3⟩ := h0
+      rw [h1]
+      clear h0 h1 step_star
+      have joinable_cator := NStep.semi_confluence step' h2
+      have joinable_arg := NStepStar.joinable h3
+      exact Joinable.app joinable_cator joinable_arg
     | inr h0 =>
       cases h0 with
       | inl h1 =>
-        sorry
-      | inr h1 =>
-        sorry
+        have ⟨p,body,f,m,h2,h3,h4⟩ := h1
+        rw [h2]
+        clear h1 h2 step_star
+        have joinable_cator := NStep.semi_confluence step' h3
+        exact Joinable.pattern_match h4 joinable_cator
 
-  | @applicand arg arg' cator step' =>
+      | inr h1 =>
+        have ⟨isval, p, body, f,h2,h3,h4⟩ := h1
+        rw [h2]
+        clear h1 h2 step_star
+        have joinable_cator := NStep.semi_confluence step' h3
+        exact Joinable.skip isval h4 joinable_cator
+
+  | @applicand arg arg_a cator step' =>
     cases NStepStar.app_inversion step_star with
     | inl h0 =>
-      sorry
+      have ⟨cator',arg_b,h1,h2,h3⟩ := h0
+      clear h0
+      rw [h1]
+      clear h1 step_star
+      have joinable_cator := NStepStar.joinable h2
+      have joinable_arg := NStep.semi_confluence step' h3
+      exact Joinable.app joinable_cator joinable_arg
     | inr h0 =>
       cases h0 with
       | inl h1 =>
+        have ⟨p,body,f,m,h2,h3,h4⟩ := h1
+        rw [h2]
+        clear h1 h2 step_star
+
         sorry
       | inr h1 =>
         sorry
