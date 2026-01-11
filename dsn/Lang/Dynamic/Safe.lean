@@ -18,7 +18,7 @@ theorem Safe.subject_star_reduction
   unfold Safe
   intro h0 em h1
   apply h0
-  apply NStepStar.transitive step_star h1
+  apply NStepStar.transitivity step_star h1
 
 theorem Safe.subject_star_expansion
   (step_star : NStepStar e e')

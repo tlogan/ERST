@@ -601,14 +601,6 @@ theorem Typing.progress :
 
 
 
-theorem NStep.not_value :
-  NStep e e' →
-  ¬ Expr.is_value e
-:= by sorry
-
-
-
-
 -- theorem Divergent.necxt_preservation :
 --   NEvalCxt E →
 --   Divergent e →

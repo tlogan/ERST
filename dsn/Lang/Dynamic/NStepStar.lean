@@ -14,7 +14,7 @@ inductive StarNStep : Expr → Expr → Prop
 | refl : StarNStep e e
 | step : StarNStep e e' → NStep e' e'' → StarNStep e e''
 
-theorem StarNStep.transitive :
+theorem StarNStep.transitivity :
   StarNStep e e' → StarNStep e' e'' → StarNStep e e''
 := by
   intro h0 h1
@@ -25,7 +25,7 @@ theorem StarNStep.transitive :
     exact step ih h3
 
 
-theorem NStepStar.transitive :
+theorem NStepStar.transitivity :
   NStepStar e e' → NStepStar e' e'' → NStepStar e e''
 := by
   intro h0 h1
@@ -43,7 +43,7 @@ theorem NStepStar.reverse :
   | refl =>
     exact StarNStep.refl
   | @step e em e' h1 h2 ih =>
-    apply StarNStep.transitive
+    apply StarNStep.transitivity
     { apply StarNStep.step StarNStep.refl h1 }
     { exact ih }
 
@@ -80,7 +80,7 @@ theorem NStepStar.iso_inversion :
     | @iso body' body'' _ step =>
       exists body''
       simp
-      apply NStepStar.transitive h4
+      apply NStepStar.transitivity h4
       apply NStepStar.step step
       exact refl
 
@@ -110,7 +110,7 @@ inductive StarNRcdStep : List (String × Expr) → List (String × Expr) → Pro
 | refl : StarNRcdStep r r
 | step : StarNRcdStep r r' → NRcdStep r' r'' → StarNRcdStep r r''
 
-theorem NRcdStepStar.transitive :
+theorem NRcdStepStar.transitivity :
   NRcdStepStar e e' → NRcdStepStar e' e'' → NRcdStepStar e e''
 := by
   intro h0 h1
@@ -120,7 +120,7 @@ theorem NRcdStepStar.transitive :
   | step h2 h3 ih =>
     exact step h2 (ih h1)
 
-theorem StarNRcdStep.transitive :
+theorem StarNRcdStep.transitivity :
   StarNRcdStep r r' → StarNRcdStep r' r'' → StarNRcdStep r r''
 := by
   intro h0 h1
@@ -139,7 +139,7 @@ theorem NRcdStepStar.reverse :
     exact StarNRcdStep.refl
   | @step e em e' h1 h2 ih =>
 
-    apply StarNRcdStep.transitive
+    apply StarNRcdStep.transitivity
     { apply StarNRcdStep.step StarNRcdStep.refl h1 }
     { exact ih }
 
@@ -166,16 +166,9 @@ theorem NStepStar.app :
   | @refl e =>
     exact applicand e h1
   | @step ef em ef' h1 h2 ih =>
-    apply NStepStar.transitive
+    apply NStepStar.transitivity
     { apply NStepStar.step (NStep.applicator h1) ih }
     { exact refl }
-
-theorem NStepStar.applicator :
-  NStepStar ef ef' →
-  ∀ e, NStepStar (.app ef e) (.app ef' e)
-:= by
-  intro h0 e
-  apply NStepStar.app h0 .refl
 
 
 theorem NStepStar.record :
@@ -211,7 +204,7 @@ theorem NStepStar.record_inversion :
     | @record r' r'' step =>
       exists r''
       simp
-      apply NRcdStepStar.transitive h4
+      apply NRcdStepStar.transitivity h4
       apply NRcdStepStar.step step
       exact NRcdStepStar.refl
 
@@ -290,19 +283,6 @@ theorem Joinable.app :
   {apply NStepStar.app h2 h4 }
   {exact NStepStar.app h3 h5}
 
-theorem Joinable.applicator :
-  Joinable a b →
-  Joinable (.app a arg) (.app b arg)
-:= by
-  unfold Joinable
-  intro h0
-  have ⟨c,h1,h2⟩ := h0
-  exists (.app c arg)
-  apply And.intro
-  {exact NStepStar.applicator h1 arg}
-  {exact NStepStar.applicator h2 arg}
-
-
 
 
 theorem NStepStar.pattern_match :
@@ -378,7 +358,7 @@ theorem NRcdStepStar.cons_inversion :
       simp
       apply And.intro
       {
-        apply NStepStar.transitive h4
+        apply NStepStar.transitivity h4
         apply NStepStar.step step' NStepStar.refl
       }
       { exact h5 }
@@ -387,7 +367,7 @@ theorem NRcdStepStar.cons_inversion :
       exists r'''
       simp
       apply And.intro h4
-      apply NRcdStepStar.transitive h5
+      apply NRcdStepStar.transitivity h5
       apply NRcdStepStar.step step' NRcdStepStar.refl
 
 
@@ -590,7 +570,7 @@ theorem Joinable.subject_star_expansion :
   have ⟨c,h2,h3⟩ := h1
   exists c
   apply And.intro h2
-  apply NStepStar.transitive h0 h3
+  apply NStepStar.transitivity h0 h3
 
 
 mutual
@@ -705,7 +685,7 @@ theorem NStepStar.confluence :
     have ⟨n,h6,h7⟩ := NStep.semi_confluence h3 h4
     exists n
     apply And.intro h6
-    apply NStepStar.transitive h5 h7
+    apply NStepStar.transitivity h5 h7
 
 
 
@@ -732,7 +712,7 @@ theorem Joinable.transitivity {a b c} :
   have ⟨e',h6,h7⟩ := NStepStar.confluence h3 h4
   exists e'
   apply And.intro
-  { exact NStepStar.transitive h2 h6 }
-  { exact NStepStar.transitive h5 h7 }
+  { exact NStepStar.transitivity h2 h6 }
+  { exact NStepStar.transitivity h5 h7 }
 
 end Lang.Dynamic
