@@ -144,9 +144,9 @@ theorem NRcdStepStar.reverse :
     { exact ih }
 
 
-theorem NStepStar.applicand :
+theorem NStepStar.applicand ef :
   NStepStar e e' →
-  NStepStar (.app f e) (.app f e')
+  NStepStar (.app ef e) (.app ef e')
 := by
   intro h0
   induction h0 with
@@ -154,6 +154,29 @@ theorem NStepStar.applicand :
     apply NStepStar.refl
   | step h1 h2 ih =>
     apply NStepStar.step (NStep.applicand h1) ih
+
+theorem NStepStar.app :
+  NStepStar ef ef' →
+  NStepStar e e' →
+  NStepStar (.app ef e) (.app ef' e')
+:= by
+  intro h0 h1
+
+  induction h0 with
+  | @refl e =>
+    exact applicand e h1
+  | @step ef em ef' h1 h2 ih =>
+    apply NStepStar.transitive
+    { apply NStepStar.step (NStep.applicator h1) ih }
+    { exact refl }
+
+theorem NStepStar.applicator :
+  NStepStar ef ef' →
+  ∀ e, NStepStar (.app ef e) (.app ef' e)
+:= by
+  intro h0 e
+  apply NStepStar.app h0 .refl
+
 
 theorem NStepStar.record :
   NRcdStepStar r r' →
@@ -239,20 +262,8 @@ theorem Joinable.record :
   {exact NStepStar.record h1}
   {exact NStepStar.record h2}
 
-theorem Joinable.applicator :
-  Joinable a b →
-  Joinable (.app a arg) (.app b arg)
-:= by
-  unfold Joinable
-  intro h0
-  have ⟨c,h1,h2⟩ := h0
-  exists (.app c arg)
-  sorry
-  -- apply And.intro
-  -- {exact NStepStar.applicator h1}
-  -- {exact NStepStar.applicator h2}
 
-theorem Joinable.applicand {a b} f :
+theorem Joinable.applicand f :
   Joinable a b →
   Joinable (.app f a) (.app f b)
 := by
@@ -261,17 +272,37 @@ theorem Joinable.applicand {a b} f :
   have ⟨c,h1,h2⟩ := h0
   exists (.app f c)
   apply And.intro
-  {exact NStepStar.applicand h1}
-  {exact NStepStar.applicand h2}
-
+  {exact NStepStar.applicand f h1}
+  {exact NStepStar.applicand f h2}
 
 theorem Joinable.app :
-  Joinable cator_a cator_b →
+  Joinable fa fb →
   Joinable arg_a arg_b →
-  Joinable (.app cator_a arg_a) (.app cator_b arg_b)
+  Joinable (.app fa arg_a) (.app fb arg_b)
 := by
+  unfold Joinable
   intro h0 h1
-  sorry
+  have ⟨fc,h2,h3⟩ := h0
+  have ⟨arg_c,h4,h5⟩ := h1
+  clear h0 h1
+  exists (.app fc arg_c)
+  apply And.intro
+  {apply NStepStar.app h2 h4 }
+  {exact NStepStar.app h3 h5}
+
+theorem Joinable.applicator :
+  Joinable a b →
+  Joinable (.app a arg) (.app b arg)
+:= by
+  unfold Joinable
+  intro h0
+  have ⟨c,h1,h2⟩ := h0
+  exists (.app c arg)
+  apply And.intro
+  {exact NStepStar.applicator h1 arg}
+  {exact NStepStar.applicator h2 arg}
+
+
 
 
 theorem NStepStar.pattern_match :
@@ -328,7 +359,6 @@ theorem Joinable.skip :
 theorem NRcdStepStar.cons_inversion :
   NRcdStepStar ((l,e)::r) r' →
   (∃ e' r'' , r' = ((l,e')::r'') ∧ NStepStar e e' ∧ NRcdStepStar r r'')
-  -- (∃ e' r'' , r' = ((l,e')::r'') ∧ List.is_fresh_key l r ∧ NStepStar e e' ∧ NRcdStepStar r r'')
 := by
   intro h0
   apply NRcdStepStar.reverse at h0
@@ -536,6 +566,33 @@ theorem NRcdStepStar.joinable :
   exists r'
   apply And.intro h0 NRcdStepStar.refl
 
+theorem Expr.pattern_match_subject_reduction :
+  NStep arg arg' →
+  Expr.pattern_match arg p = some m →
+  ∃ m' , Expr.pattern_match arg' p = some m'
+:= by sorry
+
+theorem NStep.pattern_match_preservation :
+  Expr.pattern_match arg p = some m →
+  Expr.pattern_match arg' p = some m' →
+  NStep arg arg' →
+  ∀ body, NStepStar (Expr.sub m body) (Expr.sub m' body)
+:= by sorry
+
+
+theorem Joinable.subject_star_expansion :
+  NStepStar b b' →
+  Joinable a b' →
+  Joinable a b
+:= by
+  unfold Joinable
+  intro h0 h1
+  have ⟨c,h2,h3⟩ := h1
+  exists c
+  apply And.intro h2
+  apply NStepStar.transitive h0 h3
+
+
 mutual
   theorem NRcdStep.semi_confluence
     (step : NRcdStep r ra)
@@ -615,10 +672,16 @@ mutual
         have ⟨p,body,f,m,h2,h3,h4⟩ := h1
         rw [h2]
         clear h1 h2 step_star
+        have ⟨m',h5⟩ := Expr.pattern_match_subject_reduction step' h4
+        have h6 := NStep.pattern_match_preservation h4 h5 step' body
+        apply Joinable.subject_star_expansion h6
+        have joinable_cator := NStepStar.joinable h3
+        exact Joinable.pattern_match h5 joinable_cator
 
-        sorry
       | inr h1 =>
-        sorry
+        have ⟨isval, p, body, f,h2,h3,h4⟩ := h1
+        have h5 := NStep.not_value step' isval
+        exact False.elim h5
 
   | _ => sorry
 end

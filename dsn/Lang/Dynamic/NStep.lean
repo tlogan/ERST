@@ -105,6 +105,10 @@ mutual
 
 end
 
+theorem NStep.not_value :
+  NStep e e' → ¬ Expr.is_value e
+:= by sorry
+
 
 theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
   unfold Expr.project
