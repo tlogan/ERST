@@ -580,13 +580,47 @@ theorem NRcdStepStar.joinable :
 
 mutual
 
-  theorem List.pattern_match_entry_reduction :
+  theorem List.pattern_match_entry_subject_reduction :
     NRcdStep r r' →
     List.pattern_match_entry l p r = some m →
     ∃ m' , List.pattern_match_entry l p r' = some m'
-  := by sorry
+  := by
+    intro h0 h1
+    cases h0 with
+    | @head l' r e e' fresh step =>
+      simp [List.pattern_match_entry] at h1
+      by_cases h3 : l' = l
+      {
+        simp [*] at h1
+        have ⟨m',ih⟩ := Expr.pattern_match_subject_reduction step h1
+        exists m'
+        simp [List.pattern_match_entry, *]
+      }
+      {
+        simp [*] at h1
+        exists m
+        simp [List.pattern_match_entry, *]
+      }
 
-  theorem List.pattern_match_record_reduction :
+    | @tail l' r r' e fresh step =>
+      simp [List.pattern_match_entry] at h1
+      by_cases h3 : l' = l
+      {
+        simp [*] at h1
+        exists m
+        simp [List.pattern_match_entry, *]
+
+      }
+      {
+        simp [*] at h1
+        have ⟨m',ih⟩ := List.pattern_match_entry_subject_reduction step h1
+        exists m'
+        simp [List.pattern_match_entry, *]
+      }
+
+
+
+  theorem List.pattern_match_record_subject_reduction :
     NRcdStep r r' →
     List.pattern_match_record r rp = some m →
     ∃ m' , List.pattern_match_record r' rp = some m'
@@ -607,7 +641,10 @@ mutual
       cases h5 : (List.pattern_match_record r rp') with
       | some m1 =>
         simp [h5] at h3
-        sorry
+        have ⟨m0',h6⟩ := List.pattern_match_entry_subject_reduction h0 h4
+        have ⟨m1',h7⟩ := List.pattern_match_record_subject_reduction h0 h5
+        exists (m0' ++ m1')
+        simp [List.pattern_match_record, *]
       | none =>
         simp [h5] at h3
     | none =>
@@ -643,7 +680,7 @@ mutual
       simp [Expr.pattern_match] at h1
     | @record r r' step =>
       simp [Expr.pattern_match] at h1
-      have ⟨m',ih⟩ := List.pattern_match_record_reduction step h1
+      have ⟨m',ih⟩ := List.pattern_match_record_subject_reduction step h1
       exists m'
       simp [Expr.pattern_match]
       exact ih
