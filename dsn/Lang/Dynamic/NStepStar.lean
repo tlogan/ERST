@@ -211,7 +211,13 @@ theorem NStepStar.record_inversion :
 theorem NStepStar.function_inversion :
   NStepStar (.function f) e →
   e = (.function f)
-:= by sorry
+:= by
+  intro h0
+  cases h0 with
+  | refl =>
+    rfl
+  | step h1 h2 =>
+    cases h1
 
 
 def Joinable (a b : Expr) :=
@@ -289,7 +295,20 @@ theorem NStepStar.pattern_match :
   Expr.pattern_match arg p = some m →
   NStepStar cator (Expr.function ((p, body) :: f)) →
   NStepStar (Expr.app cator arg) (Expr.sub m body)
-:= by sorry
+:= by
+  intro h0 h1
+  generalize h2 : (Expr.function ((p, body) :: f)) = cator' at h1
+  induction h1 with
+  | refl =>
+    rw [← h2]
+    apply NStepStar.step
+    { apply NStep.pattern_match h0 }
+    { exact .refl }
+  | step h3 h4 ih =>
+    specialize ih h2
+    apply NStepStar.step
+    { apply NStep.applicator h3 }
+    { exact ih }
 
 theorem Joinable.pattern_match :
   Expr.pattern_match arg p = some m →
@@ -316,7 +335,19 @@ theorem NStepStar.skip :
   NStepStar cator (Expr.function ((p, body) :: f)) →
   NStepStar (Expr.app cator arg) (Expr.app (Expr.function f) arg)
 := by
-  sorry
+  intro h0 h1 h2
+  generalize h3 : (Expr.function ((p, body) :: f)) = cator' at h2
+  induction h2 with
+  | refl =>
+    rw [← h3]
+    apply NStepStar.step
+    { apply NStep.skip h0 h1 }
+    { exact .refl }
+  | step h4 h5 ih =>
+    specialize ih h3
+    apply NStepStar.step
+    { apply NStep.applicator h4 }
+    { exact ih }
 
 theorem Joinable.skip :
   arg.is_value →
@@ -546,11 +577,79 @@ theorem NRcdStepStar.joinable :
   exists r'
   apply And.intro h0 NRcdStepStar.refl
 
-theorem Expr.pattern_match_subject_reduction :
-  NStep arg arg' →
-  Expr.pattern_match arg p = some m →
-  ∃ m' , Expr.pattern_match arg' p = some m'
-:= by sorry
+
+mutual
+
+  theorem List.pattern_match_entry_reduction :
+    NRcdStep r r' →
+    List.pattern_match_entry l p r = some m →
+    ∃ m' , List.pattern_match_entry l p r' = some m'
+  := by sorry
+
+  theorem List.pattern_match_record_reduction :
+    NRcdStep r r' →
+    List.pattern_match_record r rp = some m →
+    ∃ m' , List.pattern_match_record r' rp = some m'
+  := by cases rp with
+  | nil =>
+    intro h0 h1
+    simp [List.pattern_match_record]
+  | cons lp rp' =>
+    have (l,p) := lp
+    intro h0 h1
+    simp [List.pattern_match_record] at h1
+    have ⟨h2,h3⟩ := h1
+    clear h1
+
+    cases h4 : (List.pattern_match_entry l p r) with
+    | some m0 =>
+      simp [h4] at h3
+      cases h5 : (List.pattern_match_record r rp') with
+      | some m1 =>
+        simp [h5] at h3
+        sorry
+      | none =>
+        simp [h5] at h3
+    | none =>
+      simp [h4] at h3
+
+
+  theorem Expr.pattern_match_subject_reduction :
+    NStep arg arg' →
+    Expr.pattern_match arg p = some m →
+    ∃ m' , Expr.pattern_match arg' p = some m'
+  := by cases p with
+  | var x =>
+    intro h0 h1
+    exists [(x,arg')]
+    simp [Expr.pattern_match]
+  | iso l p' =>
+    intro h0 h1
+    cases h0 with
+    | @iso e e' l' step =>
+      simp [Expr.pattern_match] at h1
+      have ⟨h2,h3⟩ := h1
+      clear h1
+      have ⟨m',ih⟩ := Expr.pattern_match_subject_reduction step h3
+      exists m'
+      simp [Expr.pattern_match]
+      exact ⟨h2, ih⟩
+    | _ =>
+      simp [Expr.pattern_match] at h1
+  | record ps =>
+    intro h0 h1
+    cases h0 with
+    | iso =>
+      simp [Expr.pattern_match] at h1
+    | @record r r' step =>
+      simp [Expr.pattern_match] at h1
+      have ⟨m',ih⟩ := List.pattern_match_record_reduction step h1
+      exists m'
+      simp [Expr.pattern_match]
+      exact ih
+    | _ =>
+      simp [Expr.pattern_match] at h1
+end
 
 theorem NStep.pattern_match_preservation :
   Expr.pattern_match arg p = some m →
