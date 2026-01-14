@@ -745,6 +745,36 @@ theorem Expr.pattern_match_subject_star_reduction :
     have ⟨m',h4⟩ := Expr.pattern_match_subject_reduction h1 h3
     apply ih h4
 
+
+
+mutual
+  theorem NStep.sub_preservation
+    (step_arg : NStep arg arg')
+    body
+  : NStepStar (Expr.sub [(x,arg)] body) (Expr.sub [(x,arg')] body)
+  := by cases body with
+    | var x' =>
+      by_cases h0 : x' = x
+      {
+        simp [Expr.sub,find,h0]
+        apply NStepStar.step step_arg NStepStar.refl
+      }
+      {
+        have h1 : x' ∉ ListPair.dom [(x,arg)] := by
+          simp [ListPair.dom] ; exact h0
+        have h2 : x' ∉ ListPair.dom [(x,arg')] := by
+          simp [ListPair.dom] ; exact h0
+        have h3 := Expr.sub_refl h1
+        have h4 := Expr.sub_refl h2
+        rw [h3,h4]
+        apply NStepStar.refl
+      }
+    | iso l target =>
+      simp [Expr.sub]
+      sorry
+    | _ => sorry
+end
+
 mutual
   theorem NStep.pattern_match_preservation
     (step_arg : NStep arg arg')
@@ -752,32 +782,24 @@ mutual
     (matching_arg' : Expr.pattern_match arg' p = some m')
     body
   : NStepStar (Expr.sub m body) (Expr.sub m' body)
-  := by cases body with
-  | var x =>
-    cases p with
-    | var x' =>
-      by_cases h0 : x = x'
-      {
-        simp [Expr.pattern_match] at matching_arg
-        simp [Expr.pattern_match] at matching_arg'
-        rw [←matching_arg,←matching_arg']
-        simp [Expr.sub,find,h0]
-        apply NStepStar.step step_arg NStepStar.refl
-      }
-      {
-        simp [Expr.pattern_match] at matching_arg
-        simp [Expr.pattern_match] at matching_arg'
-        rw [←matching_arg,←matching_arg']
-        have h1 : x ∉ ListPair.dom [(x',arg)] := by
-          simp [ListPair.dom] ; exact h0
-        have h2 : x ∉ ListPair.dom [(x',arg')] := by
-          simp [ListPair.dom] ; exact h0
-        have h3 := Expr.sub_refl h1
-        have h4 := Expr.sub_refl h2
-        rw [h3,h4]
-        apply NStepStar.refl
-      }
-    | _ => sorry
+  := by cases p with
+  | var x' =>
+    simp [Expr.pattern_match] at matching_arg
+    simp [Expr.pattern_match] at matching_arg'
+    rw [←matching_arg,←matching_arg']
+    exact sub_preservation step_arg body
+
+  | iso l p' =>
+    cases step_arg with
+    | @iso target target' l' step_target =>
+      simp [Expr.pattern_match] at matching_arg
+      simp [Expr.pattern_match] at matching_arg'
+      have ⟨h0,h1⟩ := matching_arg
+      have ⟨h2,h3⟩ := matching_arg'
+      clear h2 matching_arg matching_arg'
+      have ih := NStep.pattern_match_preservation step_target h1 h3
+      apply ih
+    | _ => simp [Expr.pattern_match] at matching_arg
   | _ => sorry
 end
 
