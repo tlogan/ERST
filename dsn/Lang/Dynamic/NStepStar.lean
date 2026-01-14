@@ -725,19 +725,34 @@ theorem Expr.pattern_match_subject_star_reduction :
     apply ih h4
 
 theorem NStep.pattern_match_preservation :
+  NStep arg arg' →
   Expr.pattern_match arg p = some m →
   Expr.pattern_match arg' p = some m' →
-  NStep arg arg' →
   ∀ body, NStepStar (Expr.sub m body) (Expr.sub m' body)
 := by sorry
 
 theorem NStepStar.pattern_match_preservation :
+  NStepStar arg arg' →
+  ∀ {m m'},
   Expr.pattern_match arg p = some m →
   Expr.pattern_match arg' p = some m' →
-  NStepStar arg arg' →
   ∀ body, NStepStar (Expr.sub m body) (Expr.sub m' body)
-:= by sorry
-
+:= by
+  intro h0
+  induction h0 with
+  | @refl arg =>
+    intro m m' h1 h2 body
+    rw [h1] at h2
+    simp at h2
+    rw [← h2]
+    apply NStepStar.refl
+  | @step arg argm arg' h1 h2 ih =>
+    intro m m' h3 h4 body
+    have ⟨mm,h5⟩ := Expr.pattern_match_subject_reduction h1 h3
+    have h6 := NStep.pattern_match_preservation h1 h3 h5 body
+    apply NStepStar.transitivity h6
+    apply ih h5
+    apply h4
 
 theorem Joinable.subject_star_expansion :
   NStepStar b b' →
@@ -832,7 +847,7 @@ mutual
         rw [h2]
         clear h1 h2 step_star
         have ⟨m',h5⟩ := Expr.pattern_match_subject_reduction step' h4
-        have h6 := NStep.pattern_match_preservation h4 h5 step' body
+        have h6 := NStep.pattern_match_preservation step' h4 h5 body
         apply Joinable.subject_star_expansion h6
         have joinable_cator := NStepStar.joinable h3
         exact Joinable.pattern_match h5 joinable_cator
@@ -853,7 +868,7 @@ mutual
       clear h2 h4
 
       have ⟨m',h5⟩ := Expr.pattern_match_subject_star_reduction h3 matching
-      have h6 := NStepStar.pattern_match_preservation matching h5 h3 body
+      have h6 := NStepStar.pattern_match_preservation h3 matching h5 body
       apply Joinable.swap
       apply Joinable.subject_star_expansion h6
       apply Joinable.pattern_match h5
