@@ -710,9 +710,19 @@ end
 
 theorem Expr.pattern_match_subject_star_reduction :
   NStepStar arg arg' →
+  ∀ {m},
   Expr.pattern_match arg p = some m →
   ∃ m' , Expr.pattern_match arg' p = some m'
-:= by sorry
+:= by
+  intro h0
+  induction h0 with
+  | refl =>
+    intro m h1
+    exists m
+  | @step arg argm arg' h1 h2 ih =>
+    intro m h3
+    have ⟨m',h4⟩ := Expr.pattern_match_subject_reduction h1 h3
+    apply ih h4
 
 theorem NStep.pattern_match_preservation :
   Expr.pattern_match arg p = some m →
