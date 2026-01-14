@@ -84,21 +84,21 @@ mutual
   /- head normal forms -/
   | iso : NStep body body' → NStep (.iso l body) (.iso l body')
   | record : NRcdStep r r' →  NStep (.record r) (.record r')
-  | applicator : NStep cator cator' → NStep (.app cator arg) (.app cator' arg)
-  | applicand : NStep arg arg' → NStep (.app cator arg) (.app cator arg')
-  | loop : NStep body body' → NStep (.loop body) (.loop body')
 
   /- redex forms -/
-  | pattern_match :
+  | applicator arg : NStep cator cator' → NStep (.app cator arg) (.app cator' arg)
+  | applicand cator : NStep arg arg' → NStep (.app cator arg) (.app cator arg')
+  | pattern_match body f :
     Expr.pattern_match arg p = some m →
-    NStep (.app (.function ((p,e) :: f)) arg) (Expr.sub m e)
-  | skip :
+    NStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m body)
+  | skip body f:
     arg.is_value →
     Expr.pattern_match arg p = none →
-    NStep (.app (.function ((p,e) :: f)) arg) (.app (.function f) arg)
-  | erase :
-    NStep (.anno e t) e
-  | recycle :
+    NStep (.app (.function ((p,body) :: f)) arg) (.app (.function f) arg)
+  | erase body t :
+    NStep (.anno body t) body
+  | loopi : NStep body body' → NStep (.loop body) (.loop body')
+  | recycle x e :
     NStep
       (.loop (.function [(.var x, e)]))
       (Expr.sub [(x, (.loop (.function [(.var x, e)])))] e)
@@ -119,7 +119,7 @@ theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
     rfl
   have h1 : e = Expr.sub [("x", e)] (.var "x") := by exact rfl
   rw [h1]
-  apply NStep.pattern_match h0
-
+  apply pattern_match
+  exact h0
 
 end Lang.Dynamic

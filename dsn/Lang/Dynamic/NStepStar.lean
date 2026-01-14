@@ -153,7 +153,7 @@ theorem NStepStar.applicand ef :
   | refl =>
     apply NStepStar.refl
   | step h1 h2 ih =>
-    apply NStepStar.step (NStep.applicand h1) ih
+    apply NStepStar.step (NStep.applicand _ h1) ih
 
 theorem NStepStar.app :
   NStepStar ef ef' →
@@ -167,7 +167,7 @@ theorem NStepStar.app :
     exact applicand e h1
   | @step ef em ef' h1 h2 ih =>
     apply NStepStar.transitivity
-    { apply NStepStar.step (NStep.applicator h1) ih }
+    { apply NStepStar.step (NStep.applicator _ h1) ih }
     { exact refl }
 
 
@@ -236,6 +236,13 @@ theorem Joinable.swap {a b} :
   have ⟨e,h1,h2⟩ := h0
   exists e
 
+theorem Joinable.refl e:
+  Joinable e e
+:= by
+  unfold Joinable
+  exists e
+  apply And.intro NStepStar.refl NStepStar.refl
+
 theorem Joinable.iso :
   Joinable a b →
   Joinable (.iso l a) (.iso l b)
@@ -302,12 +309,12 @@ theorem NStepStar.pattern_match :
   | refl =>
     rw [← h2]
     apply NStepStar.step
-    { apply NStep.pattern_match h0 }
+    { apply NStep.pattern_match ; exact h0 }
     { exact .refl }
   | step h3 h4 ih =>
     specialize ih h2
     apply NStepStar.step
-    { apply NStep.applicator h3 }
+    { apply NStep.applicator ; exact h3 }
     { exact ih }
 
 theorem Joinable.pattern_match :
@@ -341,12 +348,12 @@ theorem NStepStar.skip :
   | refl =>
     rw [← h3]
     apply NStepStar.step
-    { apply NStep.skip h0 h1 }
+    { apply NStep.skip body f h0 h1}
     { exact .refl }
   | step h4 h5 ih =>
     specialize ih h3
     apply NStepStar.step
-    { apply NStep.applicator h4 }
+    { apply NStep.applicator ; exact h4 }
     { exact ih }
 
 theorem Joinable.skip :
@@ -688,10 +695,23 @@ mutual
       simp [Expr.pattern_match] at h1
 end
 
+theorem Expr.pattern_match_subject_star_reduction :
+  NStepStar arg arg' →
+  Expr.pattern_match arg p = some m →
+  ∃ m' , Expr.pattern_match arg' p = some m'
+:= by sorry
+
 theorem NStep.pattern_match_preservation :
   Expr.pattern_match arg p = some m →
   Expr.pattern_match arg' p = some m' →
   NStep arg arg' →
+  ∀ body, NStepStar (Expr.sub m body) (Expr.sub m' body)
+:= by sorry
+
+theorem NStepStar.pattern_match_preservation :
+  Expr.pattern_match arg p = some m →
+  Expr.pattern_match arg' p = some m' →
+  NStepStar arg arg' →
   ∀ body, NStepStar (Expr.sub m body) (Expr.sub m' body)
 := by sorry
 
@@ -799,6 +819,36 @@ mutual
         have h5 := NStep.not_value step' isval
         exact False.elim h5
 
+  | @pattern_match arg p m body f matching =>
+    cases NStepStar.app_inversion step_star with
+    | inl h0 =>
+      have ⟨cator,arg',h1,h2,h3⟩ := h0
+      rw [h1]
+      clear step_star h0 h1
+      have h4 := NStepStar.function_inversion h2
+      rw [h4]
+      clear h2 h4
+
+      have ⟨m',h5⟩ := Expr.pattern_match_subject_star_reduction h3 matching
+      have h6 := NStepStar.pattern_match_preservation matching h5 h3 body
+      apply Joinable.swap
+      apply Joinable.subject_star_expansion h6
+      apply Joinable.pattern_match h5
+      apply Joinable.refl
+
+    | inr h0 =>
+      cases h0 with
+      | inl h1 =>
+        sorry
+      | inr h1 =>
+        sorry
+  -- | @loopi body body' step=>
+
+    -- have ⟨body_b,h0,step_star'⟩ := NStepStar.loop_inversion step_star
+    -- rw [h0]
+    -- have ih := NStep.semi_confluence step' step_star'
+    -- exact Joinable.iso ih
+    -- sorry
   | _ => sorry
 end
 
