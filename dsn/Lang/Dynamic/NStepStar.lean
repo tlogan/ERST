@@ -839,9 +839,33 @@ mutual
     | inr h0 =>
       cases h0 with
       | inl h1 =>
-        sorry
+        have ⟨p',body',f',m',h2,h3,h4⟩ := h1
+        rw [h2]
+        clear step_star h1 h2
+        have h5 := NStepStar.function_inversion h3
+        simp at h5
+        have ⟨⟨h6,h7⟩,h8⟩ := h5
+        clear h5
+        rw [h7]
+        clear h7
+        rw [h6] at h4
+        clear h6 h8
+        rw [matching] at h4
+        simp at h4
+        rw [← h4]
+        apply Joinable.refl
+
       | inr h1 =>
-        sorry
+        have ⟨isval,p',body',f',h2,h3,h4⟩ := h1
+        rw [h2]
+        clear step_star h1 h2
+        have h5 := NStepStar.function_inversion h3
+        simp at h5
+        have ⟨⟨h6,h7⟩,h8⟩ := h5
+        clear h5
+        rw [h6] at h4
+        simp [matching] at h4
+
   -- | @loopi body body' step=>
 
     -- have ⟨body_b,h0,step_star'⟩ := NStepStar.loop_inversion step_star
