@@ -219,6 +219,19 @@ theorem NStepStar.function_inversion :
   | step h1 h2 =>
     cases h1
 
+theorem NStepStar.value_inversion :
+  e.is_value →
+  NStepStar e e' →
+  e' = e
+:= by
+  intro h0 h1
+  cases h1 with
+  | refl =>
+    rfl
+  | step h2 h3 =>
+    have h4 := NStep.not_value h2 h0
+    exact False.elim h4
+
 
 def Joinable (a b : Expr) :=
   ∃ e , NStepStar a e ∧ NStepStar b e
@@ -865,6 +878,47 @@ mutual
         clear h5
         rw [h6] at h4
         simp [matching] at h4
+
+  | @skip arg p body f isval h0 =>
+    cases NStepStar.app_inversion step_star with
+    | inl h1 =>
+      have ⟨cator,arg',h2,h3,h4⟩ := h1
+      rw [h2]
+      clear step_star h1 h2
+      apply NStepStar.value_inversion isval at h4
+      rw [h4]
+      clear h4
+      have h5 := NStepStar.function_inversion h3
+      rw [h5]
+      clear h5
+      apply Joinable.swap
+      apply Joinable.skip isval h0
+      apply Joinable.refl
+    | inr h1 =>
+      cases h1 with
+      | inl h2 =>
+        have ⟨p',body',f',m,h3,h4,h5⟩ := h2
+        rw [h3]
+        clear step_star h2 h3
+
+        have h6 := NStepStar.function_inversion h4
+        simp at h6
+        have ⟨⟨h7,h8⟩,h9⟩ := h6
+        clear h4 h6
+        rw [h8]
+        rw [h7] at h5
+        rw [h0] at h5
+        simp at h5
+
+      | inr h2 =>
+        have ⟨isval',p',body',f',h3,h4,h5⟩ := h2
+        rw [h3]
+        clear step_star h2 h3
+        have h6 := NStepStar.function_inversion h4
+        simp at h6
+        have ⟨⟨h7,h8⟩,h9⟩ := h6
+        rw [h9]
+        apply Joinable.refl
 
   -- | @loopi body body' step=>
 
