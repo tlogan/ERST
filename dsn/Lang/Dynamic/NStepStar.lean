@@ -708,6 +708,27 @@ mutual
       simp [Expr.pattern_match] at h1
 end
 
+theorem Expr.sub_refl :
+  x ∉ ListPair.dom m →
+  (Expr.sub m (.var x)) = (.var x)
+:= by
+  intro h0
+  induction m with
+  | nil =>
+    simp [Expr.sub, find]
+  | cons pair m' ih =>
+    have ⟨x',target⟩ := pair
+    simp [ListPair.dom] at h0
+    have ⟨h1,h2⟩ := h0
+    clear h0
+    specialize ih h2
+    simp [Expr.sub, find]
+    have h3 : x' ≠ x := by exact fun h => h1 (Eq.symm h)
+    simp [h3]
+    unfold Expr.sub at ih
+    exact ih
+
+
 theorem Expr.pattern_match_subject_star_reduction :
   NStepStar arg arg' →
   ∀ {m},
@@ -724,12 +745,41 @@ theorem Expr.pattern_match_subject_star_reduction :
     have ⟨m',h4⟩ := Expr.pattern_match_subject_reduction h1 h3
     apply ih h4
 
-theorem NStep.pattern_match_preservation :
-  NStep arg arg' →
-  Expr.pattern_match arg p = some m →
-  Expr.pattern_match arg' p = some m' →
-  ∀ body, NStepStar (Expr.sub m body) (Expr.sub m' body)
-:= by sorry
+mutual
+  theorem NStep.pattern_match_preservation
+    (step_arg : NStep arg arg')
+    (matching_arg : Expr.pattern_match arg p = some m)
+    (matching_arg' : Expr.pattern_match arg' p = some m')
+    body
+  : NStepStar (Expr.sub m body) (Expr.sub m' body)
+  := by cases body with
+  | var x =>
+    cases p with
+    | var x' =>
+      by_cases h0 : x = x'
+      {
+        simp [Expr.pattern_match] at matching_arg
+        simp [Expr.pattern_match] at matching_arg'
+        rw [←matching_arg,←matching_arg']
+        simp [Expr.sub,find,h0]
+        apply NStepStar.step step_arg NStepStar.refl
+      }
+      {
+        simp [Expr.pattern_match] at matching_arg
+        simp [Expr.pattern_match] at matching_arg'
+        rw [←matching_arg,←matching_arg']
+        have h1 : x ∉ ListPair.dom [(x',arg)] := by
+          simp [ListPair.dom] ; exact h0
+        have h2 : x ∉ ListPair.dom [(x',arg')] := by
+          simp [ListPair.dom] ; exact h0
+        have h3 := Expr.sub_refl h1
+        have h4 := Expr.sub_refl h2
+        rw [h3,h4]
+        apply NStepStar.refl
+      }
+    | _ => sorry
+  | _ => sorry
+end
 
 theorem NStepStar.pattern_match_preservation :
   NStepStar arg arg' →
