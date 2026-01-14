@@ -745,6 +745,23 @@ theorem Expr.pattern_match_subject_star_reduction :
     have ⟨m',h4⟩ := Expr.pattern_match_subject_reduction h1 h3
     apply ih h4
 
+theorem NStep.sub_context_preservation
+  m
+  (step : NStep body body')
+: NStepStar (Expr.sub m body) (Expr.sub m body')
+:= sorry
+
+
+theorem NStepStar.sub_context_preservation
+  m
+  (step_star : NStepStar body body')
+: NStepStar (Expr.sub m body) (Expr.sub m body')
+:= by induction step_star with
+| @refl body =>
+  apply NStepStar.refl
+| step h1 h2 ih =>
+  have h3 := NStep.sub_context_preservation m h1
+  apply NStepStar.transitivity h3 ih
 
 
 mutual
@@ -775,7 +792,101 @@ mutual
     | _ => sorry
 end
 
+theorem Expr.sub_concat :
+  Expr.sub (m0 ++ m1) e = Expr.sub m0 (Expr.sub m1 e)
+:= by sorry
+
 mutual
+
+  theorem NStep.pattern_match_entry_preservation
+    (step_r : NRcdStep r r')
+    (matching_arg : List.pattern_match_entry l p r = some m)
+    (matching_arg' : List.pattern_match_entry l p r' = some m')
+    body
+  : NStepStar (Expr.sub m body) (Expr.sub m' body)
+  := by cases step_r with
+  | @head l' r'' target target' fresh step' =>
+    simp [List.pattern_match_entry] at matching_arg
+    simp [List.pattern_match_entry] at matching_arg'
+    by_cases h0 : l' = l
+    {
+      simp [*] at matching_arg
+      simp [*] at matching_arg'
+      apply NStep.pattern_match_preservation step' matching_arg matching_arg'
+    }
+    {
+      simp [*] at matching_arg
+      simp [*] at matching_arg'
+      simp [*]
+      exact NStepStar.refl
+    }
+  | @tail l' r'' r''' target fresh step' =>
+    simp [List.pattern_match_entry] at matching_arg
+    simp [List.pattern_match_entry] at matching_arg'
+    by_cases h0 : l' = l
+    {
+      simp [*] at matching_arg
+      simp [*] at matching_arg'
+      simp [*]
+      exact NStepStar.refl
+    }
+    {
+      simp [*] at matching_arg
+      simp [*] at matching_arg'
+      apply NStep.pattern_match_entry_preservation step' matching_arg matching_arg'
+    }
+
+  theorem NStep.pattern_match_record_preservation
+    (step_r : NRcdStep r r')
+    (matching_arg : List.pattern_match_record r rp = some m)
+    (matching_arg' : List.pattern_match_record r' rp = some m')
+    body
+  : NStepStar (Expr.sub m body) (Expr.sub m' body)
+  := by cases rp with
+  | nil =>
+    unfold List.pattern_match_record at matching_arg
+    simp at matching_arg
+    unfold List.pattern_match_record at matching_arg'
+    simp at matching_arg'
+    simp [*]
+    exact NStepStar.refl
+  | cons pp rp' =>
+    have ⟨l,p⟩ := pp
+    simp [List.pattern_match_record] at matching_arg
+    simp [List.pattern_match_record] at matching_arg'
+    have ⟨h0,h1⟩ := matching_arg
+    have ⟨h2,h3⟩ := matching_arg'
+    clear matching_arg matching_arg' h0 h2
+    cases h4 : (List.pattern_match_entry l p r) with
+    | some m0 =>
+      cases h5 : (List.pattern_match_record r rp') with
+      | some m1 =>
+        simp [*] at h1
+
+
+        cases h6 : (List.pattern_match_entry l p r') with
+        | some m0' =>
+          cases h7 : (List.pattern_match_record r' rp') with
+          | some m1' =>
+            simp [*] at h3
+            rw [←h1,←h3]
+            rw [Expr.sub_concat]
+            rw [Expr.sub_concat]
+            have h8 := NStep.pattern_match_entry_preservation step_r h4 h6 (Expr.sub m1' body)
+            have h9 := NStep.pattern_match_record_preservation step_r h5 h7 body
+            apply NStepStar.transitivity
+            { apply NStepStar.sub_context_preservation _ h9 }
+            { apply h8 }
+          | none =>
+            simp [*] at h3
+        | none =>
+          simp [*] at h3
+      | none =>
+        simp [*] at h1
+    | none =>
+      simp [*] at h1
+
+
   theorem NStep.pattern_match_preservation
     (step_arg : NStep arg arg')
     (matching_arg : Expr.pattern_match arg p = some m)
@@ -788,7 +899,6 @@ mutual
     simp [Expr.pattern_match] at matching_arg'
     rw [←matching_arg,←matching_arg']
     exact sub_preservation step_arg body
-
   | iso l p' =>
     cases step_arg with
     | @iso target target' l' step_target =>
@@ -800,7 +910,15 @@ mutual
       have ih := NStep.pattern_match_preservation step_target h1 h3
       apply ih
     | _ => simp [Expr.pattern_match] at matching_arg
-  | _ => sorry
+  | record rp =>
+    cases step_arg with
+    | iso =>
+      simp [Expr.pattern_match] at matching_arg
+    | @record r r' step_r =>
+      simp [Expr.pattern_match] at matching_arg
+      simp [Expr.pattern_match] at matching_arg'
+      apply NStep.pattern_match_record_preservation step_r matching_arg matching_arg'
+    | _ => simp [Expr.pattern_match] at matching_arg
 end
 
 theorem NStepStar.pattern_match_preservation :
