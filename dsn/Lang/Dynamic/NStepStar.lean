@@ -917,7 +917,7 @@ mutual
     simp [Expr.pattern_match] at matching_arg
     simp [Expr.pattern_match] at matching_arg'
     rw [←matching_arg,←matching_arg']
-    exact sub_preservation step_arg body
+    exact sub_preservation _ step_arg body
   | iso l p' =>
     cases step_arg with
     | @iso target target' l' step_target =>
