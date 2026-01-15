@@ -772,42 +772,83 @@ mutual
     body
   : NStepStar (Expr.sub [(x,arg)] body) (Expr.sub [(x,arg')] body)
   := by cases body with
-    | var x' =>
-      by_cases h0 : x' = x
-      {
-        simp [Expr.sub,find,h0]
-        apply NStepStar.step step_arg NStepStar.refl
-      }
-      {
-        have h1 : x' ∉ ListPair.dom [(x,arg)] := by
-          simp [ListPair.dom] ; exact h0
-        have h2 : x' ∉ ListPair.dom [(x,arg')] := by
-          simp [ListPair.dom] ; exact h0
-        have h3 := Expr.sub_refl h1
-        have h4 := Expr.sub_refl h2
-        rw [h3,h4]
-        apply NStepStar.refl
-      }
-    | iso l target =>
-      simp [Expr.sub]
-      sorry
-    | _ => sorry
+  | var x' =>
+    by_cases h0 : x' = x
+    {
+      simp [Expr.sub,find,h0]
+      apply NStepStar.step step_arg NStepStar.refl
+    }
+    {
+      have h1 : x' ∉ ListPair.dom [(x,arg)] := by
+        simp [ListPair.dom] ; exact h0
+      have h2 : x' ∉ ListPair.dom [(x,arg')] := by
+        simp [ListPair.dom] ; exact h0
+      have h3 := Expr.sub_refl h1
+      have h4 := Expr.sub_refl h2
+      rw [h3,h4]
+      apply NStepStar.refl
+    }
+  | iso l target =>
+    simp [Expr.sub]
+    sorry
+  | _ => sorry
 end
 
-theorem Expr.sub_concat e :
-  ListPair.dom m0 ∩ ListPair.dom m1 = [] →
-  Expr.sub (m0 ++ m1) e = Expr.sub m0 (Expr.sub m1 e)
-:= by cases e with
-| var x =>
-  simp [Expr.sub]
-  sorry
-| _ => sorry
+-- theorem find_disjoint_concat :
+--   ListPair.dom m0 ∩ ListPair.dom m1 = [] →
+--   find x (m0 ++ m1) = some e →
+--   (find x m0 = some e ∧ find x m1 = none) ∨
+--   (find x m0 = none ∧ find x m1 = some e)
+-- := by sorry
+
+-- theorem find_none_concat :
+--   find x (m0 ++ m1) = none →
+--   find x m0 = none ∧ find x m1 = none
+-- := by sorry
+
+-- theorem Expr.sub_concat e :
+--   ListPair.dom m0 ∩ ListPair.dom m1 = [] →
+--   Expr.sub (m0 ++ m1) e = Expr.sub m0 (Expr.sub m1 e)
+-- := by cases e with
+-- | var x =>
+--   intro h0
+--   simp [Expr.sub]
+
+--   cases h1 : find x (m0 ++ m1) with
+--   | some arg =>
+--     have h2 := find_disjoint_concat h0 h1
+--     cases h2 with
+--     | inl h3 =>
+--       have ⟨h4,h5⟩ := h3
+--       simp [h5]
+--       unfold Expr.sub
+--       simp [h4]
+--     | inr h3 =>
+
+--       have ⟨h4,h5⟩ := h3
+--       simp [h5]
+
+--       unfold Expr.sub
+--   | none =>
+--     have ⟨h2,h3⟩ := find_none_concat h1
+--     simp [h3]
+--     unfold Expr.sub
+--     simp [h2]
+-- | _ => sorry
 
 theorem Eq.disjoint_pattern_match_preservation :
   List.pattern_match_entry l p r = some m0 →
   List.pattern_match_record r rp = some m1 →
   Pat.ids p ∩ List.pattern_ids rp = [] →
   ListPair.dom m0 ∩ ListPair.dom m1 = []
+:= by sorry
+
+theorem NStepStar.sub_disjoint_concat :
+  ListPair.dom m0 ∩ ListPair.dom m1 = [] →
+  ListPair.dom m0' ∩ ListPair.dom m1' = [] →
+  NStepStar (Expr.sub m0 body) (Expr.sub m0' body) →
+  NStepStar (Expr.sub m1 body) (Expr.sub m1' body) →
+  NStepStar (Expr.sub (m0 ++ m1) body) (Expr.sub (m0' ++ m1') body)
 := by sorry
 
 mutual
@@ -850,6 +891,7 @@ mutual
       apply NStep.pattern_match_entry_preservation step' matching_arg matching_arg'
     }
 
+
   theorem NStep.pattern_match_record_preservation
     (step_r : NRcdStep r r')
     (matching_arg : List.pattern_match_record r rp = some m)
@@ -888,14 +930,11 @@ mutual
 
             have h10 := Eq.disjoint_pattern_match_preservation h4 h5 h6
             have h11 := Eq.disjoint_pattern_match_preservation h8 h9 h6
-            rw [Expr.sub_concat body h10]
-            rw [Expr.sub_concat body h11]
-            have h12 := NStep.pattern_match_entry_preservation step_r h4 h8 (Expr.sub m1' body)
+
+            have h12 := NStep.pattern_match_entry_preservation step_r h4 h8 body
             have h13 := NStep.pattern_match_record_preservation step_r h5 h9 body
 
-            apply NStepStar.transitivity
-            { apply NStepStar.sub_context_preservation _ h13 }
-            { apply h12 }
+            exact NStepStar.sub_disjoint_concat h10 h11 h12 h13
 
           | none =>
             simp [*] at h3
