@@ -661,10 +661,12 @@ mutual
       cases h5 : (List.pattern_match_record r rp') with
       | some m1 =>
         simp [h5] at h3
-        have ⟨m0',h6⟩ := List.pattern_match_entry_subject_reduction h0 h4
-        have ⟨m1',h7⟩ := List.pattern_match_record_subject_reduction h0 h5
+        have ⟨h6,h7⟩ := h3
+        have ⟨m0',h8⟩ := List.pattern_match_entry_subject_reduction h0 h4
+        have ⟨m1',h9⟩ := List.pattern_match_record_subject_reduction h0 h5
         exists (m0' ++ m1')
         simp [List.pattern_match_record, *]
+
       | none =>
         simp [h5] at h3
     | none =>
@@ -792,8 +794,20 @@ mutual
     | _ => sorry
 end
 
-theorem Expr.sub_concat :
+theorem Expr.sub_concat e :
+  ListPair.dom m0 ∩ ListPair.dom m1 = [] →
   Expr.sub (m0 ++ m1) e = Expr.sub m0 (Expr.sub m1 e)
+:= by cases e with
+| var x =>
+  simp [Expr.sub]
+  sorry
+| _ => sorry
+
+theorem Eq.disjoint_pattern_match_preservation :
+  List.pattern_match_entry l p r = some m0 →
+  List.pattern_match_record r rp = some m1 →
+  Pat.ids p ∩ List.pattern_ids rp = [] →
+  ListPair.dom m0 ∩ ListPair.dom m1 = []
 := by sorry
 
 mutual
@@ -863,20 +877,26 @@ mutual
       | some m1 =>
         simp [*] at h1
 
+        have ⟨h6,h7⟩:= h1
 
-        cases h6 : (List.pattern_match_entry l p r') with
+        cases h8 : (List.pattern_match_entry l p r') with
         | some m0' =>
-          cases h7 : (List.pattern_match_record r' rp') with
+          cases h9 : (List.pattern_match_record r' rp') with
           | some m1' =>
             simp [*] at h3
-            rw [←h1,←h3]
-            rw [Expr.sub_concat]
-            rw [Expr.sub_concat]
-            have h8 := NStep.pattern_match_entry_preservation step_r h4 h6 (Expr.sub m1' body)
-            have h9 := NStep.pattern_match_record_preservation step_r h5 h7 body
+            rw [←h7,←h3]
+
+            have h10 := Eq.disjoint_pattern_match_preservation h4 h5 h6
+            have h11 := Eq.disjoint_pattern_match_preservation h8 h9 h6
+            rw [Expr.sub_concat body h10]
+            rw [Expr.sub_concat body h11]
+            have h12 := NStep.pattern_match_entry_preservation step_r h4 h8 (Expr.sub m1' body)
+            have h13 := NStep.pattern_match_record_preservation step_r h5 h9 body
+
             apply NStepStar.transitivity
-            { apply NStepStar.sub_context_preservation _ h9 }
-            { apply h8 }
+            { apply NStepStar.sub_context_preservation _ h13 }
+            { apply h12 }
+
           | none =>
             simp [*] at h3
         | none =>

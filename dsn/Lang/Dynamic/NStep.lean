@@ -5,6 +5,18 @@ set_option pp.fieldNotation false
 namespace Lang.Dynamic
 
 mutual
+  def List.pattern_ids : List (String × Pat) → List String
+  | .nil => .nil
+  | (_, p) :: r =>
+    (Pat.ids p) ++ (List.pattern_ids r)
+
+  def Pat.ids : Pat → List String
+  | .var id => [id]
+  | .iso l body => Pat.ids body
+  | .record r => List.pattern_ids r
+end
+
+mutual
   def List.pattern_match_entry (label : String) (pat : Pat)
   : List (String × Expr) → Option (List (String × Expr))
   | .nil => none
@@ -21,7 +33,10 @@ mutual
     if Pat.free_vars pat ∩ ListPat.free_vars pats == [] then
       let m0 ← List.pattern_match_entry label pat args
       let m1 ← List.pattern_match_record args pats
-      return (m0 ++ m1)
+      if (Pat.ids pat ∩ List.pattern_ids pats == []) then
+        return (m0 ++ m1)
+      else
+        failure
     else
       .none
 
@@ -36,17 +51,6 @@ mutual
   | _, _ => none
 end
 
-mutual
-  def List.pattern_ids : List (String × Pat) → List String
-  | .nil => .nil
-  | (_, p) :: r =>
-    (Pat.ids p) ++ (List.pattern_ids r)
-
-  def Pat.ids : Pat → List String
-  | .var id => [id]
-  | .iso l body => Pat.ids body
-  | .record r => List.pattern_ids r
-end
 
 
 mutual
@@ -115,8 +119,7 @@ theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
   have h0 : Expr.pattern_match
     (Expr.record [(l, e)]) (Pat.record [(l, Pat.var "x")]) = some [("x", e)]
   := by
-    simp [Expr.pattern_match, List.pattern_match_record, List.pattern_match_entry]
-    rfl
+    simp [Expr.pattern_match, List.pattern_match_record, List.pattern_match_entry, Inter.inter, List.inter, ListPat.free_vars, Pat.ids, List.pattern_ids]
   have h1 : e = Expr.sub [("x", e)] (.var "x") := by exact rfl
   rw [h1]
   apply pattern_match
