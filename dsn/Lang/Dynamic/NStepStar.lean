@@ -768,6 +768,7 @@ theorem NStepStar.sub_context_preservation
 
 mutual
   theorem NStep.sub_preservation
+    x
     (step_arg : NStep arg arg')
     body
   : NStepStar (Expr.sub [(x,arg)] body) (Expr.sub [(x,arg')] body)
@@ -790,51 +791,10 @@ mutual
     }
   | iso l target =>
     simp [Expr.sub]
-    sorry
+    have ih := NStep.sub_preservation x step_arg target
+    apply NStepStar.iso ih
   | _ => sorry
 end
-
--- theorem find_disjoint_concat :
---   ListPair.dom m0 ∩ ListPair.dom m1 = [] →
---   find x (m0 ++ m1) = some e →
---   (find x m0 = some e ∧ find x m1 = none) ∨
---   (find x m0 = none ∧ find x m1 = some e)
--- := by sorry
-
--- theorem find_none_concat :
---   find x (m0 ++ m1) = none →
---   find x m0 = none ∧ find x m1 = none
--- := by sorry
-
--- theorem Expr.sub_concat e :
---   ListPair.dom m0 ∩ ListPair.dom m1 = [] →
---   Expr.sub (m0 ++ m1) e = Expr.sub m0 (Expr.sub m1 e)
--- := by cases e with
--- | var x =>
---   intro h0
---   simp [Expr.sub]
-
---   cases h1 : find x (m0 ++ m1) with
---   | some arg =>
---     have h2 := find_disjoint_concat h0 h1
---     cases h2 with
---     | inl h3 =>
---       have ⟨h4,h5⟩ := h3
---       simp [h5]
---       unfold Expr.sub
---       simp [h4]
---     | inr h3 =>
-
---       have ⟨h4,h5⟩ := h3
---       simp [h5]
-
---       unfold Expr.sub
---   | none =>
---     have ⟨h2,h3⟩ := find_none_concat h1
---     simp [h3]
---     unfold Expr.sub
---     simp [h2]
--- | _ => sorry
 
 theorem Eq.disjoint_pattern_match_preservation :
   List.pattern_match_entry l p r = some m0 →
