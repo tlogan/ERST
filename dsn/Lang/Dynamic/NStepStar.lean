@@ -99,7 +99,54 @@ theorem NStepStar.app_inversion :
     NStepStar cator (.function ((p,body)::f)) ∧
     Expr.pattern_match arg p = none
   ))
-:= by sorry
+:= by
+  intro h0
+  have h1 := NStepStar.reverse h0
+  clear h0
+  induction h1 with
+  | refl =>
+    apply Or.inl
+    exists cator
+    exists arg
+    apply And.intro rfl
+    apply And.intro NStepStar.refl NStepStar.refl
+  | @step em e h2 h3 ih =>
+    cases ih with
+    | inl h4 =>
+      have ⟨cator',arg',h5,h6,h7⟩ := h4
+      clear h4
+      rw [h5] at h3
+      clear h5
+      cases h3 with
+      | @applicator cator' cator'' _ step =>
+        apply Or.inl
+        exists cator''
+        exists arg'
+        simp
+        apply And.intro
+        {
+          apply NStepStar.transitivity h6
+          apply NStepStar.step step
+          apply NStepStar.refl
+        }
+        { apply h7 }
+
+      | @applicand arg' arg'' _ step =>
+        apply Or.inl
+        exists cator'
+        exists arg''
+        simp
+        apply And.intro h6
+        apply NStepStar.transitivity h7
+        apply NStepStar.step step
+        apply NStepStar.refl
+
+      | pattern_match =>
+        sorry
+      | skip =>
+        sorry
+    | inr h4 =>
+      sorry
 
 
 inductive NRcdStepStar : List (String × Expr) → List (String × Expr) → Prop
