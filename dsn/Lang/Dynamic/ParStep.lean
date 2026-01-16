@@ -9,6 +9,7 @@ namespace Lang.Dynamic
 mutual
 
   inductive ParRcdStep : List (String × Expr) → List (String × Expr) → Prop
+  | refl r : ParRcdStep r r
   | cons :
     ParStep e e' →  ParRcdStep r r' →
     List.is_fresh_key l r →
@@ -95,7 +96,7 @@ theorem ReflTrans.n_rcd_step_head :
     exact ReflTrans.refl ((l, e) :: r)
   | @step e em e' h1 h2 ih =>
     apply ReflTrans.step
-    { apply NRcdStep.head h0 h1 }
+    { apply NRcdStep.head h1 h0 }
     { exact ih }
 
 theorem List.is_fresh_key_n_rcd_step_reduction :
@@ -131,10 +132,7 @@ theorem ReflTrans.n_rcd_step_cons :
     exact n_rcd_step_head h0 h1
   | @step r rm r' h2 h3 ih =>
     apply ReflTrans.step
-    { apply NRcdStep.tail
-      { exact h0 }
-      { exact h2 }
-    }
+    { apply NRcdStep.tail _ h2 h0 }
     {
       apply ih
       exact List.is_fresh_key_n_rcd_step_reduction h2 h0
@@ -185,6 +183,8 @@ mutual
     (step : ParRcdStep r r')
   : ReflTrans NRcdStep r r'
   := by cases step with
+  | refl =>
+    exact ReflTrans.refl r
   | @cons l  e e' rr rr' step_e step_rr fresh =>
     have ih0 := ParStep.soundness step_e
     have ih1 := ParRcdStep.soundness step_rr
@@ -230,10 +230,45 @@ mutual
 end
 
 mutual
+  theorem ParRcdStep.completeness
+    (step : NRcdStep r r')
+  : ParRcdStep r r'
+  := by cases step with
+  | @head e e' l r step_e fresh =>
+    have ih := ParStep.completeness step_e
+    apply ParRcdStep.cons ih (ParRcdStep.refl r) fresh
+  | @tail r r' l e step_r fresh =>
+    have ih := ParRcdStep.completeness step_r
+    apply ParRcdStep.cons (ParStep.refl e) ih fresh
+
   theorem ParStep.completeness
-    (n_step : NStep e e')
+    (step : NStep e e')
   : ParStep e e'
-  := by sorry
+  := by cases step with
+  | @iso body body' l step_body =>
+    have ih := ParStep.completeness step_body
+    exact ParStep.iso ih
+  | @record r r' step_r =>
+    have ih := ParRcdStep.completeness step_r
+    exact ParStep.record ih
+  | @applicator cator cator' arg step_cator =>
+    have ih := ParStep.completeness step_cator
+    apply ParStep.app ih
+    exact ParStep.refl arg
+  | @applicand cator arg arg' step_arg =>
+    have ih := ParStep.completeness step_arg
+    apply ParStep.app (ParStep.refl arg') ih
+  | @pattern_match arg p m body f matching =>
+    exact ParStep.pattern_match body f matching
+  | @skip arg p body f isval nomatching =>
+    exact ParStep.skip body f isval nomatching
+  | @erase e' t =>
+    exact ParStep.erase e' t
+  | @loopi body body' step_body =>
+    have ih := ParStep.completeness step_body
+    exact ParStep.loopi ih
+  | @recycle x body =>
+    exact ParStep.recycle x body
 end
 
 
