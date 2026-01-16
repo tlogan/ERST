@@ -10,8 +10,8 @@ mutual
 
   inductive ParRcdStep : List (String × Expr) → List (String × Expr) → Prop
   | cons :
-    List.is_fresh_key l r → ParStep e e' →  NRcdStep r r' →
-    ParRcdStep ((l, e) :: r) ((l, e') :: r)
+    List.is_fresh_key l r → ParStep e e' →  ParRcdStep r r' →
+    ParRcdStep ((l, e) :: r) ((l, e') :: r')
 
   inductive ParStep : Expr → Expr → Prop
   | refl e : ParStep e e
@@ -59,14 +59,144 @@ mutual
 end
 
 
-theorem ReflTrans.par_step_soundness :
-  ReflTrans ParStep e e' → ReflTrans NStep e e'
-:= by sorry
+theorem ReflTrans.n_step_iso :
+  ReflTrans NStep body body' →
+  ReflTrans NStep (Expr.iso label body) (Expr.iso label body')
+:= by
+  intro h0
+  induction h0 with
+  | refl =>
+    apply ReflTrans.refl
+  | step h1 h2 ih =>
+    apply ReflTrans.step (NStep.iso h1) ih
+
+theorem ReflTrans.n_rcd_step_record :
+  ReflTrans NRcdStep r r' →
+  ReflTrans NStep (.record r) (.record r')
+:= by
+  intro h0
+  induction h0 with
+  | refl r =>
+    exact ReflTrans.refl (Expr.record r)
+  | step h1 h2 ih =>
+    apply ReflTrans.step
+    { apply NStep.record h1 }
+    { exact ih }
+
+theorem ReflTrans.n_rcd_step_head :
+  List.is_fresh_key l r →
+  ReflTrans NStep e e' →
+  ReflTrans NRcdStep ((l,e)::r) ((l,e')::r)
+:= by
+  intro h0 h1
+  induction h1 with
+  | refl e =>
+    exact ReflTrans.refl ((l, e) :: r)
+  | @step e em e' h1 h2 ih =>
+    apply ReflTrans.step
+    { apply NRcdStep.head h0 h1 }
+    { exact ih }
+
+theorem List.is_fresh_key_n_rcd_step_reduction :
+  NRcdStep r r' →
+  ∀ {l},
+  List.is_fresh_key l r →
+  List.is_fresh_key l r'
+:= by
+  intro h0
+  cases h0 with
+  | head step' =>
+    intro l fresh
+    exact fresh
+  | tail fresh' step' =>
+    intro l fresh
+    have ih := @List.is_fresh_key_n_rcd_step_reduction _ _ step'
+    simp [List.is_fresh_key] at fresh
+    have ⟨h1,h2⟩ := fresh
+    clear fresh
+    simp [List.is_fresh_key]
+    apply And.intro h1
+    exact ih h2
+
+theorem ReflTrans.n_rcd_step_cons :
+  List.is_fresh_key l r →
+  ReflTrans NStep e e' →
+  ReflTrans NRcdStep r r' →
+  ReflTrans NRcdStep ((l,e)::r) ((l,e')::r')
+:= by
+  intro h0 h1 h2
+  induction h2 with
+  | @refl r =>
+    exact n_rcd_step_head h0 h1
+  | @step r rm r' h2 h3 ih =>
+    apply ReflTrans.step
+    { apply NRcdStep.tail
+      { exact h0 }
+      { exact h2 }
+    }
+    {
+      apply ih
+      exact List.is_fresh_key_n_rcd_step_reduction h2 h0
+    }
 
 
-theorem ReflTrans.par_step_completeness :
-  ReflTrans NStep e e' → ReflTrans ParStep e e'
-:= by sorry
+mutual
+  theorem ParRcdStep.soundness
+    (step : ParRcdStep r r')
+  : ReflTrans NRcdStep r r'
+  := by cases step with
+  | @cons l rr e e' rr' fresh step_e step_rr =>
+    have ih0 := ParStep.soundness step_e
+    have ih1 := ParRcdStep.soundness step_rr
+    exact ReflTrans.n_rcd_step_cons fresh ih0 ih1
+
+  theorem ParStep.soundness
+    (step : ParStep e e')
+  : ReflTrans NStep e e'
+  := by cases step  with
+  | @iso body body' l step_body =>
+    have ih := ParStep.soundness step_body
+    exact ReflTrans.n_step_iso ih
+  | @record r r' step_r =>
+    have ih := ParRcdStep.soundness step_r
+    exact ReflTrans.n_rcd_step_record ih
+  | _ => sorry
+end
+
+mutual
+  theorem ParStep.completeness
+    (n_step : NStep e e')
+  : ParStep e e'
+  := by sorry
+end
+
+
+theorem ReflTrans.par_step_soundness
+  (par_step : ReflTrans ParStep e e')
+: ReflTrans NStep e e'
+:= by induction par_step with
+| refl e =>
+  exact ReflTrans.refl e
+| @step e em e' h0 h1 ih =>
+  apply ReflTrans.transitivity
+  { exact ParStep.soundness h0 }
+  { exact ih }
+
+
+theorem ReflTrans.par_step_completeness
+  (n_step : ReflTrans NStep e e')
+: ReflTrans ParStep e e'
+:= by induction n_step with
+| refl e =>
+  exact ReflTrans.refl e
+| @step e em e' h0 h1 ih =>
+
+  apply ReflTrans.transitivity
+  { apply ReflTrans.step
+    { apply ParStep.completeness h0}
+    { exact ih }
+  }
+  { exact ReflTrans.refl e' }
 
 theorem Joinable.right_par_step_expansion :
   ParStep e e' →
