@@ -10,7 +10,8 @@ mutual
 
   inductive ParRcdStep : List (String × Expr) → List (String × Expr) → Prop
   | cons :
-    List.is_fresh_key l r → ParStep e e' →  ParRcdStep r r' →
+    ParStep e e' →  ParRcdStep r r' →
+    List.is_fresh_key l r →
     ParRcdStep ((l, e) :: r) ((l, e') :: r')
 
   inductive ParStep : Expr → Expr → Prop
@@ -20,9 +21,9 @@ mutual
   | record : ParRcdStep r r' →  ParStep (.record r) (.record r')
 
   /- redex forms -/
-  | app arg :
+  | app :
     ParStep cator cator' → ParStep arg arg' →
-    ParStep (.app cator arg) (.app cator' arg)
+    ParStep (.app cator arg) (.app cator' arg')
   | pattern_match body f :
     Expr.pattern_match arg p = some m →
     ParStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m body)
@@ -139,13 +140,52 @@ theorem ReflTrans.n_rcd_step_cons :
       exact List.is_fresh_key_n_rcd_step_reduction h2 h0
     }
 
+theorem ReflTrans.n_step_applicand ef :
+  ReflTrans NStep e e' →
+  ReflTrans NStep (.app ef e) (.app ef e')
+:= by
+  intro h0
+  induction h0 with
+  | refl =>
+    apply ReflTrans.refl
+  | step h1 h2 ih =>
+    apply ReflTrans.step (NStep.applicand _ h1) ih
+
+theorem ReflTrans.n_step_app :
+  ReflTrans NStep ef ef' →
+  ReflTrans NStep  e e' →
+  ReflTrans NStep  (.app ef e) (.app ef' e')
+:= by
+  intro h0 h1
+
+  induction h0 with
+  | @refl e =>
+    exact ReflTrans.n_step_applicand e h1
+  | @step ef em ef' h1 h2 ih =>
+    apply ReflTrans.transitivity
+    { apply ReflTrans.step (NStep.applicator _ h1) ih }
+    { exact ReflTrans.refl (Expr.app ef' e') }
+
+theorem ReflTrans.n_step_loopi :
+  ReflTrans NStep body body' →
+  ReflTrans NStep (Expr.loop body) (Expr.loop body')
+:= by
+  intro h0
+  induction h0 with
+  | refl =>
+    apply ReflTrans.refl
+  | step h1 h2 ih =>
+    apply ReflTrans.step
+    { apply NStep.loopi h1 }
+    { exact ih }
+
 
 mutual
   theorem ParRcdStep.soundness
     (step : ParRcdStep r r')
   : ReflTrans NRcdStep r r'
   := by cases step with
-  | @cons l rr e e' rr' fresh step_e step_rr =>
+  | @cons l  e e' rr rr' step_e step_rr fresh =>
     have ih0 := ParStep.soundness step_e
     have ih1 := ParRcdStep.soundness step_rr
     exact ReflTrans.n_rcd_step_cons fresh ih0 ih1
@@ -154,13 +194,39 @@ mutual
     (step : ParStep e e')
   : ReflTrans NStep e e'
   := by cases step  with
+  | refl =>
+    exact ReflTrans.refl e
   | @iso body body' l step_body =>
     have ih := ParStep.soundness step_body
     exact ReflTrans.n_step_iso ih
   | @record r r' step_r =>
     have ih := ParRcdStep.soundness step_r
     exact ReflTrans.n_rcd_step_record ih
-  | _ => sorry
+  | @app cator cator' arg arg' step_cator step_arg =>
+    have ih0 := ParStep.soundness step_cator
+    have ih1 := ParStep.soundness step_arg
+    exact ReflTrans.n_step_app ih0 ih1
+  | @pattern_match arg p m body f matching =>
+    apply ReflTrans.step
+    { apply NStep.pattern_match
+      exact matching
+    }
+    { exact ReflTrans.refl (Expr.sub m body) }
+  | @skip arg p body f isval nomatching =>
+    apply ReflTrans.step
+    { apply NStep.skip _ _ isval nomatching }
+    { exact ReflTrans.refl (Expr.app (Expr.function f) arg)}
+  | erase =>
+    apply ReflTrans.step
+    { apply NStep.erase }
+    { exact ReflTrans.refl e' }
+  | @loopi body body' step_body =>
+    have ih := ParStep.soundness step_body
+    exact ReflTrans.n_step_loopi ih
+  | @recycle x e =>
+    apply ReflTrans.step
+    { apply NStep.recycle }
+    { exact ReflTrans.refl (Expr.sub [(x, Expr.loop (Expr.function [(Pat.var x, e)]))] e)}
 end
 
 mutual
