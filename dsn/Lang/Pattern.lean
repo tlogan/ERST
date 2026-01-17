@@ -1,0 +1,44 @@
+import Lang.Basic
+
+set_option pp.fieldNotation false
+
+namespace Lang
+
+mutual
+  def Pattern.match_entry (label : String) (pat : Pat)
+  : List (String × Expr) → Option (List (String × Expr))
+  | .nil => none
+  | (l, e) :: args =>
+    if l == label then
+      (Pattern.match e pat)
+    else
+      Pattern.match_entry label pat args
+
+  def Pattern.match_record (args : List (String × Expr))
+  : List (String × Pat) → Option (List (String × Expr))
+  | .nil => some []
+  | (label, pat) :: pats => do
+    if Pat.free_vars pat ∩ ListPat.free_vars pats == [] then
+      let m0 ← Pattern.match_entry label pat args
+      let m1 ← Pattern.match_record args pats
+      if (Pat.ids pat ∩ List.pattern_ids pats == []) then
+        return (m0 ++ m1)
+      else
+        failure
+    else
+      .none
+
+  def Pattern.match : Expr → Pat → Option (List (String × Expr))
+  | e, (.var id) => some [(id, e)]
+  | (.iso l e), (.iso label p) =>
+    if l == label then
+      Pattern.match e p
+    else
+      none
+  | (.record r), (.record p) => Pattern.match_record r p
+  | _, _ => none
+end
+
+
+
+end Lang

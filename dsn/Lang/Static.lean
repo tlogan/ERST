@@ -1,15 +1,14 @@
 import Lang.Util
 import Lang.Basic
-import Lang.Dynamic.NStepStar
-import Lang.Dynamic.Safe
-import Lang.Dynamic.FinTyping
-import Lang.Dynamic.Typing
+import Lang.Safe
+import Lang.FinTyping
+import Lang.Typing
 import Mathlib.Tactic.Linarith
 
 set_option eval.pp false
 set_option pp.fieldNotation false
 
-open Lang.Dynamic
+open Lang
 
 
 mutual
@@ -2121,14 +2120,14 @@ theorem Typ.factor_reflection {am id t label t' e'} :
   Typ.factor id t label = some t' →
   Typing am e' (.lfp id t') →
   ∃ e ,
-    Joinable (Expr.project e label) e' ∧
+    Joinable (ReflTrans NStep) (Expr.project e label) e' ∧
     Typing am e (.lfp id t)
 := by sorry
 
 theorem Typ.factor_preservation {am id t label t' e' e} :
   Typ.factor id t label = some t' →
   Typing am e (.lfp id t) →
-  Joinable (Expr.project e label) e' →
+  Joinable (ReflTrans NStep) (Expr.project e label) e' →
   Typing am e' (.lfp id t')
 := by sorry
 
@@ -2232,7 +2231,7 @@ theorem ListZone.invert_preservation {id zones zones' am assums} :
           MultiSubtyping (am'' ++ am' ++ am) assums' ∧
           Typing (am'' ++ am' ++ am) ep t' ) )
     ) →
-    Joinable (.project ep "right") (.app ef (.project ep "left"))
+    Joinable (ReflTrans NStep) (.project ep "right") (.app ef (.project ep "left"))
   )
 := by sorry
 
@@ -2255,7 +2254,7 @@ theorem List.pair_typ_invert_preservation {id am assums assums0 assums0'} skolem
           MultiSubtyping (am'' ++ am' ++ am) assums0' ∧
           Typing (am'' ++ am' ++ am) ep (.pair tl tr) )
       ) →
-      Joinable (.project ep "right") (.app ef (.project ep "left"))
+      Joinable (ReflTrans NStep) (.project ep "right") (.app ef (.project ep "left"))
     )
 := by sorry
 
@@ -2401,7 +2400,7 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
     have ⟨ep,p10,p11⟩ := Typ.factor_reflection p7 p9
 
     apply Typing.joinable_preservation
-      (Joinable.applicand e p10)
+      (NStep.joinable_applicand e p10)
 
     apply Typ.factor_preservation p8 p11
 
@@ -2509,7 +2508,7 @@ theorem LoopSubtyping.soundness {id zones t am assums e} :
 
     have ⟨ep,p14,p15⟩ := Typ.factor_reflection p8 typing_factor_left
 
-    apply Typing.joinable_preservation (Joinable.applicand e p14)
+    apply Typing.joinable_preservation (NStep.joinable_applicand e p14)
     apply Typ.factor_preservation p9 p15
 
     apply List.pair_typ_invert_preservation skolems (Typ.var idl) r p5 p1 at soundness
@@ -2605,12 +2604,12 @@ theorem MultiSubtyping.concat_elim_left {am cs cs'} :
 theorem PatLifting.Static.soundness {assums context p t assums' context'} :
   PatLifting.Static assums context p t assums' context' →
   ∀ tam e, Typing tam e t →
-    ∃ eam , Expr.pattern_match e p = .some eam ∧ MultiTyping tam eam context'
+    ∃ eam , Pattern.match e p = .some eam ∧ MultiTyping tam eam context'
 := by sorry
 
 
 theorem pattern_match_ids_containment {v p eam} :
-  Expr.pattern_match v p = .some eam →
+  Pattern.match v p = .some eam →
   Pat.ids p ⊆ ListPair.dom eam
 := by sorry
 

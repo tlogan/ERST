@@ -1,31 +1,31 @@
+import Lang.Util
 import Lang.Basic
-import Lang.Dynamic.NStep
-import Lang.Dynamic.NStepStar
+import Lang.NStep
 
 set_option pp.fieldNotation false
 
 
-namespace Lang.Dynamic
+namespace Lang
 
 
 def Safe (e : Expr) : Prop :=
-  (∀ e', NStepStar e e' → Expr.is_value e' ∨ (∃ e'' , NStep e' e''))
+  (∀ e', ReflTrans NStep e e' → Expr.is_value e' ∨ (∃ e'' , NStep e' e''))
 
 theorem Safe.subject_star_reduction
-  (step_star : NStepStar e e')
+  (step_star : ReflTrans NStep e e')
 : Safe e → Safe e'
 := by
   unfold Safe
   intro h0 em h1
   apply h0
-  apply NStepStar.transitivity step_star h1
+  apply ReflTrans.transitivity step_star h1
 
 theorem Safe.subject_star_expansion
-  (step_star : NStepStar e e')
+  (step_star : ReflTrans NStep e e')
 : Safe e' → Safe e
 := by
   intro h0 em h1
-  have ⟨en,h2,h3⟩ := NStepStar.confluence step_star h1
+  have ⟨en,h2,h3⟩ := NStep.confluence step_star h1
   cases h3 with
   | refl =>
     apply h0
@@ -39,29 +39,17 @@ theorem Safe.subject_reduction
 : Safe e → Safe e'
 := by
   apply Safe.subject_star_reduction
-  apply NStepStar.step
+  apply ReflTrans.step
   exact step
-  exact NStepStar.refl
+  exact ReflTrans.refl e'
 
 theorem Safe.subject_expansion
   (step : NStep e e')
 : Safe e' → Safe e
 := by
   apply Safe.subject_star_expansion
-  apply NStepStar.step
+  apply ReflTrans.step
   exact step
-  exact NStepStar.refl
+  exact ReflTrans.refl e'
 
-
-
-
-  -- cases h1 with
-  -- | refl =>
-  --   apply Or.inr
-
-
-  --   sorry
-  -- | step =>
-  --   sorry
-
-end Lang.Dynamic
+end Lang

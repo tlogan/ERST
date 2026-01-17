@@ -1,67 +1,61 @@
 import Lang.Util
 import Lang.Basic
-import Lang.Dynamic.NStep
+import Lang.Pattern
+import Lang.ParStep
 
 set_option pp.fieldNotation false
 
-namespace Lang.Dynamic
+namespace Lang
 
 mutual
+  inductive NRcdStep : List (String × Expr) → List (String × Expr) → Prop
+  | head : NStep e e' →  List.is_fresh_key l r → NRcdStep ((l, e) :: r) ((l, e') :: r)
+  | tail e : NRcdStep r r' → List.is_fresh_key l r → NRcdStep ((l,e) :: r) ((l,e) :: r')
 
-  inductive ParRcdStep : List (String × Expr) → List (String × Expr) → Prop
-  | refl r : ParRcdStep r r
-  | cons :
-    ParStep e e' →  ParRcdStep r r' →
-    List.is_fresh_key l r →
-    ParRcdStep ((l, e) :: r) ((l, e') :: r')
-
-  inductive ParStep : Expr → Expr → Prop
-  | refl e : ParStep e e
+  inductive NStep : Expr → Expr → Prop
   /- head normal forms -/
-  | iso : ParStep body body' → ParStep (.iso l body) (.iso l body')
-  | record : ParRcdStep r r' →  ParStep (.record r) (.record r')
+  | iso : NStep body body' → NStep (.iso l body) (.iso l body')
+  | record : NRcdStep r r' →  NStep (.record r) (.record r')
 
   /- redex forms -/
-  | app :
-    ParStep cator cator' → ParStep arg arg' →
-    ParStep (.app cator arg) (.app cator' arg')
+  | applicator arg : NStep cator cator' → NStep (.app cator arg) (.app cator' arg)
+  | applicand cator : NStep arg arg' → NStep (.app cator arg) (.app cator arg')
   | pattern_match body f :
-    Expr.pattern_match arg p = some m →
-    ParStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m body)
+    Pattern.match arg p = some m →
+    NStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m body)
   | skip body f:
     arg.is_value →
-    Expr.pattern_match arg p = none →
-    ParStep (.app (.function ((p,body) :: f)) arg) (.app (.function f) arg)
+    Pattern.match arg p = none →
+    NStep (.app (.function ((p,body) :: f)) arg) (.app (.function f) arg)
   | erase body t :
-    ParStep (.anno body t) body
-  | loopi : ParStep body body' → ParStep (.loop body) (.loop body')
+    NStep (.anno body t) body
+  | loopi : NStep body body' → NStep (.loop body) (.loop body')
   | recycle x e :
-    ParStep
+    NStep
       (.loop (.function [(.var x, e)]))
       (Expr.sub [(x, (.loop (.function [(.var x, e)])))] e)
-end
-
-
-def Joinable (R : α → α → Prop) (ea eb : α) :=
-  ∃ en , R ea en ∧ R eb en
-
-mutual
-
-  theorem ParStep.diamond
-    (step_a : ParStep e ea)
-    (step_b : ParStep e eb)
-  : Joinable ParStep ea eb
-  := by cases step_a with
-  | refl =>
-    exists eb
-    apply And.intro step_b
-    exact ParStep.refl eb
-  | _ => sorry
 
 end
 
+theorem NStep.not_value :
+  NStep e e' → ¬ Expr.is_value e
+:= by sorry
 
-theorem ReflTrans.n_step_iso :
+
+theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
+  unfold Expr.project
+  have h0 : Pattern.match
+    (Expr.record [(l, e)]) (Pat.record [(l, Pat.var "x")]) = some [("x", e)]
+  := by
+    simp [Pattern.match, Pattern.match_record, Pattern.match_entry, Inter.inter, List.inter, ListPat.free_vars, Pat.ids, List.pattern_ids]
+  have h1 : e = Expr.sub [("x", e)] (.var "x") := by exact rfl
+  rw [h1]
+  apply pattern_match
+  exact h0
+
+
+
+theorem NStep.refl_trans_iso :
   ReflTrans NStep body body' →
   ReflTrans NStep (Expr.iso label body) (Expr.iso label body')
 := by
@@ -72,7 +66,7 @@ theorem ReflTrans.n_step_iso :
   | step h1 h2 ih =>
     apply ReflTrans.step (NStep.iso h1) ih
 
-theorem ReflTrans.n_rcd_step_record :
+theorem NStep.refl_trans_record :
   ReflTrans NRcdStep r r' →
   ReflTrans NStep (.record r) (.record r')
 := by
@@ -85,7 +79,7 @@ theorem ReflTrans.n_rcd_step_record :
     { apply NStep.record h1 }
     { exact ih }
 
-theorem ReflTrans.n_rcd_step_head :
+theorem NRcdStep.refl_trans_head :
   List.is_fresh_key l r →
   ReflTrans NStep e e' →
   ReflTrans NRcdStep ((l,e)::r) ((l,e')::r)
@@ -120,7 +114,7 @@ theorem List.is_fresh_key_n_rcd_step_reduction :
     apply And.intro h1
     exact ih h2
 
-theorem ReflTrans.n_rcd_step_cons :
+theorem NRcdStep.refl_trans_cons :
   List.is_fresh_key l r →
   ReflTrans NStep e e' →
   ReflTrans NRcdStep r r' →
@@ -129,7 +123,7 @@ theorem ReflTrans.n_rcd_step_cons :
   intro h0 h1 h2
   induction h2 with
   | @refl r =>
-    exact n_rcd_step_head h0 h1
+    exact NRcdStep.refl_trans_head h0 h1
   | @step r rm r' h2 h3 ih =>
     apply ReflTrans.step
     { apply NRcdStep.tail _ h2 h0 }
@@ -138,7 +132,7 @@ theorem ReflTrans.n_rcd_step_cons :
       exact List.is_fresh_key_n_rcd_step_reduction h2 h0
     }
 
-theorem ReflTrans.n_step_applicand ef :
+theorem NStep.refl_trans_applicand ef :
   ReflTrans NStep e e' →
   ReflTrans NStep (.app ef e) (.app ef e')
 := by
@@ -149,7 +143,23 @@ theorem ReflTrans.n_step_applicand ef :
   | step h1 h2 ih =>
     apply ReflTrans.step (NStep.applicand _ h1) ih
 
-theorem ReflTrans.n_step_app :
+
+theorem NStep.joinable_applicand f :
+  Joinable (ReflTrans NStep) a b →
+  Joinable (ReflTrans NStep) (.app f a) (.app f b)
+:= by
+  unfold Joinable
+  intro h0
+  have ⟨c,h1,h2⟩ := h0
+  exists (.app f c)
+  apply And.intro
+  { exact refl_trans_applicand f h1 }
+  { exact refl_trans_applicand f h2 }
+
+
+
+
+theorem NStep.refl_trans_app :
   ReflTrans NStep ef ef' →
   ReflTrans NStep  e e' →
   ReflTrans NStep  (.app ef e) (.app ef' e')
@@ -158,13 +168,13 @@ theorem ReflTrans.n_step_app :
 
   induction h0 with
   | @refl e =>
-    exact ReflTrans.n_step_applicand e h1
+    exact NStep.refl_trans_applicand e h1
   | @step ef em ef' h1 h2 ih =>
     apply ReflTrans.transitivity
     { apply ReflTrans.step (NStep.applicator _ h1) ih }
     { exact ReflTrans.refl (Expr.app ef' e') }
 
-theorem ReflTrans.n_step_loopi :
+theorem NStep.refl_trans_loopi :
   ReflTrans NStep body body' →
   ReflTrans NStep (Expr.loop body) (Expr.loop body')
 := by
@@ -179,33 +189,33 @@ theorem ReflTrans.n_step_loopi :
 
 
 mutual
-  theorem ParRcdStep.soundness
+  theorem NRcdStep.semi_completeness
     (step : ParRcdStep r r')
   : ReflTrans NRcdStep r r'
   := by cases step with
   | refl =>
     exact ReflTrans.refl r
   | @cons l  e e' rr rr' step_e step_rr fresh =>
-    have ih0 := ParStep.soundness step_e
-    have ih1 := ParRcdStep.soundness step_rr
-    exact ReflTrans.n_rcd_step_cons fresh ih0 ih1
+    have ih0 := NStep.semi_completeness step_e
+    have ih1 := NRcdStep.semi_completeness step_rr
+    exact NRcdStep.refl_trans_cons fresh ih0 ih1
 
-  theorem ParStep.soundness
+  theorem NStep.semi_completeness
     (step : ParStep e e')
   : ReflTrans NStep e e'
   := by cases step  with
   | refl =>
     exact ReflTrans.refl e
   | @iso body body' l step_body =>
-    have ih := ParStep.soundness step_body
-    exact ReflTrans.n_step_iso ih
+    have ih := NStep.semi_completeness step_body
+    exact NStep.refl_trans_iso ih
   | @record r r' step_r =>
-    have ih := ParRcdStep.soundness step_r
-    exact ReflTrans.n_rcd_step_record ih
+    have ih := NRcdStep.semi_completeness step_r
+    exact NStep.refl_trans_record ih
   | @app cator cator' arg arg' step_cator step_arg =>
-    have ih0 := ParStep.soundness step_cator
-    have ih1 := ParStep.soundness step_arg
-    exact ReflTrans.n_step_app ih0 ih1
+    have ih0 := NStep.semi_completeness step_cator
+    have ih1 := NStep.semi_completeness step_arg
+    exact NStep.refl_trans_app ih0 ih1
   | @pattern_match arg p m body f matching =>
     apply ReflTrans.step
     { apply NStep.pattern_match
@@ -221,8 +231,8 @@ mutual
     { apply NStep.erase }
     { exact ReflTrans.refl e' }
   | @loopi body body' step_body =>
-    have ih := ParStep.soundness step_body
-    exact ReflTrans.n_step_loopi ih
+    have ih := NStep.semi_completeness step_body
+    exact NStep.refl_trans_loopi ih
   | @recycle x e =>
     apply ReflTrans.step
     { apply NStep.recycle }
@@ -272,7 +282,7 @@ mutual
 end
 
 
-theorem ReflTrans.par_step_soundness
+theorem NStep.refl_trans_completeness
   (par_step : ReflTrans ParStep e e')
 : ReflTrans NStep e e'
 := by induction par_step with
@@ -280,11 +290,11 @@ theorem ReflTrans.par_step_soundness
   exact ReflTrans.refl e
 | @step e em e' h0 h1 ih =>
   apply ReflTrans.transitivity
-  { exact ParStep.soundness h0 }
+  { exact NStep.semi_completeness h0 }
   { exact ih }
 
 
-theorem ReflTrans.par_step_completeness
+theorem NStep.refl_trans_soundness
   (n_step : ReflTrans NStep e e')
 : ReflTrans ParStep e e'
 := by induction n_step with
@@ -299,67 +309,7 @@ theorem ReflTrans.par_step_completeness
   }
   { exact ReflTrans.refl e' }
 
-theorem Joinable.right_par_step_expansion :
-  ParStep e e' →
-  Joinable (ReflTrans ParStep) ea e' →
-  Joinable (ReflTrans ParStep) ea e
-:= by
-  unfold Joinable
-  intro h0 h1
-  have ⟨en,h2,h3⟩ := h1
-  clear h1
-  exists en
-  apply And.intro
-  { exact h2 }
-  { exact ReflTrans.step h0 h3 }
-
-theorem ReflTrans.par_step_semi_confluence
-  (step : ReflTrans ParStep e ea)
-: ∀ {eb} , ParStep e eb → Joinable (ReflTrans ParStep) ea eb
-:= by induction step with
-| refl e =>
-  intro eb h0
-  unfold Joinable
-  exists eb
-  apply And.intro
-  { apply ReflTrans.step
-    { exact h0 }
-    { exact ReflTrans.refl eb }
-  }
-  { exact ReflTrans.refl eb }
-| @step e em ea h0 h1 ih =>
-  intro eb h2
-  have h3 := ParStep.diamond h0 h2
-  unfold Joinable at h3
-  have ⟨en,h4,h5⟩ := h3
-  clear h3
-  specialize ih h4
-  exact Joinable.right_par_step_expansion h5 ih
-
-theorem ReflTrans.par_step_confluence
-  (step_a : ReflTrans ParStep e ea)
-  (step_b : ReflTrans ParStep e eb)
-: Joinable (ReflTrans ParStep) ea eb
-:= by
-  have h0 := ReflTrans.reverse step_a
-  clear step_a
-  induction h0 with
-  | refl =>
-    unfold Joinable
-    exists eb
-    apply And.intro
-    { apply step_b }
-    { exact ReflTrans.refl eb }
-  | @step m a h2 h3 ih =>
-    have ⟨b',h4,h5⟩ := ih
-    clear ih
-    have ⟨n,h6,h7⟩ := ReflTrans.par_step_semi_confluence h4 h3
-    exists n
-    apply And.intro
-    { exact h7 }
-    { exact ReflTrans.transitivity h5 h6 }
-
-theorem Joinable.par_step_soundness :
+theorem NStep.joinable_completeness :
   Joinable (ReflTrans ParStep) ea eb →
   Joinable (ReflTrans NStep) ea eb
 := by
@@ -368,20 +318,19 @@ theorem Joinable.par_step_soundness :
   have ⟨en,h1,h2⟩ := h0 ; clear h0
   exists en
   apply And.intro
-  { exact ReflTrans.par_step_soundness h1 }
-  { exact ReflTrans.par_step_soundness h2 }
+  { exact NStep.refl_trans_completeness h1 }
+  { exact NStep.refl_trans_completeness h2 }
 
 
-theorem ReflTrans.n_step_confluence
+theorem NStep.confluence
   (step_a : ReflTrans NStep e ea)
   (step_b : ReflTrans NStep e eb)
 : Joinable (ReflTrans NStep) ea eb
 := by
-  apply Joinable.par_step_soundness
-  apply ReflTrans.par_step_confluence
-  { exact ReflTrans.par_step_completeness step_a }
-  { exact ReflTrans.par_step_completeness step_b }
+  apply NStep.joinable_completeness
+  apply ParStep.confluence
+  { exact NStep.refl_trans_soundness step_a }
+  { exact NStep.refl_trans_soundness step_b }
 
 
-
-end Lang.Dynamic
+end Lang

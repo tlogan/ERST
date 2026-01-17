@@ -1,11 +1,11 @@
+import Lang.Util
 import Lang.Basic
-import Lang.Dynamic.NStep
-import Lang.Dynamic.NStepStar
-import Lang.Dynamic.Safe
+import Lang.NStep
+import Lang.Safe
 
 set_option pp.fieldNotation false
 
-namespace Lang.Dynamic
+namespace Lang
 
 def FinTyping (e : Expr) : Typ → Prop
 | .top => Safe e
@@ -40,14 +40,14 @@ mutual
     unfold FinTyping
     intro h0
     apply FinTyping.subject_reduction
-    { apply NStep.applicand transition }
+    { apply NStep.applicand _ transition }
     { exact h0 }
 
   | entry label body =>
     unfold FinTyping
     intro h0
     apply FinTyping.subject_reduction
-    { apply NStep.applicand transition }
+    { apply NStep.applicand _ transition }
     { exact h0 }
 
 
@@ -56,7 +56,7 @@ mutual
     intro h0 e'' h1
     specialize h0 e'' h1
     apply FinTyping.subject_reduction
-    { apply NStep.applicator transition }
+    { apply NStep.applicator _ transition }
     { exact h0 }
 
   | unio left right =>
@@ -107,14 +107,14 @@ mutual
     unfold FinTyping
     intro h0
     apply FinTyping.subject_expansion
-    { apply NStep.applicand transition }
+    { apply NStep.applicand _ transition }
     { exact h0 }
 
   | entry label body =>
     unfold FinTyping
     intro h0
     apply FinTyping.subject_expansion
-    { apply NStep.applicand transition }
+    { apply NStep.applicand _ transition }
     { exact h0 }
 
 
@@ -123,7 +123,7 @@ mutual
     intro h0 e'' h1
     specialize h0 e'' h1
     apply FinTyping.subject_expansion
-    { apply NStep.applicator transition }
+    { apply NStep.applicator _ transition }
     { exact h0 }
 
   | unio left right =>
@@ -160,4 +160,4 @@ mutual
 end
 
 
-end Lang.Dynamic
+end Lang

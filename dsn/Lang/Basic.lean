@@ -1387,3 +1387,40 @@ def Typ.enrich : Typ → Typ
 theorem List.pair_typ_free_vars_containment {xs ys : List (Typ × Typ)} :
   xs ⊆ ys → List.pair_typ_free_vars xs ⊆ List.pair_typ_free_vars ys
 := by sorry
+
+
+mutual
+  def List.pattern_ids : List (String × Pat) → List String
+  | .nil => .nil
+  | (_, p) :: r =>
+    (Pat.ids p) ++ (List.pattern_ids r)
+
+  def Pat.ids : Pat → List String
+  | .var id => [id]
+  | .iso l body => Pat.ids body
+  | .record r => List.pattern_ids r
+end
+
+mutual
+  def List.record_sub (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
+  | .nil => .nil
+  | (l, e) :: r =>
+    (l, Expr.sub m e) :: (List.record_sub m r)
+
+  def List.function_sub (m : List (String × Expr)): List (Pat × Expr) → List (Pat × Expr)
+  | .nil => .nil
+  | (p, e) :: f =>
+    let ids := Pat.ids p
+    (p, Expr.sub (remove_all m ids) e) :: (List.function_sub m f)
+
+  def Expr.sub (m : List (String × Expr)): Expr → Expr
+  | .var id => match (find id m) with
+    | .none => (.var id)
+    | .some e => e
+  | .iso l body => .iso l (Expr.sub m body)
+  | .record r => .record (List.record_sub m r)
+  | .function f => .function (List.function_sub m f)
+  | .app ef ea => .app (Expr.sub m ef) (Expr.sub m ea)
+  | .anno e t => .anno (Expr.sub m e) t
+  | .loop e => .loop (Expr.sub m e)
+end

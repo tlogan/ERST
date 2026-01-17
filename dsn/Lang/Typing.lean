@@ -1,12 +1,12 @@
+import Lang.Util
 import Lang.Basic
-import Lang.Dynamic.NStep
-import Lang.Dynamic.NStepStar
-import Lang.Dynamic.Safe
-import Lang.Dynamic.FinTyping
+import Lang.NStep
+import Lang.Safe
+import Lang.FinTyping
 
 set_option pp.fieldNotation false
 
-namespace Lang.Dynamic
+namespace Lang
 
 
 mutual
@@ -91,14 +91,14 @@ mutual
     unfold Typing
     intro h0
     apply Typing.subject_reduction
-    { apply NStep.applicand transition }
+    { apply NStep.applicand _ transition }
     { exact h0 }
 
   | entry label body =>
     unfold Typing
     intro h0
     apply Typing.subject_reduction
-    { apply NStep.applicand transition }
+    { apply NStep.applicand _ transition }
     { exact h0 }
 
 
@@ -107,7 +107,7 @@ mutual
     intro h0 e'' h1
     specialize h0 e'' h1
     apply Typing.subject_reduction
-    { apply NStep.applicator transition }
+    { apply NStep.applicator _ transition }
     { exact h0 }
 
   | unio left right =>
@@ -183,21 +183,20 @@ mutual
   | top =>
     unfold Typing
     intro h0
-    sorry
-    -- exact Safe.subject_expansion transition h0
+    exact Safe.subject_expansion transition h0
 
   | iso label body =>
     unfold Typing
     intro h0
     apply Typing.subject_expansion
-    { apply NStep.applicand transition }
+    { apply NStep.applicand _ transition }
     { exact h0 }
 
   | entry label body =>
     unfold Typing
     intro h0
     apply Typing.subject_expansion
-    { apply NStep.applicand transition }
+    { apply NStep.applicand _ transition }
     { exact h0 }
 
 
@@ -206,7 +205,7 @@ mutual
     intro h0 e'' h1
     specialize h0 e'' h1
     apply Typing.subject_expansion
-    { apply NStep.applicator transition }
+    { apply NStep.applicator _ transition }
     { exact h0 }
 
   | unio left right =>
@@ -578,7 +577,7 @@ theorem Typing.inter_entry_intro {am l e r body t} :
 
 theorem Typing.path_determines_function
   (typing : Typing am e (.path antec consq))
-: ∃ f , NStepStar e (.function f)
+: ∃ f , ReflTrans NStep e (.function f)
 := by sorry
 
 
@@ -666,7 +665,7 @@ theorem Subtyping.list_typ_diff_elim :
 theorem Typing.path_intro :
   (∀ e' ,
     Typing am e' tp →
-    ∃ eam , Expr.pattern_match e' p = .some eam ∧ Typing am (Expr.sub eam e) tr
+    ∃ eam , Pattern.match e' p = .some eam ∧ Typing am (Expr.sub eam e) tr
   ) →
   Typing am (Expr.function ((p, e) :: f)) (Typ.path (List.typ_diff tp subtras) tr)
 := by
@@ -677,12 +676,12 @@ theorem Typing.path_intro :
   have ⟨eam,h4,h5⟩ := h0 e' h3
 
   have h1 : NStep (Expr.app (Expr.function ((p, e) :: f)) e') (Expr.sub eam e) := by
-    apply NStep.pattern_match h4
+    exact NStep.pattern_match e f h4
   exact subject_expansion h1 h5
 
 
 theorem Typing.function_preservation {am p tp e f t } :
-  (∀ {v} , Typing am v tp → ∃ eam , Expr.pattern_match v p = .some eam) →
+  (∀ {v} , Typing am v tp → ∃ eam , Pattern.match v p = .some eam) →
   ¬ Subtyping am t (.path tp .top) →
   Typing am (.function f) t →
   Typing am (.function ((p,e) :: f)) t
@@ -690,7 +689,7 @@ theorem Typing.function_preservation {am p tp e f t } :
 
 
 theorem Typing.star_preservation :
-  NStepStar e e' →
+  ReflTrans NStep e e' →
   Typing am e t →
   Typing am e' t
 := by sorry
@@ -827,23 +826,20 @@ theorem Subtyping.transitivity :
 
 
 theorem Typing.joinable_preservation {a b am t} :
-  Joinable a b →
+  Joinable (ReflTrans NStep) a b →
   Typing am a t →
   Typing am b t
 := by sorry
 
 theorem Typing.joinable_reflection {a b am t} :
-  Joinable a b →
+  Joinable (ReflTrans NStep) a b →
   Typing am b t →
   Typing am a t
 := by
   intro h0 h1
   apply Typing.joinable_preservation
-  apply Joinable.swap h0
-  exact h1
+  { apply Joinable.symm h0 }
+  { exact h1 }
 
 
-
-
-
-end Lang.Dynamic
+end Lang
