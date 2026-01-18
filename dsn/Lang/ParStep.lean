@@ -41,6 +41,29 @@ mutual
       (Expr.sub [(x, (.loop (.function [(.var x, e)])))] e)
 end
 
+theorem ParStep.joinable_iso :
+  Joinable ParStep a b →
+  Joinable ParStep (.iso l a) (.iso l b)
+:= by
+  unfold Joinable
+  intro h0
+  have ⟨c,h1,h2⟩ := h0
+  exists (.iso l c)
+  apply And.intro
+  { exact iso h1 }
+  { exact iso h2 }
+
+
+theorem ParStep.triangle :
+  ParStep a b →
+  Joinable ParStep a b
+:= by
+  intro step
+  unfold Joinable
+  exists b
+  apply And.intro step
+  exact ParStep.refl b
+
 
 mutual
 
@@ -48,11 +71,18 @@ mutual
     (step_a : ParStep e ea)
     (step_b : ParStep e eb)
   : Joinable ParStep ea eb
-  := by cases step_a with
+  := by have h := step_a ; cases h with
   | refl =>
-    exists eb
-    apply And.intro step_b
-    exact ParStep.refl eb
+    exact ParStep.triangle step_b
+  | @iso body body_a l step_body_a =>
+    cases step_b with
+    | @refl e =>
+      apply Joinable.symm
+      exact ParStep.triangle step_a
+    | @iso _ body_b _ step_body_b =>
+      clear step_a
+      have ih := ParStep.diamond step_body_a step_body_b
+      exact joinable_iso ih
   | _ => sorry
 
 end
