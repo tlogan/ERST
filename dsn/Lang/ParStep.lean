@@ -53,6 +53,16 @@ theorem ParStep.joinable_iso :
   { exact iso h1 }
   { exact iso h2 }
 
+theorem ParRcdStep.triangle :
+  ParRcdStep a b →
+  Joinable ParRcdStep a b
+:= by
+  intro step
+  unfold Joinable
+  exists b
+  apply And.intro step
+  exact ParRcdStep.refl b
+
 
 theorem ParStep.triangle :
   ParStep a b →
@@ -64,8 +74,107 @@ theorem ParStep.triangle :
   apply And.intro step
   exact ParStep.refl b
 
+theorem ParStep.joinable_record :
+  Joinable ParRcdStep ra rb →
+  Joinable ParStep (.record ra) (.record rb)
+:= by
+  unfold Joinable
+  intro h0
+  have ⟨rc,h1,h2⟩ := h0
+  exists (.record rc)
+  apply And.intro
+  { exact record h1 }
+  { exact record h2 }
+
+
+theorem ParRcdStep.fresh_key_reduction :
+  ParRcdStep r r' →
+  List.is_fresh_key l r →
+  List.is_fresh_key l r'
+:= by
+  intro h0
+  cases h0 with
+  | refl  =>
+    exact fun a => a
+  | @cons e e' rr rr' l' step_e step_rr fresh_rr =>
+    intro fresh_r
+    simp [List.is_fresh_key] at fresh_r
+    have ⟨h1,h2⟩ := fresh_r
+    clear fresh_r
+    simp [List.is_fresh_key]
+    apply And.intro h1
+    apply ParRcdStep.fresh_key_reduction step_rr h2
+
+
+theorem ParRcdStep.fresh_key_expansion :
+  ParRcdStep r r' →
+  List.is_fresh_key l r' →
+  List.is_fresh_key l r
+:= by
+  intro h0
+  cases h0 with
+  | refl =>
+    exact fun a => a
+  | @cons e e' rr rr' l' step_e step_rr fresh_rr  =>
+    intro fresh_r
+    simp [List.is_fresh_key] at fresh_r
+    have ⟨h1,h2⟩ := fresh_r
+    clear fresh_r
+    simp [List.is_fresh_key]
+    apply And.intro h1
+    apply ParRcdStep.fresh_key_expansion step_rr h2
+
+
+theorem ParRcdStep.joinable_cons :
+  (List.is_fresh_key l ra ∨ List.is_fresh_key l rb) →
+  Joinable ParStep ea eb →
+  Joinable ParRcdStep ra rb →
+  Joinable ParRcdStep ((l,ea)::ra) ((l,eb)::rb)
+:= by
+  unfold Joinable
+  intro h0 h1 h2
+  have ⟨ec,h4,h5⟩ := h1
+  have ⟨rc,h6,h7⟩ := h2
+  exists ((l,ec)::rc)
+  cases h0 with
+  | inl h8 =>
+    apply And.intro
+    { exact ParRcdStep.cons h4 h6 h8 }
+    {
+      have h9 := ParRcdStep.fresh_key_reduction h6 h8
+      have h10 := ParRcdStep.fresh_key_expansion h7 h9
+      exact ParRcdStep.cons h5 h7 h10
+    }
+  | inr h8 =>
+    apply And.intro
+    {
+      have h9 := ParRcdStep.fresh_key_reduction h7 h8
+      have h10 := ParRcdStep.fresh_key_expansion h6 h9
+      exact ParRcdStep.cons h4 h6 h10
+    }
+    { exact ParRcdStep.cons h5 h7 h8 }
+
 
 mutual
+
+  theorem ParRcdStep.diamond
+    (step_a : ParRcdStep r ra)
+    (step_b : ParRcdStep r rb)
+  : Joinable ParRcdStep ra rb
+  := by have h := step_a ; cases h with
+  | refl =>
+    exact ParRcdStep.triangle step_b
+  | @cons e ea rr rra l step_ea step_rra fresh =>
+    cases step_b with
+    | refl =>
+      apply Joinable.symm
+      exact ParRcdStep.triangle step_a
+    | @cons _ eb _ rrb _ step_eb step_rrb fresh' =>
+      clear fresh'
+      have ih0 := ParStep.diamond step_ea step_eb
+      have ih1 := ParRcdStep.diamond step_rra step_rrb
+      have fresh_rra := ParRcdStep.fresh_key_reduction step_rra fresh
+      apply ParRcdStep.joinable_cons (Or.inl fresh_rra) ih0 ih1
 
   theorem ParStep.diamond
     (step_a : ParStep e ea)
@@ -82,7 +191,15 @@ mutual
     | @iso _ body_b _ step_body_b =>
       clear step_a
       have ih := ParStep.diamond step_body_a step_body_b
-      exact joinable_iso ih
+      exact ParStep.joinable_iso ih
+  | @record r ra step_ra =>
+    cases step_b with
+    | @refl e =>
+      apply Joinable.symm
+      exact ParStep.triangle step_a
+    | @record _ rb step_rb =>
+      have ih := ParRcdStep.diamond step_ra step_rb
+      exact ParStep.joinable_record ih
   | _ => sorry
 
 end
