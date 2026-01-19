@@ -74,6 +74,13 @@ theorem ParStep.triangle :
   apply And.intro step
   exact ParStep.refl b
 
+theorem ParStep.joinable_refl :
+  Joinable ParStep e e
+:= by
+  unfold Joinable
+  exists e
+  apply And.intro (refl e) (refl e)
+
 theorem ParStep.joinable_record :
   Joinable ParRcdStep ra rb →
   Joinable ParStep (.record ra) (.record rb)
@@ -154,6 +161,218 @@ theorem ParRcdStep.joinable_cons :
     }
     { exact ParRcdStep.cons h5 h7 h8 }
 
+theorem Joinable.app :
+  Joinable ParStep fa fb →
+  Joinable ParStep arg_a arg_b →
+  Joinable ParStep (Expr.app fa arg_a) (Expr.app fb arg_b)
+:= by
+  unfold Joinable
+  intro h0 h1
+  have ⟨fc,h2,h3⟩ := h0
+  have ⟨arg_c,h4,h5⟩ := h1
+  clear h0 h1
+  exists (.app fc arg_c)
+  apply And.intro
+  { exact ParStep.app h2 h4 }
+  { exact ParStep.app h3 h5 }
+
+mutual
+
+  theorem ParRcdStep.pattern_match_entry_reduction :
+    ParRcdStep r r' →
+    Pattern.match_entry l p r = some m →
+    ∃ m' , Pattern.match_entry l p r' = some m'
+  := by
+    intro h0 h1
+    cases h0 with
+    | refl =>
+      exact Exists.intro m h1
+    | @cons e e' rr rr' l' step_e step_rr fresh =>
+      simp [Pattern.match_entry] at h1
+      by_cases h3 : l' = l
+      {
+        simp [*] at h1
+        have ⟨m',ih⟩ := ParStep.pattern_match_reduction step_e h1
+        exists m'
+        simp [Pattern.match_entry, *]
+      }
+      {
+        simp [*] at h1
+        have ⟨m',ih⟩ := ParRcdStep.pattern_match_entry_reduction step_rr h1
+        exists m'
+        simp [Pattern.match_entry, *]
+      }
+
+  theorem ParRcdStep.pattern_match_reduction :
+    ParRcdStep r r' →
+    Pattern.match_record r rp = some m →
+    ∃ m' , Pattern.match_record r' rp = some m'
+  := by cases rp with
+  | nil =>
+    intro h0 h1
+    simp [Pattern.match_record]
+  | cons lp rp' =>
+    have (l,p) := lp
+    intro h0 h1
+    simp [Pattern.match_record] at h1
+    have ⟨h2,h3⟩ := h1
+    clear h1
+
+    cases h4 : (Pattern.match_entry l p r) with
+    | some m0 =>
+      simp [h4] at h3
+      cases h5 : (Pattern.match_record r rp') with
+      | some m1 =>
+        simp [h5] at h3
+        have ⟨h6,h7⟩ := h3
+        have ⟨m0',h8⟩ := ParRcdStep.pattern_match_entry_reduction h0 h4
+        have ⟨m1',h9⟩ := ParRcdStep.pattern_match_reduction h0 h5
+        exists (m0' ++ m1')
+        simp [Pattern.match_record, *]
+
+      | none =>
+        simp [h5] at h3
+    | none =>
+      simp [h4] at h3
+
+
+  theorem ParStep.pattern_match_reduction :
+    ParStep arg arg' →
+    Pattern.match arg p = some m →
+    ∃ m' , Pattern.match arg' p = some m'
+  := by cases p with
+  | var x =>
+    intro h0 h1
+    exists [(x,arg')]
+    simp [Pattern.match]
+  | iso l p' =>
+    intro h0 h1
+    cases h0 with
+    | refl =>
+      exact Exists.intro m h1
+    | @iso e e' l' step =>
+      simp [Pattern.match] at h1
+      have ⟨h2,h3⟩ := h1
+      clear h1
+      have ⟨m',ih⟩ := ParStep.pattern_match_reduction step h3
+      exists m'
+      simp [Pattern.match]
+      exact ⟨h2, ih⟩
+    | _ =>
+      simp [Pattern.match] at h1
+  | record ps =>
+    intro h0 h1
+    cases h0 with
+    | refl =>
+      exact Exists.intro m h1
+    | iso =>
+      simp [Pattern.match] at h1
+    | @record r r' step =>
+      simp [Pattern.match] at h1
+      have ⟨m',ih⟩ := ParRcdStep.pattern_match_reduction step h1
+      exists m'
+      simp [Pattern.match]
+      exact ih
+    | _ =>
+      simp [Pattern.match] at h1
+end
+
+
+mutual
+  theorem ParStep.sub_preservation
+    x
+    (step_arg : ParStep arg arg')
+    body
+  : ParStep (Expr.sub [(x,arg)] body) (Expr.sub [(x,arg')] body)
+  := by cases body with
+  | _ => sorry
+  -- | var x' =>
+  --   by_cases h0 : x' = x
+  --   {
+  --     simp [Expr.sub,find,h0]
+  --     apply NStepStar.step step_arg NStepStar.refl
+  --   }
+  --   {
+  --     have h1 : x' ∉ ListPair.dom [(x,arg)] := by
+  --       simp [ListPair.dom] ; exact h0
+  --     have h2 : x' ∉ ListPair.dom [(x,arg')] := by
+  --       simp [ListPair.dom] ; exact h0
+  --     have h3 := Expr.sub_refl h1
+  --     have h4 := Expr.sub_refl h2
+  --     rw [h3,h4]
+  --     apply NStepStar.refl
+  --   }
+  -- | iso l target =>
+  --   simp [Expr.sub]
+  --   have ih := NStep.sub_preservation x step_arg target
+  --   apply NStepStar.iso ih
+  -- | _ => sorry
+end
+
+
+
+mutual
+  theorem ParStep.pattern_match_preservation
+    (step : ParStep arg arg')
+    (matching : Pattern.match arg p = some m)
+    (matching' : Pattern.match arg' p = some m')
+  : ∀ e, ParStep (Expr.sub m e) (Expr.sub m' e)
+  := by cases p with
+  | var x =>
+    simp [Pattern.match] at matching
+    simp [Pattern.match] at matching'
+    rw [←matching, ←matching']
+    clear matching matching'
+    intro e
+    exact sub_preservation x step e
+  | _ => sorry
+
+    -- intro h0
+    -- induction h0 with
+    -- | @refl arg =>
+    --   intro m m' h1 h2 body
+    --   rw [h1] at h2
+    --   simp at h2
+    --   rw [← h2]
+    --   apply NStepStar.refl
+    -- | @step arg argm arg' h1 h2 ih =>
+    --   intro m m' h3 h4 body
+    --   have ⟨mm,h5⟩ := ParStep.pattern_match_reduction h1 h3
+    --   have h6 := ParStep.pattern_match_preservation h1 h3 h5 body
+    --   apply NStepStar.transitivity h6
+    --   apply ih h5
+    --   apply h4
+end
+
+-- theorem ParStep.transitivity :
+--   ParStep e e' → ParStep e' e'' → ReflTransLeft R e e''
+-- := by
+--   intro h0 h1
+--   induction h1 with
+--   | refl =>
+--     exact h0
+--   | step h2 h3 ih =>
+--      exact step ih h3
+
+-- theorem ParStep.joinable_right_expansion :
+--   ParStep e e' →
+--   Joinable ParStep ea e' →
+--   Joinable ParStep ea e
+-- := by
+--   unfold Joinable
+--   intro h0 h1
+--   have ⟨en,h2,h3⟩ := h1
+--   clear h1
+--   exists en
+--   apply And.intro
+--   { exact h2 }
+--   { apply ParStep.transitivity }
+
+
+theorem ParStep.value_inversion :
+  ParStep a b → Expr.is_value a → a = b
+:= by sorry
+
 
 mutual
 
@@ -200,6 +419,51 @@ mutual
     | @record _ rb step_rb =>
       have ih := ParRcdStep.diamond step_ra step_rb
       exact ParStep.joinable_record ih
+  | @app cator cator_a arg arg_a step_cator_a step_arg_a =>
+    cases step_b with
+    | @refl e =>
+      apply Joinable.symm
+      exact ParStep.triangle step_a
+    | @app _ cator_b _ arg_b step_cator_b step_arg_b =>
+      have ih0 := ParStep.diamond step_cator_a step_cator_b
+      have ih1 := ParStep.diamond step_arg_a step_arg_b
+      exact Joinable.app ih0 ih1
+    | @pattern_match _ p m body f matching =>
+      cases step_cator_a with
+      | refl =>
+        clear step_a
+        have ⟨ma, matching_a⟩ := ParStep.pattern_match_reduction step_arg_a matching
+        unfold Joinable
+        exists (Expr.sub ma body)
+        apply And.intro
+        { exact ParStep.pattern_match body f matching_a }
+        { exact ParStep.pattern_match_preservation step_arg_a matching matching_a body }
+    | @skip _ p body f isval nomatching =>
+      cases step_cator_a with
+      | refl =>
+        have h0 := ParStep.value_inversion step_arg_a isval
+        rw [← h0] ; clear h0
+        exists (Expr.app (Expr.function f) arg)
+        apply And.intro
+        { exact ParStep.skip body f isval nomatching }
+        { exact ParStep.refl (Expr.app (Expr.function f) arg) }
+  | @skip arg p body f isval nomatching =>
+    cases step_b with
+    | refl =>
+      apply Joinable.symm
+      exact ParStep.triangle step_a
+    | @app _ cator_b _ arg_b step_cator_b step_arg_b =>
+      have h0 := ParStep.value_inversion step_arg_b isval
+      rw [←h0]
+      cases step_cator_b with
+      | refl =>
+        apply Joinable.symm
+        exact ParStep.triangle step_a
+    | @pattern_match _ _ m _ _ matching =>
+      rw [matching] at nomatching
+      simp at nomatching
+    | skip =>
+      exact ParStep.joinable_refl
   | _ => sorry
 
 end
