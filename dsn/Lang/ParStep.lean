@@ -277,96 +277,197 @@ mutual
       simp [Pattern.match] at h1
 end
 
+theorem Expr.sub_refl :
+  x ∉ ListPair.dom m →
+  (Expr.sub m (.var x)) = (.var x)
+:= by
+  intro h0
+  induction m with
+  | nil =>
+    simp [Expr.sub, find]
+  | cons pair m' ih =>
+    have ⟨x',target⟩ := pair
+    simp [ListPair.dom] at h0
+    have ⟨h1,h2⟩ := h0
+    clear h0
+    specialize ih h2
+    simp [Expr.sub, find]
+    have h3 : x' ≠ x := by exact fun h => h1 (Eq.symm h)
+    simp [h3]
+    unfold Expr.sub at ih
+    exact ih
+
 
 mutual
   theorem ParStep.sub_preservation
     x
-    (step_arg : ParStep arg arg')
+    (step : ParStep arg arg')
     body
   : ParStep (Expr.sub [(x,arg)] body) (Expr.sub [(x,arg')] body)
   := by cases body with
+  | var x' =>
+    by_cases h0 : x' = x
+    {
+      simp [Expr.sub,find,h0]
+      exact step
+    }
+    {
+      have h1 : x' ∉ ListPair.dom [(x,arg)] := by
+        simp [ListPair.dom] ; exact h0
+      have h2 : x' ∉ ListPair.dom [(x,arg')] := by
+        simp [ListPair.dom] ; exact h0
+      have h3 := Expr.sub_refl h1
+      have h4 := Expr.sub_refl h2
+      rw [h3,h4]
+      exact ParStep.refl (Expr.var x')
+    }
+  | iso l target =>
+    simp [Expr.sub]
+    have ih := ParStep.sub_preservation x step target
+    exact ParStep.iso ih
   | _ => sorry
-  -- | var x' =>
-  --   by_cases h0 : x' = x
-  --   {
-  --     simp [Expr.sub,find,h0]
-  --     apply NStepStar.step step_arg NStepStar.refl
-  --   }
-  --   {
-  --     have h1 : x' ∉ ListPair.dom [(x,arg)] := by
-  --       simp [ListPair.dom] ; exact h0
-  --     have h2 : x' ∉ ListPair.dom [(x,arg')] := by
-  --       simp [ListPair.dom] ; exact h0
-  --     have h3 := Expr.sub_refl h1
-  --     have h4 := Expr.sub_refl h2
-  --     rw [h3,h4]
-  --     apply NStepStar.refl
-  --   }
-  -- | iso l target =>
-  --   simp [Expr.sub]
-  --   have ih := NStep.sub_preservation x step_arg target
-  --   apply NStepStar.iso ih
-  -- | _ => sorry
 end
 
 
+theorem Pattern.match_disjoint_preservation :
+  Pattern.match_entry l p r = some m0 →
+  Pattern.match_record r rp = some m1 →
+  Pat.ids p ∩ List.pattern_ids rp = [] →
+  ListPair.dom m0 ∩ ListPair.dom m1 = []
+:= by sorry
+
+theorem ParStep.sub_disjoint_concat :
+  ListPair.dom m0 ∩ ListPair.dom m1 = [] →
+  ListPair.dom m0' ∩ ListPair.dom m1' = [] →
+  ParStep (Expr.sub m0 body) (Expr.sub m0' body) →
+  ParStep (Expr.sub m1 body) (Expr.sub m1' body) →
+  ParStep (Expr.sub (m0 ++ m1) body) (Expr.sub (m0' ++ m1') body)
+:= by sorry
+
 
 mutual
+
+  theorem ParRcdStep.pattern_match_entry_preservation
+    (step : ParRcdStep r r')
+    (matching : Pattern.match_entry l p r = some m)
+    (matching' : Pattern.match_entry l p r' = some m')
+    e
+  : ParStep (Expr.sub m e) (Expr.sub m' e)
+  := by cases step with
+  | refl =>
+    rw [matching] at matching'
+    simp at matching'
+    rw [matching']
+    exact ParStep.refl (Expr.sub m' e)
+  | @cons ee ee' rr rr' l' step_ee step_rr =>
+    simp [Pattern.match_entry] at matching
+    simp [Pattern.match_entry] at matching'
+    by_cases h0 : l' = l
+    {
+      simp [*] at matching
+      simp [*] at matching'
+      apply ParStep.pattern_match_preservation step_ee matching matching' e
+    }
+    {
+      simp [*] at matching
+      simp [*] at matching'
+      apply ParRcdStep.pattern_match_entry_preservation step_rr matching matching' e
+    }
+
+  theorem ParRcdStep.pattern_match_preservation
+    (step : ParRcdStep r r')
+    (matching : Pattern.match_record r ps = some m)
+    (matching' : Pattern.match_record r' ps = some m')
+    e
+  : ParStep (Expr.sub m e) (Expr.sub m' e)
+  := by cases ps with
+  | nil =>
+    simp [Pattern.match_record] at matching
+    simp [Pattern.match_record] at matching'
+    rw [matching, matching']
+    exact ParStep.refl (Expr.sub [] e)
+  | cons lp ps' =>
+    have (l,p) := lp
+    simp [Pattern.match_record] at matching
+    simp [Pattern.match_record] at matching'
+
+    have ⟨h1,h2⟩ := matching
+    have ⟨h3,h4⟩ := matching'
+    clear matching matching'
+
+    cases h5 : (Pattern.match_entry l p r) with
+    | some m0 =>
+      simp [*] at h2
+      cases h6 : (Pattern.match_entry l p r') with
+      | some m1 =>
+        simp [*] at h4
+        cases h7 : (Pattern.match_record r ps') with
+        | some m2 =>
+          simp [*] at h2
+          cases h8 : (Pattern.match_record r' ps') with
+          | some m3 =>
+            simp [*] at h4
+            have ⟨h9,h10⟩ := h2
+            rw [←h10,←h4]
+            have ih0 := ParRcdStep.pattern_match_entry_preservation step h5 h6 e
+            have ih1 := ParRcdStep.pattern_match_preservation step h7 h8 e
+            apply ParStep.sub_disjoint_concat
+            { exact Pattern.match_disjoint_preservation h5 h7 h9 }
+            { exact Pattern.match_disjoint_preservation h6 h8 h9 }
+            { exact ih0 }
+            { exact ih1 }
+          | none =>
+            simp [*] at h4
+        | none =>
+          simp [*] at h2
+      | none =>
+        simp [*] at h4
+    | none =>
+      simp [*] at h2
+
+
   theorem ParStep.pattern_match_preservation
     (step : ParStep arg arg')
     (matching : Pattern.match arg p = some m)
     (matching' : Pattern.match arg' p = some m')
-  : ∀ e, ParStep (Expr.sub m e) (Expr.sub m' e)
+    e
+  : ParStep (Expr.sub m e) (Expr.sub m' e)
   := by cases p with
   | var x =>
     simp [Pattern.match] at matching
     simp [Pattern.match] at matching'
     rw [←matching, ←matching']
     clear matching matching'
-    intro e
-    exact sub_preservation x step e
-  | _ => sorry
-
-    -- intro h0
-    -- induction h0 with
-    -- | @refl arg =>
-    --   intro m m' h1 h2 body
-    --   rw [h1] at h2
-    --   simp at h2
-    --   rw [← h2]
-    --   apply NStepStar.refl
-    -- | @step arg argm arg' h1 h2 ih =>
-    --   intro m m' h3 h4 body
-    --   have ⟨mm,h5⟩ := ParStep.pattern_match_reduction h1 h3
-    --   have h6 := ParStep.pattern_match_preservation h1 h3 h5 body
-    --   apply NStepStar.transitivity h6
-    --   apply ih h5
-    --   apply h4
+    exact ParStep.sub_preservation x step e
+  | @iso l p_body =>
+    cases step with
+    | refl =>
+      simp [matching'] at matching
+      simp [*]
+      exact ParStep.refl (Expr.sub m e)
+    | @iso body body' l' step_body =>
+      simp [Pattern.match] at matching
+      simp [Pattern.match] at matching'
+      have ⟨h0,h1⟩ := matching ; clear matching
+      have ⟨h2,h3⟩ := matching' ; clear matching'
+      have ih := ParStep.pattern_match_preservation step_body h1 h3
+      apply ih
+    | _ =>
+      simp [Pattern.match] at matching
+  | @record ps =>
+    cases step with
+    | refl =>
+      simp [matching'] at matching
+      simp [*]
+      exact ParStep.refl (Expr.sub m e)
+    | @record r r' step_r =>
+      simp [Pattern.match] at matching
+      simp [Pattern.match] at matching'
+      apply ParRcdStep.pattern_match_preservation step_r matching matching'
+    | _ =>
+      simp [Pattern.match] at matching
 end
 
--- theorem ParStep.transitivity :
---   ParStep e e' → ParStep e' e'' → ReflTransLeft R e e''
--- := by
---   intro h0 h1
---   induction h1 with
---   | refl =>
---     exact h0
---   | step h2 h3 ih =>
---      exact step ih h3
-
--- theorem ParStep.joinable_right_expansion :
---   ParStep e e' →
---   Joinable ParStep ea e' →
---   Joinable ParStep ea e
--- := by
---   unfold Joinable
---   intro h0 h1
---   have ⟨en,h2,h3⟩ := h1
---   clear h1
---   exists en
---   apply And.intro
---   { exact h2 }
---   { apply ParStep.transitivity }
 
 
 theorem ParStep.value_inversion :
