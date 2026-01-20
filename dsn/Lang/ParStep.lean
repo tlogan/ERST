@@ -345,11 +345,40 @@ end
 
 
 mutual
-  theorem ParStep.value_reduction :
-    ParStep arg arg' →
-    Expr.is_value arg →
-    Expr.is_value arg'
-  := by sorry
+
+  theorem ParRcdStep.value_reduction
+    (step : ParRcdStep r r')
+  : List.is_record_value r → List.is_record_value r'
+  := by cases step with
+  | nil =>
+    exact fun a => a
+  | @cons e e' rr rr' l step_e step_rr =>
+    simp [List.is_record_value]
+    intro h0 h1 h2
+    apply And.intro
+    { apply And.intro
+      { apply ParRcdStep.fresh_key_reduction step_rr h0}
+      { apply ParStep.value_reduction step_e h1 }
+    }
+    { apply ParRcdStep.value_reduction step_rr h2 }
+
+  theorem ParStep.value_reduction
+    (step : ParStep arg arg')
+  : Expr.is_value arg → Expr.is_value arg'
+  := by cases step with
+  | refl =>
+    exact fun a => a
+  | @iso body body' l step_body =>
+    simp [Expr.is_value]
+    intro h0
+    apply ParStep.value_reduction step_body h0
+  | @record r r' step_r =>
+    simp [Expr.is_value]
+    intro h0
+    apply ParRcdStep.value_reduction step_r h0
+  | @function f f' step_f =>
+    simp [Expr.is_value]
+  | _ => simp [Expr.is_value]
 end
 
 mutual
