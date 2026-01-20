@@ -12,10 +12,15 @@ mutual
   | head : NStep e e' →  List.is_fresh_key l r → NRcdStep ((l, e) :: r) ((l, e') :: r)
   | tail e : NRcdStep r r' → List.is_fresh_key l r → NRcdStep ((l,e) :: r) ((l,e) :: r')
 
+  inductive NFunStep : List (Pat × Expr) → List (Pat × Expr) → Prop
+  | head p f : NStep e e' →  NFunStep ((p, e) :: f) ((p, e') :: f)
+  | tail p e : NFunStep f f' → NFunStep ((p,e) :: f) ((p,e) :: f')
+
   inductive NStep : Expr → Expr → Prop
   /- head normal forms -/
   | iso : NStep body body' → NStep (.iso l body) (.iso l body')
   | record : NRcdStep r r' →  NStep (.record r) (.record r')
+  | function : NFunStep f f' →  NStep (.function f) (.function f')
 
   /- redex forms -/
   | applicator arg : NStep cator cator' → NStep (.app cator arg) (.app cator' arg)
@@ -79,6 +84,19 @@ theorem NStep.refl_trans_record :
     { apply NStep.record h1 }
     { exact ih }
 
+theorem NStep.refl_trans_function :
+  ReflTrans NFunStep f f' →
+  ReflTrans NStep (.function f) (.function f')
+:= by
+  intro h0
+  induction h0 with
+  | refl f =>
+    exact ReflTrans.refl (Expr.function f)
+  | step h1 h2 ih =>
+    apply ReflTrans.step
+    { apply NStep.function h1 }
+    { exact ih }
+
 theorem NRcdStep.refl_trans_head :
   List.is_fresh_key l r →
   ReflTrans NStep e e' →
@@ -131,6 +149,33 @@ theorem NRcdStep.refl_trans_cons :
       apply ih
       exact List.is_fresh_key_n_rcd_step_reduction h2 h0
     }
+
+theorem NFunStep.refl_trans_head :
+  ReflTrans NStep e e' →
+  ReflTrans NFunStep ((p,e)::f) ((p,e')::f)
+:= by
+  intro h1
+  induction h1 with
+  | refl e =>
+    exact ReflTrans.refl ((p, e) :: f)
+  | @step e em e' h1 h2 ih =>
+    apply ReflTrans.step
+    { apply NFunStep.head p f h1 }
+    { exact ih }
+
+theorem NFunStep.refl_trans_cons :
+  ReflTrans NStep e e' →
+  ReflTrans NFunStep r r' →
+  ReflTrans NFunStep ((p,e)::r) ((p,e')::r')
+:= by
+  intro h1 h2
+  induction h2 with
+  | @refl r =>
+    apply NFunStep.refl_trans_head h1
+  | @step r rm r' h2 h3 ih =>
+    apply ReflTrans.step
+    { apply NFunStep.tail _ _ h2 }
+    { apply ih }
 
 theorem NStep.refl_trans_applicand ef :
   ReflTrans NStep e e' →
@@ -200,6 +245,17 @@ mutual
     have ih1 := NRcdStep.semi_completeness step_rr
     exact NRcdStep.refl_trans_cons fresh ih0 ih1
 
+  theorem NFunStep.semi_completeness
+    (step : ParFunStep f f')
+  : ReflTrans NFunStep f f'
+  := by cases step with
+  | refl =>
+    exact ReflTrans.refl f
+  | @cons e e' ff ff' p step_e step_ff =>
+    have ih0 := NStep.semi_completeness step_e
+    have ih1 := NFunStep.semi_completeness step_ff
+    exact NFunStep.refl_trans_cons ih0 ih1
+
   theorem NStep.semi_completeness
     (step : ParStep e e')
   : ReflTrans NStep e e'
@@ -212,6 +268,9 @@ mutual
   | @record r r' step_r =>
     have ih := NRcdStep.semi_completeness step_r
     exact NStep.refl_trans_record ih
+  | @function f f' step_f =>
+    have ih := NFunStep.semi_completeness step_f
+    exact NStep.refl_trans_function ih
   | @app cator cator' arg arg' step_cator step_arg =>
     have ih0 := NStep.semi_completeness step_cator
     have ih1 := NStep.semi_completeness step_arg
@@ -251,6 +310,18 @@ mutual
     have ih := ParRcdStep.completeness step_r
     apply ParRcdStep.cons (ParStep.refl e) ih fresh
 
+  theorem ParFunStep.completeness
+    (step : NFunStep f f')
+  : ParFunStep f f'
+  := by cases step with
+  | @head e e' p f step_e =>
+    have ih := ParStep.completeness step_e
+    apply ParFunStep.cons ih (ParFunStep.refl f)
+
+  | @tail f f' p e step_f =>
+    have ih := ParFunStep.completeness step_f
+    apply ParFunStep.cons (ParStep.refl e) ih
+
   theorem ParStep.completeness
     (step : NStep e e')
   : ParStep e e'
@@ -261,6 +332,9 @@ mutual
   | @record r r' step_r =>
     have ih := ParRcdStep.completeness step_r
     exact ParStep.record ih
+  | @function f f' step_f =>
+    have ih := ParFunStep.completeness step_f
+    exact ParStep.function ih
   | @applicator cator cator' arg step_cator =>
     have ih := ParStep.completeness step_cator
     apply ParStep.app ih

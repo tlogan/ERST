@@ -15,11 +15,18 @@ mutual
     List.is_fresh_key l r →
     ParRcdStep ((l, e) :: r) ((l, e') :: r')
 
+  inductive ParFunStep : List (Pat × Expr) → List (Pat × Expr) → Prop
+  | refl f : ParFunStep f f
+  | cons :
+    ParStep e e' →  ParFunStep f f' →
+    ParFunStep ((p, e) :: f) ((p, e') :: f')
+
   inductive ParStep : Expr → Expr → Prop
   | refl e : ParStep e e
   /- head normal forms -/
   | iso : ParStep body body' → ParStep (.iso l body) (.iso l body')
   | record : ParRcdStep r r' →  ParStep (.record r) (.record r')
+  | function : ParFunStep f f' → ParStep (.function f) (.function f')
 
   /- redex forms -/
   | app :
@@ -299,6 +306,14 @@ theorem Expr.sub_refl :
 
 
 mutual
+
+  theorem ParStep.sub_record_preservation
+    x
+    (step : ParStep arg arg')
+    r
+  : ParRcdStep (List.record_sub [(x,arg)] r) (List.record_sub [(x,arg')] r)
+  := by sorry
+
   theorem ParStep.sub_preservation
     x
     (step : ParStep arg arg')
@@ -325,6 +340,13 @@ mutual
     simp [Expr.sub]
     have ih := ParStep.sub_preservation x step target
     exact ParStep.iso ih
+  | record r =>
+    simp [Expr.sub]
+    have ih := ParStep.sub_record_preservation x step r
+    exact ParStep.record ih
+  | function f =>
+    simp [Expr.sub]
+    sorry
   | _ => sorry
 end
 
@@ -471,7 +493,7 @@ end
 
 
 theorem ParStep.value_inversion :
-  ParStep a b → Expr.is_value a → a = b
+  ParStep a b → Expr.is_value a → b = a
 := by sorry
 
 
@@ -520,6 +542,8 @@ mutual
     | @record _ rb step_rb =>
       have ih := ParRcdStep.diamond step_ra step_rb
       exact ParStep.joinable_record ih
+  | @function f f' step_f=>
+    sorry
   | @app cator cator_a arg arg_a step_cator_a step_arg_a =>
     cases step_b with
     | @refl e =>
@@ -530,6 +554,7 @@ mutual
       have ih1 := ParStep.diamond step_arg_a step_arg_b
       exact Joinable.app ih0 ih1
     | @pattern_match _ p m body f matching =>
+
       cases step_cator_a with
       | refl =>
         clear step_a
@@ -539,15 +564,17 @@ mutual
         apply And.intro
         { exact ParStep.pattern_match body f matching_a }
         { exact ParStep.pattern_match_preservation step_arg_a matching matching_a body }
+      | _ => sorry
     | @skip _ p body f isval nomatching =>
       cases step_cator_a with
       | refl =>
         have h0 := ParStep.value_inversion step_arg_a isval
-        rw [← h0] ; clear h0
+        rw [h0] ; clear h0
         exists (Expr.app (Expr.function f) arg)
         apply And.intro
         { exact ParStep.skip body f isval nomatching }
         { exact ParStep.refl (Expr.app (Expr.function f) arg) }
+      | _ => sorry
   | @skip arg p body f isval nomatching =>
     cases step_b with
     | refl =>
@@ -555,11 +582,12 @@ mutual
       exact ParStep.triangle step_a
     | @app _ cator_b _ arg_b step_cator_b step_arg_b =>
       have h0 := ParStep.value_inversion step_arg_b isval
-      rw [←h0]
+      rw [h0]
       cases step_cator_b with
       | refl =>
         apply Joinable.symm
         exact ParStep.triangle step_a
+      | _ => sorry
     | @pattern_match _ _ m _ _ matching =>
       rw [matching] at nomatching
       simp at nomatching
