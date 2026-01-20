@@ -39,13 +39,14 @@ mutual
     arg.is_value →
     Pattern.match arg p = none →
     ParStep (.app (.function ((p,body) :: f)) arg) (.app (.function f) arg)
+  | anno : ParStep e e' → ParStep (.anno e t) (.anno e' t)
   | erase body t :
     ParStep (.anno body t) body
-  | loopi : ParStep body body' → ParStep (.loop body) (.loop body')
+  | loopi : ParStep body body' → ParStep (.loopi body) (.loopi body')
   | recycle x e :
     ParStep
-      (.loop (.function [(.var x, e)]))
-      (Expr.sub [(x, (.loop (.function [(.var x, e)])))] e)
+      (.loopi (.function [(.var x, e)]))
+      (Expr.sub [(x, (.loopi (.function [(.var x, e)])))] e)
 end
 
 theorem ParStep.joinable_iso :
@@ -314,12 +315,19 @@ mutual
   : ParRcdStep (List.record_sub [(x,arg)] r) (List.record_sub [(x,arg')] r)
   := by sorry
 
+  theorem ParStep.sub_function_preservation
+    x
+    (step : ParStep arg arg')
+    f
+  : ParFunStep (List.function_sub [(x,arg)] f) (List.function_sub [(x,arg')] f)
+  := by sorry
+
   theorem ParStep.sub_preservation
     x
     (step : ParStep arg arg')
-    body
-  : ParStep (Expr.sub [(x,arg)] body) (Expr.sub [(x,arg')] body)
-  := by cases body with
+    e
+  : ParStep (Expr.sub [(x,arg)] e) (Expr.sub [(x,arg')] e)
+  := by cases e with
   | var x' =>
     by_cases h0 : x' = x
     {
@@ -336,9 +344,9 @@ mutual
       rw [h3,h4]
       exact ParStep.refl (Expr.var x')
     }
-  | iso l target =>
+  | iso l body =>
     simp [Expr.sub]
-    have ih := ParStep.sub_preservation x step target
+    have ih := ParStep.sub_preservation x step body
     exact ParStep.iso ih
   | record r =>
     simp [Expr.sub]
@@ -346,8 +354,21 @@ mutual
     exact ParStep.record ih
   | function f =>
     simp [Expr.sub]
-    sorry
-  | _ => sorry
+    have ih := ParStep.sub_function_preservation x step f
+    exact function ih
+  | app ef ea =>
+    simp [Expr.sub]
+    have ih0 := ParStep.sub_preservation x step ef
+    have ih1 := ParStep.sub_preservation x step ea
+    exact app ih0 ih1
+  | anno e t =>
+    simp [Expr.sub]
+    have ih := ParStep.sub_preservation x step e
+    exact anno ih
+  | loopi e =>
+    simp [Expr.sub]
+    have ih := ParStep.sub_preservation x step e
+    exact loopi ih
 end
 
 

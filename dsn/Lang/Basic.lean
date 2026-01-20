@@ -893,7 +893,7 @@ inductive Expr
 | app : Expr → Expr → Expr
 -- | anno : String → Typ → Expr → Expr → Expr
 | anno : Expr → Typ → Expr
-| loop : Expr → Expr
+| loopi : Expr → Expr
 deriving Repr
 
 def Expr.pair (left : Expr) (right : Expr) : Expr :=
@@ -1275,7 +1275,7 @@ macro_rules
   `(Expr.def [id| $i] (.some [typ| $t]) [expr| $a] [expr| $c])
 | `([expr| def $i:ident = $a:expr in $c:expr  ]) =>
   `(Expr.def [id| $i] .none [expr| $a] [expr| $c])
-| `([expr| loop ( $e:expr ) ]) => `(Expr.loop [expr| $e])
+| `([expr| loop ( $e:expr ) ]) => `(Expr.loopi [expr| $e])
 | `([expr| ( $e:expr ) ]) => `([expr| $e])
 
 
@@ -1422,5 +1422,5 @@ mutual
   | .function f => .function (List.function_sub m f)
   | .app ef ea => .app (Expr.sub m ef) (Expr.sub m ea)
   | .anno e t => .anno (Expr.sub m e) t
-  | .loop e => .loop (Expr.sub m e)
+  | .loopi e => .loopi (Expr.sub m e)
 end

@@ -32,13 +32,14 @@ mutual
     arg.is_value →
     Pattern.match arg p = none →
     NStep (.app (.function ((p,body) :: f)) arg) (.app (.function f) arg)
+  | anno : NStep body body' → NStep (.anno body t) (.anno body' t)
   | erase body t :
     NStep (.anno body t) body
-  | loopi : NStep body body' → NStep (.loop body) (.loop body')
+  | loopi : NStep body body' → NStep (.loopi body) (.loopi body')
   | recycle x e :
     NStep
-      (.loop (.function [(.var x, e)]))
-      (Expr.sub [(x, (.loop (.function [(.var x, e)])))] e)
+      (.loopi (.function [(.var x, e)]))
+      (Expr.sub [(x, (.loopi (.function [(.var x, e)])))] e)
 
 end
 
@@ -96,6 +97,17 @@ theorem NStep.refl_trans_function :
     apply ReflTrans.step
     { apply NStep.function h1 }
     { exact ih }
+
+theorem NStep.refl_trans_anno :
+  ReflTrans NStep e e' →
+  ReflTrans NStep (Expr.anno e t) (Expr.anno e' t)
+:= by
+  intro h0
+  induction h0 with
+  | refl =>
+    apply ReflTrans.refl
+  | step h1 h2 ih =>
+    apply ReflTrans.step (NStep.anno h1) ih
 
 theorem NRcdStep.refl_trans_head :
   List.is_fresh_key l r →
@@ -221,7 +233,7 @@ theorem NStep.refl_trans_app :
 
 theorem NStep.refl_trans_loopi :
   ReflTrans NStep body body' →
-  ReflTrans NStep (Expr.loop body) (Expr.loop body')
+  ReflTrans NStep (Expr.loopi body) (Expr.loopi body')
 := by
   intro h0
   induction h0 with
@@ -285,6 +297,10 @@ mutual
     apply ReflTrans.step
     { apply NStep.skip _ _ isval nomatching }
     { exact ReflTrans.refl (Expr.app (Expr.function f) arg)}
+  | @anno e e' t step_e =>
+    have ih := NStep.semi_completeness step_e
+    exact NStep.refl_trans_anno ih
+
   | erase =>
     apply ReflTrans.step
     { apply NStep.erase }
@@ -295,7 +311,7 @@ mutual
   | @recycle x e =>
     apply ReflTrans.step
     { apply NStep.recycle }
-    { exact ReflTrans.refl (Expr.sub [(x, Expr.loop (Expr.function [(Pat.var x, e)]))] e)}
+    { exact ReflTrans.refl (Expr.sub [(x, Expr.loopi (Expr.function [(Pat.var x, e)]))] e)}
 end
 
 mutual
@@ -346,6 +362,9 @@ mutual
     exact ParStep.pattern_match body f matching
   | @skip arg p body f isval nomatching =>
     exact ParStep.skip body f isval nomatching
+  | @anno body body' t step_body =>
+    have ih := ParStep.completeness step_body
+    exact ParStep.anno ih
   | @erase e' t =>
     exact ParStep.erase e' t
   | @loopi body body' step_body =>
