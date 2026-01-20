@@ -543,6 +543,7 @@ mutual
       simp [*] at h2
 
 
+
   theorem ParStep.pattern_match_preservation
     (step : ParStep arg arg')
     (matching : Pattern.match arg p = some m)
@@ -587,6 +588,17 @@ mutual
     | _ =>
       simp [Pattern.match] at matching
 end
+
+theorem ParStep.sub
+  (step_arg : ParStep arg arg')
+  (step_body : ParStep body body')
+  (matching : Pattern.match arg p = some m)
+  (matching' : Pattern.match arg' p = some m')
+: ParStep (Expr.sub m body) (Expr.sub m' body')
+:= by sorry
+
+
+
 
 
 
@@ -686,7 +698,21 @@ mutual
         { exact ParStep.pattern_match body f matching_a }
         { exact ParStep.pattern_match_preservation step_arg_a matching matching_a body }
       | @function _ ff step_ff =>
-        sorry
+        clear step_a
+        have ⟨ma, matching_a⟩ := ParStep.pattern_match_reduction step_arg_a matching
+        cases step_ff with
+        | refl =>
+          unfold Joinable
+          exists (Expr.sub ma body)
+          apply And.intro
+          { exact ParStep.pattern_match body f matching_a }
+          { exact ParStep.pattern_match_preservation step_arg_a matching matching_a body }
+        | @cons _ body' _ f' _ step_body step_f =>
+          unfold Joinable
+          exists (Expr.sub ma body')
+          apply And.intro
+          { apply ParStep.pattern_match _ _ matching_a }
+          { exact ParStep.sub step_arg_a step_body matching matching_a }
 
     | @skip _ p body f isval nomatching =>
 
@@ -726,7 +752,18 @@ mutual
         apply Joinable.symm
         exact ParStep.triangle step_a
       | @function _ ff step_ff =>
-        sorry
+        cases step_ff with
+        | refl =>
+          apply Joinable.symm
+          exact ParStep.triangle step_a
+        | @cons _ body' _ f' _ step_body step_f =>
+          exists (Expr.app (Expr.function f') arg)
+          apply And.intro
+          { apply ParStep.app
+            { exact ParStep.function step_f }
+            { exact ParStep.refl arg }
+          }
+          { apply ParStep.skip _ _ isval nomatching }
     | @pattern_match _ _ m _ _ matching =>
       rw [matching] at nomatching
       simp at nomatching

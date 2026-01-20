@@ -707,7 +707,7 @@ theorem Typing.path_elim
 
 theorem Typing.loop_path_elim {am e t} id :
   Typing am e (.path (.var id) t) →
-  Typing am (.loop e) t
+  Typing am (.loopi e) t
 := by
   sorry
 
