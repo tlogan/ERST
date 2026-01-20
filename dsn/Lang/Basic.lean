@@ -874,16 +874,17 @@ def Pat.pair (left : Pat) (right : Pat) : Pat :=
     .record [("left", left), ("right", right)]
 
 mutual
-  def ListPat.free_vars : List (String × Pat) → List String
-  | .nil => []
-  | .cons (l,p) remainder =>
-    Pat.free_vars p ∪ ListPat.free_vars remainder
+  def List.pattern_ids : List (String × Pat) → List String
+  | .nil => .nil
+  | (_, p) :: r =>
+    (Pat.ids p) ++ (List.pattern_ids r)
 
-  def Pat.free_vars : Pat → List String
+  def Pat.ids : Pat → List String
   | .var id => [id]
-  | .iso label body => Pat.free_vars body
-  | .record ps => ListPat.free_vars ps
+  | .iso l body => Pat.ids body
+  | .record r => List.pattern_ids r
 end
+
 
 inductive Expr
 | var : String → Expr
@@ -891,7 +892,6 @@ inductive Expr
 | record : List (String × Expr) → Expr
 | function : List (Pat × Expr) → Expr
 | app : Expr → Expr → Expr
--- | anno : String → Typ → Expr → Expr → Expr
 | anno : Expr → Typ → Expr
 | loopi : Expr → Expr
 deriving Repr
@@ -1388,18 +1388,6 @@ theorem List.pair_typ_free_vars_containment {xs ys : List (Typ × Typ)} :
   xs ⊆ ys → List.pair_typ_free_vars xs ⊆ List.pair_typ_free_vars ys
 := by sorry
 
-
-mutual
-  def List.pattern_ids : List (String × Pat) → List String
-  | .nil => .nil
-  | (_, p) :: r =>
-    (Pat.ids p) ++ (List.pattern_ids r)
-
-  def Pat.ids : Pat → List String
-  | .var id => [id]
-  | .iso l body => Pat.ids body
-  | .record r => List.pattern_ids r
-end
 
 mutual
   def List.record_sub (m : List (String × Expr)): List (String × Expr) → List (String × Expr)

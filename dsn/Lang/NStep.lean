@@ -55,7 +55,7 @@ theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
   := by
     simp [Pattern.match, Pattern.match_record, Pattern.match_entry,
         Inter.inter, List.inter,
-        ListPat.free_vars, Pat.ids, List.pattern_ids,
+        Pat.ids, List.pattern_ids,
         List.keys_unique, List.is_fresh_key
     ]
   have h1 : e = Expr.sub [("x", e)] (.var "x") := by exact rfl

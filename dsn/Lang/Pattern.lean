@@ -24,13 +24,10 @@ mutual
   : List (String × Pat) → Option (List (String × Expr))
   | .nil => some []
   | (label, pat) :: pats => do
-    if Pat.free_vars pat ∩ ListPat.free_vars pats == [] then
+    if Pat.ids pat ∩ List.pattern_ids pats == [] then
       let m0 ← Pattern.match_entry label pat args
       let m1 ← Pattern.match_record args pats
-      if (Pat.ids pat ∩ List.pattern_ids pats == []) then
-        return (m0 ++ m1)
-      else
-        failure
+      return (m0 ++ m1)
     else
       .none
 

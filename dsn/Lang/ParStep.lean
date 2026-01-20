@@ -160,6 +160,24 @@ theorem ParRcdStep.fresh_key_reduction :
     apply And.intro h1
     apply ParRcdStep.fresh_key_reduction step_rr h2
 
+theorem ParRcdStep.fresh_key_expansion :
+  ParRcdStep r r' →
+  List.is_fresh_key l r' →
+  List.is_fresh_key l r
+:= by
+  intro h0
+  cases h0 with
+  | nil =>
+    exact fun a => a
+  | @cons e e' rr rr' l' step_e step_rr =>
+    intro fresh_r
+    simp [List.is_fresh_key] at fresh_r
+    have ⟨h1,h2⟩ := fresh_r
+    clear fresh_r
+    simp [List.is_fresh_key]
+    apply And.intro h1
+    apply ParRcdStep.fresh_key_expansion step_rr h2
+
 theorem ParRcdStep.keys_unique_reduction :
   ParRcdStep r r' →
   List.keys_unique r →
@@ -177,6 +195,25 @@ theorem ParRcdStep.keys_unique_reduction :
     apply And.intro
     { exact fresh_key_reduction step_rr h2 }
     { exact ParRcdStep.keys_unique_reduction step_rr h3 }
+
+
+theorem ParRcdStep.keys_unique_expansion :
+  ParRcdStep r r' →
+  List.keys_unique r' →
+  List.keys_unique r
+:= by
+  intro h0
+  cases h0 with
+  | nil  =>
+    exact fun a => a
+  | @cons e e' rr rr' l' step_e step_rr=>
+    intro h1
+    simp [List.keys_unique] at h1
+    have ⟨h2,h3⟩ := h1
+    simp [List.keys_unique]
+    apply And.intro
+    { exact fresh_key_expansion step_rr h2 }
+    { exact ParRcdStep.keys_unique_expansion step_rr h3 }
 
 
 
@@ -287,7 +324,6 @@ mutual
       cases h5 : (Pattern.match_record r rp') with
       | some m1 =>
         simp [h5] at h3
-        have ⟨h6,h7⟩ := h3
         have ⟨m0',h8⟩ := ParRcdStep.pattern_match_entry_reduction h0 h4
         have ⟨m1',h9⟩ := ParRcdStep.pattern_match_reduction h0 h5
         exists (m0' ++ m1')
@@ -363,8 +399,8 @@ mutual
     { apply ParRcdStep.value_reduction step_rr h2 }
 
   theorem ParStep.value_reduction
-    (step : ParStep arg arg')
-  : Expr.is_value arg → Expr.is_value arg'
+    (step : ParStep e e')
+  : Expr.is_value e → Expr.is_value e'
   := by cases step with
   | refl =>
     exact fun a => a
@@ -382,13 +418,64 @@ mutual
 end
 
 mutual
-  theorem ParStep.skip_reduction :
-    Expr.is_value arg →
-    ParStep arg arg' →
-    Pattern.match arg p = none →
-    Pattern.match arg' p = none
+  theorem ParRcdStep.pattern_match_entry_expansion
+    (isval : List.is_record_value r)
+    (step : ParRcdStep r r')
+  : Pattern.match_entry l p r' = some m' → ∃ m , Pattern.match_entry l p r = some m
+  := by sorry
+
+  theorem ParRcdStep.pattern_match_expansion
+    (isval : List.is_record_value r)
+    (step : ParRcdStep r r')
+  : Pattern.match_record r' ps = some m' → ∃ m , Pattern.match_record r ps = some m
   := by sorry
 end
+
+theorem ParRcdStep.skip_reduction
+  (isval : List.is_record_value r)
+  (step : ParRcdStep r r')
+: Pattern.match_record r ps = none → Pattern.match_record r' ps = none
+:= by cases ps with
+| nil =>
+  simp [Pattern.match_record]
+| cons lp ps' =>
+  have (l,p) := lp
+  simp [Pattern.match_record]
+  intro h0 h1 m0' h3 m1' h5
+
+  have ⟨m0,h6⟩ := ParRcdStep.pattern_match_entry_expansion isval step h3
+  have ⟨m1,h7⟩ := ParRcdStep.pattern_match_expansion isval step h5
+  exact h0 h1 m0 h6 m1 h7
+
+theorem ParStep.skip_reduction
+  (isval : Expr.is_value e)
+  (step : ParStep e e')
+: Pattern.match e p = none → Pattern.match e' p = none
+:= by cases p with
+| var x =>
+  simp [Pattern.match]
+| iso l pbody =>
+  cases step with
+  | @iso body body' l' step_body =>
+    simp [Pattern.match]
+    simp [Expr.is_value] at isval
+    intro h0 h1
+    apply ParStep.skip_reduction isval step_body (h0 h1)
+  | _ =>
+    simp [Pattern.match] <;>
+    simp [Expr.is_value] at isval
+| record ps =>
+  cases step with
+  | @record r r' step_r =>
+    simp [Pattern.match]
+    simp [Expr.is_value] at isval
+    intro h0 h1
+    apply ParRcdStep.skip_reduction isval step_r
+    apply h0
+    apply ParRcdStep.keys_unique_expansion step_r h1
+  | _ =>
+    simp [Pattern.match] <;>
+    simp [Expr.is_value] at isval
 
 theorem Expr.sub_refl :
   x ∉ ListPair.dom m →
@@ -588,13 +675,12 @@ mutual
           cases h8 : (Pattern.match_record r' ps') with
           | some m3 =>
             simp [*] at h4
-            have ⟨h9,h10⟩ := h2
-            rw [←h10,←h4]
+            rw [←h2,←h4]
             have ih0 := ParRcdStep.pattern_match_entry_preservation step h5 h6 e
             have ih1 := ParRcdStep.pattern_match_preservation step h7 h8 e
             apply ParStep.sub_disjoint_concat
-            { exact Pattern.match_disjoint_preservation h5 h7 h9 }
-            { exact Pattern.match_disjoint_preservation h6 h8 h9 }
+            { apply Pattern.match_disjoint_preservation h5 h7 h3 }
+            { exact Pattern.match_disjoint_preservation h6 h8 h3 }
             { exact ih0 }
             { exact ih1 }
           | none =>
