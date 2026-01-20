@@ -54,6 +54,7 @@ mutual
     (∃ am' , (ListPair.dom am') ⊆ ids ∧ (MultiSubtyping (am' ++ am) quals))
   | .lfp id body =>
     Monotonic am id body ∧
+    /- TODO: remove this size requirement -/
     (∃ t, ∃ (h : Typ.size t < Typ.size (.lfp id body)),
       (∀ e',
         Typing am e' t →
