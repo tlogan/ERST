@@ -2070,7 +2070,7 @@ mutual
     ) →
     LoopSubtyping (List.pair_typ_free_vars assums') id zones t' →
     id ∉ List.pair_typ_free_vars assums' →
-    GuardedTyping skolems assums context (.loop e) t' skolems' assums'
+    GuardedTyping skolems assums context (.loopi e) t' skolems' assums'
 
   | anno {skolems assums context skolems'' assums''} e ta te skolems' assums' :
     Typ.free_vars ta ⊆ [] →

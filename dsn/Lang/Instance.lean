@@ -665,7 +665,7 @@ mutual
       return [ ⟨Θ''', Δ''', t⟩ ]
     )))
 
-  | .loop e => do
+  | .loopi e => do
     let id ← fresh_typ_id
     (← GuardedTyping.compute Θ Δ Γ e).flatMapM (fun ⟨Θ', Δ', t⟩ => do
       let id_antec ← fresh_typ_id
