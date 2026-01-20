@@ -70,6 +70,16 @@ theorem ParRcdStep.triangle :
   apply And.intro step
   exact ParRcdStep.refl b
 
+theorem ParFunStep.triangle :
+  ParFunStep a b →
+  Joinable ParFunStep a b
+:= by
+  intro step
+  unfold Joinable
+  exists b
+  apply And.intro step
+  exact ParFunStep.refl b
+
 
 theorem ParStep.triangle :
   ParStep a b →
@@ -99,6 +109,18 @@ theorem ParStep.joinable_record :
   apply And.intro
   { exact record h1 }
   { exact record h2 }
+
+theorem ParStep.joinable_function :
+  Joinable ParFunStep ra rb →
+  Joinable ParStep (.function ra) (.function rb)
+:= by
+  unfold Joinable
+  intro h0
+  have ⟨rc,h1,h2⟩ := h0
+  exists (.function rc)
+  apply And.intro
+  { exact function h1 }
+  { exact function h2 }
 
 theorem ParRcdStep.fresh_key_reduction :
   ParRcdStep r r' →
@@ -159,10 +181,21 @@ theorem ParRcdStep.keys_unique_reduction :
 
 
 theorem ParRcdStep.joinable_cons :
-  -- (List.is_fresh_key l ra ∨ List.is_fresh_key l rb) →
   Joinable ParStep ea eb →
   Joinable ParRcdStep ra rb →
   Joinable ParRcdStep ((l,ea)::ra) ((l,eb)::rb)
+:= by
+  unfold Joinable
+  intro h1 h2
+  have ⟨ec,h4,h5⟩ := h1
+  have ⟨rc,h6,h7⟩ := h2
+  exists ((l,ec)::rc)
+  apply And.intro (cons l h4 h6) (cons l h5 h7)
+
+theorem ParFunStep.joinable_cons :
+  Joinable ParStep ea eb →
+  Joinable ParFunStep ra rb →
+  Joinable ParFunStep ((l,ea)::ra) ((l,eb)::rb)
 := by
   unfold Joinable
   intro h1 h2
@@ -564,6 +597,7 @@ theorem ParStep.value_inversion :
 
 mutual
 
+
   theorem ParRcdStep.diamond
     (step_a : ParRcdStep r ra)
     (step_b : ParRcdStep r rb)
@@ -580,6 +614,24 @@ mutual
       have ih0 := ParStep.diamond step_ea step_eb
       have ih1 := ParRcdStep.diamond step_rra step_rrb
       exact ParRcdStep.joinable_cons ih0 ih1
+
+  theorem ParFunStep.diamond
+    (step_a : ParFunStep r ra)
+    (step_b : ParFunStep r rb)
+  : Joinable ParFunStep ra rb
+  := by have h := step_a ; cases h with
+  | refl =>
+    exact ParFunStep.triangle step_b
+  | @cons e ea rr rra l step_ea step_rra =>
+    cases step_b with
+    | refl =>
+      apply Joinable.symm
+      exact ParFunStep.triangle step_a
+    | @cons _ eb _ rrb _ step_eb step_rrb =>
+      have ih0 := ParStep.diamond step_ea step_eb
+      have ih1 := ParFunStep.diamond step_rra step_rrb
+
+      exact ParFunStep.joinable_cons ih0 ih1
 
   theorem ParStep.diamond
     (step_a : ParStep e ea)
@@ -605,8 +657,14 @@ mutual
     | @record _ rb step_rb =>
       have ih := ParRcdStep.diamond step_ra step_rb
       exact ParStep.joinable_record ih
-  | @function f f' step_f=>
-    sorry
+  | @function f fa step_fa =>
+    cases step_b with
+    | @refl e =>
+      apply Joinable.symm
+      exact ParStep.triangle step_a
+    | @function _ fb step_fb =>
+      have ih := ParFunStep.diamond step_fa step_fb
+      exact ParStep.joinable_function ih
   | @app cator cator_a arg arg_a step_cator_a step_arg_a =>
     cases step_b with
     | @refl e =>
@@ -627,17 +685,34 @@ mutual
         apply And.intro
         { exact ParStep.pattern_match body f matching_a }
         { exact ParStep.pattern_match_preservation step_arg_a matching matching_a body }
-      | _ => sorry
+      | @function _ ff step_ff =>
+        sorry
+
     | @skip _ p body f isval nomatching =>
+
+      have h0 := ParStep.value_inversion step_arg_a isval
+      rw [h0] ; clear h0
       cases step_cator_a with
       | refl =>
-        have h0 := ParStep.value_inversion step_arg_a isval
-        rw [h0] ; clear h0
+        unfold Joinable
         exists (Expr.app (Expr.function f) arg)
         apply And.intro
-        { exact ParStep.skip body f isval nomatching }
+        { apply ParStep.skip body f isval nomatching}
         { exact ParStep.refl (Expr.app (Expr.function f) arg) }
-      | _ => sorry
+      | @function _ ff step_ff =>
+        { cases step_ff with
+          | refl =>
+            unfold Joinable
+            exists (Expr.app (Expr.function f) arg)
+            apply And.intro
+            { apply ParStep.skip body f isval nomatching}
+            { exact ParStep.refl (Expr.app (Expr.function f) arg) }
+          | @cons _ body' _ f' _ step_body step_f =>
+            exists (Expr.app (Expr.function f') arg)
+            apply And.intro
+            { exact ParStep.skip body' f' isval nomatching }
+            { apply ParStep.app (ParStep.function step_f) (ParStep.refl arg) }
+        }
   | @skip arg p body f isval nomatching =>
     cases step_b with
     | refl =>
@@ -650,7 +725,8 @@ mutual
       | refl =>
         apply Joinable.symm
         exact ParStep.triangle step_a
-      | _ => sorry
+      | @function _ ff step_ff =>
+        sorry
     | @pattern_match _ _ m _ _ matching =>
       rw [matching] at nomatching
       simp at nomatching
