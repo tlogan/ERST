@@ -249,8 +249,8 @@ mutual
     (step : ParRcdStep r r')
   : ReflTrans NRcdStep r r'
   := by cases step with
-  | refl =>
-    exact ReflTrans.refl r
+  | nil =>
+    exact ReflTrans.refl []
   | @cons l  e e' rr rr' step_e step_rr =>
     have ih0 := NStep.semi_completeness step_e
     have ih1 := NRcdStep.semi_completeness step_rr
@@ -260,8 +260,8 @@ mutual
     (step : ParFunStep f f')
   : ReflTrans NFunStep f f'
   := by cases step with
-  | refl =>
-    exact ReflTrans.refl f
+  | nil =>
+    exact ReflTrans.refl []
   | @cons e e' ff ff' p step_e step_ff =>
     have ih0 := NStep.semi_completeness step_e
     have ih1 := NFunStep.semi_completeness step_ff

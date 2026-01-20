@@ -9,13 +9,13 @@ namespace Lang
 mutual
 
   inductive ParRcdStep : List (String × Expr) → List (String × Expr) → Prop
-  | refl r : ParRcdStep r r
+  | nil : ParRcdStep [] []
   | cons l :
     ParStep e e' →  ParRcdStep r r' →
     ParRcdStep ((l, e) :: r) ((l, e') :: r')
 
   inductive ParFunStep : List (Pat × Expr) → List (Pat × Expr) → Prop
-  | refl f : ParFunStep f f
+  | nil : ParFunStep [] []
   | cons p :
     ParStep e e' →  ParFunStep f f' →
     ParFunStep ((p, e) :: f) ((p, e') :: f')
@@ -47,6 +47,26 @@ mutual
       (.loopi (.function [(.var x, e)]))
       (Expr.sub [(x, (.loopi (.function [(.var x, e)])))] e)
 end
+
+theorem ParRcdStep.refl r :
+  ParRcdStep r r
+:= by induction r with
+| nil =>
+  exact nil
+| cons le r'' ih =>
+  apply ParRcdStep.cons
+  { exact ParStep.refl (Prod.snd le) }
+  { exact ih }
+
+theorem ParFunStep.refl f :
+  ParFunStep f f
+:= by induction f with
+| nil =>
+  exact nil
+| cons le r'' ih =>
+  apply ParFunStep.cons
+  { exact ParStep.refl (Prod.snd le) }
+  { exact ih }
 
 theorem ParStep.joinable_iso :
   Joinable ParStep a b →
@@ -129,7 +149,7 @@ theorem ParRcdStep.fresh_key_reduction :
 := by
   intro h0
   cases h0 with
-  | refl  =>
+  | nil =>
     exact fun a => a
   | @cons e e' rr rr' l' step_e step_rr =>
     intro fresh_r
@@ -147,7 +167,7 @@ theorem ParRcdStep.keys_unique_reduction :
 := by
   intro h0
   cases h0 with
-  | refl  =>
+  | nil  =>
     exact fun a => a
   | @cons e e' rr rr' l' step_e step_rr=>
     intro h1
@@ -228,7 +248,7 @@ mutual
   := by
     intro h0 h1
     cases h0 with
-    | refl =>
+    | nil =>
       exact Exists.intro m h1
     | @cons e e' rr rr' l' step_e step_rr =>
       simp [Pattern.match_entry] at h1
@@ -489,11 +509,8 @@ mutual
     e
   : ParStep (Expr.sub m e) (Expr.sub m' e)
   := by cases step with
-  | refl =>
-    rw [matching] at matching'
-    simp at matching'
-    rw [matching']
-    exact ParStep.refl (Expr.sub m' e)
+  | nil =>
+    simp [Pattern.match_entry] at matching
   | @cons ee ee' rr rr' l' step_ee step_rr =>
     simp [Pattern.match_entry] at matching
     simp [Pattern.match_entry] at matching'
@@ -623,13 +640,10 @@ mutual
     (step_b : ParRcdStep r rb)
   : Joinable ParRcdStep ra rb
   := by have h := step_a ; cases h with
-  | refl =>
+  | nil =>
     exact ParRcdStep.triangle step_b
   | @cons e ea rr rra l step_ea step_rra =>
     cases step_b with
-    | refl =>
-      apply Joinable.symm
-      exact ParRcdStep.triangle step_a
     | @cons _ eb _ rrb _ step_eb step_rrb =>
       have ih0 := ParStep.diamond step_ea step_eb
       have ih1 := ParRcdStep.diamond step_rra step_rrb
@@ -640,13 +654,10 @@ mutual
     (step_b : ParFunStep r rb)
   : Joinable ParFunStep ra rb
   := by have h := step_a ; cases h with
-  | refl =>
+  | nil =>
     exact ParFunStep.triangle step_b
   | @cons e ea rr rra l step_ea step_rra =>
     cases step_b with
-    | refl =>
-      apply Joinable.symm
-      exact ParFunStep.triangle step_a
     | @cons _ eb _ rrb _ step_eb step_rrb =>
       have ih0 := ParStep.diamond step_ea step_eb
       have ih1 := ParFunStep.diamond step_rra step_rrb
@@ -709,12 +720,6 @@ mutual
         clear step_a
         have ⟨ma, matching_a⟩ := ParStep.pattern_match_reduction step_arg_a matching
         cases step_ff with
-        | refl =>
-          unfold Joinable
-          exists (Expr.sub ma body)
-          apply And.intro
-          { exact ParStep.pattern_match body f matching_a }
-          { exact ParStep.pattern_match_preservation step_arg_a matching matching_a body }
         | @cons _ body' _ f' _ step_body step_f =>
           unfold Joinable
           exists (Expr.sub ma body')
@@ -740,19 +745,6 @@ mutual
         }
       | @function _ ff step_ff =>
         { cases step_ff with
-          | refl =>
-            unfold Joinable
-            exists (Expr.app (Expr.function f) arg_a)
-            apply And.intro
-            {
-              apply ParStep.skip
-              { exact ParStep.value_reduction step_arg_a isval }
-              { exact h0 }
-            }
-            { apply ParStep.app
-              { exact ParStep.refl (Expr.function f) }
-              { exact step_arg_a }
-            }
           | @cons _ body' _ f' _ step_body step_f =>
             exists (Expr.app (Expr.function f') arg_a)
             apply And.intro
@@ -786,17 +778,6 @@ mutual
         }
       | @function _ ff step_ff =>
         cases step_ff with
-        | refl =>
-          exists (.app (.function f) arg_b)
-          apply And.intro
-          { apply ParStep.app
-            { exact ParStep.refl (Expr.function f) }
-            { exact step_arg_b }
-          }
-          { apply ParStep.skip
-            { exact ParStep.value_reduction step_arg_b isval }
-            { exact h0 }
-          }
         | @cons _ body' _ f' _ step_body step_f =>
           exists (Expr.app (Expr.function f') arg_b)
           apply And.intro
