@@ -9,8 +9,8 @@ namespace Lang
 
 mutual
   inductive NRcdStep : List (String × Expr) → List (String × Expr) → Prop
-  | head : NStep e e' →  List.is_fresh_key l r → NRcdStep ((l, e) :: r) ((l, e') :: r)
-  | tail e : NRcdStep r r' → List.is_fresh_key l r → NRcdStep ((l,e) :: r) ((l,e) :: r')
+  | head l r: NStep e e' →  NRcdStep ((l, e) :: r) ((l, e') :: r)
+  | tail l e : NRcdStep r r' → NRcdStep ((l,e) :: r) ((l,e) :: r')
 
   inductive NFunStep : List (Pat × Expr) → List (Pat × Expr) → Prop
   | head p f : NStep e e' →  NFunStep ((p, e) :: f) ((p, e') :: f)
@@ -53,7 +53,11 @@ theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
   have h0 : Pattern.match
     (Expr.record [(l, e)]) (Pat.record [(l, Pat.var "x")]) = some [("x", e)]
   := by
-    simp [Pattern.match, Pattern.match_record, Pattern.match_entry, Inter.inter, List.inter, ListPat.free_vars, Pat.ids, List.pattern_ids]
+    simp [Pattern.match, Pattern.match_record, Pattern.match_entry,
+        Inter.inter, List.inter,
+        ListPat.free_vars, Pat.ids, List.pattern_ids,
+        List.keys_unique, List.is_fresh_key
+    ]
   have h1 : e = Expr.sub [("x", e)] (.var "x") := by exact rfl
   rw [h1]
   apply pattern_match
@@ -110,57 +114,52 @@ theorem NStep.refl_trans_anno :
     apply ReflTrans.step (NStep.anno h1) ih
 
 theorem NRcdStep.refl_trans_head :
-  List.is_fresh_key l r →
   ReflTrans NStep e e' →
   ReflTrans NRcdStep ((l,e)::r) ((l,e')::r)
 := by
-  intro h0 h1
+  intro h1
   induction h1 with
   | refl e =>
     exact ReflTrans.refl ((l, e) :: r)
   | @step e em e' h1 h2 ih =>
     apply ReflTrans.step
-    { apply NRcdStep.head h1 h0 }
+    { apply NRcdStep.head _ _ h1 }
     { exact ih }
 
-theorem List.is_fresh_key_n_rcd_step_reduction :
-  NRcdStep r r' →
-  ∀ {l},
-  List.is_fresh_key l r →
-  List.is_fresh_key l r'
-:= by
-  intro h0
-  cases h0 with
-  | head step' =>
-    intro l fresh
-    exact fresh
-  | tail fresh' step' =>
-    intro l fresh
-    have ih := @List.is_fresh_key_n_rcd_step_reduction _ _ step'
-    simp [List.is_fresh_key] at fresh
-    have ⟨h1,h2⟩ := fresh
-    clear fresh
-    simp [List.is_fresh_key]
-    apply And.intro h1
-    exact ih h2
+-- theorem List.is_fresh_key_n_rcd_step_reduction :
+--   NRcdStep r r' →
+--   ∀ {l},
+--   List.is_fresh_key l r →
+--   List.is_fresh_key l r'
+-- := by
+--   intro h0
+--   cases h0 with
+--   | head step' =>
+--     intro l fresh
+--     exact fresh
+--   | tail fresh' step' =>
+--     intro l fresh
+--     have ih := @List.is_fresh_key_n_rcd_step_reduction _ _ step'
+--     simp [List.is_fresh_key] at fresh
+--     have ⟨h1,h2⟩ := fresh
+--     clear fresh
+--     simp [List.is_fresh_key]
+--     apply And.intro h1
+--     exact ih h2
 
 theorem NRcdStep.refl_trans_cons :
-  List.is_fresh_key l r →
   ReflTrans NStep e e' →
   ReflTrans NRcdStep r r' →
   ReflTrans NRcdStep ((l,e)::r) ((l,e')::r')
 := by
-  intro h0 h1 h2
+  intro h1 h2
   induction h2 with
   | @refl r =>
-    exact NRcdStep.refl_trans_head h0 h1
+    apply NRcdStep.refl_trans_head h1
   | @step r rm r' h2 h3 ih =>
     apply ReflTrans.step
-    { apply NRcdStep.tail _ h2 h0 }
-    {
-      apply ih
-      exact List.is_fresh_key_n_rcd_step_reduction h2 h0
-    }
+    { apply NRcdStep.tail _ _ h2 }
+    { apply ih }
 
 theorem NFunStep.refl_trans_head :
   ReflTrans NStep e e' →
@@ -252,10 +251,10 @@ mutual
   := by cases step with
   | refl =>
     exact ReflTrans.refl r
-  | @cons l  e e' rr rr' step_e step_rr fresh =>
+  | @cons l  e e' rr rr' step_e step_rr =>
     have ih0 := NStep.semi_completeness step_e
     have ih1 := NRcdStep.semi_completeness step_rr
-    exact NRcdStep.refl_trans_cons fresh ih0 ih1
+    exact NRcdStep.refl_trans_cons ih0 ih1
 
   theorem NFunStep.semi_completeness
     (step : ParFunStep f f')
@@ -319,12 +318,12 @@ mutual
     (step : NRcdStep r r')
   : ParRcdStep r r'
   := by cases step with
-  | @head e e' l r step_e fresh =>
+  | @head e e' l r step_e =>
     have ih := ParStep.completeness step_e
-    apply ParRcdStep.cons ih (ParRcdStep.refl r) fresh
-  | @tail r r' l e step_r fresh =>
+    apply ParRcdStep.cons _ ih (ParRcdStep.refl r)
+  | @tail r r' l e step_r =>
     have ih := ParRcdStep.completeness step_r
-    apply ParRcdStep.cons (ParStep.refl e) ih fresh
+    apply ParRcdStep.cons _ (ParStep.refl e) ih
 
   theorem ParFunStep.completeness
     (step : NFunStep f f')
@@ -332,11 +331,11 @@ mutual
   := by cases step with
   | @head e e' p f step_e =>
     have ih := ParStep.completeness step_e
-    apply ParFunStep.cons ih (ParFunStep.refl f)
+    apply ParFunStep.cons _ ih (ParFunStep.refl f)
 
   | @tail f f' p e step_f =>
     have ih := ParFunStep.completeness step_f
-    apply ParFunStep.cons (ParStep.refl e) ih
+    apply ParFunStep.cons _ (ParStep.refl e) ih
 
   theorem ParStep.completeness
     (step : NStep e e')

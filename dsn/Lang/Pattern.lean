@@ -4,6 +4,12 @@ set_option pp.fieldNotation false
 
 namespace Lang
 
+def List.keys_unique {α} : List (String × α) → Bool
+| .nil =>
+  true
+| .cons (k,o) kos =>
+  List.is_fresh_key k kos && List.keys_unique kos
+
 mutual
   def Pattern.match_entry (label : String) (pat : Pat)
   : List (String × Expr) → Option (List (String × Expr))
@@ -35,7 +41,11 @@ mutual
       Pattern.match e p
     else
       none
-  | (.record r), (.record p) => Pattern.match_record r p
+  | (.record r), (.record p) =>
+    if List.keys_unique r then
+      Pattern.match_record r p
+    else
+      none
   | _, _ => none
 end
 

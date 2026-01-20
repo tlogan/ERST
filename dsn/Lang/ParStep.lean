@@ -10,14 +10,13 @@ mutual
 
   inductive ParRcdStep : List (String × Expr) → List (String × Expr) → Prop
   | refl r : ParRcdStep r r
-  | cons :
+  | cons l :
     ParStep e e' →  ParRcdStep r r' →
-    List.is_fresh_key l r →
     ParRcdStep ((l, e) :: r) ((l, e') :: r')
 
   inductive ParFunStep : List (Pat × Expr) → List (Pat × Expr) → Prop
   | refl f : ParFunStep f f
-  | cons :
+  | cons p :
     ParStep e e' →  ParFunStep f f' →
     ParFunStep ((p, e) :: f) ((p, e') :: f')
 
@@ -101,7 +100,6 @@ theorem ParStep.joinable_record :
   { exact record h1 }
   { exact record h2 }
 
-
 theorem ParRcdStep.fresh_key_reduction :
   ParRcdStep r r' →
   List.is_fresh_key l r →
@@ -111,7 +109,7 @@ theorem ParRcdStep.fresh_key_reduction :
   cases h0 with
   | refl  =>
     exact fun a => a
-  | @cons e e' rr rr' l' step_e step_rr fresh_rr =>
+  | @cons e e' rr rr' l' step_e step_rr =>
     intro fresh_r
     simp [List.is_fresh_key] at fresh_r
     have ⟨h1,h2⟩ := fresh_r
@@ -120,54 +118,58 @@ theorem ParRcdStep.fresh_key_reduction :
     apply And.intro h1
     apply ParRcdStep.fresh_key_reduction step_rr h2
 
-
-theorem ParRcdStep.fresh_key_expansion :
+theorem ParRcdStep.keys_unique_reduction :
   ParRcdStep r r' →
-  List.is_fresh_key l r' →
-  List.is_fresh_key l r
+  List.keys_unique r →
+  List.keys_unique r'
 := by
   intro h0
   cases h0 with
-  | refl =>
+  | refl  =>
     exact fun a => a
-  | @cons e e' rr rr' l' step_e step_rr fresh_rr  =>
-    intro fresh_r
-    simp [List.is_fresh_key] at fresh_r
-    have ⟨h1,h2⟩ := fresh_r
-    clear fresh_r
-    simp [List.is_fresh_key]
-    apply And.intro h1
-    apply ParRcdStep.fresh_key_expansion step_rr h2
+  | @cons e e' rr rr' l' step_e step_rr=>
+    intro h1
+    simp [List.keys_unique] at h1
+    have ⟨h2,h3⟩ := h1
+    simp [List.keys_unique]
+    apply And.intro
+    { exact fresh_key_reduction step_rr h2 }
+    { exact ParRcdStep.keys_unique_reduction step_rr h3 }
+
+
+
+
+-- theorem ParRcdStep.fresh_key_expansion :
+--   ParRcdStep r r' →
+--   List.is_fresh_key l r' →
+--   List.is_fresh_key l r
+-- := by
+--   intro h0
+--   cases h0 with
+--   | refl =>
+--     exact fun a => a
+--   | @cons e e' rr rr' l' step_e step_rr fresh_rr  =>
+--     intro fresh_r
+--     simp [List.is_fresh_key] at fresh_r
+--     have ⟨h1,h2⟩ := fresh_r
+--     clear fresh_r
+--     simp [List.is_fresh_key]
+--     apply And.intro h1
+--     apply ParRcdStep.fresh_key_expansion step_rr h2
 
 
 theorem ParRcdStep.joinable_cons :
-  (List.is_fresh_key l ra ∨ List.is_fresh_key l rb) →
+  -- (List.is_fresh_key l ra ∨ List.is_fresh_key l rb) →
   Joinable ParStep ea eb →
   Joinable ParRcdStep ra rb →
   Joinable ParRcdStep ((l,ea)::ra) ((l,eb)::rb)
 := by
   unfold Joinable
-  intro h0 h1 h2
+  intro h1 h2
   have ⟨ec,h4,h5⟩ := h1
   have ⟨rc,h6,h7⟩ := h2
   exists ((l,ec)::rc)
-  cases h0 with
-  | inl h8 =>
-    apply And.intro
-    { exact ParRcdStep.cons h4 h6 h8 }
-    {
-      have h9 := ParRcdStep.fresh_key_reduction h6 h8
-      have h10 := ParRcdStep.fresh_key_expansion h7 h9
-      exact ParRcdStep.cons h5 h7 h10
-    }
-  | inr h8 =>
-    apply And.intro
-    {
-      have h9 := ParRcdStep.fresh_key_reduction h7 h8
-      have h10 := ParRcdStep.fresh_key_expansion h6 h9
-      exact ParRcdStep.cons h4 h6 h10
-    }
-    { exact ParRcdStep.cons h5 h7 h8 }
+  apply And.intro (cons l h4 h6) (cons l h5 h7)
 
 theorem Joinable.app :
   Joinable ParStep fa fb →
@@ -195,7 +197,7 @@ mutual
     cases h0 with
     | refl =>
       exact Exists.intro m h1
-    | @cons e e' rr rr' l' step_e step_rr fresh =>
+    | @cons e e' rr rr' l' step_e step_rr =>
       simp [Pattern.match_entry] at h1
       by_cases h3 : l' = l
       {
@@ -277,10 +279,13 @@ mutual
       simp [Pattern.match] at h1
     | @record r r' step =>
       simp [Pattern.match] at h1
-      have ⟨m',ih⟩ := ParRcdStep.pattern_match_reduction step h1
+      have ⟨h2,h3⟩ := h1
+      have ⟨m',ih⟩ := ParRcdStep.pattern_match_reduction step h3
       exists m'
       simp [Pattern.match]
-      exact ih
+      apply And.intro
+      { exact ParRcdStep.keys_unique_reduction step h2 }
+      { exact ih }
     | _ =>
       simp [Pattern.match] at h1
 end
@@ -306,6 +311,17 @@ theorem Expr.sub_refl :
     exact ih
 
 
+theorem remove_all_single_membership :
+  x ∈ ids →
+  remove_all [(x,c)] ids = []
+:= by sorry
+
+theorem remove_all_single_nomem :
+  x ∉ ids →
+  remove_all [(x,c)] ids = [(x,c)]
+:= by sorry
+
+
 mutual
 
   theorem ParStep.sub_record_preservation
@@ -313,14 +329,39 @@ mutual
     (step : ParStep arg arg')
     r
   : ParRcdStep (List.record_sub [(x,arg)] r) (List.record_sub [(x,arg')] r)
-  := by sorry
+  := by cases r with
+  | nil =>
+    simp [List.record_sub]
+    exact ParRcdStep.refl []
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.record_sub]
+    apply ParRcdStep.cons
+    { apply ParStep.sub_preservation _ step }
+    { apply ParStep.sub_record_preservation _ step}
 
   theorem ParStep.sub_function_preservation
     x
     (step : ParStep arg arg')
     f
   : ParFunStep (List.function_sub [(x,arg)] f) (List.function_sub [(x,arg')] f)
-  := by sorry
+  := by cases f with
+  | nil =>
+    simp [List.function_sub]
+    exact ParFunStep.refl []
+  | cons pe f' =>
+    have (p,e) := pe
+    simp [List.function_sub]
+    apply ParFunStep.cons
+    { by_cases h : x ∈ Pat.ids p
+      { simp [remove_all_single_membership h]
+        exact refl (Expr.sub [] e)
+      }
+      { simp [remove_all_single_nomem h]
+        apply ParStep.sub_preservation x step e
+      }
+    }
+    { apply ParStep.sub_function_preservation _ step }
 
   theorem ParStep.sub_preservation
     x
@@ -506,7 +547,10 @@ mutual
     | @record r r' step_r =>
       simp [Pattern.match] at matching
       simp [Pattern.match] at matching'
-      apply ParRcdStep.pattern_match_preservation step_r matching matching'
+      have ⟨h0,h1⟩ := matching
+      have ⟨h2,h3⟩ := matching'
+      apply ParRcdStep.pattern_match_preservation step_r h1 h3
+
     | _ =>
       simp [Pattern.match] at matching
 end
@@ -527,17 +571,15 @@ mutual
   := by have h := step_a ; cases h with
   | refl =>
     exact ParRcdStep.triangle step_b
-  | @cons e ea rr rra l step_ea step_rra fresh =>
+  | @cons e ea rr rra l step_ea step_rra =>
     cases step_b with
     | refl =>
       apply Joinable.symm
       exact ParRcdStep.triangle step_a
-    | @cons _ eb _ rrb _ step_eb step_rrb fresh' =>
-      clear fresh'
+    | @cons _ eb _ rrb _ step_eb step_rrb =>
       have ih0 := ParStep.diamond step_ea step_eb
       have ih1 := ParRcdStep.diamond step_rra step_rrb
-      have fresh_rra := ParRcdStep.fresh_key_reduction step_rra fresh
-      apply ParRcdStep.joinable_cons (Or.inl fresh_rra) ih0 ih1
+      exact ParRcdStep.joinable_cons ih0 ih1
 
   theorem ParStep.diamond
     (step_a : ParStep e ea)
