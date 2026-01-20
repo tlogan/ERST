@@ -323,6 +323,24 @@ mutual
       simp [Pattern.match] at h1
 end
 
+
+mutual
+  theorem ParStep.value_reduction :
+    ParStep arg arg' →
+    Expr.is_value arg →
+    Expr.is_value arg'
+  := by sorry
+end
+
+mutual
+  theorem ParStep.skip_reduction :
+    Expr.is_value arg →
+    ParStep arg arg' →
+    Pattern.match arg p = none →
+    Pattern.match arg' p = none
+  := by sorry
+end
+
 theorem Expr.sub_refl :
   x ∉ ListPair.dom m →
   (Expr.sub m (.var x)) = (.var x)
@@ -598,17 +616,7 @@ theorem ParStep.sub
 := by sorry
 
 
-
-
-
-
-theorem ParStep.value_inversion :
-  ParStep a b → Expr.is_value a → b = a
-:= by sorry
-
-
 mutual
-
 
   theorem ParRcdStep.diamond
     (step_a : ParRcdStep r ra)
@@ -715,29 +723,47 @@ mutual
           { exact ParStep.sub step_arg_a step_body matching matching_a }
 
     | @skip _ p body f isval nomatching =>
-
-      have h0 := ParStep.value_inversion step_arg_a isval
-      rw [h0] ; clear h0
+      have h0 := ParStep.skip_reduction isval step_arg_a nomatching
       cases step_cator_a with
       | refl =>
         unfold Joinable
-        exists (Expr.app (Expr.function f) arg)
+        exists (Expr.app (Expr.function f) arg_a)
         apply And.intro
-        { apply ParStep.skip body f isval nomatching}
-        { exact ParStep.refl (Expr.app (Expr.function f) arg) }
+        {
+          apply ParStep.skip
+          { exact ParStep.value_reduction step_arg_a isval }
+          { exact h0 }
+        }
+        { apply ParStep.app
+          { exact ParStep.refl (Expr.function f) }
+          { exact step_arg_a }
+        }
       | @function _ ff step_ff =>
         { cases step_ff with
           | refl =>
             unfold Joinable
-            exists (Expr.app (Expr.function f) arg)
+            exists (Expr.app (Expr.function f) arg_a)
             apply And.intro
-            { apply ParStep.skip body f isval nomatching}
-            { exact ParStep.refl (Expr.app (Expr.function f) arg) }
+            {
+              apply ParStep.skip
+              { exact ParStep.value_reduction step_arg_a isval }
+              { exact h0 }
+            }
+            { apply ParStep.app
+              { exact ParStep.refl (Expr.function f) }
+              { exact step_arg_a }
+            }
           | @cons _ body' _ f' _ step_body step_f =>
-            exists (Expr.app (Expr.function f') arg)
+            exists (Expr.app (Expr.function f') arg_a)
             apply And.intro
-            { exact ParStep.skip body' f' isval nomatching }
-            { apply ParStep.app (ParStep.function step_f) (ParStep.refl arg) }
+            { apply ParStep.skip
+              { exact ParStep.value_reduction step_arg_a isval }
+              { exact h0 }
+            }
+            { apply ParStep.app
+              { exact ParStep.function step_f }
+              { exact step_arg_a }
+            }
         }
   | @skip arg p body f isval nomatching =>
     cases step_b with
@@ -745,25 +771,43 @@ mutual
       apply Joinable.symm
       exact ParStep.triangle step_a
     | @app _ cator_b _ arg_b step_cator_b step_arg_b =>
-      have h0 := ParStep.value_inversion step_arg_b isval
-      rw [h0]
+      have h0 := ParStep.skip_reduction isval step_arg_b nomatching
       cases step_cator_b with
       | refl =>
-        apply Joinable.symm
-        exact ParStep.triangle step_a
+        exists (.app (.function f) arg_b)
+        apply And.intro
+        { apply ParStep.app
+          { exact ParStep.refl (Expr.function f) }
+          { exact step_arg_b }
+        }
+        { apply ParStep.skip
+          { exact ParStep.value_reduction step_arg_b isval }
+          { exact h0 }
+        }
       | @function _ ff step_ff =>
         cases step_ff with
         | refl =>
-          apply Joinable.symm
-          exact ParStep.triangle step_a
+          exists (.app (.function f) arg_b)
+          apply And.intro
+          { apply ParStep.app
+            { exact ParStep.refl (Expr.function f) }
+            { exact step_arg_b }
+          }
+          { apply ParStep.skip
+            { exact ParStep.value_reduction step_arg_b isval }
+            { exact h0 }
+          }
         | @cons _ body' _ f' _ step_body step_f =>
-          exists (Expr.app (Expr.function f') arg)
+          exists (Expr.app (Expr.function f') arg_b)
           apply And.intro
           { apply ParStep.app
             { exact ParStep.function step_f }
-            { exact ParStep.refl arg }
+            { exact step_arg_b }
           }
-          { apply ParStep.skip _ _ isval nomatching }
+          { apply ParStep.skip
+            { exact ParStep.value_reduction step_arg_b isval }
+            { exact h0 }
+          }
     | @pattern_match _ _ m _ _ matching =>
       rw [matching] at nomatching
       simp at nomatching
