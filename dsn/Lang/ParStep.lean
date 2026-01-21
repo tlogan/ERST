@@ -579,17 +579,47 @@ theorem Expr.sub_refl :
     unfold Expr.sub at ih
     exact ih
 
+theorem remove_all_empty α ids:
+  @remove_all α [] ids = []
+:= by induction ids with
+| nil =>
+  simp [remove_all]
+| cons id ids' ih =>
+  simp [remove_all, remove]
+  exact ih
+
 
 theorem remove_all_single_membership :
   x ∈ ids →
   remove_all [(x,c)] ids = []
-:= by sorry
+:= by induction ids with
+| nil =>
+  simp [remove_all]
+| cons id ids' ih =>
+  simp [remove_all]
+  intro h0
+  cases h0 with
+  | inl h1 =>
+    simp [*, remove]
+    simp [remove_all_empty]
+  | inr h1 =>
+    specialize ih h1
+    simp [remove]
+    by_cases h2 : x = id
+    { simp [h2,remove_all_empty] }
+    { simp [h2,ih] }
 
 theorem remove_all_single_nomem :
   x ∉ ids →
   remove_all [(x,c)] ids = [(x,c)]
-:= by sorry
-
+:= by induction ids with
+| nil =>
+  simp [remove_all]
+| cons id ids ih =>
+  simp [remove_all,remove]
+  intro h0 h1
+  simp [h0]
+  apply ih h1
 
 mutual
 
