@@ -32,14 +32,16 @@ mutual
     ParStep cator cator' → ParStep arg arg' →
     ParStep (.app cator arg) (.app cator' arg')
   | pattern_match f :
+    ParStep body body' →
     ParStep arg arg' →
     Pattern.match arg' p = some m' →
-    ParStep body body' →
     ParStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m' body')
-  | skip body f:
-    arg.is_value →
-    Pattern.match arg p = none →
-    ParStep (.app (.function ((p,body) :: f)) arg) (.app (.function f) arg)
+  | skip body :
+    ParFunStep f f' →
+    ParStep arg arg' →
+    Expr.is_value arg' →
+    Pattern.match arg' p = none →
+    ParStep (.app (.function ((p,body) :: f)) arg) (.app (.function f') arg)
   | anno : ParStep e e' → ParStep (.anno e t) (.anno e' t)
   | erase body t :
     ParStep (.anno body t) body
@@ -892,6 +894,12 @@ theorem Pattern.match_sub_preservation :
   )
 := by sorry
 
+theorem Pattern.match_skip_preservation :
+  Pattern.match arg p = none →
+  ∀ mm,
+  Pattern.match (Expr.sub mm arg) p = none
+:= by sorry
+
 theorem Pattern.match_domain :
   Pattern.match arg p = some m →
   ∀ id, id ∈ Pat.ids p ↔ id ∈ ListPair.dom m
@@ -955,7 +963,7 @@ mutual
     have ih1 := ParStep.sub step_arg step_aa matching matching'
     apply ParStep.app ih0 ih1
 
-  | @pattern_match aa aa' pp mm' body body' f step_aa matching'' step_body =>
+  | @pattern_match body body' aa aa' pp mm' f step_body step_aa matching'' =>
     simp [Expr.sub, List.function_sub]
     have ⟨mm'',h0,h1⟩ := Pattern.match_sub_preservation matching'' m'
     rw [←h1]
@@ -963,9 +971,16 @@ mutual
     rw [Pattern.remove_all_ids h2]
     have ih0 := ParStep.sub step_arg step_aa matching matching'
     have ih1 := ParStep.sub step_arg step_body matching matching'
-    apply ParStep.pattern_match _ ih0 h0
-    apply ParStep.sub_remove_all _ ih1
+    apply ParStep.pattern_match
+    { apply ParStep.sub_remove_all _ ih1 }
+    { exact ih0 }
+    { exact h0 }
 
+  | @skip aa pp f f' body isval nomatching step_f =>
+    simp [Expr.sub, List.function_sub]
+    -- have h0 := Pattern.match_skip_preservation nomatching m
+    -- apply ParStep.skip
+    sorry
   | _ => sorry
 end
 
@@ -1030,7 +1045,7 @@ mutual
       have ih0 := ParStep.diamond step_cator_a step_cator_b
       have ih1 := ParStep.diamond step_arg_a step_arg_b
       exact Joinable.app ih0 ih1
-    | @pattern_match _ arg_b p mb body body_a f step_arg_b matching step_body_a =>
+    | @pattern_match body body_a _ arg_b p mb f  step_body_a step_arg_b matching =>
       cases step_cator_a with
       | @function _ ff step_ff =>
         clear step_a
@@ -1042,49 +1057,55 @@ mutual
           unfold Joinable
           exists (Expr.sub mc body_c)
           apply And.intro
-          { apply ParStep.pattern_match _ h0 matching' step_body_c}
+          { exact ParStep.pattern_match f' step_body_c h0 matching' }
           { apply ParStep.sub step_arg_c h1 matching matching' }
 
-    | @skip _ p body f isval nomatching =>
-      have h0 := ParStep.skip_reduction isval step_arg_a nomatching
+    | @skip  f fa _ arg_b p body step_fa step_arg_b isval nomatching =>
       cases step_cator_a with
       | @function _ ff step_ff =>
-        { cases step_ff with
-          | @cons _ body' _ f' _ step_body step_f =>
-            exists (Expr.app (Expr.function f') arg_a)
-            apply And.intro
-            { apply ParStep.skip
-              { exact ParStep.value_reduction step_arg_a isval }
-              { exact h0 }
-            }
-            { apply ParStep.app
-              { exact ParStep.function step_f }
-              { exact step_arg_a }
-            }
-        }
-  | @skip arg p body f isval nomatching =>
+        cases step_ff with
+        | @cons _ body' _ fb _ step_body step_fb =>
+          have ⟨fc,h1,h2⟩ := ParFunStep.diamond step_fa step_fb
+          have ⟨arg_c,h3,h4⟩ := ParStep.diamond step_arg_a step_arg_b
+          exists (Expr.app (Expr.function fc) arg_a)
+          apply And.intro
+          { apply ParStep.skip _ h2 h3
+            { exact ParStep.value_reduction h4 isval }
+            { exact ParStep.skip_reduction isval h4 nomatching }
+          }
+          { apply ParStep.app
+            { exact ParStep.function h1 }
+            { exact step_arg_a }
+          }
+  | @skip  f fa arg arg_a p body step_fa step_arg_a isval nomatching =>
     cases step_b with
     | @app _ cator_b _ arg_b step_cator_b step_arg_b =>
-      have h0 := ParStep.skip_reduction isval step_arg_b nomatching
       cases step_cator_b with
       | @function _ ff step_ff =>
         cases step_ff with
-        | @cons _ body' _ f' _ step_body step_f =>
-          exists (Expr.app (Expr.function f') arg_b)
+        | @cons _ body' _ fb _ step_body step_fb =>
+          have ⟨fc,h1,h2⟩ := ParFunStep.diamond step_fa step_fb
+          have ⟨arg_c,h3,h4⟩ := ParStep.diamond step_arg_a step_arg_b
+
+          exists (Expr.app (Expr.function fc) arg_b)
           apply And.intro
           { apply ParStep.app
-            { exact ParStep.function step_f }
+            { exact ParStep.function h1 }
             { exact step_arg_b }
           }
-          { apply ParStep.skip
-            { exact ParStep.value_reduction step_arg_b isval }
-            { exact h0 }
+          {
+            apply ParStep.skip _ h2 h4
+            { apply ParStep.value_reduction h3 isval }
+            { exact ParStep.skip_reduction isval h3 nomatching }
           }
-    | @pattern_match _ arg' _ m' _ body' _ step_arg matching step_body =>
-      have h0 := ParStep.skip_reduction isval step_arg nomatching
-      simp [matching] at h0
+    | @pattern_match _ body_b _ arg_b _ m' _ step_body_b step_arg_b matching =>
+      have ⟨arg_c,h3,h4⟩ := ParStep.diamond step_arg_a step_arg_b
+      have h0 := ParStep.skip_reduction isval h3 nomatching
+      have h1 := ParStep.pattern_match_reduction h4 matching
+      simp [h0] at h1
     | skip =>
-      exact ParStep.joinable_refl
+      sorry
+      -- exact ParStep.joinable_refl
   | _ => sorry
 
 end

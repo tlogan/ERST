@@ -258,6 +258,15 @@ theorem NStep.refl_trans_pattern_match
   }
   { exact ih }
 
+theorem NStep.refl_trans_skip
+  (step_f : ReflTrans NFunStep f f')
+  (step_arg : ReflTrans NStep arg arg')
+  (nomatching : Pattern.match arg' p = none)
+  (isval : Expr.is_value arg')
+: ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (.app (.function f') arg)
+:= by induction step_f with
+| _ => sorry
+
 theorem NStep.refl_trans_loopi :
   ReflTrans NStep body body' →
   ReflTrans NStep (Expr.loopi body) (Expr.loopi body')
@@ -314,14 +323,14 @@ mutual
     have ih0 := NStep.semi_completeness step_cator
     have ih1 := NStep.semi_completeness step_arg
     exact NStep.refl_trans_app ih0 ih1
-  | @pattern_match arg arg' p m' body body' f step_arg matching' step_body =>
+  | @pattern_match body body' arg arg' p m' f  step_body step_arg matching' =>
     have ih0 := NStep.semi_completeness step_arg
     have ih1 := NStep.semi_completeness step_body
     exact NStep.refl_trans_pattern_match ih1 ih0 matching'
-  | @skip arg p body f isval nomatching =>
-    apply ReflTrans.step
-    { apply NStep.skip _ _ isval nomatching }
-    { exact ReflTrans.refl (Expr.app (Expr.function f) arg)}
+  | @skip f f' arg arg' p body step_f step_arg isval nomatching =>
+    have ih0 := NFunStep.semi_completeness step_f
+    have ih1 := NStep.semi_completeness step_arg
+    exact NStep.refl_trans_skip ih0 ih1 nomatching isval
   | @anno e e' t step_e =>
     have ih := NStep.semi_completeness step_e
     exact NStep.refl_trans_anno ih
@@ -384,9 +393,9 @@ mutual
     have ih := ParStep.completeness step_arg
     apply ParStep.app (ParStep.refl arg') ih
   | @pattern_match arg p m body f matching =>
-    apply ParStep.pattern_match _ (ParStep.refl arg) matching (ParStep.refl body)
+    apply ParStep.pattern_match _ (ParStep.refl body) (ParStep.refl arg) matching
   | @skip arg p body f isval nomatching =>
-    exact ParStep.skip body f isval nomatching
+    apply ParStep.skip _ (ParFunStep.refl f) (ParStep.refl arg) isval nomatching
   | @anno body body' t step_body =>
     have ih := ParStep.completeness step_body
     exact ParStep.anno ih
