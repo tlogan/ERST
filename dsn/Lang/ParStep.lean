@@ -746,7 +746,7 @@ mutual
     {
       simp [*] at matching
       simp [*] at matching'
-      apply ParStep.pattern_match_preservation step_ee matching matching' e
+      apply ParStep.substitute step_ee matching matching' e
     }
     {
       simp [*] at matching
@@ -754,7 +754,7 @@ mutual
       apply ParRcdStep.pattern_match_entry_preservation step_rr matching matching' e
     }
 
-  theorem ParRcdStep.pattern_match_preservation
+  theorem ParRcdStep.substitute
     (step : ParRcdStep r r')
     (matching : Pattern.match_record r ps = some m)
     (matching' : Pattern.match_record r' ps = some m')
@@ -789,7 +789,7 @@ mutual
             simp [*] at h4
             rw [←h2,←h4]
             have ih0 := ParRcdStep.pattern_match_entry_preservation step h5 h6 e
-            have ih1 := ParRcdStep.pattern_match_preservation step h7 h8 e
+            have ih1 := ParRcdStep.substitute step h7 h8 e
             apply ParStep.sub_disjoint_concat
             { apply Pattern.match_disjoint_preservation h5 h7 h3 }
             { exact Pattern.match_disjoint_preservation h6 h8 h3 }
@@ -806,7 +806,7 @@ mutual
 
 
 
-  theorem ParStep.pattern_match_preservation
+  theorem ParStep.substitute
     (step : ParStep arg arg')
     (matching : Pattern.match arg p = some m)
     (matching' : Pattern.match arg' p = some m')
@@ -830,7 +830,7 @@ mutual
       simp [Pattern.match] at matching'
       have ⟨h0,h1⟩ := matching ; clear matching
       have ⟨h2,h3⟩ := matching' ; clear matching'
-      have ih := ParStep.pattern_match_preservation step_body h1 h3
+      have ih := ParStep.substitute step_body h1 h3
       apply ih
     | _ =>
       simp [Pattern.match] at matching
@@ -845,19 +845,75 @@ mutual
       simp [Pattern.match] at matching'
       have ⟨h0,h1⟩ := matching
       have ⟨h2,h3⟩ := matching'
-      apply ParRcdStep.pattern_match_preservation step_r h1 h3
+      apply ParRcdStep.substitute step_r h1 h3
 
     | _ =>
       simp [Pattern.match] at matching
 end
 
-theorem ParStep.sub
-  (step_arg : ParStep arg arg')
-  (step_body : ParStep body body')
-  (matching : Pattern.match arg p = some m)
-  (matching' : Pattern.match arg' p = some m')
-: ParStep (Expr.sub m body) (Expr.sub m' body')
-:= by sorry
+
+-- theorem Expr.sub_inside_out :
+--   (Expr.sub m (Expr.sub m' e)) =
+--   (Expr.sub m' (Expr.sub (remove_all m (ListPair.dom m')) e))
+-- := by sorry
+
+mutual
+
+  theorem ParRcdStep.sub
+    (step_arg : ParStep arg arg')
+    (step_body : ParRcdStep body body')
+    (matching : Pattern.match arg p = some m)
+    (matching' : Pattern.match arg' p = some m')
+  : ParRcdStep (List.record_sub m body) (List.record_sub m' body')
+  := by sorry
+
+  theorem ParFunStep.sub
+    (step_arg : ParStep arg arg')
+    (step_body : ParFunStep body body')
+    (matching : Pattern.match arg p = some m)
+    (matching' : Pattern.match arg' p = some m')
+  : ParFunStep (List.function_sub m body) (List.function_sub m' body')
+  := by sorry
+
+  theorem ParStep.sub
+    (step_arg : ParStep arg arg')
+    (step_body : ParStep body body')
+    (matching : Pattern.match arg p = some m)
+    (matching' : Pattern.match arg' p = some m')
+  : ParStep (Expr.sub m body) (Expr.sub m' body')
+  := by cases step_body with
+  | refl =>
+    exact ParStep.substitute step_arg matching matching' body
+
+  | @iso b b' l step_b =>
+    simp [Expr.sub]
+    apply ParStep.iso
+    apply ParStep.sub step_arg step_b matching matching'
+
+  | @record r r' step_r =>
+    simp [Expr.sub]
+    apply ParStep.record
+    apply ParRcdStep.sub step_arg step_r matching matching'
+
+  | @function f f' step_f =>
+    simp [Expr.sub]
+    apply ParStep.function
+    apply ParFunStep.sub step_arg step_f matching matching'
+
+  | @app cator cator' aa aa' step_cator step_aa =>
+    simp [Expr.sub]
+    have ih0 := ParStep.sub step_arg step_cator matching matching'
+    have ih1 := ParStep.sub step_arg step_aa matching matching'
+    apply ParStep.app ih0 ih1
+
+  | @pattern_match aa pp mm b f matching''=>
+    simp [Expr.sub, List.function_sub]
+    -- rw [Expr.sub_inside_out]
+    -- apply ParStep.pattern_match
+    sorry
+
+  | _ => sorry
+end
 
 
 mutual
@@ -942,7 +998,7 @@ mutual
         exists (Expr.sub ma body)
         apply And.intro
         { exact ParStep.pattern_match body f matching_a }
-        { exact ParStep.pattern_match_preservation step_arg_a matching matching_a body }
+        { exact ParStep.substitute step_arg_a matching matching_a body }
       | @function _ ff step_ff =>
         clear step_a
         have ⟨ma, matching_a⟩ := ParStep.pattern_match_reduction step_arg_a matching
