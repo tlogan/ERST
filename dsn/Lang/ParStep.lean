@@ -422,13 +422,95 @@ mutual
     (isval : List.is_record_value r)
     (step : ParRcdStep r r')
   : Pattern.match_entry l p r' = some m' → ∃ m , Pattern.match_entry l p r = some m
-  := by sorry
+  := by cases step with
+  | nil =>
+    intro h0
+    exact Exists.intro m' h0
+  | @cons e e' rr rr' l' step_e step_rr =>
+    simp [Pattern.match_entry]
+    simp [List.is_record_value] at isval
+    have ⟨⟨h0,h1⟩,h2⟩ := isval
+    intro h3
+    by_cases h4 : l' = l
+    {
+      simp [*] at h3
+      have ⟨m,ih⟩ := ParStep.pattern_match_expansion h1 step_e h3
+      exists m
+      simp [*]
+    }
+    {
+      simp [*] at h3
+      have ⟨m,ih⟩ := ParRcdStep.pattern_match_entry_expansion h2 step_rr h3
+      exists m
+      simp [*]
+    }
 
   theorem ParRcdStep.pattern_match_expansion
     (isval : List.is_record_value r)
     (step : ParRcdStep r r')
   : Pattern.match_record r' ps = some m' → ∃ m , Pattern.match_record r ps = some m
-  := by sorry
+  := by cases ps with
+  | nil =>
+    simp [Pattern.match_record]
+  | cons lp rp' =>
+    have (l,p) := lp
+    intro h0
+    simp [Pattern.match_record] at h0
+    have ⟨h2,h3⟩ := h0
+    clear h0
+
+    cases h4 : (Pattern.match_entry l p r') with
+    | some m0' =>
+      simp [h4] at h3
+      cases h5 : (Pattern.match_record r' rp') with
+      | some m1' =>
+        simp [h5] at h3
+        have ⟨m0,h8⟩ := ParRcdStep.pattern_match_entry_expansion isval step h4
+        have ⟨m1,h9⟩ := ParRcdStep.pattern_match_expansion isval step h5
+        exists (m0 ++ m1)
+        simp [Pattern.match_record, *]
+      | none =>
+        simp [h5] at h3
+    | none =>
+      simp [h4] at h3
+
+  theorem ParStep.pattern_match_expansion
+    (isval : Expr.is_value e)
+    (step : ParStep e e')
+  : Pattern.match e' p = some m' → ∃ m , Pattern.match e p = some m
+  := by cases p with
+  | var x =>
+    simp [Pattern.match]
+  | iso l p' =>
+    cases step with
+    | refl =>
+      intro h0
+      exact Exists.intro m' h0
+    | @iso body body' l' step_body =>
+      simp [Pattern.match]
+      simp [Expr.is_value] at isval
+      intro h0 h1
+      apply And.intro h0
+      have ⟨m,ih⟩ := ParStep.pattern_match_expansion isval step_body h1
+      exists m
+    | _ =>
+      simp [Pattern.match] <;> simp [Expr.is_value] at isval
+  | record ps =>
+    cases step with
+    | refl =>
+      intro h0
+      exact Exists.intro m' h0
+    | iso =>
+      simp [Pattern.match]
+    | @record r r' step =>
+      simp [Pattern.match]
+      simp [Expr.is_value] at isval
+      intro h0 h1
+      have ⟨m,ih⟩ := ParRcdStep.pattern_match_expansion isval step h1
+      apply And.intro (ParRcdStep.keys_unique_expansion step h0)
+      exists m
+    | _ =>
+      simp [Pattern.match] <;> simp [Expr.is_value] at isval
 end
 
 theorem ParRcdStep.skip_reduction
