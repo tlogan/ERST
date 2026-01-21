@@ -213,8 +213,6 @@ theorem NStep.joinable_applicand f :
   { exact refl_trans_applicand f h2 }
 
 
-
-
 theorem NStep.refl_trans_app :
   ReflTrans NStep ef ef' →
   ReflTrans NStep  e e' →
@@ -230,13 +228,35 @@ theorem NStep.refl_trans_app :
     { apply ReflTrans.step (NStep.applicator _ h1) ih }
     { exact ReflTrans.refl (Expr.app ef' e') }
 
-theorem NStep.refl_trans_pattern_match :
-  ReflTrans Nstep body body' →
-  ReflTrans NStep arg arg' →
-  Pattern.match arg' p = some m' →
-  ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m' body')
-:= by
-  sorry
+theorem NStep.refl_trans_pattern_matcher
+  (step_arg : ReflTrans NStep arg arg')
+  (matching' : Pattern.match arg' p = some m')
+: ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m' body)
+:= by induction step_arg with
+| refl arg =>
+  apply ReflTrans.step
+  { apply NStep.pattern_match _ _ matching' }
+  { exact ReflTrans.refl (Expr.sub m' body) }
+| @step arg argm arg' h0 h1 ih =>
+  apply ReflTrans.step
+  { apply NStep.applicand _ h0 }
+  { apply ih matching' }
+
+theorem NStep.refl_trans_pattern_match
+  (step_body : ReflTrans NStep body body')
+  (step_arg : ReflTrans NStep arg arg')
+  (matching' : Pattern.match arg' p = some m')
+: ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m' body')
+:= by induction step_body with
+| refl =>
+  exact refl_trans_pattern_matcher step_arg matching'
+| @step body bodym body' h0 h1 ih =>
+  apply ReflTrans.step
+  { apply NStep.applicator
+    apply NStep.function
+    apply NFunStep.head _ _ h0
+  }
+  { exact ih }
 
 theorem NStep.refl_trans_loopi :
   ReflTrans NStep body body' →
