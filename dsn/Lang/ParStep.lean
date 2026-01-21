@@ -21,6 +21,7 @@ mutual
     ParFunStep ((p, e) :: f) ((p, e') :: f')
 
   inductive ParStep : Expr → Expr → Prop
+  /- TODO: can replace with a variable step -/
   | refl e : ParStep e e
   /- head normal forms -/
   | iso : ParStep body body' → ParStep (.iso l body) (.iso l body')
@@ -31,9 +32,11 @@ mutual
   | app :
     ParStep cator cator' → ParStep arg arg' →
     ParStep (.app cator arg) (.app cator' arg')
-  | pattern_match body f :
-    Pattern.match arg p = some m →
-    ParStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m body)
+  | pattern_match f :
+    ParStep arg arg' →
+    Pattern.match arg' p = some m' →
+    ParStep body body' →
+    ParStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m' body')
   | skip body f:
     arg.is_value →
     Pattern.match arg p = none →
@@ -852,17 +855,6 @@ mutual
 end
 
 
--- theorem Expr.sub_inside_out :
---   (Expr.sub m (Expr.sub m' e)) =
---   (Expr.sub m' (Expr.sub (remove_all m (ListPair.dom m')) e))
--- := by sorry
-
-theorem ParStep.substitute_transitivity :
-  ParStep e (Expr.sub m body)  →
-  ParStep (Expr.sub m body) (Expr.sub m' body) →
-  ParStep e (Expr.sub m' body)
-:= by sorry
-
 theorem Pattern.match_sub_preservation :
   Pattern.match arg p = some m →
   ∀ mm,
@@ -874,6 +866,20 @@ theorem Pattern.match_sub_preservation :
   )
 := by sorry
 
+theorem Pattern.match_domain :
+  Pattern.match arg p = some m →
+  ∀ id, id ∈ Pat.ids p ↔ id ∈ ListPair.dom m
+:= by sorry
+
+theorem Pattern.remove_all_ids :
+  (∀ id, id ∈ a ↔ id ∈ b) →
+  remove_all m a = remove_all m b
+:= by sorry
+
+theorem ParStep.sub_remove_all ids :
+  ParStep (Expr.sub m body) (Expr.sub m' body') →
+  ParStep (Expr.sub (remove_all m ids) body) (Expr.sub (remove_all m' ids) body')
+:= by sorry
 mutual
 
   theorem ParRcdStep.sub
@@ -923,15 +929,16 @@ mutual
     have ih1 := ParStep.sub step_arg step_aa matching matching'
     apply ParStep.app ih0 ih1
 
-  | @pattern_match aa pp mm b f matching''=>
+  | @pattern_match aa aa' pp mm' body body' f step_aa matching'' step_body =>
     simp [Expr.sub, List.function_sub]
-    apply @ParStep.substitute_transitivity _ m
-    {
-      have ⟨mm',h0,h1⟩ := Pattern.match_sub_preservation matching''
-
-      sorry
-    }
-    { exact ParStep.substitute step_arg matching matching' (Expr.sub mm b) }
+    have ⟨mm'',h0,h1⟩ := Pattern.match_sub_preservation matching'' m'
+    rw [←h1]
+    have h2 := Pattern.match_domain matching''
+    rw [Pattern.remove_all_ids h2]
+    have ih0 := ParStep.sub step_arg step_aa matching matching'
+    have ih1 := ParStep.sub step_arg step_body matching matching'
+    apply ParStep.pattern_match _ ih0 h0
+    apply ParStep.sub_remove_all _ ih1
 
   | _ => sorry
 end
@@ -1009,27 +1016,30 @@ mutual
       have ih0 := ParStep.diamond step_cator_a step_cator_b
       have ih1 := ParStep.diamond step_arg_a step_arg_b
       exact Joinable.app ih0 ih1
-    | @pattern_match _ p m body f matching =>
-
+    | @pattern_match _ arg_b p mb body body_a f step_arg_b matching step_body_a =>
       cases step_cator_a with
       | refl =>
         clear step_a
-        have ⟨ma, matching_a⟩ := ParStep.pattern_match_reduction step_arg_a matching
+        have ⟨arg_c,h0,step_arg_c⟩ := ParStep.diamond step_arg_a step_arg_b
+        have ⟨mc, matching'⟩ := ParStep.pattern_match_reduction step_arg_c matching
         unfold Joinable
-        exists (Expr.sub ma body)
+        exists (Expr.sub mc body_a)
         apply And.intro
-        { exact ParStep.pattern_match body f matching_a }
-        { exact ParStep.substitute step_arg_a matching matching_a body }
+        { apply ParStep.pattern_match _ h0 matching' step_body_a}
+        { apply ParStep.substitute step_arg_c matching matching' body_a }
+
       | @function _ ff step_ff =>
         clear step_a
-        have ⟨ma, matching_a⟩ := ParStep.pattern_match_reduction step_arg_a matching
+        have ⟨arg_c,h0,step_arg_c⟩ := ParStep.diamond step_arg_a step_arg_b
+        have ⟨mc, matching'⟩ := ParStep.pattern_match_reduction step_arg_c matching
         cases step_ff with
-        | @cons _ body' _ f' _ step_body step_f =>
+        | @cons _ body_b _ f' _ step_body_b step_f =>
+          have ⟨body_c,h1,step_body_c⟩ := ParStep.diamond step_body_a step_body_b
           unfold Joinable
-          exists (Expr.sub ma body')
+          exists (Expr.sub mc body_c)
           apply And.intro
-          { apply ParStep.pattern_match _ _ matching_a }
-          { exact ParStep.sub step_arg_a step_body matching matching_a }
+          { apply ParStep.pattern_match _ h0 matching' step_body_c}
+          { apply ParStep.sub step_arg_c h1 matching matching' }
 
     | @skip _ p body f isval nomatching =>
       have h0 := ParStep.skip_reduction isval step_arg_a nomatching
@@ -1093,9 +1103,9 @@ mutual
             { exact ParStep.value_reduction step_arg_b isval }
             { exact h0 }
           }
-    | @pattern_match _ _ m _ _ matching =>
-      rw [matching] at nomatching
-      simp at nomatching
+    | @pattern_match _ arg' _ m' _ body' _ step_arg matching step_body =>
+      have h0 := ParStep.skip_reduction isval step_arg nomatching
+      simp [matching] at h0
     | skip =>
       exact ParStep.joinable_refl
   | _ => sorry
