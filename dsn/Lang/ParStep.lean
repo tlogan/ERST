@@ -857,6 +857,23 @@ end
 --   (Expr.sub m' (Expr.sub (remove_all m (ListPair.dom m')) e))
 -- := by sorry
 
+theorem ParStep.substitute_transitivity :
+  ParStep e (Expr.sub m body)  →
+  ParStep (Expr.sub m body) (Expr.sub m' body) →
+  ParStep e (Expr.sub m' body)
+:= by sorry
+
+theorem Pattern.match_sub_preservation :
+  Pattern.match arg p = some m →
+  ∀ mm,
+  ∃ m', Pattern.match (Expr.sub mm arg) p = some m' ∧
+  (∀ e,
+    (Expr.sub m' (Expr.sub (remove_all mm (ListPair.dom m)) e))
+    =
+    (Expr.sub mm (Expr.sub m e))
+  )
+:= by sorry
+
 mutual
 
   theorem ParRcdStep.sub
@@ -908,9 +925,13 @@ mutual
 
   | @pattern_match aa pp mm b f matching''=>
     simp [Expr.sub, List.function_sub]
-    -- rw [Expr.sub_inside_out]
-    -- apply ParStep.pattern_match
-    sorry
+    apply @ParStep.substitute_transitivity _ m
+    {
+      have ⟨mm',h0,h1⟩ := Pattern.match_sub_preservation matching''
+
+      sorry
+    }
+    { exact ParStep.substitute step_arg matching matching' (Expr.sub mm b) }
 
   | _ => sorry
 end
