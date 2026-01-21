@@ -258,14 +258,39 @@ theorem NStep.refl_trans_pattern_match
   }
   { exact ih }
 
+theorem NStep.refl_trans_skipper
+  (step_arg : ReflTrans NStep arg arg')
+  (nomatching : Pattern.match arg' p = none)
+  (isval : Expr.is_value arg')
+: ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (.app (.function f) arg')
+:= by induction step_arg with
+| refl arg =>
+  apply ReflTrans.step
+  { apply NStep.skip _ _ isval nomatching }
+  { exact ReflTrans.refl (Expr.app (Expr.function f) arg) }
+| @step arg argm arg' h0 h1 ih =>
+  apply ReflTrans.step
+  { apply NStep.applicand _ h0 }
+  { exact ih nomatching isval }
+
 theorem NStep.refl_trans_skip
   (step_f : ReflTrans NFunStep f f')
   (step_arg : ReflTrans NStep arg arg')
   (nomatching : Pattern.match arg' p = none)
   (isval : Expr.is_value arg')
-: ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (.app (.function f') arg)
+: ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (.app (.function f') arg')
 := by induction step_f with
-| _ => sorry
+| refl f =>
+  exact refl_trans_skipper step_arg nomatching isval
+| @step f fm f' h0 h1 ih =>
+
+  apply ReflTrans.step
+  { apply NStep.applicator
+    apply NStep.function
+    apply NFunStep.tail
+    exact h0
+  }
+  { apply ih }
 
 theorem NStep.refl_trans_loopi :
   ReflTrans NStep body body' →

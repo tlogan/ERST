@@ -41,7 +41,7 @@ mutual
     ParStep arg arg' →
     Expr.is_value arg' →
     Pattern.match arg' p = none →
-    ParStep (.app (.function ((p,body) :: f)) arg) (.app (.function f') arg)
+    ParStep (.app (.function ((p,body) :: f)) arg) (.app (.function f') arg')
   | anno : ParStep e e' → ParStep (.anno e t) (.anno e' t)
   | erase body t :
     ParStep (.anno body t) body
@@ -1067,7 +1067,7 @@ mutual
         | @cons _ body' _ fb _ step_body step_fb =>
           have ⟨fc,h1,h2⟩ := ParFunStep.diamond step_fa step_fb
           have ⟨arg_c,h3,h4⟩ := ParStep.diamond step_arg_a step_arg_b
-          exists (Expr.app (Expr.function fc) arg_a)
+          exists (Expr.app (Expr.function fc) arg_c)
           apply And.intro
           { apply ParStep.skip _ h2 h3
             { exact ParStep.value_reduction h4 isval }
@@ -1075,7 +1075,7 @@ mutual
           }
           { apply ParStep.app
             { exact ParStep.function h1 }
-            { exact step_arg_a }
+            { exact h4 }
           }
   | @skip  f fa arg arg_a p body step_fa step_arg_a isval nomatching =>
     cases step_b with
@@ -1087,11 +1087,11 @@ mutual
           have ⟨fc,h1,h2⟩ := ParFunStep.diamond step_fa step_fb
           have ⟨arg_c,h3,h4⟩ := ParStep.diamond step_arg_a step_arg_b
 
-          exists (Expr.app (Expr.function fc) arg_b)
+          exists (Expr.app (Expr.function fc) arg_c)
           apply And.intro
           { apply ParStep.app
             { exact ParStep.function h1 }
-            { exact step_arg_b }
+            { exact h3 }
           }
           {
             apply ParStep.skip _ h2 h4
