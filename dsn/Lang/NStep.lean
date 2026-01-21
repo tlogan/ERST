@@ -230,6 +230,14 @@ theorem NStep.refl_trans_app :
     { apply ReflTrans.step (NStep.applicator _ h1) ih }
     { exact ReflTrans.refl (Expr.app ef' e') }
 
+theorem NStep.refl_trans_pattern_match :
+  ReflTrans Nstep body body' →
+  ReflTrans NStep arg arg' →
+  Pattern.match arg' p = some m' →
+  ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m' body')
+:= by
+  sorry
+
 theorem NStep.refl_trans_loopi :
   ReflTrans NStep body body' →
   ReflTrans NStep (Expr.loopi body) (Expr.loopi body')
@@ -271,8 +279,8 @@ mutual
     (step : ParStep e e')
   : ReflTrans NStep e e'
   := by cases step  with
-  | refl =>
-    exact ReflTrans.refl e
+  | var x =>
+    exact ReflTrans.refl (Expr.var x)
   | @iso body body' l step_body =>
     have ih := NStep.semi_completeness step_body
     exact NStep.refl_trans_iso ih
@@ -286,12 +294,10 @@ mutual
     have ih0 := NStep.semi_completeness step_cator
     have ih1 := NStep.semi_completeness step_arg
     exact NStep.refl_trans_app ih0 ih1
-  | @pattern_match arg p m body f matching =>
-    apply ReflTrans.step
-    { apply NStep.pattern_match
-      exact matching
-    }
-    { exact ReflTrans.refl (Expr.sub m body) }
+  | @pattern_match arg arg' p m' body body' f step_arg matching' step_body =>
+    have ih0 := NStep.semi_completeness step_arg
+    have ih1 := NStep.semi_completeness step_body
+    exact NStep.refl_trans_pattern_match ih1 ih0 matching'
   | @skip arg p body f isval nomatching =>
     apply ReflTrans.step
     { apply NStep.skip _ _ isval nomatching }
@@ -358,7 +364,7 @@ mutual
     have ih := ParStep.completeness step_arg
     apply ParStep.app (ParStep.refl arg') ih
   | @pattern_match arg p m body f matching =>
-    exact ParStep.pattern_match body f matching
+    apply ParStep.pattern_match _ (ParStep.refl arg) matching (ParStep.refl body)
   | @skip arg p body f isval nomatching =>
     exact ParStep.skip body f isval nomatching
   | @anno body body' t step_body =>
