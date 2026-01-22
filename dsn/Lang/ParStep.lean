@@ -914,6 +914,12 @@ theorem ParStep.sub_remove_all ids :
   ParStep (Expr.sub m body) (Expr.sub m' body') →
   ParStep (Expr.sub (remove_all m ids) body) (Expr.sub (remove_all m' ids) body')
 := by sorry
+
+theorem Expr.is_value_sub_preservation :
+  Expr.is_value e →
+  Expr.is_value (Expr.sub m e)
+:= by sorry
+
 mutual
 
   theorem ParRcdStep.sub
@@ -976,11 +982,14 @@ mutual
     { exact ih0 }
     { exact h0 }
 
-  | @skip aa pp f f' body isval nomatching step_f =>
+  | @skip f f' aa aa' pp bb step_f step_aa isval nomatching  =>
     simp [Expr.sub, List.function_sub]
-    -- have h0 := Pattern.match_skip_preservation nomatching m
-    -- apply ParStep.skip
-    sorry
+    have h0 := Pattern.match_skip_preservation nomatching m
+    apply ParStep.skip
+    { apply ParFunStep.sub step_arg step_f matching matching' }
+    { apply ParStep.sub step_arg step_aa matching matching'}
+    { exact Expr.is_value_sub_preservation isval }
+    { exact Pattern.match_skip_preservation nomatching m' }
   | _ => sorry
 end
 
