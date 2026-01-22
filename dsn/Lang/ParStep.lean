@@ -1136,6 +1136,8 @@ mutual
             { exact ParStep.function h1 }
             { exact h4 }
           }
+  | @pattern_match =>
+    sorry
   | @skip  f fa arg arg_a p body step_fa step_arg_a isval_a nomatching_a =>
     cases step_b with
     | @app _ cator_b _ arg_b step_cator_b step_arg_b =>
@@ -1262,8 +1264,36 @@ mutual
               { apply Pattern.match_var }
             }
             { exact ParStep.recycle x h2 }
-    | _ => sorry
-  | _ => sorry
+    | @recycle _ eeb _ step_eeb =>
+      have ⟨eec,h1,h2⟩ := ParStep.diamond step_eea step_eeb
+      exists (Expr.sub [(x, Expr.loopi (Expr.function [(Pat.var x, eec)]))] eec)
+      apply And.intro
+      {
+        have h3 : ParStep
+          (Expr.loopi (Expr.function [(Pat.var x, eea)]))
+          (Expr.loopi (Expr.function [(Pat.var x, eec)]))
+        := by
+          apply ParStep.loopi
+          apply ParStep.function
+          apply ParFunStep.cons _ h1
+          apply ParFunStep.nil
+        apply ParStep.sub h3 h1
+        { apply Pattern.match_var }
+        { apply Pattern.match_var }
+      }
+      {
+        have h3 : ParStep
+          (Expr.loopi (Expr.function [(Pat.var x, eeb)]))
+          (Expr.loopi (Expr.function [(Pat.var x, eec)]))
+        := by
+          apply ParStep.loopi
+          apply ParStep.function
+          apply ParFunStep.cons _ h2
+          apply ParFunStep.nil
+        apply ParStep.sub h3 h2
+        { apply Pattern.match_var }
+        { apply Pattern.match_var }
+      }
 
 end
 
