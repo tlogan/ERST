@@ -47,5 +47,10 @@ mutual
 end
 
 
+theorem Pattern.match_var :
+  Pattern.match e (.var x) = some [(x,e)]
+:= by sorry
+
+
 
 end Lang

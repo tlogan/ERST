@@ -1205,6 +1205,38 @@ mutual
     | @erase _ eb _ step_eb =>
       have ⟨ec,h1,h2⟩ := ParStep.diamond step_ea step_eb
       exists ec
+  | @loopi body body_a step_body_a =>
+    cases step_b with
+    | @loopi _ body_b step_body_b =>
+      have ⟨body_c,h1,h2⟩ := ParStep.diamond step_body_a step_body_b
+      exists (Expr.loopi body_c)
+      apply And.intro
+      { exact ParStep.loopi h1 }
+      { exact ParStep.loopi h2 }
+    | @recycle e ea x step_ea =>
+      cases step_body_a with
+      | @function _ f' step_f =>
+        cases step_f with
+        | @cons _ eb _ ff _ step_eb step_ff =>
+          cases step_ff with
+          | nil =>
+            have ⟨ec,h1,h2⟩ := ParStep.diamond step_ea step_eb
+            exists (Expr.sub [(x, Expr.loopi (Expr.function [(Pat.var x, ec)]))] ec)
+            apply And.intro
+            { exact ParStep.recycle x h2 }
+            {
+              have h3 : ParStep
+                (Expr.loopi (Expr.function [(Pat.var x, ea)]))
+                (Expr.loopi (Expr.function [(Pat.var x, ec)]))
+              := by
+                apply ParStep.loopi
+                apply ParStep.function
+                apply ParFunStep.cons _ h1
+                apply ParFunStep.nil
+              apply ParStep.sub h3 h1
+              { apply Pattern.match_var }
+              { apply Pattern.match_var }
+            }
   | _ => sorry
 
 end
