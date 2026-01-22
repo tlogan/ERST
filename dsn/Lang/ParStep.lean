@@ -1081,13 +1081,12 @@ mutual
     (step_a : ParStep e ea)
     (step_b : ParStep e eb)
   : Joinable ParStep ea eb
-  := by have h := step_a ; cases h with
+  := by cases step_a with
   | var x =>
     exact ParStep.triangle step_b
   | @iso body body_a l step_body_a =>
     cases step_b with
     | @iso _ body_b _ step_body_b =>
-      clear step_a
       have ih := ParStep.diamond step_body_a step_body_b
       exact ParStep.joinable_iso ih
   | @record r ra step_ra =>
@@ -1109,7 +1108,6 @@ mutual
     | @pattern_match body body_a _ arg_b p mb f  step_body_a step_arg_b matching =>
       cases step_cator_a with
       | @function _ ff step_ff =>
-        clear step_a
         have ⟨arg_c,h0,step_arg_c⟩ := ParStep.diamond step_arg_a step_arg_b
         have ⟨mc, matching'⟩ := ParStep.pattern_match_reduction step_arg_c matching
         cases step_ff with
@@ -1213,21 +1211,21 @@ mutual
       apply And.intro
       { exact ParStep.loopi h1 }
       { exact ParStep.loopi h2 }
-    | @recycle e ea x step_ea =>
+    | @recycle ee eea x step_eea =>
       cases step_body_a with
       | @function _ f' step_f =>
         cases step_f with
-        | @cons _ eb _ ff _ step_eb step_ff =>
+        | @cons _ eeb _ ff _ step_eeb step_ff =>
           cases step_ff with
           | nil =>
-            have ⟨ec,h1,h2⟩ := ParStep.diamond step_ea step_eb
-            exists (Expr.sub [(x, Expr.loopi (Expr.function [(Pat.var x, ec)]))] ec)
+            have ⟨eec,h1,h2⟩ := ParStep.diamond step_eea step_eeb
+            exists (Expr.sub [(x, Expr.loopi (Expr.function [(Pat.var x, eec)]))] eec)
             apply And.intro
             { exact ParStep.recycle x h2 }
             {
               have h3 : ParStep
-                (Expr.loopi (Expr.function [(Pat.var x, ea)]))
-                (Expr.loopi (Expr.function [(Pat.var x, ec)]))
+                (Expr.loopi (Expr.function [(Pat.var x, eea)]))
+                (Expr.loopi (Expr.function [(Pat.var x, eec)]))
               := by
                 apply ParStep.loopi
                 apply ParStep.function
@@ -1237,6 +1235,34 @@ mutual
               { apply Pattern.match_var }
               { apply Pattern.match_var }
             }
+  | @recycle ee eea x step_eea =>
+
+    cases step_b with
+    | @loopi _ body_b step_body_b =>
+      cases step_body_b with
+      | @function _ f step_f =>
+        cases step_f with
+        | @cons _ eeb _ ff _ step_eeb step_ff =>
+          cases step_ff with
+          | nil =>
+            have ⟨eec,h1,h2⟩ := ParStep.diamond step_eea step_eeb
+            exists (Expr.sub [(x, Expr.loopi (Expr.function [(Pat.var x, eec)]))] eec)
+            apply And.intro
+            {
+              have h3 : ParStep
+                (Expr.loopi (Expr.function [(Pat.var x, eea)]))
+                (Expr.loopi (Expr.function [(Pat.var x, eec)]))
+              := by
+                apply ParStep.loopi
+                apply ParStep.function
+                apply ParFunStep.cons _ h1
+                apply ParFunStep.nil
+              apply ParStep.sub h3 h1
+              { apply Pattern.match_var }
+              { apply Pattern.match_var }
+            }
+            { exact ParStep.recycle x h2 }
+    | _ => sorry
   | _ => sorry
 
 end
