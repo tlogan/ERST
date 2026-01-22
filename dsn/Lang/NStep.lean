@@ -360,13 +360,15 @@ mutual
     have ih := NStep.semi_completeness step_e
     exact NStep.refl_trans_anno ih
 
-  | erase =>
+  | @erase e _ t step_body=>
     apply ReflTrans.step
     { apply NStep.erase }
-    { exact ReflTrans.refl e' }
+    { apply NStep.semi_completeness step_body }
+
   | @loopi body body' step_body =>
     have ih := NStep.semi_completeness step_body
     exact NStep.refl_trans_loopi ih
+
   | @recycle x e =>
     apply ReflTrans.step
     { apply NStep.recycle }
@@ -425,7 +427,7 @@ mutual
     have ih := ParStep.completeness step_body
     exact ParStep.anno ih
   | @erase e' t =>
-    exact ParStep.erase e' t
+    apply ParStep.erase _ (ParStep.refl e')
   | @loopi body body' step_body =>
     have ih := ParStep.completeness step_body
     exact ParStep.loopi ih

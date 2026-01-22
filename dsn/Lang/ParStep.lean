@@ -43,8 +43,9 @@ mutual
     Pattern.match arg' p = none →
     ParStep (.app (.function ((p,body) :: f)) arg) (.app (.function f') arg')
   | anno : ParStep e e' → ParStep (.anno e t) (.anno e' t)
-  | erase body t :
-    ParStep (.anno body t) body
+  | erase t :
+    ParStep body body' →
+    ParStep (.anno body t) body'
   | loopi : ParStep body body' → ParStep (.loopi body) (.loopi body')
   | recycle x e :
     ParStep
@@ -1007,6 +1008,14 @@ mutual
     { apply ParStep.sub step_arg step_aa matching matching'}
     { exact Expr.is_value_sub_preservation isval }
     { exact Pattern.match_skip_preservation nomatching m' }
+  | @anno e e' t step_e =>
+    simp [Expr.sub, List.function_sub]
+    apply ParStep.anno
+    apply ParStep.sub step_arg step_e matching matching'
+  | @erase body body' t step_body =>
+    simp [Expr.sub, List.function_sub]
+    apply ParStep.erase
+    apply ParStep.sub step_arg step_body matching matching'
   | _ => sorry
 end
 
