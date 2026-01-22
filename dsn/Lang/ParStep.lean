@@ -928,7 +928,14 @@ mutual
     (matching : Pattern.match arg p = some m)
     (matching' : Pattern.match arg' p = some m')
   : ParRcdStep (List.record_sub m body) (List.record_sub m' body')
-  := by sorry
+  := by cases step_body with
+  | nil =>
+    exact ParRcdStep.refl (List.record_sub m [])
+  | @cons e e' r r' l step_e step_r =>
+    simp [List.record_sub]
+    apply ParRcdStep.cons
+    { apply ParStep.sub step_arg step_e matching matching'}
+    { apply ParRcdStep.sub step_arg step_r matching matching' }
 
   theorem ParFunStep.sub
     (step_arg : ParStep arg arg')
@@ -936,7 +943,17 @@ mutual
     (matching : Pattern.match arg p = some m)
     (matching' : Pattern.match arg' p = some m')
   : ParFunStep (List.function_sub m body) (List.function_sub m' body')
-  := by sorry
+  := by cases step_body with
+  | nil =>
+    exact ParFunStep.refl (List.function_sub m [])
+  | @cons e e' f f' l step_e step_f =>
+    simp [List.function_sub]
+    apply ParFunStep.cons
+    {
+      apply ParStep.sub_remove_all
+      apply ParStep.sub step_arg step_e matching matching'
+    }
+    { apply ParFunStep.sub step_arg step_f matching matching' }
 
   theorem ParStep.sub
     (step_arg : ParStep arg arg')
