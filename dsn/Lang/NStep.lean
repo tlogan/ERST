@@ -305,6 +305,26 @@ theorem NStep.refl_trans_loopi :
     { apply NStep.loopi h1 }
     { exact ih }
 
+theorem NStep.refl_trans_recycle :
+  ReflTrans NStep e e' →
+  ReflTrans NStep
+    (.loopi (.function [(.var x, e)]))
+    (Expr.sub [(x, (.loopi (.function [(.var x, e')])))] e')
+:= by
+  intro h0
+  induction h0 with
+  | refl e =>
+    apply ReflTrans.step
+    { apply NStep.recycle }
+    { apply ReflTrans.refl }
+  | @step e em e' h1 h2 ih =>
+    apply ReflTrans.step
+    { apply NStep.loopi
+      apply NStep.function
+      apply NFunStep.head _ _ h1
+    }
+    { exact ih }
+
 
 mutual
   theorem NRcdStep.semi_completeness
@@ -369,10 +389,9 @@ mutual
     have ih := NStep.semi_completeness step_body
     exact NStep.refl_trans_loopi ih
 
-  | @recycle x e =>
-    apply ReflTrans.step
-    { apply NStep.recycle }
-    { exact ReflTrans.refl (Expr.sub [(x, Expr.loopi (Expr.function [(Pat.var x, e)]))] e)}
+  | @recycle e e' x step_e =>
+    have ih := NStep.semi_completeness step_e
+    exact NStep.refl_trans_recycle ih
 end
 
 mutual
@@ -432,7 +451,7 @@ mutual
     have ih := ParStep.completeness step_body
     exact ParStep.loopi ih
   | @recycle x body =>
-    exact ParStep.recycle x body
+    apply ParStep.recycle _ (ParStep.refl body)
 end
 
 

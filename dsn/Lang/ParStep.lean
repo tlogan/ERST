@@ -47,10 +47,11 @@ mutual
     ParStep body body' →
     ParStep (.anno body t) body'
   | loopi : ParStep body body' → ParStep (.loopi body) (.loopi body')
-  | recycle x e :
+  | recycle x :
+    ParStep e e' →
     ParStep
       (.loopi (.function [(.var x, e)]))
-      (Expr.sub [(x, (.loopi (.function [(.var x, e)])))] e)
+      (Expr.sub [(x, (.loopi (.function [(.var x, e')])))] e')
 end
 
 mutual
@@ -911,10 +912,22 @@ theorem Pattern.remove_all_ids :
   remove_all m a = remove_all m b
 := by sorry
 
+theorem Expr.sub_inside_out :
+  Expr.sub m (Expr.sub [(x,c)] e)
+  =
+  Expr.sub [(x,(Expr.sub m c))] (Expr.sub (remove x m) e)
+:= by sorry
+
+theorem ParStep.sub_remove x :
+  ParStep (Expr.sub m body) (Expr.sub m' body') →
+  ParStep (Expr.sub (remove x m) body) (Expr.sub (remove x m') body')
+:= by sorry
+
 theorem ParStep.sub_remove_all ids :
   ParStep (Expr.sub m body) (Expr.sub m' body') →
   ParStep (Expr.sub (remove_all m ids) body) (Expr.sub (remove_all m' ids) body')
 := by sorry
+
 
 theorem Expr.is_value_sub_preservation :
   Expr.is_value e →
@@ -1009,14 +1022,25 @@ mutual
     { exact Expr.is_value_sub_preservation isval }
     { exact Pattern.match_skip_preservation nomatching m' }
   | @anno e e' t step_e =>
-    simp [Expr.sub, List.function_sub]
+    simp [Expr.sub]
     apply ParStep.anno
     apply ParStep.sub step_arg step_e matching matching'
   | @erase body body' t step_body =>
-    simp [Expr.sub, List.function_sub]
+    simp [Expr.sub]
     apply ParStep.erase
     apply ParStep.sub step_arg step_body matching matching'
-  | _ => sorry
+  | @loopi body body' step_body =>
+    simp [Expr.sub]
+    apply ParStep.loopi
+    apply ParStep.sub step_arg step_body matching matching'
+  | @recycle e e' x step_e =>
+    simp [Expr.sub, List.function_sub]
+    simp [Pat.ids, remove_all]
+    rw [Expr.sub_inside_out]
+    simp [Expr.sub, List.function_sub, Pat.ids, remove_all]
+    apply ParStep.recycle
+    apply ParStep.sub_remove
+    apply ParStep.sub step_arg step_e matching matching'
 end
 
 
