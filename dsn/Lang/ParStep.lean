@@ -1044,6 +1044,8 @@ mutual
 end
 
 
+
+set_option maxHeartbeats 1000000 in
 mutual
 
   theorem ParRcdStep.diamond
@@ -1136,7 +1138,7 @@ mutual
             { exact ParStep.function h1 }
             { exact h4 }
           }
-  | @skip  f fa arg arg_a p body step_fa step_arg_a isval nomatching =>
+  | @skip  f fa arg arg_a p body step_fa step_arg_a isval_a nomatching_a =>
     cases step_b with
     | @app _ cator_b _ arg_b step_cator_b step_arg_b =>
       cases step_cator_b with
@@ -1154,17 +1156,30 @@ mutual
           }
           {
             apply ParStep.skip _ h2 h4
-            { apply ParStep.value_reduction h3 isval }
-            { exact ParStep.skip_reduction isval h3 nomatching }
+            { apply ParStep.value_reduction h3 isval_a }
+            { exact ParStep.skip_reduction isval_a h3 nomatching_a }
           }
     | @pattern_match _ body_b _ arg_b _ m' _ step_body_b step_arg_b matching =>
       have ⟨arg_c,h3,h4⟩ := ParStep.diamond step_arg_a step_arg_b
-      have h0 := ParStep.skip_reduction isval h3 nomatching
+      have h0 := ParStep.skip_reduction isval_a h3 nomatching_a
       have h1 := ParStep.pattern_match_reduction h4 matching
       simp [h0] at h1
-    | skip =>
-      sorry
-      -- exact ParStep.joinable_refl
+    | @skip _ fb _ arg_b _ _ step_fb step_arg_b isval_b nomatching_b =>
+      have ⟨fc,h1,h2⟩ := ParFunStep.diamond step_fa step_fb
+      have ⟨arg_c,h3,h4⟩ := ParStep.diamond step_arg_a step_arg_b
+
+      exists (Expr.app (Expr.function fc) arg_c)
+      apply And.intro
+      {
+        apply ParStep.app
+        { apply ParStep.function h1 }
+        { apply h3 }
+      }
+      {
+        apply ParStep.app
+        { apply ParStep.function h2 }
+        { apply h4 }
+      }
   | _ => sorry
 
 end
