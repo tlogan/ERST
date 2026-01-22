@@ -1194,6 +1194,17 @@ mutual
       apply And.intro
       { exact ParStep.erase t h1 }
       { exact h2 }
+  | @erase e ea t step_ea =>
+    cases step_b with
+    | @anno _ eb _ step_eb =>
+      have ⟨ec,h1,h2⟩ := ParStep.diamond step_ea step_eb
+      exists ec
+      apply And.intro
+      { exact h1 }
+      { exact ParStep.erase t h2 }
+    | @erase _ eb _ step_eb =>
+      have ⟨ec,h1,h2⟩ := ParStep.diamond step_ea step_eb
+      exists ec
   | _ => sorry
 
 end
