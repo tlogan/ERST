@@ -912,6 +912,16 @@ theorem Pattern.remove_all_ids :
   remove_all m a = remove_all m b
 := by sorry
 
+theorem sub_var_remove_all_membership :
+  x ∈ ids →
+  Expr.sub (remove_all m ids) (.var x) = (.var x)
+:= by sorry
+
+theorem sub_var_remove_all_nomem :
+  x ∉ ids →
+  Expr.sub (remove_all m ids) (.var x) = Expr.sub m (.var x)
+:= by sorry
+
 theorem Expr.sub_inside_out :
   Expr.sub m (Expr.sub [(x,c)] e)
   =
@@ -923,10 +933,27 @@ theorem ParStep.sub_remove x :
   ParStep (Expr.sub (remove x m) body) (Expr.sub (remove x m') body')
 := by sorry
 
-theorem ParStep.sub_remove_all ids :
-  ParStep (Expr.sub m body) (Expr.sub m' body') →
-  ParStep (Expr.sub (remove_all m ids) body) (Expr.sub (remove_all m' ids) body')
-:= by sorry
+mutual
+  theorem ParStep.sub_remove_all ids
+    (step_body : ParStep body body')
+  : ParStep (Expr.sub m body) (Expr.sub m' body') →
+    ParStep (Expr.sub (remove_all m ids) body) (Expr.sub (remove_all m' ids) body')
+  := by cases step_body with
+  | var x =>
+    intro h0
+    by_cases h : x ∈ ids
+    {
+      rw [sub_var_remove_all_membership h]
+      rw [sub_var_remove_all_membership h]
+      apply ParStep.var
+    }
+    { rw [sub_var_remove_all_nomem h]
+      rw [sub_var_remove_all_nomem h]
+      exact h0
+    }
+  | _ => sorry
+end
+
 
 theorem List.is_fresh_key_sub_preservation :
   List.is_fresh_key l r →
@@ -1007,11 +1034,11 @@ mutual
   := by cases step_body with
   | nil =>
     exact ParFunStep.refl (List.function_sub m [])
-  | @cons e e' f f' l step_e step_f =>
+  | @cons e e' f f' p' step_e step_f =>
     simp [List.function_sub]
     apply ParFunStep.cons
     {
-      apply ParStep.sub_remove_all
+      apply ParStep.sub_remove_all _ step_e
       apply ParStep.sub step_arg step_e matching matching'
     }
     { apply ParFunStep.sub step_arg step_f matching matching' }
@@ -1056,7 +1083,7 @@ mutual
     have ih0 := ParStep.sub step_arg step_aa matching matching'
     have ih1 := ParStep.sub step_arg step_body matching matching'
     apply ParStep.pattern_match
-    { apply ParStep.sub_remove_all _ ih1 }
+    { apply ParStep.sub_remove_all _ step_body ih1 }
     { exact ih0 }
     { exact h0 }
 
