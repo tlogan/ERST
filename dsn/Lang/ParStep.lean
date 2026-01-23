@@ -933,27 +933,6 @@ theorem ParStep.sub_remove x :
   ParStep (Expr.sub (remove x m) body) (Expr.sub (remove x m') body')
 := by sorry
 
-mutual
-  theorem ParStep.sub_remove_all ids
-    (step_body : ParStep body body')
-  : ParStep (Expr.sub m body) (Expr.sub m' body') →
-    ParStep (Expr.sub (remove_all m ids) body) (Expr.sub (remove_all m' ids) body')
-  := by cases step_body with
-  | var x =>
-    intro h0
-    by_cases h : x ∈ ids
-    {
-      rw [sub_var_remove_all_membership h]
-      rw [sub_var_remove_all_membership h]
-      apply ParStep.var
-    }
-    { rw [sub_var_remove_all_nomem h]
-      rw [sub_var_remove_all_nomem h]
-      exact h0
-    }
-  | _ => sorry
-end
-
 
 theorem List.is_fresh_key_sub_preservation :
   List.is_fresh_key l r →
@@ -1006,6 +985,71 @@ mutual
     simp [Expr.is_value, Expr.sub]
   | _ =>
     simp [Expr.is_value]
+end
+
+mutual
+  theorem ParRcdStep.sub_remove_all ids
+    (step_r : ParRcdStep r r')
+  : ParRcdStep (List.record_sub m r) (List.record_sub m' r') →
+    ParRcdStep (List.record_sub (remove_all m ids) r) (List.record_sub (remove_all m' ids) r')
+  := sorry
+
+  theorem ParFunStep.sub_remove_all ids
+    (step_r : ParFunStep f f')
+  : ParFunStep (List.function_sub m f) (List.function_sub m' f') →
+    ParFunStep (List.function_sub (remove_all m ids) r) (List.function_sub (remove_all m' ids) f')
+  := sorry
+
+  theorem ParStep.sub_remove_all ids
+    (step_body : ParStep body body')
+  : ParStep (Expr.sub m body) (Expr.sub m' body') →
+    ParStep (Expr.sub (remove_all m ids) body) (Expr.sub (remove_all m' ids) body')
+  := by cases step_body with
+  | var x =>
+    intro h0
+    by_cases h : x ∈ ids
+    {
+      rw [sub_var_remove_all_membership h]
+      rw [sub_var_remove_all_membership h]
+      apply ParStep.var
+    }
+    { rw [sub_var_remove_all_nomem h]
+      rw [sub_var_remove_all_nomem h]
+      exact h0
+    }
+  | @iso body body' l step_body =>
+    simp [Expr.sub]
+    intro h0
+    cases h0 with
+    | @iso _ _ _ step_body_sub =>
+      apply ParStep.iso
+      apply ParStep.sub_remove_all ids step_body step_body_sub
+  | @record r r' step_r =>
+    simp [Expr.sub]
+    intro h0
+    cases h0 with
+    | @record _ _ step_r_sub =>
+      apply ParStep.record
+      apply ParRcdStep.sub_remove_all _ step_r step_r_sub
+  | @function f f' step_f =>
+    simp [Expr.sub]
+    intro h0
+    cases h0 with
+    | @function _ _ step_f_sub =>
+      apply ParStep.function
+      apply ParFunStep.sub_remove_all _ step_f step_f_sub
+  | @app cator cator' arg arg' step_cator step_arg =>
+    simp [Expr.sub]
+    intro h0
+    generalize h1 : (Expr.sub m cator) = cator_sub at h0
+    generalize h2 : (Expr.sub m arg) = arg_sub at h0
+    generalize h3 : (Expr.sub m' cator') = cator_sub' at h0
+    generalize h4 : (Expr.sub m' arg') = arg_sub' at h0
+    generalize h5 : (Expr.app cator_sub' arg_sub') = e' at h0
+    cases h0 with
+    | _ => sorry
+
+  | _ => sorry
 end
 
 mutual
