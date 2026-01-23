@@ -1136,8 +1136,33 @@ mutual
             { exact ParStep.function h1 }
             { exact h4 }
           }
-  | @pattern_match =>
-    sorry
+  | @pattern_match body body_a arg arg_a p ma f step_body_a step_arg_a matching_a =>
+    cases step_b with
+    | @app _ cator _ arg_b step_cator step_arg_b =>
+      cases step_cator with
+      | @function _ ff step_ff =>
+        cases step_ff with
+        | @cons _ body_b _ f' _ step_body_b step_f =>
+          have ⟨body_c,h1,h2⟩ := ParStep.diamond step_body_a step_body_b
+          have ⟨arg_c,h3,h4⟩ := ParStep.diamond step_arg_a step_arg_b
+          have ⟨mc, matching_c⟩ := ParStep.pattern_match_reduction h3 matching_a
+          exists (Expr.sub mc body_c)
+          apply And.intro
+          { exact ParStep.sub h3 h1 matching_a matching_c }
+          { exact ParStep.pattern_match f' h2 h4 matching_c }
+    | @pattern_match _ body_b _ arg_b _  mb _ step_body_b step_arg_b matching_b =>
+      have ⟨body_c,h1,h2⟩ := ParStep.diamond step_body_a step_body_b
+      have ⟨arg_c,h3,h4⟩ := ParStep.diamond step_arg_a step_arg_b
+      have ⟨mc, matching_c⟩ := ParStep.pattern_match_reduction h3 matching_a
+      exists (Expr.sub mc body_c)
+      apply And.intro
+      { exact ParStep.sub h3 h1 matching_a matching_c }
+      { exact ParStep.sub h4 h2 matching_b matching_c }
+    | @skip _ fa _ arg_b _ _ step_fa step_arg_b isval_b nomatching_b =>
+      have ⟨arg_c,h3,h4⟩ := ParStep.diamond step_arg_a step_arg_b
+      have h0 := ParStep.skip_reduction isval_b h4 nomatching_b
+      have h1 := ParStep.pattern_match_reduction h3 matching_a
+      simp [h0] at h1
   | @skip  f fa arg arg_a p body step_fa step_arg_a isval_a nomatching_a =>
     cases step_b with
     | @app _ cator_b _ arg_b step_cator_b step_arg_b =>
