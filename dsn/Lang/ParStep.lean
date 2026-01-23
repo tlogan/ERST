@@ -928,11 +928,58 @@ theorem ParStep.sub_remove_all ids :
   ParStep (Expr.sub (remove_all m ids) body) (Expr.sub (remove_all m' ids) body')
 := by sorry
 
+theorem List.is_fresh_key_sub_preservation :
+  List.is_fresh_key l r →
+  List.is_fresh_key l (List.record_sub m r)
+:= by induction r with
+| nil =>
+  simp [List.is_fresh_key, List.record_sub]
+| cons le r' ih =>
+  have (l',e) := le
+  simp [List.is_fresh_key, List.record_sub]
+  intro h0 h1
+  apply And.intro h0
+  apply ih h1
 
-theorem Expr.is_value_sub_preservation :
-  Expr.is_value e →
-  Expr.is_value (Expr.sub m e)
-:= by sorry
+mutual
+
+  theorem Expr.is_record_value_sub_preservation :
+    List.is_record_value r →
+    List.is_record_value (List.record_sub m r)
+  := by cases r with
+  | nil =>
+    simp [List.is_record_value, List.record_sub]
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.is_record_value, List.record_sub]
+    intro h0 h1 h2
+    apply And.intro
+    {
+      apply And.intro
+      { exact List.is_fresh_key_sub_preservation h0 }
+      { apply Expr.is_value_sub_preservation h1 }
+    }
+    { apply Expr.is_record_value_sub_preservation h2 }
+
+  theorem Expr.is_value_sub_preservation :
+    Expr.is_value e →
+    Expr.is_value (Expr.sub m e)
+  := by cases e with
+  | var x =>
+    simp [Expr.is_value]
+  | iso l body =>
+    simp [Expr.is_value, Expr.sub]
+    intro h0
+    apply Expr.is_value_sub_preservation h0
+  | record r =>
+    simp [Expr.is_value, Expr.sub]
+    intro h0
+    apply Expr.is_record_value_sub_preservation h0
+  | function f =>
+    simp [Expr.is_value, Expr.sub]
+  | _ =>
+    simp [Expr.is_value]
+end
 
 mutual
 
