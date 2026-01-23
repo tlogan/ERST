@@ -1047,6 +1047,16 @@ mutual
     generalize h4 : (Expr.sub m' arg') = arg_sub' at h0
     generalize h5 : (Expr.app cator_sub' arg_sub') = e' at h0
     cases h0 with
+    | @app _ cator_sub'' _ arg_sub'' step_cator_sub step_arg_sub =>
+      simp [*] at h5
+      have ⟨h6,h7⟩ := h5
+      clear h5
+      rw [←h6,←h1,←h3] at step_cator_sub
+      rw [←h7,←h2,←h4] at step_arg_sub
+      apply ParStep.app
+      { apply ParStep.sub_remove_all _ step_cator step_cator_sub }
+      { apply ParStep.sub_remove_all _ step_arg step_arg_sub }
+
     | _ => sorry
 
   | _ => sorry
