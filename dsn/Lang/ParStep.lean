@@ -745,6 +745,11 @@ mutual
 end
 
 
+theorem ListPair.dom_remove_all_disjoint :
+  ListPair.dom m0 ∩ ListPair.dom m1 = [] →
+  ListPair.dom (remove_all m0 ids) ∩ ListPair.dom (remove_all m1 ids) = []
+:= by sorry
+
 theorem Pattern.match_disjoint_preservation :
   Pattern.match_entry l p r = some m0 →
   Pattern.match_record r rp = some m1 →
@@ -760,6 +765,11 @@ theorem ParStep.sub_disjoint_concat :
   ParStep (Expr.sub (m0 ++ m1) body) (Expr.sub (m0' ++ m1') body)
 := by sorry
 
+theorem remove_all_concat :
+  remove_all (m0 ++ m1) ids =
+  remove_all m0 ids ++ remove_all m1 ids
+:= by sorry
+
 
 mutual
 
@@ -767,8 +777,9 @@ mutual
     (step : ParRcdStep r r')
     (matching : Pattern.match_entry l p r = some m)
     (matching' : Pattern.match_entry l p r' = some m')
+    ids
     e
-  : ParStep (Expr.sub m e) (Expr.sub m' e)
+  : ParStep (Expr.sub (remove_all m ids) e) (Expr.sub (remove_all m' ids) e)
   := by cases step with
   | nil =>
     simp [Pattern.match_entry] at matching
@@ -779,26 +790,27 @@ mutual
     {
       simp [*] at matching
       simp [*] at matching'
-      apply ParStep.substitute step_ee matching matching' e
+      apply ParStep.substitute step_ee matching matching' ids e
     }
     {
       simp [*] at matching
       simp [*] at matching'
-      apply ParRcdStep.pattern_match_entry_preservation step_rr matching matching' e
+      apply ParRcdStep.pattern_match_entry_preservation step_rr matching matching' ids e
     }
 
   theorem ParRcdStep.substitute
     (step : ParRcdStep r r')
     (matching : Pattern.match_record r ps = some m)
     (matching' : Pattern.match_record r' ps = some m')
+    ids
     e
-  : ParStep (Expr.sub m e) (Expr.sub m' e)
+  : ParStep (Expr.sub (remove_all m ids) e) (Expr.sub (remove_all m' ids) e)
   := by cases ps with
   | nil =>
     simp [Pattern.match_record] at matching
     simp [Pattern.match_record] at matching'
     rw [matching, matching']
-    exact ParStep.refl (Expr.sub [] e)
+    exact ParStep.refl (Expr.sub (remove_all [] ids) e)
   | cons lp ps' =>
     have (l,p) := lp
     simp [Pattern.match_record] at matching
@@ -821,11 +833,21 @@ mutual
           | some m3 =>
             simp [*] at h4
             rw [←h2,←h4]
-            have ih0 := ParRcdStep.pattern_match_entry_preservation step h5 h6 e
-            have ih1 := ParRcdStep.substitute step h7 h8 e
+
+            have ih0 := ParRcdStep.pattern_match_entry_preservation step h5 h6 ids e
+            have ih1 := ParRcdStep.substitute step h7 h8 ids e
+
+            rw [remove_all_concat]
+            rw [remove_all_concat]
             apply ParStep.sub_disjoint_concat
-            { apply Pattern.match_disjoint_preservation h5 h7 h3 }
-            { exact Pattern.match_disjoint_preservation h6 h8 h3 }
+            {
+              apply ListPair.dom_remove_all_disjoint
+              apply Pattern.match_disjoint_preservation h5 h7 h3
+            }
+            {
+              apply ListPair.dom_remove_all_disjoint
+              exact Pattern.match_disjoint_preservation h6 h8 h3
+            }
             { exact ih0 }
             { exact ih1 }
           | none =>
@@ -843,21 +865,33 @@ mutual
     (step : ParStep arg arg')
     (matching : Pattern.match arg p = some m)
     (matching' : Pattern.match arg' p = some m')
+    ids
     e
-  : ParStep (Expr.sub m e) (Expr.sub m' e)
+  : ParStep (Expr.sub (remove_all m ids) e) (Expr.sub (remove_all m' ids) e)
   := by cases p with
   | var x =>
     simp [Pattern.match] at matching
     simp [Pattern.match] at matching'
     rw [←matching, ←matching']
     clear matching matching'
-    exact ParStep.sub_preservation x step e
+
+    by_cases h : x ∈ ids
+    {
+      rw [remove_all_single_membership h]
+      rw [remove_all_single_membership h]
+      exact ParStep.refl (Expr.sub [] e)
+    }
+    {
+      rw [remove_all_single_nomem h]
+      rw [remove_all_single_nomem h]
+      exact ParStep.sub_preservation x step e
+    }
   | @iso l p_body =>
     cases step with
     | var x =>
       simp [matching'] at matching
       simp [*]
-      exact ParStep.refl (Expr.sub m e)
+      exact ParStep.refl (Expr.sub (remove_all m ids) e)
     | @iso body body' l' step_body =>
       simp [Pattern.match] at matching
       simp [Pattern.match] at matching'
@@ -872,7 +906,7 @@ mutual
     | var x =>
       simp [matching'] at matching
       simp [*]
-      exact ParStep.refl (Expr.sub m e)
+      exact ParStep.refl (Expr.sub (remove_all m ids) e)
     | @record r r' step_r =>
       simp [Pattern.match] at matching
       simp [Pattern.match] at matching'
@@ -987,104 +1021,40 @@ mutual
     simp [Expr.is_value]
 end
 
-mutual
-  theorem ParRcdStep.sub_remove_all ids
-    (step_r : ParRcdStep r r')
-  : ParRcdStep (List.record_sub m r) (List.record_sub m' r') →
-    ParRcdStep (List.record_sub (remove_all m ids) r) (List.record_sub (remove_all m' ids) r')
-  := sorry
 
-  theorem ParFunStep.sub_remove_all ids
-    (step_r : ParFunStep f f')
-  : ParFunStep (List.function_sub m f) (List.function_sub m' f') →
-    ParFunStep (List.function_sub (remove_all m ids) r) (List.function_sub (remove_all m' ids) f')
-  := sorry
-
-  theorem ParStep.sub_remove_all ids
-    (step_body : ParStep body body')
-  : ParStep (Expr.sub m body) (Expr.sub m' body') →
-    ParStep (Expr.sub (remove_all m ids) body) (Expr.sub (remove_all m' ids) body')
-  := by cases step_body with
-  | var x =>
-    intro h0
-    by_cases h : x ∈ ids
-    {
-      rw [sub_var_remove_all_membership h]
-      rw [sub_var_remove_all_membership h]
-      apply ParStep.var
-    }
-    { rw [sub_var_remove_all_nomem h]
-      rw [sub_var_remove_all_nomem h]
-      exact h0
-    }
-  | @iso body body' l step_body =>
-    simp [Expr.sub]
-    intro h0
-    cases h0 with
-    | @iso _ _ _ step_body_sub =>
-      apply ParStep.iso
-      apply ParStep.sub_remove_all ids step_body step_body_sub
-  | @record r r' step_r =>
-    simp [Expr.sub]
-    intro h0
-    cases h0 with
-    | @record _ _ step_r_sub =>
-      apply ParStep.record
-      apply ParRcdStep.sub_remove_all _ step_r step_r_sub
-  | @function f f' step_f =>
-    simp [Expr.sub]
-    intro h0
-    cases h0 with
-    | @function _ _ step_f_sub =>
-      apply ParStep.function
-      apply ParFunStep.sub_remove_all _ step_f step_f_sub
-  | @app cator cator' arg arg' step_cator step_arg =>
-    simp [Expr.sub]
-    intro h0
-    generalize h1 : (Expr.sub m cator) = cator_sub at h0
-    generalize h2 : (Expr.sub m arg) = arg_sub at h0
-    generalize h3 : (Expr.sub m' cator') = cator_sub' at h0
-    generalize h4 : (Expr.sub m' arg') = arg_sub' at h0
-    generalize h5 : (Expr.app cator_sub' arg_sub') = e' at h0
-    cases h0 with
-    | @app _ cator_sub'' _ arg_sub'' step_cator_sub step_arg_sub =>
-      simp [*] at h5
-      have ⟨h6,h7⟩ := h5
-      clear h5
-      rw [←h6,←h1,←h3] at step_cator_sub
-      rw [←h7,←h2,←h4] at step_arg_sub
-      apply ParStep.app
-      { apply ParStep.sub_remove_all _ step_cator step_cator_sub }
-      { apply ParStep.sub_remove_all _ step_arg step_arg_sub }
-
-    | _ => sorry
-
-  | _ => sorry
-end
+theorem remove_all_nesting :
+  remove_all (remove_all m ids) ids' =
+  remove_all m (ids ++ ids')
+:= by sorry
 
 mutual
 
-  theorem ParRcdStep.sub
+  theorem ParRcdStep.sub_partial
     (step_arg : ParStep arg arg')
     (step_body : ParRcdStep body body')
     (matching : Pattern.match arg p = some m)
     (matching' : Pattern.match arg' p = some m')
-  : ParRcdStep (List.record_sub m body) (List.record_sub m' body')
+    ids
+  : ParRcdStep
+    (List.record_sub (remove_all m ids) body)
+    (List.record_sub (remove_all m' ids) body')
   := by cases step_body with
   | nil =>
     exact ParRcdStep.refl (List.record_sub m [])
   | @cons e e' r r' l step_e step_r =>
     simp [List.record_sub]
     apply ParRcdStep.cons
-    { apply ParStep.sub step_arg step_e matching matching'}
-    { apply ParRcdStep.sub step_arg step_r matching matching' }
+    { apply ParStep.sub_partial step_arg step_e matching matching'}
+    { apply ParRcdStep.sub_partial step_arg step_r matching matching' }
 
-  theorem ParFunStep.sub
+  theorem ParFunStep.sub_partial
     (step_arg : ParStep arg arg')
     (step_body : ParFunStep body body')
     (matching : Pattern.match arg p = some m)
     (matching' : Pattern.match arg' p = some m')
-  : ParFunStep (List.function_sub m body) (List.function_sub m' body')
+    ids
+  : ParFunStep (List.function_sub (remove_all m ids) body)
+    (List.function_sub (remove_all m' ids) body')
   := by cases step_body with
   | nil =>
     exact ParFunStep.refl (List.function_sub m [])
@@ -1092,75 +1062,78 @@ mutual
     simp [List.function_sub]
     apply ParFunStep.cons
     {
-      apply ParStep.sub_remove_all _ step_e
-      apply ParStep.sub step_arg step_e matching matching'
+      rw [remove_all_nesting]
+      rw [remove_all_nesting]
+      apply ParStep.sub_partial step_arg step_e matching matching'
     }
-    { apply ParFunStep.sub step_arg step_f matching matching' }
+    { apply ParFunStep.sub_partial step_arg step_f matching matching' }
 
-  theorem ParStep.sub
+  theorem ParStep.sub_partial
     (step_arg : ParStep arg arg')
     (step_body : ParStep body body')
     (matching : Pattern.match arg p = some m)
     (matching' : Pattern.match arg' p = some m')
-  : ParStep (Expr.sub m body) (Expr.sub m' body')
+    ids
+  : ParStep (Expr.sub (remove_all m ids) body) (Expr.sub (remove_all m' ids) body')
   := by cases step_body with
   | var x =>
-    exact ParStep.substitute step_arg matching matching' (Expr.var x)
+    exact ParStep.substitute step_arg matching matching' _ (Expr.var x)
 
   | @iso b b' l step_b =>
     simp [Expr.sub]
     apply ParStep.iso
-    apply ParStep.sub step_arg step_b matching matching'
+    apply ParStep.sub_partial step_arg step_b matching matching'
 
   | @record r r' step_r =>
     simp [Expr.sub]
     apply ParStep.record
-    apply ParRcdStep.sub step_arg step_r matching matching'
+    apply ParRcdStep.sub_partial step_arg step_r matching matching'
 
   | @function f f' step_f =>
     simp [Expr.sub]
     apply ParStep.function
-    apply ParFunStep.sub step_arg step_f matching matching'
+    apply ParFunStep.sub_partial step_arg step_f matching matching'
 
   | @app cator cator' aa aa' step_cator step_aa =>
     simp [Expr.sub]
-    have ih0 := ParStep.sub step_arg step_cator matching matching'
-    have ih1 := ParStep.sub step_arg step_aa matching matching'
+    have ih0 := ParStep.sub_partial step_arg step_cator matching matching' ids
+    have ih1 := ParStep.sub_partial step_arg step_aa matching matching' ids
     apply ParStep.app ih0 ih1
 
   | @pattern_match body body' aa aa' pp mm' f step_body step_aa matching'' =>
     simp [Expr.sub, List.function_sub]
-    have ⟨mm'',h0,h1⟩ := Pattern.match_sub_preservation matching'' m'
+    have ⟨mm'',h0,h1⟩ := Pattern.match_sub_preservation matching'' (remove_all m' ids)
     rw [←h1]
     have h2 := Pattern.match_domain matching''
     rw [Pattern.remove_all_ids h2]
-    have ih0 := ParStep.sub step_arg step_aa matching matching'
-    have ih1 := ParStep.sub step_arg step_body matching matching'
+    have ih0 := ParStep.sub_partial step_arg step_aa matching matching'
+    have ih1 := ParStep.sub_partial step_arg step_body matching matching'
+    rw [remove_all_nesting]
+    rw [remove_all_nesting]
     apply ParStep.pattern_match
-    { apply ParStep.sub_remove_all _ step_body ih1 }
-    { exact ih0 }
+    { apply ih1 }
+    { exact ih0 ids }
     { exact h0 }
 
   | @skip f f' aa aa' pp bb step_f step_aa isval nomatching  =>
     simp [Expr.sub, List.function_sub]
-    have h0 := Pattern.match_skip_preservation nomatching m
     apply ParStep.skip
-    { apply ParFunStep.sub step_arg step_f matching matching' }
-    { apply ParStep.sub step_arg step_aa matching matching'}
+    { apply ParFunStep.sub_partial step_arg step_f matching matching' }
+    { apply ParStep.sub_partial step_arg step_aa matching matching'}
     { exact Expr.is_value_sub_preservation isval }
-    { exact Pattern.match_skip_preservation nomatching m' }
+    { exact Pattern.match_skip_preservation nomatching (remove_all m' ids) }
   | @anno e e' t step_e =>
     simp [Expr.sub]
     apply ParStep.anno
-    apply ParStep.sub step_arg step_e matching matching'
+    apply ParStep.sub_partial step_arg step_e matching matching'
   | @erase body body' t step_body =>
     simp [Expr.sub]
     apply ParStep.erase
-    apply ParStep.sub step_arg step_body matching matching'
+    apply ParStep.sub_partial step_arg step_body matching matching'
   | @loopi body body' step_body =>
     simp [Expr.sub]
     apply ParStep.loopi
-    apply ParStep.sub step_arg step_body matching matching'
+    apply ParStep.sub_partial step_arg step_body matching matching'
   | @recycle e e' x step_e =>
     simp [Expr.sub, List.function_sub]
     simp [Pat.ids, remove_all]
@@ -1168,9 +1141,24 @@ mutual
     simp [Expr.sub, List.function_sub, Pat.ids, remove_all]
     apply ParStep.recycle
     apply ParStep.sub_remove
-    apply ParStep.sub step_arg step_e matching matching'
+    apply ParStep.sub_partial step_arg step_e matching matching'
 end
 
+
+theorem remove_none α m:
+  @remove_all α m [] = m
+:= by sorry
+
+theorem ParStep.sub
+  (step_arg : ParStep arg arg')
+  (step_body : ParStep body body')
+  (matching : Pattern.match arg p = some m)
+  (matching' : Pattern.match arg' p = some m')
+: ParStep (Expr.sub m body) (Expr.sub m' body')
+:= by
+  rw [←remove_none _ m]
+  rw [←remove_none _ m]
+  apply ParStep.sub_partial step_arg step_body matching matching'
 
 
 set_option maxHeartbeats 1000000 in
