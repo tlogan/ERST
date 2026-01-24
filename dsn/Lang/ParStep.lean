@@ -962,12 +962,6 @@ theorem Expr.sub_inside_out :
   Expr.sub [(x,(Expr.sub m c))] (Expr.sub (remove x m) e)
 := by sorry
 
-theorem ParStep.sub_remove x :
-  ParStep (Expr.sub m body) (Expr.sub m' body') →
-  ParStep (Expr.sub (remove x m) body) (Expr.sub (remove x m') body')
-:= by sorry
-
-
 theorem List.is_fresh_key_sub_preservation :
   List.is_fresh_key l r →
   List.is_fresh_key l (List.record_sub m r)
@@ -1022,10 +1016,16 @@ mutual
 end
 
 
+theorem remove_remove_all_nesting :
+  remove x (remove_all m ids) =
+  remove_all m (ids ++ [x])
+:= by sorry
+
 theorem remove_all_nesting :
   remove_all (remove_all m ids) ids' =
   remove_all m (ids ++ ids')
 := by sorry
+
 
 mutual
 
@@ -1140,7 +1140,8 @@ mutual
     rw [Expr.sub_inside_out]
     simp [Expr.sub, List.function_sub, Pat.ids, remove_all]
     apply ParStep.recycle
-    apply ParStep.sub_remove
+    rw [remove_remove_all_nesting]
+    rw [remove_remove_all_nesting]
     apply ParStep.sub_partial step_arg step_e matching matching'
 end
 
