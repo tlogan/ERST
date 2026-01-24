@@ -1015,17 +1015,29 @@ mutual
     simp [Expr.is_value]
 end
 
-
 theorem remove_remove_all_nesting :
-  remove x (remove_all m ids) =
-  remove_all m (ids ++ [x])
-:= by sorry
+  ∀ α m ,
+  @remove α x (remove_all m ids) =
+  @remove_all α m (ids ++ [x])
+:= by induction ids with
+| nil =>
+  simp [remove_all]
+| cons id ids' ih =>
+  intro α m
+  simp [remove_all]
+  apply ih
 
 theorem remove_all_nesting :
-  remove_all (remove_all m ids) ids' =
-  remove_all m (ids ++ ids')
-:= by sorry
-
+  ∀ α m,
+  @remove_all α (remove_all m ids) ids' =
+  @remove_all α m (ids ++ ids')
+:= by induction ids with
+| nil =>
+  simp [remove_all]
+| cons id ids'' ih =>
+  intro α m
+  simp [remove_all]
+  apply ih
 
 mutual
 
@@ -1148,7 +1160,8 @@ end
 
 theorem remove_none α m:
   @remove_all α m [] = m
-:= by sorry
+:= by
+  simp [remove_all]
 
 theorem ParStep.sub
   (step_arg : ParStep arg arg')
