@@ -35,8 +35,7 @@ mutual
     ParStep body body' →
     ParStep arg arg' →
     Pattern.match arg' p = some m' →
-    (Expr.sub m' body') = some body'' →
-    ParStep (.app (.function ((p,body) :: f)) arg) body''
+    ParStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m' body')
   | skip body :
     ParFunStep f f' →
     ParStep arg arg' →
@@ -50,9 +49,9 @@ mutual
   | loopi : ParStep body body' → ParStep (.loopi body) (.loopi body')
   | recycle x :
     ParStep e e' →
-    (Expr.sub [(x, (.loopi (.function [(.var x, e')])))] e') = some e'' →
-    ParStep (.loopi (.function [(.var x, e)])) e''
-
+    ParStep
+      (.loopi (.function [(.var x, e)]))
+      (Expr.sub [(x, (.loopi (.function [(.var x, e')])))] e')
 end
 
 mutual
@@ -595,7 +594,7 @@ theorem ParStep.skip_reduction
 
 theorem Expr.sub_refl :
   x ∉ ListPair.dom m →
-  (Expr.sub m (.var x)) = some (.var x)
+  (Expr.sub m (.var x)) = (.var x)
 := by
   intro h0
   induction m with
@@ -655,106 +654,57 @@ theorem remove_all_single_nomem :
   simp [h0]
   apply ih h1
 
-
 mutual
 
   theorem ParStep.sub_record_preservation
+    x
     (step : ParStep arg arg')
-  :
-    List.record_sub [(x,arg)] r = some rr →
-    List.record_sub [(x,arg')] r = some rr' →
-    ParRcdStep rr rr'
+    r
+  : ParRcdStep (List.record_sub [(x,arg)] r) (List.record_sub [(x,arg')] r)
   := by cases r with
   | nil =>
     simp [List.record_sub]
-    intro h0 h1 ; rw [h0,h1]
-    exact ParRcdStep.nil
+    exact ParRcdStep.refl []
   | cons le r' =>
     have (l,e) := le
     simp [List.record_sub]
-    match
-      h0 : (Expr.sub [(x, arg)] e), h1 : (List.record_sub [(x, arg)] r'),
-      h2 : (Expr.sub [(x, arg')] e), h3 :(List.record_sub [(x, arg')] r')
-    with
-    | some e, some r', some e', some r'' =>
-      simp
-      intro h4 h5 ; rw [←h4,←h5] ; clear h4 h5
-      apply ParRcdStep.cons
-      { apply ParStep.sub_preservation step h0 h2}
-      { apply ParStep.sub_record_preservation step h1 h3 }
-    | none,_,_,_ =>
-      simp [*]
-    | _,none,_,_ =>
-      simp [*]
-    | _,_,none,_ =>
-      simp [*]
-    | _,_,_,none =>
-      simp [*]
+    apply ParRcdStep.cons
+    { apply ParStep.sub_preservation _ step }
+    { apply ParStep.sub_record_preservation _ step}
 
   theorem ParStep.sub_function_preservation
+    x
     (step : ParStep arg arg')
-  :
-    (List.function_sub [(x,arg)] f) = some ff →
-    (List.function_sub [(x,arg')] f) = some ff' →
-    ParFunStep ff ff'
+    f
+  : ParFunStep (List.function_sub [(x,arg)] f) (List.function_sub [(x,arg')] f)
   := by cases f with
   | nil =>
     simp [List.function_sub]
-    intro h0 h1 ; rw [h0,h1]
     exact ParFunStep.refl []
   | cons pe f' =>
     have (p,e) := pe
     simp [List.function_sub]
-    match
-      h0 : (Expr.sub (remove_all [(x, arg)] (Pat.ids p)) e),
-      h1 : (List.function_sub [(x, arg)] f'),
-      h2 : (Expr.sub (remove_all [(x, arg')] (Pat.ids p)) e),
-      h3 : (List.function_sub [(x, arg')] f')
-    with
-    | some e', some f'', some e'', some f''' =>
-      simp
-      intro h4 h5 h6 h7 ; rw [←h5,←h7] ; clear h5 h7
-      apply ParFunStep.cons
-      {
-        by_cases h8 : x ∈ Pat.ids p
-        {
-          simp [remove_all_single_membership h8] at h0 h2
-          rw [h0] at h2
-          simp at h2
-          rw [h2]
-          apply ParStep.refl
-        }
-        {
-          simp [remove_all_single_nomem h8] at h0 h2
-          apply ParStep.sub_preservation step h0 h2
-        }
+    apply ParFunStep.cons
+    { by_cases h : x ∈ Pat.ids p
+      { simp [remove_all_single_membership h]
+        exact refl (Expr.sub [] e)
       }
-      { apply ParStep.sub_function_preservation step h1 h3}
-    | none,_,_,_ =>
-      simp [*]
-    | _,none,_,_ =>
-      simp [*]
-    | _,_,none,_ =>
-      simp [*]
-    | _,_,_,none =>
-      simp [*]
-
-
-
-
+      { simp [remove_all_single_nomem h]
+        apply ParStep.sub_preservation x step e
+      }
+    }
+    { apply ParStep.sub_function_preservation _ step }
 
   theorem ParStep.sub_preservation
+    x
     (step : ParStep arg arg')
-  :
-    (Expr.sub [(x,arg)] e) = some ee →
-    (Expr.sub [(x,arg')] e) = some ee' →
-    ParStep  ee ee'
+    e
+  : ParStep (Expr.sub [(x,arg)] e) (Expr.sub [(x,arg')] e)
   := by cases e with
   | var x' =>
     by_cases h0 : x' = x
     {
       simp [Expr.sub,find,h0]
-      intro h1 h2 ; rw [←h1,←h2]
       exact step
     }
     {
@@ -765,94 +715,33 @@ mutual
       have h3 := Expr.sub_refl h1
       have h4 := Expr.sub_refl h2
       rw [h3,h4]
-      simp
-      intro h5 h6 ; rw [←h5,←h6]
-      apply ParStep.var x'
+      exact ParStep.refl (Expr.var x')
     }
   | iso l body =>
     simp [Expr.sub]
-    match
-      h0 : (Expr.sub [(x, arg)] body),
-      h1 : (Expr.sub [(x, arg')] body)
-    with
-    | some b, some b' =>
-      simp [*]
-      intro h2 h3 ; rw [←h2,←h3]
-      apply ParStep.iso
-      apply ParStep.sub_preservation step h0 h1
-    | none,_ => simp [*]
-    | _,none => simp [*]
+    have ih := ParStep.sub_preservation x step body
+    exact ParStep.iso ih
   | record r =>
     simp [Expr.sub]
-    match
-      h0 : (List.record_sub [(x, arg)] r),
-      h1 : (List.record_sub [(x, arg')] r)
-    with
-    | some rr, some rr' =>
-      simp [*]
-      intro h2 h3 ; rw [←h2,←h3]
-      apply ParStep.record
-      apply ParStep.sub_record_preservation step h0 h1
-    | none,_ => simp [*]
-    | _,none => simp [*]
+    have ih := ParStep.sub_record_preservation x step r
+    exact ParStep.record ih
   | function f =>
     simp [Expr.sub]
-    match
-      h0 : (List.function_sub [(x, arg)] f),
-      h1 : (List.function_sub [(x, arg')] f)
-    with
-    | some ff, some ff' =>
-      simp [*]
-      intro h2 h3 ; rw [←h2,←h3]
-      apply ParStep.function
-      apply ParStep.sub_function_preservation step h0 h1
-    | none,_ => simp [*]
-    | _,none => simp [*]
+    have ih := ParStep.sub_function_preservation x step f
+    exact function ih
   | app ef ea =>
     simp [Expr.sub]
-
-    match
-      h0 : (Expr.sub [(x, arg)] ef),
-      h1 : (Expr.sub [(x, arg)] ea),
-      h2 : (Expr.sub [(x, arg')] ef),
-      h3 : (Expr.sub [(x, arg')] ea)
-    with
-    | some eef, some eea, some eef', some eea' =>
-      simp [*]
-      intro h4 h5 ; rw [←h4,←h5]
-      apply ParStep.app
-      { apply ParStep.sub_preservation step h0 h2 }
-      { apply ParStep.sub_preservation step h1 h3 }
-    | none,_,_,_ => simp [*]
-    | _,none,_,_ => simp [*]
-    | _,_,none,_ => simp [*]
-    | _,_,_,none => simp [*]
+    have ih0 := ParStep.sub_preservation x step ef
+    have ih1 := ParStep.sub_preservation x step ea
+    exact app ih0 ih1
   | anno e t =>
     simp [Expr.sub]
-    match
-      h0 : (Expr.sub [(x, arg)] e),
-      h1 : (Expr.sub [(x, arg')] e)
-    with
-    | some b, some b' =>
-      simp [*]
-      intro h2 h3 ; rw [←h2,←h3]
-      apply ParStep.anno
-      apply ParStep.sub_preservation step h0 h1
-    | none,_ => simp [*]
-    | _,none => simp [*]
+    have ih := ParStep.sub_preservation x step e
+    exact anno ih
   | loopi e =>
     simp [Expr.sub]
-    match
-      h0 : (Expr.sub [(x, arg)] e),
-      h1 : (Expr.sub [(x, arg')] e)
-    with
-    | some b, some b' =>
-      simp [*]
-      intro h2 h3 ; rw [←h2,←h3]
-      apply ParStep.loopi
-      apply ParStep.sub_preservation step h0 h1
-    | none,_ => simp [*]
-    | _,none => simp [*]
+    have ih := ParStep.sub_preservation x step e
+    exact loopi ih
 end
 
 
@@ -1309,12 +1198,6 @@ mutual
     apply ParStep.loopi
     apply ParStep.sub_partial step_arg step_body matching matching'
   | @recycle e e' x step_e =>
-    /- TODO:
-    - need to redefine substitution
-    - function body substitution should fail if there are variable collisions
-    - when subbing into body of a function
-    - add renaming to any fresh var in cons rule of function step
-    -/
     simp [Expr.sub, List.function_sub]
     simp [Pat.ids, remove_all]
 

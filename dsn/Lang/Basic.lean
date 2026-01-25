@@ -1400,45 +1400,25 @@ def Expr.context_free_vars : List (String × Expr) → List String
 
 
 mutual
-  def List.record_sub (m : List (String × Expr)): List (String × Expr) → Option (List (String × Expr))
-  | .nil => some .nil
-  | (l, e) :: r => do
-    let e' ← Expr.sub m e
-    let r' ← (List.record_sub m r)
-    return (l, e') :: r'
+  def List.record_sub (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
+  | .nil => .nil
+  | (l, e) :: r =>
+    (l, Expr.sub m e) :: (List.record_sub m r)
 
-  def List.function_sub (m : List (String × Expr)): List (Pat × Expr) → Option (List (Pat × Expr))
-  | .nil => some .nil
-  | (p, e) :: f => do
-    if Expr.context_free_vars m ∩ Expr.free_vars e == [] then
-      let ids := Pat.ids p
-      let e' ← Expr.sub (remove_all m ids) e
-      let f' ← (List.function_sub m f)
-      return (p, e')  :: f'
-    else
-      failure
+  def List.function_sub (m : List (String × Expr)): List (Pat × Expr) → List (Pat × Expr)
+  | .nil => .nil
+  | (p, e) :: f =>
+    let ids := Pat.ids p
+    (p, Expr.sub (remove_all m ids) e) :: (List.function_sub m f)
 
-  def Expr.sub (m : List (String × Expr)): Expr → Option Expr
+  def Expr.sub (m : List (String × Expr)): Expr → Expr
   | .var id => match (find id m) with
-    | .none => some (.var id)
-    | .some e => some e
-  | .iso l body => do
-    let body' ← (Expr.sub m body)
-    return .iso l body'
-  | .record r =>  do
-    let r' ← (List.record_sub m r)
-    return .record r'
-  | .function f => do
-    let f' ← (List.function_sub m f)
-    return .function f'
-  | .app ef ea => do
-    let ef' ← (Expr.sub m ef)
-    let ea' ← (Expr.sub m ea)
-    return .app ef' ea'
-  | .anno e t => do
-    let e' ← (Expr.sub m e)
-    return .anno e' t
-  | .loopi e => do
-    let e' ← (Expr.sub m e)
-    return .loopi e'
+    | .none => (.var id)
+    | .some e => e
+  | .iso l body => .iso l (Expr.sub m body)
+  | .record r => .record (List.record_sub m r)
+  | .function f => .function (List.function_sub m f)
+  | .app ef ea => .app (Expr.sub m ef) (Expr.sub m ea)
+  | .anno e t => .anno (Expr.sub m e) t
+  | .loopi e => .loopi (Expr.sub m e)
 end
