@@ -956,11 +956,62 @@ theorem sub_var_remove_all_nomem :
   Expr.sub (remove_all m ids) (.var x) = Expr.sub m (.var x)
 := by sorry
 
-theorem Expr.sub_inside_out :
-  Expr.sub m (Expr.sub [(x,c)] e)
-  =
-  Expr.sub [(x,(Expr.sub m c))] (Expr.sub (remove x m) e)
+
+theorem find_remove_refl α x m:
+  @find α x (remove x m) = Option.none
 := by sorry
+
+theorem find_remove_neq α x m:
+  x ≠ x' →
+  @find α x (remove x' m) = find x m
+:= by sorry
+
+theorem find_fresh_var_preservation :
+    find x m = some e →
+    x' ∉ Expr.context_free_vars m →
+    x' ∉ Expr.free_vars e
+:= by sorry
+
+theorem Expr.sub_fresh :
+  x ∉ Expr.free_vars e →
+  Expr.sub [(x,c)] e = e
+:= by sorry
+
+mutual
+  /- TODO: requires that m does not point to expression containing x -/
+  theorem Expr.sub_inside_out :
+    x ∉ (Expr.context_free_vars m) →
+    Expr.sub m (Expr.sub [(x,c)] e)
+    =
+    Expr.sub [(x,(Expr.sub m c))] (Expr.sub (remove x m) e)
+  := by intro h0; cases e with
+  | var x' =>
+    by_cases h1 : x = x'
+    {
+      simp [Expr.sub,find,h1]
+      simp [find_remove_refl]
+      simp [Expr.sub,find]
+    }
+    {
+      simp [Expr.sub]
+      simp [find]
+      simp [h1]
+
+      rw [find_remove_neq _ _ _ (fun a => h1 (Eq.symm a))]
+
+      cases h2 : find x' m with
+      | none =>
+        simp [*]
+        simp [Expr.sub,find,h1,h2]
+      | some e =>
+        simp [*, Expr.sub]
+        apply Eq.symm
+        apply Expr.sub_fresh
+        apply find_fresh_var_preservation h2 h0
+
+    }
+  | _ => sorry
+end
 
 theorem List.is_fresh_key_sub_preservation :
   List.is_fresh_key l r →
@@ -1149,12 +1200,18 @@ mutual
   | @recycle e e' x step_e =>
     simp [Expr.sub, List.function_sub]
     simp [Pat.ids, remove_all]
-    rw [Expr.sub_inside_out]
+
+    have fresh : x ∉ Expr.context_free_vars (remove_all m' ids) := by
+      sorry
+
+    rw [Expr.sub_inside_out fresh]
+
     simp [Expr.sub, List.function_sub, Pat.ids, remove_all]
     apply ParStep.recycle
     rw [remove_remove_all_nesting]
     rw [remove_remove_all_nesting]
     apply ParStep.sub_partial step_arg step_e matching matching'
+
 end
 
 

@@ -1389,6 +1389,16 @@ theorem List.pair_typ_free_vars_containment {xs ys : List (Typ × Typ)} :
 := by sorry
 
 
+
+def Expr.free_vars : Expr → List String
+| _ => []
+
+def Expr.context_free_vars : List (String × Expr) → List String
+| [] => []
+| (x,e) :: m => Expr.free_vars e ++ (Expr.context_free_vars m)
+
+
+
 mutual
   def List.record_sub (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
   | .nil => .nil
