@@ -1441,4 +1441,8 @@ mutual
   | .loopi e => do
     let e' ← (Expr.sub m e)
     return .loopi e'
+
+  def Expr.sub_op (m : List (String × Expr)): Option Expr → Option Expr
+  | some e => Expr.sub m e
+  | none => none
 end

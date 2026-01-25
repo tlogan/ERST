@@ -55,6 +55,27 @@ mutual
 
 end
 
+def ParOpStep : Option Expr → Option Expr → Prop
+| some e, some e' => ParStep e e'
+| _,_ => False
+
+theorem ParOpStep.soundness :
+  ParOpStep (some e) (some e') →
+  ParStep e e'
+:= by
+  unfold ParOpStep
+  simp
+
+theorem ParOpStep.completeness:
+  ee = some e → ee' = some e' →
+  ParStep e e' →
+  ParOpStep ee ee'
+:= by
+  unfold ParOpStep
+  intro h0 h1 h2
+  simp [h0,h1]
+  exact h2
+
 mutual
   theorem ParRcdStep.refl r :
     ParRcdStep r r
@@ -868,17 +889,28 @@ theorem Pattern.match_disjoint_preservation :
   ListPair.dom m0 ∩ ListPair.dom m1 = []
 := by sorry
 
-theorem ParStep.sub_disjoint_concat :
+theorem ParOpStep.sub_disjoint_concat :
   ListPair.dom m0 ∩ ListPair.dom m1 = [] →
   ListPair.dom m0' ∩ ListPair.dom m1' = [] →
-  ParStep (Expr.sub m0 body) (Expr.sub m0' body) →
-  ParStep (Expr.sub m1 body) (Expr.sub m1' body) →
-  ParStep (Expr.sub (m0 ++ m1) body) (Expr.sub (m0' ++ m1') body)
+  ParOpStep (Expr.sub m0 body) (Expr.sub m0' body) →
+  ParOpStep (Expr.sub m1 body) (Expr.sub m1' body) →
+  ParOpStep (Expr.sub (m0 ++ m1) body) (Expr.sub (m0' ++ m1') body)
 := by sorry
 
 theorem remove_all_concat :
   remove_all (m0 ++ m1) ids =
   remove_all m0 ids ++ remove_all m1 ids
+:= by sorry
+
+
+theorem Expr.sub_concat_left :
+  Expr.sub (m0 ++ m1) e = some e_sub →
+  ∃ e_sub', Expr.sub (m0) e = some e_sub'
+:= by sorry
+
+theorem Expr.sub_concat_right :
+  Expr.sub (m0 ++ m1) e = some e_sub →
+  ∃ e_sub', Expr.sub (m1) e = some e_sub'
 := by sorry
 
 
@@ -888,9 +920,10 @@ mutual
     (step : ParRcdStep r r')
     (matching : Pattern.match_entry l p r = some m)
     (matching' : Pattern.match_entry l p r' = some m')
-    ids
-    e
-  : ParStep (Expr.sub (remove_all m ids) e) (Expr.sub (remove_all m' ids) e)
+  :
+    (Expr.sub (remove_all m ids) e) = some e_sub →
+    (Expr.sub (remove_all m' ids) e) = some e_sub' →
+    ParStep e_sub e_sub'
   := by cases step with
   | nil =>
     simp [Pattern.match_entry] at matching
@@ -901,27 +934,33 @@ mutual
     {
       simp [*] at matching
       simp [*] at matching'
-      apply ParStep.substitute step_ee matching matching' ids e
+      intro h1 h2
+      apply ParStep.substitute step_ee matching matching' h1 h2
     }
     {
       simp [*] at matching
       simp [*] at matching'
-      apply ParRcdStep.pattern_match_entry_preservation step_rr matching matching' ids e
+      intro h1 h2
+      apply ParRcdStep.pattern_match_entry_preservation step_rr matching matching' h1 h2
     }
 
   theorem ParRcdStep.substitute
     (step : ParRcdStep r r')
     (matching : Pattern.match_record r ps = some m)
     (matching' : Pattern.match_record r' ps = some m')
-    ids
-    e
-  : ParStep (Expr.sub (remove_all m ids) e) (Expr.sub (remove_all m' ids) e)
+  :
+    (Expr.sub (remove_all m ids) e) = some e_sub →
+    (Expr.sub (remove_all m' ids) e) = some e_sub' →
+    ParStep e_sub e_sub'
   := by cases ps with
   | nil =>
     simp [Pattern.match_record] at matching
     simp [Pattern.match_record] at matching'
     rw [matching, matching']
-    exact ParStep.refl (Expr.sub (remove_all [] ids) e)
+    intro h0 h1
+    simp [h1] at h0 ; clear h1
+    simp [*]
+    apply ParStep.refl
   | cons lp ps' =>
     have (l,p) := lp
     simp [Pattern.match_record] at matching
@@ -944,13 +983,12 @@ mutual
           | some m3 =>
             simp [*] at h4
             rw [←h2,←h4]
-
-            have ih0 := ParRcdStep.pattern_match_entry_preservation step h5 h6 ids e
-            have ih1 := ParRcdStep.substitute step h7 h8 ids e
-
             rw [remove_all_concat]
             rw [remove_all_concat]
-            apply ParStep.sub_disjoint_concat
+            intro h9 h10
+            apply ParOpStep.soundness
+            rw [←h9,←h10]
+            apply ParOpStep.sub_disjoint_concat
             {
               apply ListPair.dom_remove_all_disjoint
               apply Pattern.match_disjoint_preservation h5 h7 h3
@@ -959,8 +997,19 @@ mutual
               apply ListPair.dom_remove_all_disjoint
               exact Pattern.match_disjoint_preservation h6 h8 h3
             }
-            { exact ih0 }
-            { exact ih1 }
+            {
+              have ⟨e_sub0,h11⟩ := Expr.sub_concat_left h9
+              have ⟨e_sub1,h12⟩ := Expr.sub_concat_left h10
+              apply ParOpStep.completeness h11 h12
+              apply ParRcdStep.pattern_match_entry_preservation step h5 h6 h11 h12
+            }
+            {
+
+              have ⟨e_sub2,h11⟩ := Expr.sub_concat_right h9
+              have ⟨e_sub3,h12⟩ := Expr.sub_concat_right h10
+              apply ParOpStep.completeness h11 h12
+              apply ParRcdStep.substitute step h7 h8 h11 h12
+            }
           | none =>
             simp [*] at h4
         | none =>
@@ -976,9 +1025,9 @@ mutual
     (step : ParStep arg arg')
     (matching : Pattern.match arg p = some m)
     (matching' : Pattern.match arg' p = some m')
-    ids
-    e
-  : ParStep (Expr.sub (remove_all m ids) e) (Expr.sub (remove_all m' ids) e)
+  : (Expr.sub (remove_all m ids) e) = some e_sub →
+    (Expr.sub (remove_all m' ids) e) = some e_sub' →
+    ParStep e_sub e_sub'
   := by cases p with
   | var x =>
     simp [Pattern.match] at matching
@@ -990,26 +1039,32 @@ mutual
     {
       rw [remove_all_single_membership h]
       rw [remove_all_single_membership h]
-      exact ParStep.refl (Expr.sub [] e)
+      intro h0 h1
+      simp [h1] at h0
+      rw [h0]
+      exact ParStep.refl e_sub
     }
     {
       rw [remove_all_single_nomem h]
       rw [remove_all_single_nomem h]
-      exact ParStep.sub_preservation x step e
+      intro h0 h1
+      apply ParStep.sub_preservation step h0 h1
     }
   | @iso l p_body =>
     cases step with
     | var x =>
       simp [matching'] at matching
       simp [*]
-      exact ParStep.refl (Expr.sub (remove_all m ids) e)
+      intro h0 h1
+      simp [h1] at h0
+      rw [h0]
+      exact ParStep.refl e_sub
     | @iso body body' l' step_body =>
       simp [Pattern.match] at matching
       simp [Pattern.match] at matching'
       have ⟨h0,h1⟩ := matching ; clear matching
       have ⟨h2,h3⟩ := matching' ; clear matching'
-      have ih := ParStep.substitute step_body h1 h3
-      apply ih
+      apply ParStep.substitute step_body h1 h3
     | _ =>
       simp [Pattern.match] at matching
   | @record ps =>
@@ -1017,7 +1072,10 @@ mutual
     | var x =>
       simp [matching'] at matching
       simp [*]
-      exact ParStep.refl (Expr.sub (remove_all m ids) e)
+      intro h0 h1
+      simp [h1] at h0
+      rw [h0]
+      exact ParStep.refl e_sub
     | @record r r' step_r =>
       simp [Pattern.match] at matching
       simp [Pattern.match] at matching'
@@ -1032,19 +1090,19 @@ end
 
 theorem Pattern.match_sub_preservation :
   Pattern.match arg p = some m →
-  ∀ mm,
-  ∃ m', Pattern.match (Expr.sub mm arg) p = some m' ∧
+  ∀ mm, (Expr.sub mm arg) = some arg_sub →
+  ∃ m', Pattern.match arg_sub p = some m' ∧
   (∀ e,
-    (Expr.sub m' (Expr.sub (remove_all mm (ListPair.dom m)) e))
+    (Expr.sub_op m' (Expr.sub (remove_all mm (ListPair.dom m)) e))
     =
-    (Expr.sub mm (Expr.sub m e))
+    (Expr.sub_op mm (Expr.sub m e))
   )
 := by sorry
 
 theorem Pattern.match_skip_preservation :
   Pattern.match arg p = none →
-  ∀ mm,
-  Pattern.match (Expr.sub mm arg) p = none
+  ∀ mm, (Expr.sub mm arg) = some sub_arg →
+  Pattern.match sub_arg p = none
 := by sorry
 
 theorem Pattern.match_domain :
@@ -1059,7 +1117,7 @@ theorem Pattern.remove_all_ids :
 
 theorem sub_var_remove_all_membership :
   x ∈ ids →
-  Expr.sub (remove_all m ids) (.var x) = (.var x)
+  Expr.sub (remove_all m ids) (.var x) = some (.var x)
 := by sorry
 
 theorem sub_var_remove_all_nomem :
@@ -1092,33 +1150,36 @@ mutual
   /- TODO: requires that m does not point to expression containing x -/
   theorem Expr.sub_inside_out :
     x ∉ (Expr.context_free_vars m) →
-    Expr.sub m (Expr.sub [(x,c)] e)
+    ∃ c_sub, (Expr.sub m c) = some c_sub ∧
+    Expr.sub_op m (Expr.sub [(x,c)] e)
     =
-    Expr.sub [(x,(Expr.sub m c))] (Expr.sub (remove x m) e)
+    Expr.sub_op [(x,c_sub)] (Expr.sub (remove x m) e)
   := by intro h0; cases e with
   | var x' =>
     by_cases h1 : x = x'
     {
       simp [Expr.sub,find,h1]
       simp [find_remove_refl]
-      simp [Expr.sub,find]
+      simp [Expr.sub_op, Expr.sub,find]
+      sorry
     }
     {
-      simp [Expr.sub]
-      simp [find]
-      simp [h1]
+      sorry
+      -- simp [Expr.sub]
+      -- simp [find]
+      -- simp [h1]
 
-      rw [find_remove_neq _ _ _ (fun a => h1 (Eq.symm a))]
+      -- rw [find_remove_neq _ _ _ (fun a => h1 (Eq.symm a))]
 
-      cases h2 : find x' m with
-      | none =>
-        simp [*]
-        simp [Expr.sub,find,h1,h2]
-      | some e =>
-        simp [*, Expr.sub]
-        apply Eq.symm
-        apply Expr.sub_fresh
-        apply find_fresh_var_preservation h2 h0
+      -- cases h2 : find x' m with
+      -- | none =>
+      --   simp [*]
+      --   simp [Expr.sub,find,h1,h2]
+      -- | some e =>
+      --   simp [*, Expr.sub]
+      --   apply Eq.symm
+      --   apply Expr.sub_fresh
+      --   apply find_fresh_var_preservation h2 h0
 
     }
   | _ => sorry
@@ -1126,53 +1187,89 @@ end
 
 theorem List.is_fresh_key_sub_preservation :
   List.is_fresh_key l r →
-  List.is_fresh_key l (List.record_sub m r)
+  ∀ {r'},
+  (List.record_sub m r) = some r' →
+  List.is_fresh_key l r'
 := by induction r with
 | nil =>
   simp [List.is_fresh_key, List.record_sub]
-| cons le r' ih =>
+| cons le r'' ih =>
   have (l',e) := le
   simp [List.is_fresh_key, List.record_sub]
-  intro h0 h1
-  apply And.intro h0
-  apply ih h1
+  intro h0 h1 r'
+
+  match h2 : (Expr.sub m e), h3 : (List.record_sub m r'') with
+  | some e', some r''' =>
+    simp
+    intro h4
+    rw [←h4]
+    simp [List.is_fresh_key]
+    apply And.intro h0
+    apply ih h1 h3
+  | none,_ => simp [*]
+  | _,none => simp [*]
 
 mutual
 
   theorem Expr.is_record_value_sub_preservation :
     List.is_record_value r →
-    List.is_record_value (List.record_sub m r)
+    ∀ {r'}, (List.record_sub m r) = some r' →
+    List.is_record_value r'
   := by cases r with
   | nil =>
     simp [List.is_record_value, List.record_sub]
   | cons le r' =>
     have (l,e) := le
     simp [List.is_record_value, List.record_sub]
-    intro h0 h1 h2
-    apply And.intro
-    {
+
+    match  h0 : (Expr.sub m e), h1 : (List.record_sub m r') with
+    | some e'', some r''' =>
+      simp
+      intro h2 h3 h4
+      simp [List.is_record_value]
       apply And.intro
-      { exact List.is_fresh_key_sub_preservation h0 }
-      { apply Expr.is_value_sub_preservation h1 }
-    }
-    { apply Expr.is_record_value_sub_preservation h2 }
+      {
+        apply And.intro
+        { exact List.is_fresh_key_sub_preservation h2 h1 }
+        { apply Expr.is_value_sub_preservation h3 h0
+      }
+      }
+      { apply Expr.is_record_value_sub_preservation h4 h1 }
+    | none,_ => simp [*]
+    | _,none => simp [*]
 
   theorem Expr.is_value_sub_preservation :
     Expr.is_value e →
-    Expr.is_value (Expr.sub m e)
+    ∀ {e'}, (Expr.sub m e) = some e' →
+    Expr.is_value e'
   := by cases e with
   | var x =>
     simp [Expr.is_value]
   | iso l body =>
     simp [Expr.is_value, Expr.sub]
-    intro h0
-    apply Expr.is_value_sub_preservation h0
+    match h0 : (Expr.sub m body) with
+    | some b =>
+      simp [Expr.is_value]
+      intro h1
+      apply Expr.is_value_sub_preservation h1 h0
+    | none =>
+      simp [*]
   | record r =>
     simp [Expr.is_value, Expr.sub]
-    intro h0
-    apply Expr.is_record_value_sub_preservation h0
+    match h0 : (List.record_sub m r) with
+    | some b =>
+      simp
+      intro h1
+      apply Expr.is_record_value_sub_preservation h1 h0
+    | none =>
+      simp [*]
   | function f =>
     simp [Expr.is_value, Expr.sub]
+    match h0 : (List.function_sub m f) with
+    | some b =>
+      simp [Expr.is_value]
+    | none =>
+      simp [*]
   | _ =>
     simp [Expr.is_value]
 end
