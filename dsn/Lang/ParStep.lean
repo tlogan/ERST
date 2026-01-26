@@ -1422,6 +1422,17 @@ end
 --   rw [←remove_none _ m]
 --   apply ParStep.sub_partial step_arg step_body matching matching'
 
+theorem Pattern.match_instantiate_preservation :
+  Pattern.match arg p = some m →
+  ∀ offset d,
+  ∃ mi, Pattern.match (Expr.instantiate offset d arg) p = some mi ∧
+  (∀ e,
+    (Expr.instantiate 0 mi (Expr.instantiate (offset + Pat.count_vars p) d e))
+    =
+    (Expr.instantiate offset d (Expr.instantiate 0 m e))
+  )
+:= by sorry
+
 mutual
 
   theorem ParRcdStep.instantiate
@@ -1496,34 +1507,12 @@ mutual
   | @pattern_match body body' aa aa' pp mm' f step_body step_aa matching'' =>
     simp [Expr.instantiate, List.function_instantiate]
 
-    sorry
-    /- TODO: connect the instantiation of aa' with mi of  Pattern.match aa' pp = some mm',
-    - to a new mm'' related to the instantiation mi
-    -/
-
--- theorem Pattern.match_sub_preservation :
---   Pattern.match arg p = some m →
---   ∀ mm,
---   ∃ m', Pattern.match (Expr.sub mm arg) p = some m' ∧
---   (∀ e,
---     (Expr.sub m' (Expr.sub (remove_all mm (ListPair.dom m)) e))
---     =
---     (Expr.sub mm (Expr.sub m e))
---   )
--- := by sorry
-
-    -- have ⟨mm'',h0,h1⟩ := Pattern.match_sub_preservation matching'' (remove_all m' ids)
-    -- rw [←h1]
-    -- have h2 := Pattern.match_domain matching''
-    -- rw [Pattern.remove_all_ids h2]
-    -- have ih0 := ParStep.sub_partial step_arg step_aa matching matching'
-    -- have ih1 := ParStep.sub_partial step_arg step_body matching matching'
-    -- rw [remove_all_nesting]
-    -- rw [remove_all_nesting]
-    -- apply ParStep.pattern_match
-    -- { apply ih1 }
-    -- { exact ih0 ids }
-    -- { exact h0 }
+    have ⟨mm'',h0,h1⟩ := Pattern.match_instantiate_preservation matching'' offset m'
+    rw [← h1 body']
+    apply ParStep.pattern_match
+    { apply ParStep.instantiate step_arg step_body matching matching' }
+    { apply ParStep.instantiate step_arg step_aa matching matching' }
+    { exact h0 }
 
   -- | @skip f f' aa aa' pp bb step_f step_aa isval nomatching  =>
   --   simp [Expr.sub, List.function_sub]
