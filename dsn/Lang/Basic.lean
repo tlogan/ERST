@@ -887,7 +887,8 @@ end
 
 
 inductive Expr
-| var : String → Expr
+| bvar : Nat → String → Expr
+| fvar : String → Expr
 | iso : String → Expr → Expr
 | record : List (String × Expr) → Expr
 | function : List (Pat × Expr) → Expr
@@ -923,12 +924,56 @@ mutual
   | _ => .false
 end
 
+mutual
+
+  def Pat.record_index_vars : List (String × Pat) → List String
+  | [] => []
+  | (l,p) :: ps =>
+    Pat.index_vars p ++ Pat.record_index_vars ps
+
+  def Pat.index_vars : Pat → List String
+  | var x => [x]
+  | iso l p => Pat.index_vars p
+  | record ps => Pat.record_index_vars ps
+end
+
+
+#eval Pat.index_vars (Pat.record [("uno", Pat.var "x"), ("dos", Pat.record [("dos", Pat.var "y"), ("tres", Pat.var "z")])])
+
+
+mutual
+  def Expr.record_seal (names : List String) : List (String × Expr) → List (String × Expr)
+  | [] => []
+  | (l,e)::r =>
+    (l, Expr.seal names e) :: (Expr.record_seal names r)
+
+  def Expr.function_seal (names : List String) : List (Pat × Expr) → List (Pat × Expr)
+  | [] => []
+  | (p,e)::f =>
+    let names' := Pat.index_vars p
+    (p, Expr.seal (names' ++ names) e) :: (Expr.function_seal names f)
+
+  def Expr.seal (names : List String) : Expr → Expr
+  | .bvar i x => .bvar i x
+  | .fvar x =>
+    match List.firstIndexOf x names with
+    | .some i => .bvar i x
+    | .none => .fvar x
+  | .iso l e => .iso l (Expr.seal names e)
+  | .record r => .record (Expr.record_seal names r)
+  | .function f => .function (Expr.function_seal names f)
+  | .app ef ea => .app (Expr.seal names ef) (Expr.seal names ea)
+  | .anno e t => .anno (Expr.seal names e) t
+  | .loopi e => .loopi (Expr.seal names e)
+end
+
+#eval Expr.seal [] (.function [(Pat.var "z", .app (.function [(Pat.iso "uno" (Pat.var "x"), .record [("one", .fvar "x"), ("two", .fvar "z")])]) (.fvar "hello"))])
 
 def Expr.extract (e : Expr) (l : String) : Expr :=
-  .app (.function [(Pat.iso l (Pat.var "x"), .var "x")]) e
+  Expr.seal [] (.app (.function [(Pat.iso l (Pat.var "x"), .fvar "x")]) e)
 
 def Expr.project (e : Expr) (l : String) : Expr :=
-  .app (.function [(.record [(l, .var "x")], .var "x")]) e
+  Expr.seal [] (.app (.function [(.record [(l, .var "x")], .fvar "x")]) e)
 
 def Expr.def (id : String) (top : Option Typ) (target : Expr) (contin : Expr) : Expr :=
   Expr.app
@@ -1286,41 +1331,13 @@ macro_rules
 
 
 
-class RecordPatternOf (_ : List (String × Expr)) where
-  default : List (String × Pat)
-
-class PatternOf (_ : Expr) where
-  default : Pat
-
-instance (id : String) : PatternOf (Expr.var id) where
-  default := Pat.var id
-
-instance (entries : List (String × Expr)) [d : RecordPatternOf entries]
-: PatternOf (Expr.record entries) where
-  default := Pat.record d.default
-
-
-instance : RecordPatternOf [] where
-  default := []
-
-instance
-  (label : String) (result : Expr) [pd : PatternOf result]
-  (remainder : List (String × Expr)) [rpd : RecordPatternOf remainder]
-: RecordPatternOf ((label, result) :: remainder) where
-  default := (label, pd.default) :: rpd.default
-
-
-instance (e : Expr) [p : PatternOf e] : CoeDep Expr e Pat where
-  coe := p.default
-
-
 mutual
   def Pat.toRecordExpr : List (String × Pat) → List (String × Expr)
   | .nil => .nil
   | (l, p) :: r => (l, toExpr p) :: (toRecordExpr r)
 
   def Pat.toExpr : Pat → Expr
-  | .var id => .var id
+  | .var id => .fvar id
   | .iso label body => .iso label (Pat.toExpr body)
   | .record r => .record (toRecordExpr r)
 end
@@ -1400,6 +1417,39 @@ def Expr.context_free_vars : List (String × Expr) → List String
 
 
 mutual
+  def List.record_instantiate (offset : Nat) (m : List Expr): List (String × Expr) → List (String × Expr)
+  | .nil => .nil
+  | (l, e) :: r =>
+    (l, Expr.instantiate offset m e) :: (List.record_instantiate offset m r)
+
+  def List.function_instantiate (offset : Nat) (m : List Expr): List (Pat × Expr) → List (Pat × Expr)
+  | .nil => .nil
+  | (p, e) :: f =>
+    let offset' := offset + List.length (Pat.index_vars p)
+    (p, (Expr.instantiate offset' m e)) :: (List.function_instantiate offset m f)
+
+  def Expr.instantiate (offset : Nat) (m : List Expr) : Expr → Expr
+  | .bvar i x =>
+    if i >= offset then
+      if h : (i - offset) < List.length m  then
+        let ii : Fin (List.length m) := ⟨i - offset, by simp [h]⟩
+        List.get m ii
+      else
+        .bvar i x
+    else
+      .bvar i x
+  | .fvar id => .fvar id
+  | .iso l body => .iso l (Expr.instantiate offset m body)
+  | .record r => .record (List.record_instantiate offset m r)
+  | .function f => .function (List.function_instantiate offset m f)
+  | .app ef ea => .app (Expr.instantiate offset m ef) (Expr.instantiate offset m ea)
+  | .anno e t => .anno (Expr.instantiate offset m e) t
+  | .loopi e => .loopi (Expr.instantiate offset m e)
+end
+
+
+
+mutual
   def List.record_sub (m : List (String × Expr)): List (String × Expr) → List (String × Expr)
   | .nil => .nil
   | (l, e) :: r =>
@@ -1412,8 +1462,9 @@ mutual
     (p, Expr.sub (remove_all m ids) e) :: (List.function_sub m f)
 
   def Expr.sub (m : List (String × Expr)): Expr → Expr
-  | .var id => match (find id m) with
-    | .none => (.var id)
+  | .bvar i x => .bvar i x
+  | .fvar id => match (find id m) with
+    | .none => (.fvar id)
     | .some e => e
   | .iso l body => .iso l (Expr.sub m body)
   | .record r => .record (List.record_sub m r)

@@ -46,11 +46,25 @@ mutual
   | _, _ => none
 end
 
+def Pattern.match_nameless (e : Expr) (p : Pat) : Option (List Expr) := do
+  let m ← Pattern.match e p
+  let names := Pat.index_vars p
+  return List.flatMap (fun name =>
+    match find name m with
+    | some e => [e]
+    | none => []
+  ) names
+
+
+theorem Pattern.match_index_membership :
+  Pattern.match e p = some m →
+  (∀ name, name ∈ ListPair.dom m ↔ name ∈ Pat.index_vars p)
+:= by sorry
+
 
 theorem Pattern.match_var :
   Pattern.match e (.var x) = some [(x,e)]
 := by sorry
-
 
 
 end Lang
