@@ -12,7 +12,7 @@ def List.keys_unique {α} : List (String × α) → Bool
 
 mutual
   def Pattern.match_entry (label : String) (pat : Pat)
-  : List (String × Expr) → Option (List (String × Expr))
+  : List (String × Expr) → Option (List Expr)
   | .nil => none
   | (l, e) :: args =>
     if l == label then
@@ -21,7 +21,7 @@ mutual
       Pattern.match_entry label pat args
 
   def Pattern.match_record (args : List (String × Expr))
-  : List (String × Pat) → Option (List (String × Expr))
+  : List (String × Pat) → Option (List Expr)
   | .nil => some []
   | (label, pat) :: pats => do
     if Pat.ids pat ∩ List.pattern_ids pats == [] then
@@ -31,8 +31,8 @@ mutual
     else
       .none
 
-  def Pattern.match : Expr → Pat → Option (List (String × Expr))
-  | e, (.var id) => some [(id, e)]
+  def Pattern.match : Expr → Pat → Option (List Expr)
+  | e, (.var id) => some [e]
   | (.iso l e), (.iso label p) =>
     if l == label then
       Pattern.match e p
@@ -46,25 +46,9 @@ mutual
   | _, _ => none
 end
 
-def Pattern.match_nameless (e : Expr) (p : Pat) : Option (List Expr) := do
-  let m ← Pattern.match e p
-  let names := Pat.index_vars p
-  return List.flatMap (fun name =>
-    match find name m with
-    | some e => [e]
-    | none => []
-  ) names
 
-
-theorem Pattern.match_index_membership :
-  Pattern.match e p = some m →
-  (∀ name, name ∈ ListPair.dom m ↔ name ∈ Pat.index_vars p)
+theorem Pattern.match_var e x :
+  Pattern.match e (.var x) = some [e]
 := by sorry
-
-
-theorem Pattern.match_var :
-  Pattern.match e (.var x) = some [(x,e)]
-:= by sorry
-
 
 end Lang

@@ -925,7 +925,6 @@ mutual
 end
 
 mutual
-
   def Pat.record_index_vars : List (String × Pat) → List String
   | [] => []
   | (l,p) :: ps =>
@@ -936,6 +935,8 @@ mutual
   | iso l p => Pat.index_vars p
   | record ps => Pat.record_index_vars ps
 end
+
+def Pat.count_vars (p : Pat) := List.length (Pat.index_vars p)
 
 
 #eval Pat.index_vars (Pat.record [("uno", Pat.var "x"), ("dos", Pat.record [("dos", Pat.var "y"), ("tres", Pat.var "z")])])
@@ -1414,6 +1415,33 @@ def Expr.context_free_vars : List (String × Expr) → List String
 | [] => []
 | (x,e) :: m => Expr.free_vars e ++ (Expr.context_free_vars m)
 
+mutual
+
+  def List.record_shift_vars (threshold : Nat) (offset : Nat) : List (String × Expr) → List (String × Expr)
+  | .nil => .nil
+  | (l, e) :: r =>
+    (l, Expr.shift_vars threshold offset e) :: (List.record_shift_vars threshold offset r)
+
+  def List.function_shift_vars (threshold : Nat) (offset : Nat) : List (Pat × Expr) → List (Pat × Expr)
+  | .nil => .nil
+  | (p, e) :: f =>
+    let threshold' := threshold + Pat.count_vars p
+    (p, Expr.shift_vars threshold' offset e) :: (List.function_shift_vars threshold offset f)
+
+  def Expr.shift_vars (threshold : Nat) (offset : Nat) : Expr → Expr
+  | .bvar i x =>
+    if i >= threshold then
+      (.bvar (i + offset) x)
+    else
+      (.bvar i x)
+  | .fvar id => .fvar id
+  | .iso l body => .iso l (Expr.shift_vars threshold offset body)
+  | .record r => .record (List.record_shift_vars threshold offset r)
+  | .function f => .function (List.function_shift_vars threshold offset f)
+  | .app ef ea => .app (Expr.shift_vars threshold offset ef) (Expr.shift_vars threshold offset ea)
+  | .anno e t => .anno (Expr.shift_vars threshold offset e) t
+  | .loopi e => .loopi (Expr.shift_vars threshold offset e)
+end
 
 
 mutual
@@ -1425,7 +1453,7 @@ mutual
   def List.function_instantiate (offset : Nat) (m : List Expr): List (Pat × Expr) → List (Pat × Expr)
   | .nil => .nil
   | (p, e) :: f =>
-    let offset' := offset + List.length (Pat.index_vars p)
+    let offset' := offset + (Pat.count_vars p)
     (p, (Expr.instantiate offset' m e)) :: (List.function_instantiate offset m f)
 
   def Expr.instantiate (offset : Nat) (m : List Expr) : Expr → Expr
@@ -1433,7 +1461,7 @@ mutual
     if i >= offset then
       if h : (i - offset) < List.length m  then
         let ii : Fin (List.length m) := ⟨i - offset, by simp [h]⟩
-        List.get m ii
+        Expr.shift_vars 0 offset (List.get m ii)
       else
         .bvar i x
     else
