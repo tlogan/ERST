@@ -1443,7 +1443,6 @@ mutual
   | .loopi e => .loopi (Expr.shift_vars threshold offset e)
 end
 
-
 mutual
   def List.record_instantiate (offset : Nat) (m : List Expr): List (String × Expr) → List (String × Expr)
   | .nil => .nil
@@ -1459,11 +1458,9 @@ mutual
   def Expr.instantiate (offset : Nat) (m : List Expr) : Expr → Expr
   | .bvar i x =>
     if i >= offset then
-      if h : (i - offset) < List.length m  then
-        let ii : Fin (List.length m) := ⟨i - offset, by simp [h]⟩
-        Expr.shift_vars 0 offset (List.get m ii)
-      else
-        .bvar i x
+      match m[i - offset]? with
+      | some e => Expr.shift_vars 0 offset e
+      | none => .bvar (i - List.length m) x
     else
       .bvar i x
   | .fvar id => .fvar id
@@ -1474,6 +1471,11 @@ mutual
   | .anno e t => .anno (Expr.instantiate offset m e) t
   | .loopi e => .loopi (Expr.instantiate offset m e)
 end
+
+def Expr.list_instantiate (offset : Nat) (m : List Expr): List Expr → List Expr
+| .nil => .nil
+| e :: es =>
+  Expr.instantiate offset m e :: (Expr.list_instantiate offset m es)
 
 
 

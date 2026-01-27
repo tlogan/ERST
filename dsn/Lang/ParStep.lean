@@ -1425,11 +1425,20 @@ end
 theorem Pattern.match_instantiate_preservation :
   Pattern.match arg p = some m →
   ∀ offset d,
-  ∃ mi, Pattern.match (Expr.instantiate offset d arg) p = some mi ∧
-  (∀ e,
-    (Expr.instantiate 0 mi (Expr.instantiate (offset + Pat.count_vars p) d e))
-    =
-    (Expr.instantiate offset d (Expr.instantiate 0 m e))
+  Pattern.match (Expr.instantiate offset d arg) p = some (Expr.list_instantiate offset d m)
+  --------------------------
+  -- (∀ e,
+  --   (Expr.instantiate 0 mi (Expr.instantiate (offset + Pat.count_vars p) d e))
+  --   =
+  --   (Expr.instantiate offset d (Expr.instantiate 0 m e))
+  -- )
+:= by sorry
+
+theorem  Expr.instantiate_inside_out :
+  (Expr.instantiate offset ma (Expr.instantiate 0 mb e)) =
+  (Expr.instantiate 0
+    (Expr.list_instantiate offset ma mb)
+    (Expr.instantiate (offset + List.length mb) ma e)
   )
 := by sorry
 
@@ -1505,14 +1514,16 @@ mutual
     { apply ParStep.instantiate step_arg step_aa matching matching' }
 
   | @pattern_match body body' aa aa' pp mm' f step_body step_aa matching'' =>
-    simp [Expr.instantiate, List.function_instantiate]
 
-    have ⟨mm'',h0,h1⟩ := Pattern.match_instantiate_preservation matching'' offset m'
-    rw [← h1 body']
+    simp [Expr.instantiate, List.function_instantiate]
+    /- TODO: double check rationale for inside out -/
+    rw [Expr.instantiate_inside_out]
+    rw [← Pattern.match_count_eq]
     apply ParStep.pattern_match
     { apply ParStep.instantiate step_arg step_body matching matching' }
     { apply ParStep.instantiate step_arg step_aa matching matching' }
-    { exact h0 }
+    { apply Pattern.match_instantiate_preservation matching'' offset m' }
+    { exact matching'' }
 
   -- | @skip f f' aa aa' pp bb step_f step_aa isval nomatching  =>
   --   simp [Expr.sub, List.function_sub]

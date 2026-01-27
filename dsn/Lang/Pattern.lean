@@ -46,6 +46,10 @@ mutual
   | _, _ => none
 end
 
+theorem Pattern.match_count_eq :
+  Pattern.match e p = some m →
+  Pat.count_vars p = List.length m
+:= by sorry
 
 theorem Pattern.match_var e x :
   Pattern.match e (.var x) = some [e]
