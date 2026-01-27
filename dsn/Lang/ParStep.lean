@@ -1114,11 +1114,10 @@ end
 --   )
 -- := by sorry
 
--- theorem Pattern.match_skip_preservation :
---   Pattern.match arg p = none →
---   ∀ mm,
---   Pattern.match (Expr.sub mm arg) p = none
--- := by sorry
+theorem Pattern.match_skip_preservation :
+  Pattern.match arg p = none →
+  ∀ offset m, Pattern.match (Expr.instantiate offset m arg) p = none
+:= by sorry
 
 -- theorem Pattern.match_domain :
 --   Pattern.match arg p = some m →
@@ -1434,6 +1433,12 @@ theorem Pattern.match_instantiate_preservation :
   -- )
 := by sorry
 
+
+theorem Expr.is_value_instantiate_preservation :
+  (Expr.is_value e) →
+  ∀ offset m, (Expr.is_value (Expr.instantiate offset m e))
+:= by sorry
+
 theorem  Expr.instantiate_inside_out :
   (Expr.instantiate offset ma (Expr.instantiate 0 mb e)) =
   (Expr.instantiate 0
@@ -1525,40 +1530,30 @@ mutual
     { apply Pattern.match_instantiate_preservation matching'' offset m' }
     { exact matching'' }
 
-  -- | @skip f f' aa aa' pp bb step_f step_aa isval nomatching  =>
-  --   simp [Expr.sub, List.function_sub]
-  --   apply ParStep.skip
-  --   { apply ParFunStep.sub_partial step_arg step_f matching matching' }
-  --   { apply ParStep.sub_partial step_arg step_aa matching matching'}
-  --   { exact Expr.is_value_sub_preservation isval }
-  --   { exact Pattern.match_skip_preservation nomatching (remove_all m' ids) }
-  -- | @anno e e' t step_e =>
-  --   simp [Expr.sub]
-  --   apply ParStep.anno
-  --   apply ParStep.sub_partial step_arg step_e matching matching'
-  -- | @erase body body' t step_body =>
-  --   simp [Expr.sub]
-  --   apply ParStep.erase
-  --   apply ParStep.sub_partial step_arg step_body matching matching'
-  -- | @loopi body body' step_body =>
-  --   simp [Expr.sub]
-  --   apply ParStep.loopi
-  --   apply ParStep.sub_partial step_arg step_body matching matching'
-  -- | @recycle e e' x step_e =>
-  --   simp [Expr.sub, List.function_sub]
-  --   simp [Pat.ids, remove_all]
-
-  --   have fresh : x ∉ Expr.context_free_vars (remove_all m' ids) := by
-  --     sorry
-
-  --   rw [Expr.sub_inside_out fresh]
-
-  --   simp [Expr.sub, List.function_sub, Pat.ids, remove_all]
-  --   apply ParStep.recycle
-  --   rw [remove_remove_all_nesting]
-  --   rw [remove_remove_all_nesting]
-  --   apply ParStep.sub_partial step_arg step_e matching matching'
-  | _ => sorry
+  | @skip f f' aa aa' pp bb step_f step_aa isval nomatching  =>
+    simp [Expr.instantiate, List.function_instantiate]
+    apply ParStep.skip
+    { apply ParFunStep.instantiate step_arg step_f matching matching' }
+    { apply ParStep.instantiate step_arg step_aa matching matching'}
+    { apply Expr.is_value_instantiate_preservation isval }
+    { apply Pattern.match_skip_preservation nomatching }
+  | @anno e e' t step_e =>
+    simp [Expr.instantiate]
+    apply ParStep.anno
+    apply ParStep.instantiate step_arg step_e matching matching'
+  | @erase body body' t step_body =>
+    simp [Expr.instantiate]
+    apply ParStep.erase
+    apply ParStep.instantiate step_arg step_body matching matching'
+  | @loopi body body' step_body =>
+    simp [Expr.instantiate]
+    apply ParStep.loopi
+    apply ParStep.instantiate step_arg step_body matching matching'
+  | @recycle e e' x step_e =>
+    simp [Expr.instantiate, List.function_instantiate]
+    rw [Expr.instantiate_inside_out]
+    apply ParStep.recycle
+    apply ParStep.instantiate step_arg step_e matching matching'
 
 end
 
