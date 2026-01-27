@@ -51,6 +51,11 @@ theorem Pattern.match_count_eq :
   Pat.count_vars p = List.length m
 := by sorry
 
+theorem Pattern.match_entry_count_eq :
+  Pattern.match_entry l p r = some m →
+  Pat.count_vars p = List.length m
+:= by sorry
+
 theorem Pattern.match_var e x :
   Pattern.match e (.var x) = some [e]
 := by sorry

@@ -763,6 +763,104 @@ mutual
     exact loopi ih
 end
 
+mutual
+  theorem ParStep.instantiate_record_preservation
+    offset
+    (step : ParStep arg arg')
+    r
+  : ParRcdStep
+    (List.record_instantiate offset [arg] r)
+    (List.record_instantiate offset [arg'] r)
+  := by cases r with
+  | nil =>
+    simp [List.record_instantiate]
+    exact ParRcdStep.refl []
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.record_instantiate]
+    apply ParRcdStep.cons
+    { apply ParStep.instantiate_preservation _ step }
+    { apply ParStep.instantiate_record_preservation _ step}
+
+  theorem ParStep.instantiate_function_preservation
+    offset
+    (step : ParStep arg arg')
+    f
+  : ParFunStep
+    (List.function_instantiate offset [arg] f)
+    (List.function_instantiate offset [arg'] f)
+  := by cases f with
+  -- | nil =>
+  --   simp [List.function_instantiate]
+  --   exact ParFunStep.refl []
+  -- | cons pe f' =>
+  --   have (p,e) := pe
+  --   simp [List.function_instantiate]
+  --   apply ParFunStep.cons
+  --   { by_cases h : x ∈ Pat.ids p
+  --     { simp [remove_all_single_membership h]
+  --       exact refl (Expr.instantiate [] e)
+  --     }
+  --     { simp [remove_all_single_nomem h]
+  --       apply ParStep.instantiate_preservation x step e
+  --     }
+  --   }
+  --   { apply ParStep.instantiate_function_preservation _ step }
+  | _ => sorry
+
+  theorem ParStep.instantiate_preservation
+    offset
+    (step : ParStep arg arg')
+    e
+  : ParStep (Expr.instantiate offset [arg] e) (Expr.instantiate offset [arg'] e)
+  := by cases e with
+  -- | bvar i x' =>
+  --   simp [Expr.instantiate]
+  --   exact bvar i x'
+  -- | fvar x' =>
+  --   by_cases h0 : x' = x
+  --   {
+  --     simp [Expr.instantiate,find,h0]
+  --     exact step
+  --   }
+  --   {
+  --     have h1 : x' ∉ ListPair.dom [(x,arg)] := by
+  --       simp [ListPair.dom] ; exact h0
+  --     have h2 : x' ∉ ListPair.dom [(x,arg')] := by
+  --       simp [ListPair.dom] ; exact h0
+  --     have h3 := Expr.instantiate_refl h1
+  --     have h4 := Expr.instantiate_refl h2
+  --     rw [h3,h4]
+  --     exact ParStep.refl (Expr.fvar x')
+  --   }
+  -- | iso l body =>
+  --   simp [Expr.instantiate]
+  --   have ih := ParStep.instantiate_preservation x step body
+  --   exact ParStep.iso ih
+  -- | record r =>
+  --   simp [Expr.instantiate]
+  --   have ih := ParStep.instantiate_record_preservation x step r
+  --   exact ParStep.record ih
+  -- | function f =>
+  --   simp [Expr.instantiate]
+  --   have ih := ParStep.instantiate_function_preservation x step f
+  --   exact function ih
+  -- | app ef ea =>
+  --   simp [Expr.instantiate]
+  --   have ih0 := ParStep.instantiate_preservation x step ef
+  --   have ih1 := ParStep.instantiate_preservation x step ea
+  --   exact app ih0 ih1
+  -- | anno e t =>
+  --   simp [Expr.instantiate]
+  --   have ih := ParStep.instantiate_preservation x step e
+  --   exact anno ih
+  -- | loopi e =>
+  --   simp [Expr.instantiate]
+  --   have ih := ParStep.instantiate_preservation x step e
+  --   exact loopi ih
+  | _ => sorry
+end
+
 
 -- theorem ListPair.dom_remove_all_disjoint :
 --   ListPair.dom m0 ∩ ListPair.dom m1 = [] →
@@ -783,6 +881,13 @@ end
 --   ParStep (Expr.sub m1 body) (Expr.sub m1' body) →
 --   ParStep (Expr.sub (m0 ++ m1) body) (Expr.sub (m0' ++ m1') body)
 -- := by sorry
+
+
+theorem ParStep.instantiate_concat :
+  ParStep (Expr.instantiate offset m0 body) (Expr.instantiate offset m0' body) →
+  ParStep (Expr.instantiate (offset + List.length m0) m1 body) (Expr.instantiate (offset + List.length m0') m1' body) →
+  ParStep (Expr.instantiate offset (m0 ++ m1) body) (Expr.instantiate offset (m0' ++ m1') body)
+:= by sorry
 
 -- theorem remove_all_concat :
 --   remove_all (m0 ++ m1) ids =
@@ -953,25 +1058,25 @@ mutual
     (matching' : Pattern.match_entry l p r' = some m')
     offset
     e
-  : ParStep (Expr.instantiate offset m e) (Expr.instantiate offset m e)
+  : ParStep (Expr.instantiate offset m e) (Expr.instantiate offset m' e)
   := by cases step with
-  | _ => sorry
-  -- | nil =>
-  --   simp [Pattern.match_entry] at matching
-  -- | @cons ee ee' rr rr' l' step_ee step_rr =>
-  --   simp [Pattern.match_entry] at matching
-  --   simp [Pattern.match_entry] at matching'
-  --   by_cases h0 : l' = l
-  --   {
-  --     simp [*] at matching
-  --     simp [*] at matching'
-  --     apply ParStep.substitute step_ee matching matching' ids e
-  --   }
-  --   {
-  --     simp [*] at matching
-  --     simp [*] at matching'
-  --     apply ParRcdStep.pattern_match_entry_preservation step_rr matching matching' ids e
-  --   }
+  | nil =>
+    simp [Pattern.match_entry] at matching
+  | @cons ee ee' rr rr' l' step_ee step_rr =>
+    simp [Pattern.match_entry] at matching
+    simp [Pattern.match_entry] at matching'
+    by_cases h0 : l' = l
+    {
+      simp [*] at matching
+      simp [*] at matching'
+
+      apply ParStep.instantiator step_ee matching matching'
+    }
+    {
+      simp [*] at matching
+      simp [*] at matching'
+      apply ParRcdStep.entry_instantiator step_rr matching matching'
+    }
 
   theorem ParRcdStep.instantiator
     (step : ParRcdStep r r')
@@ -981,125 +1086,98 @@ mutual
     e
   : ParStep (Expr.instantiate offset m e) (Expr.instantiate offset m'  e)
   := by cases ps with
-  | _ => sorry
-  -- | nil =>
-  --   simp [Pattern.match_record] at matching
-  --   simp [Pattern.match_record] at matching'
-  --   rw [matching, matching']
-  --   exact ParStep.refl (Expr.sub (remove_all [] ids) e)
-  -- | cons lp ps' =>
-  --   have (l,p) := lp
-  --   simp [Pattern.match_record] at matching
-  --   simp [Pattern.match_record] at matching'
+  | nil =>
+    simp [Pattern.match_record] at matching
+    simp [Pattern.match_record] at matching'
+    rw [matching, matching']
+    exact ParStep.refl (Expr.instantiate offset [] e)
+  | cons lp ps' =>
+    have (l,p) := lp
+    simp [Pattern.match_record] at matching
+    simp [Pattern.match_record] at matching'
 
-  --   have ⟨h1,h2⟩ := matching
-  --   have ⟨h3,h4⟩ := matching'
-  --   clear matching matching'
+    have ⟨h1,h2⟩ := matching
+    have ⟨h3,h4⟩ := matching'
+    clear matching matching'
 
-  --   cases h5 : (Pattern.match_entry l p r) with
-  --   | some m0 =>
-  --     simp [*] at h2
-  --     cases h6 : (Pattern.match_entry l p r') with
-  --     | some m1 =>
-  --       simp [*] at h4
-  --       cases h7 : (Pattern.match_record r ps') with
-  --       | some m2 =>
-  --         simp [*] at h2
-  --         cases h8 : (Pattern.match_record r' ps') with
-  --         | some m3 =>
-  --           simp [*] at h4
-  --           rw [←h2,←h4]
+    match
+      h5 : (Pattern.match_entry l p r),
+      h6 : (Pattern.match_record r ps'),
+      h7 : (Pattern.match_entry l p r'),
+      h8 : (Pattern.match_record r' ps')
+    with
+    | some m0, some m1, some m2, some m3 =>
+      simp [*] at h2
+      simp [*] at h4
+      rw [←h2,←h4]
 
-  --           have ih0 := ParRcdStep.pattern_match_entry_preservation step h5 h6 ids e
-  --           have ih1 := ParRcdStep.substitute step h7 h8 ids e
-
-  --           rw [remove_all_concat]
-  --           rw [remove_all_concat]
-  --           apply ParStep.sub_disjoint_concat
-  --           {
-  --             apply ListPair.dom_remove_all_disjoint
-  --             apply Pattern.match_disjoint_preservation h5 h7 h3
-  --           }
-  --           {
-  --             apply ListPair.dom_remove_all_disjoint
-  --             exact Pattern.match_disjoint_preservation h6 h8 h3
-  --           }
-  --           { exact ih0 }
-  --           { exact ih1 }
-  --         | none =>
-  --           simp [*] at h4
-  --       | none =>
-  --         simp [*] at h2
-  --     | none =>
-  --       simp [*] at h4
-  --   | none =>
-  --     simp [*] at h2
-
-
+      apply ParStep.instantiate_concat
+      { apply ParRcdStep.entry_instantiator step h5 h7 }
+      {
+        rw [← Pattern.match_entry_count_eq h5]
+        rw [← Pattern.match_entry_count_eq h7]
+        apply ParRcdStep.instantiator step h6 h8
+      }
+    | none,_,_,_ =>
+      simp [*] at h2
+    | _,none,_,_ =>
+      simp [*] at h2
+    | _,_,none,_ =>
+      simp [*] at h4
+    | _,_,_,none =>
+      simp [*] at h4
 
   theorem ParStep.instantiator
     (step : ParStep arg arg')
+    (matching : Pattern.match arg p = some m)
     (matching' : Pattern.match arg' p = some m')
     offset
     e
   : ParStep (Expr.instantiate offset m e) (Expr.instantiate offset m' e)
   := by cases p with
-  | _ => sorry
-  -- | var x =>
-  --   simp [Pattern.match] at matching
-  --   simp [Pattern.match] at matching'
-  --   rw [←matching, ←matching']
-  --   clear matching matching'
+  | var x =>
+    simp [Pattern.match] at matching
+    simp [Pattern.match] at matching'
+    rw [←matching, ←matching']
+    clear matching matching'
 
-  --   by_cases h : x ∈ ids
-  --   {
-  --     rw [remove_all_single_membership h]
-  --     rw [remove_all_single_membership h]
-  --     exact ParStep.refl (Expr.sub [] e)
-  --   }
-  --   {
-  --     rw [remove_all_single_nomem h]
-  --     rw [remove_all_single_nomem h]
-  --     exact ParStep.sub_preservation x step e
-  --   }
-  -- | @iso l p_body =>
-  --   cases step with
-  --   | bvar i x =>
-  --     simp [matching'] at matching
-  --     simp [*]
-  --     exact ParStep.refl (Expr.sub (remove_all m ids) e)
-  --   | fvar x =>
-  --     simp [matching'] at matching
-  --     simp [*]
-  --     exact ParStep.refl (Expr.sub (remove_all m ids) e)
-  --   | @iso body body' l' step_body =>
-  --     simp [Pattern.match] at matching
-  --     simp [Pattern.match] at matching'
-  --     have ⟨h0,h1⟩ := matching ; clear matching
-  --     have ⟨h2,h3⟩ := matching' ; clear matching'
-  --     have ih := ParStep.substitute step_body h1 h3
-  --     apply ih
-  --   | _ =>
-  --     simp [Pattern.match] at matching
-  -- | @record ps =>
-  --   cases step with
-  --   | bvar i x =>
-  --     simp [matching'] at matching
-  --     simp [*]
-  --     exact ParStep.refl (Expr.sub (remove_all m ids) e)
-  --   | fvar x =>
-  --     simp [matching'] at matching
-  --     simp [*]
-  --     exact ParStep.refl (Expr.sub (remove_all m ids) e)
-  --   | @record r r' step_r =>
-  --     simp [Pattern.match] at matching
-  --     simp [Pattern.match] at matching'
-  --     have ⟨h0,h1⟩ := matching
-  --     have ⟨h2,h3⟩ := matching'
-  --     apply ParRcdStep.substitute step_r h1 h3
-
-  --   | _ =>
-  --     simp [Pattern.match] at matching
+    apply ParStep.instantiate_preservation _ step
+  | @iso l p_body =>
+    cases step with
+    | bvar i x =>
+      simp [matching'] at matching
+      simp [*]
+      exact ParStep.refl (Expr.instantiate offset m e)
+    | fvar x =>
+      simp [matching'] at matching
+      simp [*]
+      exact ParStep.refl (Expr.instantiate offset m e)
+    | @iso body body' l' step_body =>
+      simp [Pattern.match] at matching
+      simp [Pattern.match] at matching'
+      have ⟨h0,h1⟩ := matching ; clear matching
+      have ⟨h2,h3⟩ := matching' ; clear matching'
+      apply ParStep.instantiator step_body h1 h3
+    | _ =>
+      simp [Pattern.match] at matching
+  | @record ps =>
+    cases step with
+    | bvar i x =>
+      simp [matching'] at matching
+      simp [*]
+      exact ParStep.refl (Expr.instantiate offset m e)
+    | fvar x =>
+      simp [matching'] at matching
+      simp [*]
+      exact ParStep.refl (Expr.instantiate offset m e)
+    | @record r r' step_r =>
+      simp [Pattern.match] at matching
+      simp [Pattern.match] at matching'
+      have ⟨h0,h1⟩ := matching
+      have ⟨h2,h3⟩ := matching'
+      apply ParRcdStep.instantiator step_r h1 h3
+    | _ =>
+      simp [Pattern.match] at matching
 end
 
 
@@ -1494,9 +1572,9 @@ mutual
   : ParStep (Expr.instantiate offset m body) (Expr.instantiate offset m' body')
   := by cases step_body with
   | bvar i x =>
-    exact ParStep.instantiator step_arg matching' offset (Expr.bvar i x)
+    exact ParStep.instantiator step_arg matching matching' offset (Expr.bvar i x)
   | fvar x =>
-    exact ParStep.instantiator step_arg matching' offset (Expr.fvar x)
+    exact ParStep.instantiator step_arg matching matching' offset (Expr.fvar x)
   | @iso b b' l step_b =>
     simp [Expr.instantiate]
     apply ParStep.iso
