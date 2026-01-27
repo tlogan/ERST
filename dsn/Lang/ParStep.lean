@@ -670,6 +670,17 @@ theorem remove_all_single_nomem :
   simp [h0]
   apply ih h1
 
+
+
+mutual
+  theorem ParStep.shift_vars_preservation
+    threshold
+    offset
+    (step : ParStep e e')
+  : ParStep (Expr.shift_vars threshold offset e) (Expr.shift_vars threshold offset e')
+  := by sorry
+end
+
 mutual
 
   theorem ParStep.sub_record_preservation
@@ -790,23 +801,15 @@ mutual
     (List.function_instantiate offset [arg] f)
     (List.function_instantiate offset [arg'] f)
   := by cases f with
-  -- | nil =>
-  --   simp [List.function_instantiate]
-  --   exact ParFunStep.refl []
-  -- | cons pe f' =>
-  --   have (p,e) := pe
-  --   simp [List.function_instantiate]
-  --   apply ParFunStep.cons
-  --   { by_cases h : x ∈ Pat.ids p
-  --     { simp [remove_all_single_membership h]
-  --       exact refl (Expr.instantiate [] e)
-  --     }
-  --     { simp [remove_all_single_nomem h]
-  --       apply ParStep.instantiate_preservation x step e
-  --     }
-  --   }
-  --   { apply ParStep.instantiate_function_preservation _ step }
-  | _ => sorry
+  | nil =>
+    simp [List.function_instantiate]
+    exact ParFunStep.refl []
+  | cons pe f' =>
+    have (p,e) := pe
+    simp [List.function_instantiate]
+    apply ParFunStep.cons
+    { apply ParStep.instantiate_preservation _ step }
+    { apply ParStep.instantiate_function_preservation _ step }
 
   theorem ParStep.instantiate_preservation
     offset
@@ -814,51 +817,45 @@ mutual
     e
   : ParStep (Expr.instantiate offset [arg] e) (Expr.instantiate offset [arg'] e)
   := by cases e with
-  -- | bvar i x' =>
-  --   simp [Expr.instantiate]
-  --   exact bvar i x'
-  -- | fvar x' =>
-  --   by_cases h0 : x' = x
-  --   {
-  --     simp [Expr.instantiate,find,h0]
-  --     exact step
-  --   }
-  --   {
-  --     have h1 : x' ∉ ListPair.dom [(x,arg)] := by
-  --       simp [ListPair.dom] ; exact h0
-  --     have h2 : x' ∉ ListPair.dom [(x,arg')] := by
-  --       simp [ListPair.dom] ; exact h0
-  --     have h3 := Expr.instantiate_refl h1
-  --     have h4 := Expr.instantiate_refl h2
-  --     rw [h3,h4]
-  --     exact ParStep.refl (Expr.fvar x')
-  --   }
-  -- | iso l body =>
-  --   simp [Expr.instantiate]
-  --   have ih := ParStep.instantiate_preservation x step body
-  --   exact ParStep.iso ih
-  -- | record r =>
-  --   simp [Expr.instantiate]
-  --   have ih := ParStep.instantiate_record_preservation x step r
-  --   exact ParStep.record ih
-  -- | function f =>
-  --   simp [Expr.instantiate]
-  --   have ih := ParStep.instantiate_function_preservation x step f
-  --   exact function ih
-  -- | app ef ea =>
-  --   simp [Expr.instantiate]
-  --   have ih0 := ParStep.instantiate_preservation x step ef
-  --   have ih1 := ParStep.instantiate_preservation x step ea
-  --   exact app ih0 ih1
-  -- | anno e t =>
-  --   simp [Expr.instantiate]
-  --   have ih := ParStep.instantiate_preservation x step e
-  --   exact anno ih
-  -- | loopi e =>
-  --   simp [Expr.instantiate]
-  --   have ih := ParStep.instantiate_preservation x step e
-  --   exact loopi ih
-  | _ => sorry
+  | bvar i x =>
+    simp [Expr.instantiate]
+    by_cases h0 : offset ≤ i
+    { simp [*]
+      by_cases h1 : i - offset = 0
+      { simp [*] ;
+        exact shift_vars_preservation 0 offset step
+      }
+      { simp [*] ; exact bvar (i - 1) x }
+    }
+    { simp [*] ; exact bvar i x }
+  | fvar x =>
+    simp [Expr.instantiate]
+    apply ParStep.fvar x
+  | iso l body =>
+    simp [Expr.instantiate]
+    apply ParStep.iso
+    apply ParStep.instantiate_preservation _ step body
+  | record r =>
+    simp [Expr.instantiate]
+    apply ParStep.record
+    apply ParStep.instantiate_record_preservation offset step r
+  | function f =>
+    simp [Expr.instantiate]
+    apply function
+    apply ParStep.instantiate_function_preservation offset step f
+  | app ef ea =>
+    simp [Expr.instantiate]
+    apply ParStep.app
+    { apply ParStep.instantiate_preservation offset step ef }
+    { apply ParStep.instantiate_preservation offset step ea }
+  | anno e t =>
+    simp [Expr.instantiate]
+    apply ParStep.anno
+    apply ParStep.instantiate_preservation offset step e
+  | loopi e =>
+    simp [Expr.instantiate]
+    apply loopi
+    apply ParStep.instantiate_preservation offset step e
 end
 
 
