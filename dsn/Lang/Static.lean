@@ -611,7 +611,7 @@ inductive PatLifting.Static
 
 | var Δ Γ id tid :
   PatLifting.Static
-  Δ Γ (.var id) (.var tid)
+  Δ Γ (Pat.var id) (Typ.var tid)
   ((.var tid, Typ.top) :: Δ)  ((id, .var tid) :: (remove id Γ))
 
 | record_nil Δ Γ :
@@ -625,7 +625,7 @@ inductive PatLifting.Static
 | record_cons Δ Γ l p remainder t t' Δ' Γ' Δ'' Γ'' :
   PatLifting.Static Δ Γ p t Δ' Γ' →
   PatLifting.Static Δ' Γ' (.record remainder) t' Δ'' Γ'' →
-  Pat.free_vars p ∩ ListPat.free_vars remainder = [] →
+  Pat.index_vars p ∩ Pat.record_index_vars remainder = [] →
   PatLifting.Static Δ Γ (.record ((l,p) :: remainder))
     (.inter (.entry l t) t') Δ'' Γ''
 
@@ -1987,7 +1987,7 @@ mutual
       ∀ skolems' assums'' tr ,
         ZoneInterp [] .true
           ⟨skolems', assums'', (.path (List.typ_diff tp subtras) tr)⟩ ⟨skolems'', assums''', t⟩ →
-        GuardedTyping skolems assums' context' e tr skolems' assums''
+        GuardedTyping skolems assums' context' (Expr.liberate_vars p e) tr skolems' assums''
     ) →
 
     (∀ skolems''' assums'''' t, ⟨skolems''', assums'''', t⟩ ∈ zones →
@@ -2022,9 +2022,9 @@ mutual
   inductive GuardedTyping :
     List String → List (Typ × Typ) → List (String × Typ) →
     Expr → Typ → List String → List (Typ × Typ) → Prop
-  | var {t} skolems assums context x :
+  | fvar {t} skolems assums context x :
     find x context = .some t →
-    GuardedTyping skolems assums context (.var x) t skolems assums
+    GuardedTyping skolems assums context (.fvar x) t skolems assums
 
   | record {skolems assums context t} r :
     Record.Typing.Static skolems assums context r t skolems assums →
@@ -2608,10 +2608,10 @@ theorem PatLifting.Static.soundness {assums context p t assums' context'} :
 := by sorry
 
 
-theorem pattern_match_ids_containment {v p eam} :
-  Pattern.match v p = .some eam →
-  Pat.ids p ⊆ ListPair.dom eam
-:= by sorry
+-- theorem pattern_match_ids_containment {v p eam} :
+--   Pattern.match v p = .some eam →
+--   Pat.ids p ⊆ ListPair.dom eam
+-- := by sorry
 
 
 

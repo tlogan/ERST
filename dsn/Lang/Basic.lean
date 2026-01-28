@@ -873,18 +873,6 @@ deriving Repr
 def Pat.pair (left : Pat) (right : Pat) : Pat :=
     .record [("left", left), ("right", right)]
 
-mutual
-  def List.pattern_ids : List (String × Pat) → List String
-  | .nil => .nil
-  | (_, p) :: r =>
-    (Pat.ids p) ++ (List.pattern_ids r)
-
-  def Pat.ids : Pat → List String
-  | .var id => [id]
-  | .iso l body => Pat.ids body
-  | .record r => List.pattern_ids r
-end
-
 
 inductive Expr
 | bvar : Nat → String → Expr
@@ -935,6 +923,7 @@ mutual
   | iso l p => Pat.index_vars p
   | record ps => Pat.record_index_vars ps
 end
+
 
 def Pat.count_vars (p : Pat) := List.length (Pat.index_vars p)
 
@@ -1481,6 +1470,10 @@ def Expr.list_instantiate (offset : Nat) (m : List Expr): List Expr → List Exp
 | e :: es =>
   Expr.instantiate offset m e :: (Expr.list_instantiate offset m es)
 
+def Expr.liberate_vars (p : Pat) (e : Expr) : Expr :=
+  let xs := Pat.index_vars p
+  let fvs := List.map (fun x => Expr.fvar x) xs
+  Expr.instantiate 0 fvs e
 
 
 mutual
@@ -1492,7 +1485,7 @@ mutual
   def List.function_sub (m : List (String × Expr)): List (Pat × Expr) → List (Pat × Expr)
   | .nil => .nil
   | (p, e) :: f =>
-    let ids := Pat.ids p
+    let ids := Pat.index_vars p
     (p, Expr.sub (remove_all m ids) e) :: (List.function_sub m f)
 
   def Expr.sub (m : List (String × Expr)): Expr → Expr

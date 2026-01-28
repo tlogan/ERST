@@ -632,7 +632,7 @@ mutual
     have (p,e) := pe
     simp [List.function_sub]
     apply ParFunStep.cons
-    { by_cases h : x ∈ Pat.ids p
+    { by_cases h : x ∈ Pat.index_vars p
       { simp [remove_all_single_membership h]
         exact refl (Expr.sub [] e)
       }

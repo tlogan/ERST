@@ -57,7 +57,7 @@ theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
   simp [Expr.instantiate, Expr.shift_vars_zero_zero]
   simp [Pattern.match, Pattern.match_record, Pattern.match_entry,
     Inter.inter, List.inter,
-    Pat.ids, List.pattern_ids,
+    Pat.index_vars, Pat.record_index_vars,
     List.keys_unique, List.is_fresh_key
   ]
 

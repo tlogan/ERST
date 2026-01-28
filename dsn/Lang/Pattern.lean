@@ -24,7 +24,7 @@ mutual
   : List (String × Pat) → Option (List Expr)
   | .nil => some []
   | (label, pat) :: pats => do
-    if Pat.ids pat ∩ List.pattern_ids pats == [] then
+    if Pat.index_vars pat ∩ Pat.record_index_vars pats == [] then
       let m0 ← Pattern.match_entry label pat args
       let m1 ← Pattern.match_record args pats
       return (m0 ++ m1)
