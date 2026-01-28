@@ -666,7 +666,7 @@ theorem Subtyping.list_typ_diff_elim :
 theorem Typing.path_intro :
   (∀ e' ,
     Typing am e' tp →
-    ∃ eam , Pattern.match e' p = .some eam ∧ Typing am (Expr.sub eam e) tr
+    ∃ eam , Pattern.match e' p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) tr
   ) →
   Typing am (Expr.function ((p, e) :: f)) (Typ.path (List.typ_diff tp subtras) tr)
 := by
@@ -676,7 +676,7 @@ theorem Typing.path_intro :
   have h3 := Subtyping.elimination Subtyping.list_typ_diff_elim h1
   have ⟨eam,h4,h5⟩ := h0 e' h3
 
-  have h1 : NStep (Expr.app (Expr.function ((p, e) :: f)) e') (Expr.sub eam e) := by
+  have h1 : NStep (Expr.app (Expr.function ((p, e) :: f)) e') (Expr.instantiate 0 eam e) := by
     exact NStep.pattern_match e f h4
   exact subject_expansion h1 h5
 

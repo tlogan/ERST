@@ -971,10 +971,10 @@ end
 #eval Expr.seal [] (.function [(Pat.var "z", .app (.function [(Pat.iso "uno" (Pat.var "x"), .record [("one", .fvar "x"), ("two", .fvar "z")])]) (.fvar "hello"))])
 
 def Expr.extract (e : Expr) (l : String) : Expr :=
-  Expr.seal [] (.app (.function [(Pat.iso l (Pat.var "x"), .fvar "x")]) e)
+  .app (.function [(Pat.iso l (Pat.var "x"), .bvar 0 "x")]) e
 
 def Expr.project (e : Expr) (l : String) : Expr :=
-  Expr.seal [] (.app (.function [(.record [(l, .var "x")], .fvar "x")]) e)
+  .app (.function [(.record [(l, .var "x")], .bvar 0 "x")]) e
 
 def Expr.def (id : String) (top : Option Typ) (target : Expr) (contin : Expr) : Expr :=
   Expr.app
@@ -1442,6 +1442,10 @@ mutual
   | .anno e t => .anno (Expr.shift_vars threshold offset e) t
   | .loopi e => .loopi (Expr.shift_vars threshold offset e)
 end
+
+theorem Expr.shift_vars_zero_zero :
+  Expr.shift_vars 0 0 e = e
+:= by sorry
 
 mutual
   def List.record_instantiate (offset : Nat) (m : List Expr): List (String × Expr) → List (String × Expr)

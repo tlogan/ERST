@@ -27,7 +27,7 @@ mutual
   | applicand cator : NStep arg arg' → NStep (.app cator arg) (.app cator arg')
   | pattern_match body f :
     Pattern.match arg p = some m →
-    NStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m body)
+    NStep (.app (.function ((p,body) :: f)) arg) (Expr.instantiate 0 m body)
   | skip body f:
     arg.is_value →
     Pattern.match arg p = none →
@@ -39,7 +39,7 @@ mutual
   | recycle x e :
     NStep
       (.loopi (.function [(.var x, e)]))
-      (Expr.sub [(x, (.loopi (.function [(.var x, e)])))] e)
+      (Expr.instantiate 0 [(.loopi (.function [(.var x, e)]))] e)
 
 end
 
@@ -50,18 +50,17 @@ theorem NStep.not_value :
 
 theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
   unfold Expr.project
-  have h0 : Pattern.match
-    (Expr.record [(l, e)]) (Pat.record [(l, Pat.var "x")]) = some [("x", e)]
-  := by
-    simp [Pattern.match, Pattern.match_record, Pattern.match_entry,
-        Inter.inter, List.inter,
-        Pat.ids, List.pattern_ids,
-        List.keys_unique, List.is_fresh_key
-    ]
-  have h1 : e = Expr.sub [("x", e)] (.var "x") := by exact rfl
+  have h1 : e = Expr.instantiate 0 [e] (.bvar 0 "x") := by
+    simp [Expr.instantiate, Expr.shift_vars_zero_zero]
   rw [h1]
-  apply pattern_match
-  exact h0
+  apply NStep.pattern_match
+  simp [Expr.instantiate, Expr.shift_vars_zero_zero]
+  simp [Pattern.match, Pattern.match_record, Pattern.match_entry,
+    Inter.inter, List.inter,
+    Pat.ids, List.pattern_ids,
+    List.keys_unique, List.is_fresh_key
+  ]
+
 
 
 
@@ -231,12 +230,12 @@ theorem NStep.refl_trans_app :
 theorem NStep.refl_trans_pattern_matcher
   (step_arg : ReflTrans NStep arg arg')
   (matching' : Pattern.match arg' p = some m')
-: ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m' body)
+: ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (Expr.instantiate 0 m' body)
 := by induction step_arg with
 | refl arg =>
   apply ReflTrans.step
   { apply NStep.pattern_match _ _ matching' }
-  { exact ReflTrans.refl (Expr.sub m' body) }
+  { exact ReflTrans.refl (Expr.instantiate 0 m' body) }
 | @step arg argm arg' h0 h1 ih =>
   apply ReflTrans.step
   { apply NStep.applicand _ h0 }
@@ -246,7 +245,7 @@ theorem NStep.refl_trans_pattern_match
   (step_body : ReflTrans NStep body body')
   (step_arg : ReflTrans NStep arg arg')
   (matching' : Pattern.match arg' p = some m')
-: ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (Expr.sub m' body')
+: ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (Expr.instantiate 0 m' body')
 := by induction step_body with
 | refl =>
   exact refl_trans_pattern_matcher step_arg matching'
@@ -309,7 +308,7 @@ theorem NStep.refl_trans_recycle :
   ReflTrans NStep e e' →
   ReflTrans NStep
     (.loopi (.function [(.var x, e)]))
-    (Expr.sub [(x, (.loopi (.function [(.var x, e')])))] e')
+    (Expr.instantiate 0 [(.loopi (.function [(.var x, e')]))] e')
 := by
   intro h0
   induction h0 with
@@ -353,8 +352,10 @@ mutual
     (step : ParStep e e')
   : ReflTrans NStep e e'
   := by cases step  with
-  | var x =>
-    exact ReflTrans.refl (Expr.var x)
+  | bvar i x =>
+    exact ReflTrans.refl (Expr.bvar i x)
+  | fvar x =>
+    exact ReflTrans.refl (Expr.fvar x)
   | @iso body body' l step_body =>
     have ih := NStep.semi_completeness step_body
     exact NStep.refl_trans_iso ih
