@@ -640,3 +640,489 @@ theorem one_one_two :
 := Eq.refl (NN.succ (NN.succ NN.zero))
 
 #check Eq.refl (NN.succ (NN.succ NN.zero))
+
+
+-- theorem Pattern.match_domain :
+--   Pattern.match arg p = some m →
+--   ∀ id, id ∈ Pat.ids p ↔ id ∈ ListPair.dom m
+-- := by sorry
+
+-- theorem Pattern.remove_all_ids :
+--   (∀ id, id ∈ a ↔ id ∈ b) →
+--   remove_all m a = remove_all m b
+-- := by sorry
+
+-- theorem sub_var_remove_all_membership :
+--   x ∈ ids →
+--   Expr.sub (remove_all m ids) (.fvar x) = (.fvar x)
+-- := by sorry
+
+-- theorem sub_var_remove_all_nomem :
+--   x ∉ ids →
+--   Expr.sub (remove_all m ids) (.fvar x) = Expr.sub m (.fvar x)
+-- := by sorry
+
+
+-- theorem find_remove_refl α x m:
+--   @find α x (remove x m) = Option.none
+-- := by sorry
+
+-- theorem find_remove_neq α x m:
+--   x ≠ x' →
+--   @find α x (remove x' m) = find x m
+-- := by sorry
+
+-- theorem find_fresh_var_preservation :
+--     find x m = some e →
+--     x' ∉ Expr.context_free_vars m →
+--     x' ∉ Expr.free_vars e
+-- := by sorry
+
+-- theorem Expr.sub_fresh :
+--   x ∉ Expr.free_vars e →
+--   Expr.sub [(x,c)] e = e
+-- := by sorry
+
+-- mutual
+--   /- TODO: requires that m does not point to expression containing x -/
+--   theorem Expr.sub_inside_out :
+--     x ∉ (Expr.context_free_vars m) →
+--     Expr.sub m (Expr.sub [(x,c)] e)
+--     =
+--     Expr.sub [(x,(Expr.sub m c))] (Expr.sub (remove x m) e)
+--   := by intro h0; cases e with
+--   | bvar i x' =>
+--     sorry
+--   | fvar x' =>
+--     by_cases h1 : x = x'
+--     {
+--       simp [Expr.sub,find,h1]
+--       simp [find_remove_refl]
+--       simp [Expr.sub,find]
+--     }
+--     {
+--       simp [Expr.sub]
+--       simp [find]
+--       simp [h1]
+
+--       rw [find_remove_neq _ _ _ (fun a => h1 (Eq.symm a))]
+
+--       cases h2 : find x' m with
+--       | none =>
+--         simp [*]
+--         simp [Expr.sub,find,h1,h2]
+--       | some e =>
+--         simp [*, Expr.sub]
+--         apply Eq.symm
+--         apply Expr.sub_fresh
+--         apply find_fresh_var_preservation h2 h0
+
+--     }
+--   | _ => sorry
+-- end
+
+-- theorem List.is_fresh_key_sub_preservation :
+--   List.is_fresh_key l r →
+--   List.is_fresh_key l (List.record_sub m r)
+-- := by induction r with
+-- | nil =>
+--   simp [List.is_fresh_key, List.record_sub]
+-- | cons le r' ih =>
+--   have (l',e) := le
+--   simp [List.is_fresh_key, List.record_sub]
+--   intro h0 h1
+--   apply And.intro h0
+--   apply ih h1
+
+-- mutual
+
+--   theorem Expr.is_record_value_sub_preservation :
+--     List.is_record_value r →
+--     List.is_record_value (List.record_sub m r)
+--   := by cases r with
+--   | nil =>
+--     simp [List.is_record_value, List.record_sub]
+--   | cons le r' =>
+--     have (l,e) := le
+--     simp [List.is_record_value, List.record_sub]
+--     intro h0 h1 h2
+--     apply And.intro
+--     {
+--       apply And.intro
+--       { exact List.is_fresh_key_sub_preservation h0 }
+--       { apply Expr.is_value_sub_preservation h1 }
+--     }
+--     { apply Expr.is_record_value_sub_preservation h2 }
+
+--   theorem Expr.is_value_sub_preservation :
+--     Expr.is_value e →
+--     Expr.is_value (Expr.sub m e)
+--   := by cases e with
+--   | bvar i x =>
+--     simp [Expr.is_value]
+--   | fvar x =>
+--     simp [Expr.is_value]
+--   | iso l body =>
+--     simp [Expr.is_value, Expr.sub]
+--     intro h0
+--     apply Expr.is_value_sub_preservation h0
+--   | record r =>
+--     simp [Expr.is_value, Expr.sub]
+--     intro h0
+--     apply Expr.is_record_value_sub_preservation h0
+--   | function f =>
+--     simp [Expr.is_value, Expr.sub]
+--   | _ =>
+--     simp [Expr.is_value]
+-- end
+
+-- theorem remove_remove_all_nesting :
+--   ∀ α m ,
+--   @remove α x (remove_all m ids) =
+--   @remove_all α m (ids ++ [x])
+-- := by induction ids with
+-- | nil =>
+--   simp [remove_all]
+-- | cons id ids' ih =>
+--   intro α m
+--   simp [remove_all]
+--   apply ih
+
+-- theorem remove_all_nesting :
+--   ∀ α m,
+--   @remove_all α (remove_all m ids) ids' =
+--   @remove_all α m (ids ++ ids')
+-- := by induction ids with
+-- | nil =>
+--   simp [remove_all]
+-- | cons id ids'' ih =>
+--   intro α m
+--   simp [remove_all]
+--   apply ih
+
+-- mutual
+
+--   theorem ParRcdStep.sub_partial
+--     (step_arg : ParStep arg arg')
+--     (step_body : ParRcdStep body body')
+--     (matching : Pattern.match arg p = some m)
+--     (matching' : Pattern.match arg' p = some m')
+--     ids
+--   : ParRcdStep
+--     (List.record_sub (remove_all m ids) body)
+--     (List.record_sub (remove_all m' ids) body')
+--   := by cases step_body with
+--   | nil =>
+--     exact ParRcdStep.refl (List.record_sub m [])
+--   | @cons e e' r r' l step_e step_r =>
+--     simp [List.record_sub]
+--     apply ParRcdStep.cons
+--     { apply ParStep.sub_partial step_arg step_e matching matching'}
+--     { apply ParRcdStep.sub_partial step_arg step_r matching matching' }
+
+--   theorem ParFunStep.sub_partial
+--     (step_arg : ParStep arg arg')
+--     (step_body : ParFunStep body body')
+--     (matching : Pattern.match arg p = some m)
+--     (matching' : Pattern.match arg' p = some m')
+--     ids
+--   : ParFunStep (List.function_sub (remove_all m ids) body)
+--     (List.function_sub (remove_all m' ids) body')
+--   := by cases step_body with
+--   | nil =>
+--     exact ParFunStep.refl (List.function_sub m [])
+--   | @cons e e' f f' p' step_e step_f =>
+--     simp [List.function_sub]
+--     apply ParFunStep.cons
+--     {
+--       rw [remove_all_nesting]
+--       rw [remove_all_nesting]
+--       apply ParStep.sub_partial step_arg step_e matching matching'
+--     }
+--     { apply ParFunStep.sub_partial step_arg step_f matching matching' }
+
+--   theorem ParStep.sub_partial
+--     (step_arg : ParStep arg arg')
+--     (step_body : ParStep body body')
+--     (matching : Pattern.match arg p = some m)
+--     (matching' : Pattern.match arg' p = some m')
+--     ids
+--   : ParStep (Expr.sub (remove_all m ids) body) (Expr.sub (remove_all m' ids) body')
+--   := by cases step_body with
+--   | bvar i x =>
+--     exact ParStep.substitute step_arg matching matching' _ (Expr.bvar i x)
+--   | fvar x =>
+--     exact ParStep.substitute step_arg matching matching' _ (Expr.fvar x)
+
+--   | @iso b b' l step_b =>
+--     simp [Expr.sub]
+--     apply ParStep.iso
+--     apply ParStep.sub_partial step_arg step_b matching matching'
+
+--   | @record r r' step_r =>
+--     simp [Expr.sub]
+--     apply ParStep.record
+--     apply ParRcdStep.sub_partial step_arg step_r matching matching'
+
+--   | @function f f' step_f =>
+--     simp [Expr.sub]
+--     apply ParStep.function
+--     apply ParFunStep.sub_partial step_arg step_f matching matching'
+
+--   | @app cator cator' aa aa' step_cator step_aa =>
+--     simp [Expr.sub]
+--     have ih0 := ParStep.sub_partial step_arg step_cator matching matching' ids
+--     have ih1 := ParStep.sub_partial step_arg step_aa matching matching' ids
+--     apply ParStep.app ih0 ih1
+
+--   | @pattern_match body body' aa aa' pp mm' f step_body step_aa matching'' =>
+--     simp [Expr.sub, List.function_sub]
+
+--     have ⟨mm'',h0,h1⟩ := Pattern.match_sub_preservation matching'' (remove_all m' ids)
+--     rw [←h1]
+--     have h2 := Pattern.match_domain matching''
+--     rw [Pattern.remove_all_ids h2]
+--     have ih0 := ParStep.sub_partial step_arg step_aa matching matching'
+--     have ih1 := ParStep.sub_partial step_arg step_body matching matching'
+--     rw [remove_all_nesting]
+--     rw [remove_all_nesting]
+--     apply ParStep.pattern_match
+--     { apply ih1 }
+--     { exact ih0 ids }
+--     { exact h0 }
+
+--   | @skip f f' aa aa' pp bb step_f step_aa isval nomatching  =>
+--     simp [Expr.sub, List.function_sub]
+--     apply ParStep.skip
+--     { apply ParFunStep.sub_partial step_arg step_f matching matching' }
+--     { apply ParStep.sub_partial step_arg step_aa matching matching'}
+--     { exact Expr.is_value_sub_preservation isval }
+--     { exact Pattern.match_skip_preservation nomatching (remove_all m' ids) }
+--   | @anno e e' t step_e =>
+--     simp [Expr.sub]
+--     apply ParStep.anno
+--     apply ParStep.sub_partial step_arg step_e matching matching'
+--   | @erase body body' t step_body =>
+--     simp [Expr.sub]
+--     apply ParStep.erase
+--     apply ParStep.sub_partial step_arg step_body matching matching'
+--   | @loopi body body' step_body =>
+--     simp [Expr.sub]
+--     apply ParStep.loopi
+--     apply ParStep.sub_partial step_arg step_body matching matching'
+--   | @recycle e e' x step_e =>
+--     simp [Expr.sub, List.function_sub]
+--     simp [Pat.ids, remove_all]
+
+--     have fresh : x ∉ Expr.context_free_vars (remove_all m' ids) := by
+--       sorry
+
+--     rw [Expr.sub_inside_out fresh]
+
+--     simp [Expr.sub, List.function_sub, Pat.ids, remove_all]
+--     apply ParStep.recycle
+--     rw [remove_remove_all_nesting]
+--     rw [remove_remove_all_nesting]
+--     apply ParStep.sub_partial step_arg step_e matching matching'
+
+-- end
+
+
+-- theorem remove_none α m:
+--   @remove_all α m [] = m
+-- := by
+--   simp [remove_all]
+
+-- theorem ParStep.sub
+--   (step_arg : ParStep arg arg')
+--   (step_body : ParStep body body')
+--   (matching : Pattern.match arg p = some m)
+--   (matching' : Pattern.match arg' p = some m')
+-- : ParStep (Expr.sub m body) (Expr.sub m' body')
+-- := by
+--   rw [←remove_none _ m]
+--   rw [←remove_none _ m]
+--   apply ParStep.sub_partial step_arg step_body matching matching'
+
+
+-- theorem remove_all_concat :
+--   remove_all (m0 ++ m1) ids =
+--   remove_all m0 ids ++ remove_all m1 ids
+-- := by sorry
+
+
+-- mutual
+
+--   theorem ParRcdStep.pattern_match_entry_preservation
+--     (step : ParRcdStep r r')
+--     (matching : Pattern.match_entry l p r = some m)
+--     (matching' : Pattern.match_entry l p r' = some m')
+--     ids
+--     e
+--   : ParStep (Expr.sub (remove_all m ids) e) (Expr.sub (remove_all m' ids) e)
+--   := by cases step with
+--   | nil =>
+--     simp [Pattern.match_entry] at matching
+--   | @cons ee ee' rr rr' l' step_ee step_rr =>
+--     simp [Pattern.match_entry] at matching
+--     simp [Pattern.match_entry] at matching'
+--     by_cases h0 : l' = l
+--     {
+--       simp [*] at matching
+--       simp [*] at matching'
+--       apply ParStep.substitute step_ee matching matching' ids e
+--     }
+--     {
+--       simp [*] at matching
+--       simp [*] at matching'
+--       apply ParRcdStep.pattern_match_entry_preservation step_rr matching matching' ids e
+--     }
+
+--   theorem ParRcdStep.substitute
+--     (step : ParRcdStep r r')
+--     (matching : Pattern.match_record r ps = some m)
+--     (matching' : Pattern.match_record r' ps = some m')
+--     ids
+--     e
+--   : ParStep (Expr.sub (remove_all m ids) e) (Expr.sub (remove_all m' ids) e)
+--   := by cases ps with
+--   | nil =>
+--     simp [Pattern.match_record] at matching
+--     simp [Pattern.match_record] at matching'
+--     rw [matching, matching']
+--     exact ParStep.refl (Expr.sub (remove_all [] ids) e)
+--   | cons lp ps' =>
+--     have (l,p) := lp
+--     simp [Pattern.match_record] at matching
+--     simp [Pattern.match_record] at matching'
+
+--     have ⟨h1,h2⟩ := matching
+--     have ⟨h3,h4⟩ := matching'
+--     clear matching matching'
+
+--     cases h5 : (Pattern.match_entry l p r) with
+--     | some m0 =>
+--       simp [*] at h2
+--       cases h6 : (Pattern.match_entry l p r') with
+--       | some m1 =>
+--         simp [*] at h4
+--         cases h7 : (Pattern.match_record r ps') with
+--         | some m2 =>
+--           simp [*] at h2
+--           cases h8 : (Pattern.match_record r' ps') with
+--           | some m3 =>
+--             simp [*] at h4
+--             rw [←h2,←h4]
+
+--             have ih0 := ParRcdStep.pattern_match_entry_preservation step h5 h6 ids e
+--             have ih1 := ParRcdStep.substitute step h7 h8 ids e
+
+--             rw [remove_all_concat]
+--             rw [remove_all_concat]
+--             apply ParStep.sub_disjoint_concat
+--             {
+--               apply ListPair.dom_remove_all_disjoint
+--               apply Pattern.match_disjoint_preservation h5 h7 h3
+--             }
+--             {
+--               apply ListPair.dom_remove_all_disjoint
+--               exact Pattern.match_disjoint_preservation h6 h8 h3
+--             }
+--             { exact ih0 }
+--             { exact ih1 }
+--           | none =>
+--             simp [*] at h4
+--         | none =>
+--           simp [*] at h2
+--       | none =>
+--         simp [*] at h4
+--     | none =>
+--       simp [*] at h2
+
+
+
+--   theorem ParStep.substitute
+--     (step : ParStep arg arg')
+--     (matching : Pattern.match arg p = some m)
+--     (matching' : Pattern.match arg' p = some m')
+--     ids
+--     e
+--   : ParStep (Expr.sub (remove_all m ids) e) (Expr.sub (remove_all m' ids) e)
+--   := by cases p with
+--   | var x =>
+--     simp [Pattern.match] at matching
+--     simp [Pattern.match] at matching'
+--     rw [←matching, ←matching']
+--     clear matching matching'
+
+--     by_cases h : x ∈ ids
+--     {
+--       rw [remove_all_single_membership h]
+--       rw [remove_all_single_membership h]
+--       exact ParStep.refl (Expr.sub [] e)
+--     }
+--     {
+--       rw [remove_all_single_nomem h]
+--       rw [remove_all_single_nomem h]
+--       exact ParStep.sub_preservation x step e
+--     }
+--   | @iso l p_body =>
+--     cases step with
+--     | bvar i x =>
+--       simp [matching'] at matching
+--       simp [*]
+--       exact ParStep.refl (Expr.sub (remove_all m ids) e)
+--     | fvar x =>
+--       simp [matching'] at matching
+--       simp [*]
+--       exact ParStep.refl (Expr.sub (remove_all m ids) e)
+--     | @iso body body' l' step_body =>
+--       simp [Pattern.match] at matching
+--       simp [Pattern.match] at matching'
+--       have ⟨h0,h1⟩ := matching ; clear matching
+--       have ⟨h2,h3⟩ := matching' ; clear matching'
+--       have ih := ParStep.substitute step_body h1 h3
+--       apply ih
+--     | _ =>
+--       simp [Pattern.match] at matching
+--   | @record ps =>
+--     cases step with
+--     | bvar i x =>
+--       simp [matching'] at matching
+--       simp [*]
+--       exact ParStep.refl (Expr.sub (remove_all m ids) e)
+--     | fvar x =>
+--       simp [matching'] at matching
+--       simp [*]
+--       exact ParStep.refl (Expr.sub (remove_all m ids) e)
+--     | @record r r' step_r =>
+--       simp [Pattern.match] at matching
+--       simp [Pattern.match] at matching'
+--       have ⟨h0,h1⟩ := matching
+--       have ⟨h2,h3⟩ := matching'
+--       apply ParRcdStep.substitute step_r h1 h3
+
+--     | _ =>
+--       simp [Pattern.match] at matching
+-- end
+
+
+-- theorem ListPair.dom_remove_all_disjoint :
+--   ListPair.dom m0 ∩ ListPair.dom m1 = [] →
+--   ListPair.dom (remove_all m0 ids) ∩ ListPair.dom (remove_all m1 ids) = []
+-- := by sorry
+
+-- theorem Pattern.match_disjoint_preservation :
+--   Pattern.match_entry l p r = some m0 →
+--   Pattern.match_record r rp = some m1 →
+--   Pat.ids p ∩ List.pattern_ids rp = [] →
+--   ListPair.dom m0 ∩ ListPair.dom m1 = []
+-- := by sorry
+
+-- theorem ParStep.sub_disjoint_concat :
+--   ListPair.dom m0 ∩ ListPair.dom m1 = [] →
+--   ListPair.dom m0' ∩ ListPair.dom m1' = [] →
+--   ParStep (Expr.sub m0 body) (Expr.sub m0' body) →
+--   ParStep (Expr.sub m1 body) (Expr.sub m1' body) →
+--   ParStep (Expr.sub (m0 ++ m1) body) (Expr.sub (m0' ++ m1') body)
+-- := by sorry

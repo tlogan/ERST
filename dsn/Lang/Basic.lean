@@ -1503,3 +1503,66 @@ mutual
   | .anno e t => .anno (Expr.sub m e) t
   | .loopi e => .loopi (Expr.sub m e)
 end
+
+
+theorem Expr.sub_refl :
+  x ∉ ListPair.dom m →
+  (Expr.sub m (.fvar x)) = (.fvar x)
+:= by
+  intro h0
+  induction m with
+  | nil =>
+    simp [Expr.sub, find]
+  | cons pair m' ih =>
+    have ⟨x',target⟩ := pair
+    simp [ListPair.dom] at h0
+    have ⟨h1,h2⟩ := h0
+    clear h0
+    specialize ih h2
+    simp [Expr.sub, find]
+    have h3 : x' ≠ x := by exact fun h => h1 (Eq.symm h)
+    simp [h3]
+    unfold Expr.sub at ih
+    exact ih
+
+theorem remove_all_empty α ids:
+  @remove_all α [] ids = []
+:= by induction ids with
+| nil =>
+  simp [remove_all]
+| cons id ids' ih =>
+  simp [remove_all, remove]
+  exact ih
+
+
+theorem remove_all_single_membership :
+  x ∈ ids →
+  remove_all [(x,c)] ids = []
+:= by induction ids with
+| nil =>
+  simp [remove_all]
+| cons id ids' ih =>
+  simp [remove_all]
+  intro h0
+  cases h0 with
+  | inl h1 =>
+    simp [*, remove]
+    simp [remove_all_empty]
+  | inr h1 =>
+    specialize ih h1
+    simp [remove]
+    by_cases h2 : x = id
+    { simp [h2,remove_all_empty] }
+    { simp [h2,ih] }
+
+theorem remove_all_single_nomem :
+  x ∉ ids →
+  remove_all [(x,c)] ids = [(x,c)]
+:= by induction ids with
+| nil =>
+  simp [remove_all]
+| cons id ids ih =>
+  simp [remove_all,remove]
+  intro h0 h1
+  simp [h0]
+  apply ih h1
