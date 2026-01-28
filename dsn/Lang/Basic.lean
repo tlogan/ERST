@@ -1437,6 +1437,14 @@ def Expr.list_shift_vars (threshold : Nat) (offset : Nat) : List Expr → List E
 | e :: es =>
   Expr.shift_vars threshold offset e :: (Expr.list_shift_vars threshold offset es)
 
+
+theorem Expr.list_shift_vars_concat :
+  (Expr.list_shift_vars threshold offset m0) ++
+  (Expr.list_shift_vars threshold offset m1)
+  =
+  Expr.list_shift_vars threshold offset (m0 ++ m1)
+:= by sorry
+
 theorem Expr.shift_vars_zero_zero :
   Expr.shift_vars 0 0 e = e
 := by sorry

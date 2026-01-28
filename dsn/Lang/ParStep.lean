@@ -559,6 +559,12 @@ theorem ParRcdStep.skip_reduction
   have ⟨m1,h7⟩ := ParRcdStep.pattern_match_expansion isval step h5
   exact h0 h1 m0 h6 m1 h7
 
+
+theorem Expr.record_shift_vars_keys_unique_preservation :
+  List.keys_unique r →
+  List.keys_unique (List.record_shift_vars threshold offset r)
+:= by sorry
+
 theorem ParStep.skip_reduction
   (isval : Expr.is_value e)
   (step : ParStep e e')
@@ -599,13 +605,96 @@ theorem Expr.shift_instantiate_inside_out :
   )
 := by sorry
 
-theorem Pattern.match_shift_vars_preservation :
-  Pattern.match arg p = some m →
-  ∀ threshold offset,
-  Pattern.match (Expr.shift_vars threshold offset arg) p
-  =
-  some (Expr.list_shift_vars threshold offset m)
-:= by sorry
+
+mutual
+
+  theorem Pattern.match_entry_shift_vars_preservation :
+    Pattern.match_entry l p r = some m →
+    ∀ threshold offset,
+    Pattern.match_entry l p (List.record_shift_vars threshold offset r)
+    =
+    some (Expr.list_shift_vars threshold offset m)
+  := by cases r with
+  | nil =>
+    simp [Pattern.match_entry]
+  | cons le r' =>
+    have (l',e) := le
+    simp [*,List.record_shift_vars, Pattern.match_entry]
+    by_cases h0 : l' = l
+    { simp [*]
+      intro h1 threshold offset
+      apply Pattern.match_shift_vars_preservation h1
+    }
+    { simp [*]
+      intro h1 threshold offset
+      apply Pattern.match_entry_shift_vars_preservation h1
+    }
+
+  theorem Pattern.match_record_shift_vars_preservation :
+    Pattern.match_record r ps = some m →
+    ∀ threshold offset,
+    Pattern.match_record (List.record_shift_vars threshold offset r) ps
+    =
+    some (Expr.list_shift_vars threshold offset m)
+  := by cases ps with
+  | nil =>
+    simp [Pattern.match_record]
+    intro h0
+    simp [*, Expr.list_shift_vars]
+  | cons lp ps' =>
+    have (l,p) := lp
+    simp [Pattern.match_record]
+
+    match
+      h0 : (Pattern.match_entry l p r),
+      h1 : (Pattern.match_record r ps')
+    with
+    | some m0, some m1 =>
+      simp
+      intro h3 h4 threshold offset
+      simp [h3]
+
+      have ih0 := Pattern.match_entry_shift_vars_preservation h0 threshold offset
+      have ih1 := Pattern.match_record_shift_vars_preservation h1 threshold offset
+      simp [ih0,ih1,←h4]
+      exact Expr.list_shift_vars_concat
+    | none,_ =>
+      simp
+    | _,none =>
+      simp
+
+  theorem Pattern.match_shift_vars_preservation :
+    Pattern.match arg p = some m →
+    ∀ threshold offset,
+    Pattern.match (Expr.shift_vars threshold offset arg) p
+    =
+    some (Expr.list_shift_vars threshold offset m)
+  := by cases p with
+  | var x  =>
+    simp [Pattern.match]
+    intro h0
+    simp [←h0]
+    simp [Expr.list_shift_vars]
+  | iso l pb =>
+    cases arg with
+    | iso l' b =>
+      simp [Pattern.match, Expr.shift_vars]
+      intro h0 h1 threshold offset
+      simp [*]
+      apply Pattern.match_shift_vars_preservation h1 threshold offset
+    | _ =>
+      simp [Pattern.match]
+  | record ps =>
+    cases arg with
+    | record r =>
+      simp [Pattern.match, Expr.shift_vars]
+      intro h0 h1 threshold offset
+      apply And.intro
+      { exact Expr.record_shift_vars_keys_unique_preservation h0 }
+      { apply Pattern.match_record_shift_vars_preservation h1}
+    | _ =>
+      simp [Pattern.match]
+end
 
 theorem Expr.is_value_shift_vars_preservation :
   (Expr.is_value e) →
@@ -1034,13 +1123,13 @@ mutual
 end
 
 
-theorem Pattern.skip_instantiator_preservation :
+theorem Pattern.skip_instantiate_preservation :
   Pattern.match arg p = none →
   ∀ offset m, Pattern.match (Expr.instantiate offset m arg) p = none
 := by sorry
 
 
-theorem Pattern.match_instantiator_preservation :
+theorem Pattern.match_instantiate_preservation :
   Pattern.match arg p = some m →
   ∀ offset d,
   Pattern.match (Expr.instantiate offset d arg) p = some (Expr.list_instantiate offset d m)
@@ -1132,15 +1221,13 @@ mutual
     { apply ParStep.instantiate step_arg step_aa matching matching' }
 
   | @pattern_match body body' aa aa' pp mm' f step_body step_aa matching'' =>
-
     simp [Expr.instantiate, List.function_instantiate]
-    /- TODO: double check rationale for inside out -/
     rw [Expr.instantiate_inside_out]
     rw [← Pattern.match_count_eq]
     apply ParStep.pattern_match
     { apply ParStep.instantiate step_arg step_body matching matching' }
     { apply ParStep.instantiate step_arg step_aa matching matching' }
-    { apply Pattern.match_instantiator_preservation matching'' offset m' }
+    { apply Pattern.match_instantiate_preservation matching'' offset m' }
     { exact matching'' }
 
   | @skip f f' aa aa' pp bb step_f step_aa isval nomatching  =>
@@ -1149,7 +1236,7 @@ mutual
     { apply ParFunStep.instantiate step_arg step_f matching matching' }
     { apply ParStep.instantiate step_arg step_aa matching matching'}
     { apply Expr.is_value_instantiator_preservation isval }
-    { apply Pattern.skip_instantiator_preservation nomatching }
+    { apply Pattern.skip_instantiate_preservation nomatching }
   | @anno e e' t step_e =>
     simp [Expr.instantiate]
     apply ParStep.anno
