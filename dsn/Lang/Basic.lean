@@ -1432,6 +1432,11 @@ mutual
   | .loopi e => .loopi (Expr.shift_vars threshold offset e)
 end
 
+def Expr.list_shift_vars (threshold : Nat) (offset : Nat) : List Expr → List Expr
+| .nil => .nil
+| e :: es =>
+  Expr.shift_vars threshold offset e :: (Expr.list_shift_vars threshold offset es)
+
 theorem Expr.shift_vars_zero_zero :
   Expr.shift_vars 0 0 e = e
 := by sorry

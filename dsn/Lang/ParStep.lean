@@ -590,15 +590,132 @@ theorem ParStep.skip_reduction
     simp [Expr.is_value] at isval
 
 
+theorem Expr.shift_instantiate_inside_out :
+  (Expr.shift_vars threshold offset (Expr.instantiate 0 m e))
+  =
+  (Expr.instantiate 0
+    (Expr.list_shift_vars threshold offset m)
+    (Expr.shift_vars (threshold + List.length m) offset e)
+  )
+:= by sorry
+
+theorem Pattern.match_shift_vars_preservation :
+  Pattern.match arg p = some m →
+  ∀ threshold offset,
+  Pattern.match (Expr.shift_vars threshold offset arg) p
+  =
+  some (Expr.list_shift_vars threshold offset m)
+:= by sorry
+
+theorem Expr.is_value_shift_vars_preservation :
+  (Expr.is_value e) →
+  ∀ threshold offset, (Expr.is_value (Expr.shift_vars threshold offset e))
+:= by sorry
+
+theorem Pattern.skip_shift_vars_preservation :
+  Pattern.match arg p = none →
+  ∀ threshold offset, Pattern.match (Expr.shift_vars threshold offset arg) p = none
+:= by sorry
 
 
 mutual
+
+  theorem ParRcdStep.shift_vars_preservation
+    threshold
+    offset
+    (step : ParRcdStep r r')
+  : ParRcdStep
+    (List.record_shift_vars threshold offset r)
+    (List.record_shift_vars threshold offset r')
+  := by cases step with
+  | nil =>
+    simp [List.record_shift_vars]
+    exact ParRcdStep.nil
+  | @cons e e' rr rr' l step_e step_rr =>
+    simp [List.record_shift_vars]
+    apply ParRcdStep.cons
+    { apply ParStep.shift_vars_preservation _ _ step_e}
+    { apply ParRcdStep.shift_vars_preservation _ _ step_rr }
+
+  theorem ParFunStep.shift_vars_preservation
+    threshold
+    offset
+    (step : ParFunStep f f')
+  : ParFunStep
+    (List.function_shift_vars threshold offset f)
+    (List.function_shift_vars threshold offset f')
+  := by cases step with
+  | nil =>
+    simp [List.function_shift_vars]
+    exact ParFunStep.nil
+  | @cons e e' ff ff' p step_e step_ff =>
+    simp [List.function_shift_vars]
+    apply ParFunStep.cons
+    { apply ParStep.shift_vars_preservation _ _ step_e }
+    { apply ParFunStep.shift_vars_preservation _ _ step_ff}
+
+
+
   theorem ParStep.shift_vars_preservation
     threshold
     offset
     (step : ParStep e e')
   : ParStep (Expr.shift_vars threshold offset e) (Expr.shift_vars threshold offset e')
-  := by sorry
+  := by cases step with
+  | bvar i x =>
+    exact ParStep.refl (Expr.shift_vars threshold offset (Expr.bvar i x))
+  | fvar x =>
+    exact ParStep.refl (Expr.shift_vars threshold offset (Expr.fvar x))
+  | @iso body body' l step_body =>
+    simp [Expr.shift_vars]
+    apply ParStep.iso
+    apply ParStep.shift_vars_preservation _ _ step_body
+  | @record r r' step_r =>
+    simp [Expr.shift_vars]
+    apply ParStep.record
+    apply ParRcdStep.shift_vars_preservation _ _ step_r
+  | @function f f' step_f =>
+    simp [Expr.shift_vars]
+    apply ParStep.function
+    apply ParFunStep.shift_vars_preservation _ _ step_f
+  | @app cator cator' arg arg' step_cator step_arg =>
+    simp [Expr.shift_vars]
+    apply ParStep.app
+    { apply ParStep.shift_vars_preservation _ _ step_cator }
+    { apply ParStep.shift_vars_preservation _ _ step_arg }
+  | @pattern_match body body' arg arg' p m' f step_body step_arg matching' =>
+    simp [Expr.shift_vars, List.function_shift_vars]
+    rw [Expr.shift_instantiate_inside_out]
+    apply ParStep.pattern_match
+    { rw [←Pattern.match_count_eq matching']
+      apply ParStep.shift_vars_preservation _ _ step_body
+    }
+    { apply ParStep.shift_vars_preservation _ _ step_arg }
+    { exact Pattern.match_shift_vars_preservation matching' threshold offset }
+  | @skip f f' arg arg' p body step_f step_arg isval nomatching' =>
+    simp [Expr.shift_vars]
+    apply ParStep.skip
+    { apply ParFunStep.shift_vars_preservation _ _ step_f }
+    { apply ParStep.shift_vars_preservation _ _  step_arg }
+    { exact Expr.is_value_shift_vars_preservation isval threshold offset }
+    { exact Pattern.skip_shift_vars_preservation nomatching' threshold offset }
+  | @anno e e' t step_e =>
+    simp [Expr.shift_vars]
+    apply ParStep.anno
+    apply ParStep.shift_vars_preservation _ _ step_e
+  | @erase e e' t step_e =>
+    simp [Expr.shift_vars]
+    apply ParStep.erase
+    apply ParStep.shift_vars_preservation _ _ step_e
+  | @loopi body body' step_body =>
+    simp [Expr.shift_vars]
+    apply ParStep.loopi
+    apply ParStep.shift_vars_preservation _ _ step_body
+  | @recycle e e' x step_e =>
+    simp [Expr.shift_vars]
+    rw [Expr.shift_instantiate_inside_out]
+    apply ParStep.recycle
+    apply ParStep.shift_vars_preservation _ _ step_e
 end
 
 mutual
@@ -710,7 +827,7 @@ mutual
     have (l,e) := le
     simp [List.record_instantiate]
     apply ParRcdStep.cons
-    { apply ParStep.instantiate_preservation _ step }
+    { apply ParStep.instantiator_preservation _ step }
     { apply ParStep.instantiate_record_preservation _ step}
 
   theorem ParStep.instantiate_function_preservation
@@ -728,10 +845,10 @@ mutual
     have (p,e) := pe
     simp [List.function_instantiate]
     apply ParFunStep.cons
-    { apply ParStep.instantiate_preservation _ step }
+    { apply ParStep.instantiator_preservation _ step }
     { apply ParStep.instantiate_function_preservation _ step }
 
-  theorem ParStep.instantiate_preservation
+  theorem ParStep.instantiator_preservation
     offset
     (step : ParStep arg arg')
     e
@@ -754,7 +871,7 @@ mutual
   | iso l body =>
     simp [Expr.instantiate]
     apply ParStep.iso
-    apply ParStep.instantiate_preservation _ step body
+    apply ParStep.instantiator_preservation _ step body
   | record r =>
     simp [Expr.instantiate]
     apply ParStep.record
@@ -766,16 +883,16 @@ mutual
   | app ef ea =>
     simp [Expr.instantiate]
     apply ParStep.app
-    { apply ParStep.instantiate_preservation offset step ef }
-    { apply ParStep.instantiate_preservation offset step ea }
+    { apply ParStep.instantiator_preservation offset step ef }
+    { apply ParStep.instantiator_preservation offset step ea }
   | anno e t =>
     simp [Expr.instantiate]
     apply ParStep.anno
-    apply ParStep.instantiate_preservation offset step e
+    apply ParStep.instantiator_preservation offset step e
   | loopi e =>
     simp [Expr.instantiate]
     apply loopi
-    apply ParStep.instantiate_preservation offset step e
+    apply ParStep.instantiator_preservation offset step e
 end
 
 
@@ -877,7 +994,7 @@ mutual
     rw [←matching, ←matching']
     clear matching matching'
 
-    apply ParStep.instantiate_preservation _ step
+    apply ParStep.instantiator_preservation _ step
   | @iso l p_body =>
     cases step with
     | bvar i x =>
@@ -917,20 +1034,20 @@ mutual
 end
 
 
-theorem Pattern.match_skip_preservation :
+theorem Pattern.skip_instantiator_preservation :
   Pattern.match arg p = none →
   ∀ offset m, Pattern.match (Expr.instantiate offset m arg) p = none
 := by sorry
 
 
-theorem Pattern.match_instantiate_preservation :
+theorem Pattern.match_instantiator_preservation :
   Pattern.match arg p = some m →
   ∀ offset d,
   Pattern.match (Expr.instantiate offset d arg) p = some (Expr.list_instantiate offset d m)
 := by sorry
 
 
-theorem Expr.is_value_instantiate_preservation :
+theorem Expr.is_value_instantiator_preservation :
   (Expr.is_value e) →
   ∀ offset m, (Expr.is_value (Expr.instantiate offset m e))
 := by sorry
@@ -1023,7 +1140,7 @@ mutual
     apply ParStep.pattern_match
     { apply ParStep.instantiate step_arg step_body matching matching' }
     { apply ParStep.instantiate step_arg step_aa matching matching' }
-    { apply Pattern.match_instantiate_preservation matching'' offset m' }
+    { apply Pattern.match_instantiator_preservation matching'' offset m' }
     { exact matching'' }
 
   | @skip f f' aa aa' pp bb step_f step_aa isval nomatching  =>
@@ -1031,8 +1148,8 @@ mutual
     apply ParStep.skip
     { apply ParFunStep.instantiate step_arg step_f matching matching' }
     { apply ParStep.instantiate step_arg step_aa matching matching'}
-    { apply Expr.is_value_instantiate_preservation isval }
-    { apply Pattern.match_skip_preservation nomatching }
+    { apply Expr.is_value_instantiator_preservation isval }
+    { apply Pattern.skip_instantiator_preservation nomatching }
   | @anno e e' t step_e =>
     simp [Expr.instantiate]
     apply ParStep.anno
