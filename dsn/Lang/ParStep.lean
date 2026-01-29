@@ -595,78 +595,221 @@ theorem ParStep.skip_reduction
     simp [Pattern.match] <;>
     simp [Expr.is_value] at isval
 
-
 mutual
-  theorem Expr.shift_instantiate_inside_out :
-    (Expr.shift_vars threshold offset (Expr.instantiate 0 m e))
-    =
-    (Expr.instantiate 0
-      (Expr.list_shift_vars threshold offset m)
-      (Expr.shift_vars (threshold + List.length m) offset e)
-    )
-  := by cases e with
-  | bvar i x =>
+theorem Expr.shift_vars_inside_out threshold depth offset :
+  Expr.shift_vars (threshold + depth) offset (Expr.shift_vars 0 depth arg)
+  =
+  Expr.shift_vars 0 depth (Expr.shift_vars threshold offset arg)
 
-    simp [Expr.instantiate]
-    cases h0 : m[i]? with
-    | some arg =>
-      simp [Expr.shift_vars_zero_zero]
-      simp [Expr.shift_vars]
-
-      have h1 : i < List.length m := by
-        have ⟨h,g⟩ := Iff.mp List.getElem?_eq_some_iff h0
-        exact h
-      have h2 : i < threshold + List.length m := by
-        exact Nat.lt_add_left threshold h1
-      have h3 : ¬ (threshold + List.length m) ≤ i := by
-        exact Nat.not_le_of_lt h2
-      simp [h3]
-      simp [Expr.instantiate]
-
-      have h4 := Expr.list_shift_vars_get_some_preservation threshold offset i h0
-      simp [h4]
-      simp [Expr.shift_vars_zero_zero]
-    | none =>
-      simp
-      simp [Expr.shift_vars]
-      have h1 : List.length m ≤ i := by
-        exact Iff.mp List.getElem?_eq_none_iff h0
-
-      by_cases h2 : threshold ≤ i - List.length m
-      { simp [h2]
-        have h3 : threshold + List.length m ≤ i := by
-          exact Nat.add_le_of_le_sub h1 h2
-        simp [h3]
-        simp [Expr.instantiate]
-
-        have h4 := List.get_none_add_preservation m i offset h0
-
-        have h5 := Expr.list_shift_vars_get_none_preservation threshold offset (i + offset) h4
-
-        simp [h5]
-
-        simp [Expr.list_shift_vars_length_eq]
-        exact Eq.symm (Nat.sub_add_comm h1)
-      }
-      { simp [h2]
-        have h3 : ¬ threshold + List.length m ≤ i := by
-          intro h
-          apply h2
-          exact Nat.le_sub_of_add_le h
-        simp [h3]
-        simp [Expr.instantiate]
-
-
-        have h4 := Expr.list_shift_vars_get_none_preservation threshold offset i h0
-        simp [h4]
-        simp [Expr.list_shift_vars_length_eq]
-
-      }
-
-  | _ => sorry
+:= by sorry
 end
 
 
+mutual
+  theorem Expr.record_shift_vars_instantiate_inside_out threshold depth offset m r:
+    List.record_shift_vars (threshold + depth) offset (List.record_instantiate depth m r)
+    =
+    List.record_instantiate depth
+      (Expr.list_shift_vars threshold offset m)
+      (List.record_shift_vars (threshold + List.length m + depth) offset r)
+  := by cases r with
+  | nil =>
+    simp [List.record_shift_vars, List.record_instantiate]
+  | cons le r =>
+    have (l,e) := le
+    simp [List.record_shift_vars, List.record_instantiate]
+    apply And.intro
+    { apply Expr.shift_vars_instantiate_inside_out }
+    { apply Expr.record_shift_vars_instantiate_inside_out }
+
+  theorem Expr.function_shift_vars_instantiate_inside_out threshold depth offset m f :
+    List.function_shift_vars (threshold + depth) offset
+      (List.function_instantiate depth m f)
+    =
+    List.function_instantiate depth
+      (Expr.list_shift_vars threshold offset m)
+      (List.function_shift_vars (threshold + List.length m + depth) offset f)
+  := by cases f with
+  | nil =>
+    simp [List.function_shift_vars, List.function_instantiate]
+  | cons pe r =>
+    have (p,e) := pe
+    simp [List.function_shift_vars, List.function_instantiate]
+
+    have h0 :
+      threshold + depth + Pat.count_vars p
+      =
+      threshold + (depth + Pat.count_vars p)
+    := by exact Nat.add_assoc threshold depth (Pat.count_vars p)
+
+
+    have h1 :
+      threshold + List.length m + depth + Pat.count_vars p
+      =
+      threshold + List.length m + (depth + Pat.count_vars p)
+    := by exact Nat.add_assoc (threshold + List.length m) depth (Pat.count_vars p)
+
+    apply And.intro
+    { rw [h0,h1]
+      apply Expr.shift_vars_instantiate_inside_out
+    }
+    { apply Expr.function_shift_vars_instantiate_inside_out }
+
+
+  theorem Expr.shift_vars_instantiate_inside_out threshold depth offset m e :
+    (Expr.shift_vars (threshold + depth) offset (Expr.instantiate depth m e))
+    =
+    (Expr.instantiate depth
+      (Expr.list_shift_vars threshold offset m)
+      (Expr.shift_vars (threshold + List.length m + depth) offset e)
+    )
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.instantiate]
+
+    by_cases h0 : depth ≤ i
+    {
+      simp [h0]
+      cases h1 : m[i - depth]? with
+      | some arg =>
+        simp [Expr.shift_vars]
+
+        have h2 : i - depth < List.length m := by
+          have ⟨h,g⟩ := Iff.mp List.getElem?_eq_some_iff h1
+          exact h
+        have h3 : i - depth < threshold + List.length m := by
+          exact Nat.lt_add_left threshold h2
+        have h4 : i < threshold + List.length m + depth := by
+          exact Iff.mp (Nat.sub_lt_iff_lt_add h0) h3
+        have h5 : ¬ (threshold + List.length m + depth) ≤ i := by
+          exact Nat.not_le_of_lt h4
+
+        simp [h5]
+        simp [Expr.instantiate]
+        simp [h0]
+        have h6 := Expr.list_shift_vars_get_some_preservation threshold offset (i - depth) h1
+        simp [h6]
+        simp [Expr.shift_vars_inside_out]
+
+      | none =>
+        simp
+        simp [Expr.shift_vars]
+        have h2 : List.length m ≤ i - depth := by
+          exact Iff.mp List.getElem?_eq_none_iff h1
+
+        by_cases h3 : threshold + depth ≤ i - List.length m
+        { simp [h3]
+
+          have h4 : List.length m ≤ i - depth + depth := by exact Nat.le_add_right_of_le h2
+          have h5 : i - depth + depth = i := by exact Nat.sub_add_cancel h0
+          rw [h5] at h4
+
+          have h6 : threshold + depth + List.length m ≤ i := by
+            exact Nat.add_le_of_le_sub h4 h3
+
+          have h7 :
+            threshold + depth + List.length m =  threshold + List.length m + depth
+          := by exact Nat.add_right_comm threshold depth (List.length m)
+
+          rw [h7] at h6
+          simp [h6]
+          simp [Expr.instantiate]
+
+          have h8 : depth ≤ i + offset := by exact Nat.le_add_right_of_le h0
+          simp [h8]
+          have h9 := List.get_none_add_preservation m (i - depth) offset h1
+          have h10 := Expr.list_shift_vars_get_none_preservation threshold offset (i - depth + offset) h9
+          have h11 : (i - depth + offset) = (i + offset - depth) := by
+            exact Eq.symm (Nat.sub_add_comm h0)
+          rw [h11] at h10
+          simp [h10]
+          simp [Expr.list_shift_vars_length_eq]
+          exact Eq.symm (Nat.sub_add_comm h4)
+        }
+        {
+          simp [h3]
+          have h4 : ¬ threshold + depth + List.length m ≤ i := by
+            intro h
+            apply h3
+            exact Nat.le_sub_of_add_le h
+
+          have h5 :
+            threshold + depth + List.length m = threshold + List.length m + depth
+          := by exact Nat.add_right_comm threshold depth (List.length m)
+          rw [h5] at h4
+
+          simp [h4]
+          simp [Expr.instantiate]
+          simp [h0]
+          have h6 := Expr.list_shift_vars_get_none_preservation threshold offset (i - depth) h1
+          simp [h6]
+          simp [Expr.list_shift_vars_length_eq]
+        }
+    }
+    { simp [h0]
+      simp [Expr.shift_vars]
+      have h1 : ¬ threshold + depth ≤ i := by
+        intro h
+        apply h0
+        exact Nat.le_of_add_left_le h
+      simp [h1]
+
+      have h2 : ¬ threshold + depth + List.length m ≤ i := by
+        intro h
+        apply h1
+        exact Nat.le_of_add_right_le h
+
+      have h3 :
+        threshold + depth + List.length m = threshold + List.length m + depth
+      := by exact Nat.add_right_comm threshold depth (List.length m)
+      rw [h3] at h2
+
+      simp [h2]
+      simp [Expr.instantiate]
+      simp [h0]
+    }
+
+  | fvar x =>
+    simp [Expr.shift_vars, Expr.instantiate]
+  | iso l body =>
+    simp [Expr.shift_vars, Expr.instantiate]
+    apply Expr.shift_vars_instantiate_inside_out
+  | record r =>
+    simp [Expr.shift_vars, Expr.instantiate]
+    apply Expr.record_shift_vars_instantiate_inside_out
+
+  | function f =>
+    simp [Expr.shift_vars, Expr.instantiate]
+    apply Expr.function_shift_vars_instantiate_inside_out
+
+  | app ef ea =>
+    simp [Expr.shift_vars, Expr.instantiate]
+    apply And.intro
+    { apply Expr.shift_vars_instantiate_inside_out }
+    { apply Expr.shift_vars_instantiate_inside_out }
+
+  | anno body t =>
+    simp [Expr.shift_vars, Expr.instantiate]
+    apply Expr.shift_vars_instantiate_inside_out
+
+  | loopi body =>
+    simp [Expr.shift_vars, Expr.instantiate]
+    apply Expr.shift_vars_instantiate_inside_out
+end
+
+theorem Expr.shift_vars_instantiate_zero_inside_out threshold offset m e :
+  (Expr.shift_vars threshold offset (Expr.instantiate 0 m e))
+  =
+  (Expr.instantiate 0
+    (Expr.list_shift_vars threshold offset m)
+    (Expr.shift_vars (threshold + List.length m) offset e)
+  )
+:= by
+  have h0 : threshold = threshold + 0 := by
+    exact rfl
+  rw [h0]
+  rw [Expr.shift_vars_instantiate_inside_out threshold 0 offset m e]
+  rfl
 mutual
 
   theorem Pattern.match_entry_shift_vars_preservation :
@@ -835,7 +978,8 @@ mutual
     { apply ParStep.shift_vars_preservation _ _ step_arg }
   | @pattern_match body body' arg arg' p m' f step_body step_arg matching' =>
     simp [Expr.shift_vars, List.function_shift_vars]
-    rw [Expr.shift_instantiate_inside_out]
+
+    rw [Expr.shift_vars_instantiate_zero_inside_out]
     apply ParStep.pattern_match
     { rw [←Pattern.match_count_eq matching']
       apply ParStep.shift_vars_preservation _ _ step_body
@@ -863,7 +1007,8 @@ mutual
     apply ParStep.shift_vars_preservation _ _ step_body
   | @recycle e e' x step_e =>
     simp [Expr.shift_vars]
-    rw [Expr.shift_instantiate_inside_out]
+
+    rw [Expr.shift_vars_instantiate_zero_inside_out]
     apply ParStep.recycle
     apply ParStep.shift_vars_preservation _ _ step_e
 end

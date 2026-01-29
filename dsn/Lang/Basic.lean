@@ -1477,32 +1477,32 @@ theorem Expr.shift_vars_zero_zero :
 := by sorry
 
 mutual
-  def List.record_instantiate (offset : Nat) (m : List Expr): List (String × Expr) → List (String × Expr)
+  def List.record_instantiate (depth : Nat) (m : List Expr): List (String × Expr) → List (String × Expr)
   | .nil => .nil
   | (l, e) :: r =>
-    (l, Expr.instantiate offset m e) :: (List.record_instantiate offset m r)
+    (l, Expr.instantiate depth m e) :: (List.record_instantiate depth m r)
 
-  def List.function_instantiate (offset : Nat) (m : List Expr): List (Pat × Expr) → List (Pat × Expr)
+  def List.function_instantiate (depth : Nat) (m : List Expr): List (Pat × Expr) → List (Pat × Expr)
   | .nil => .nil
   | (p, e) :: f =>
-    let offset' := offset + (Pat.count_vars p)
-    (p, (Expr.instantiate offset' m e)) :: (List.function_instantiate offset m f)
+    let depth' := depth + (Pat.count_vars p)
+    (p, (Expr.instantiate depth' m e)) :: (List.function_instantiate depth m f)
 
-  def Expr.instantiate (offset : Nat) (m : List Expr) : Expr → Expr
+  def Expr.instantiate (depth : Nat) (m : List Expr) : Expr → Expr
   | .bvar i x =>
-    if i >= offset then
-      match m[i - offset]? with
-      | some e => Expr.shift_vars 0 offset e
+    if i >= depth then
+      match m[i - depth]? with
+      | some e => Expr.shift_vars 0 depth e
       | none => .bvar (i - List.length m) x
     else
       .bvar i x
   | .fvar id => .fvar id
-  | .iso l body => .iso l (Expr.instantiate offset m body)
-  | .record r => .record (List.record_instantiate offset m r)
-  | .function f => .function (List.function_instantiate offset m f)
-  | .app ef ea => .app (Expr.instantiate offset m ef) (Expr.instantiate offset m ea)
-  | .anno e t => .anno (Expr.instantiate offset m e) t
-  | .loopi e => .loopi (Expr.instantiate offset m e)
+  | .iso l body => .iso l (Expr.instantiate depth m body)
+  | .record r => .record (List.record_instantiate depth m r)
+  | .function f => .function (List.function_instantiate depth m f)
+  | .app ef ea => .app (Expr.instantiate depth m ef) (Expr.instantiate depth m ea)
+  | .anno e t => .anno (Expr.instantiate depth m e) t
+  | .loopi e => .loopi (Expr.instantiate depth m e)
 end
 
 def Expr.list_instantiate (offset : Nat) (m : List Expr): List Expr → List Expr
