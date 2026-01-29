@@ -623,7 +623,7 @@ mutual
       simp [h3]
       simp [Expr.instantiate]
 
-      have h4 := Expr.list_shift_vars_get_preservation threshold offset i h0
+      have h4 := Expr.list_shift_vars_get_some_preservation threshold offset i h0
       simp [h4]
       simp [Expr.shift_vars_zero_zero]
     | none =>
@@ -632,7 +632,36 @@ mutual
       have h1 : List.length m ≤ i := by
         exact Iff.mp List.getElem?_eq_none_iff h0
 
-      sorry
+      by_cases h2 : threshold ≤ i - List.length m
+      { simp [h2]
+        have h3 : threshold + List.length m ≤ i := by
+          exact Nat.add_le_of_le_sub h1 h2
+        simp [h3]
+        simp [Expr.instantiate]
+
+        have h4 := List.get_none_add_preservation m i offset h0
+
+        have h5 := Expr.list_shift_vars_get_none_preservation threshold offset (i + offset) h4
+
+        simp [h5]
+
+        simp [Expr.list_shift_vars_length_eq]
+        exact Eq.symm (Nat.sub_add_comm h1)
+      }
+      { simp [h2]
+        have h3 : ¬ threshold + List.length m ≤ i := by
+          intro h
+          apply h2
+          exact Nat.le_sub_of_add_le h
+        simp [h3]
+        simp [Expr.instantiate]
+
+
+        have h4 := Expr.list_shift_vars_get_none_preservation threshold offset i h0
+        simp [h4]
+        simp [Expr.list_shift_vars_length_eq]
+
+      }
 
   | _ => sorry
 end

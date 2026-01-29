@@ -1438,6 +1438,23 @@ def Expr.list_shift_vars (threshold : Nat) (offset : Nat) : List Expr → List E
   Expr.shift_vars threshold offset e :: (Expr.list_shift_vars threshold offset es)
 
 
+theorem List.get_none_add_preservation {α} (m : List α) (i : Nat) (i' : Nat):
+  m[i]? = none →
+  m[i + i']? = none
+:= by induction i' with
+| zero =>
+  simp [*]
+| succ i'' ih =>
+  simp [*]
+  intro h0
+  exact Nat.le_add_right_of_le h0
+
+
+theorem Expr.list_shift_vars_length_eq threshold offset m:
+  List.length (Expr.list_shift_vars threshold offset m) = List.length m
+:= by sorry
+
+
 theorem Expr.list_shift_vars_concat :
   (Expr.list_shift_vars threshold offset m0) ++
   (Expr.list_shift_vars threshold offset m1)
@@ -1445,9 +1462,14 @@ theorem Expr.list_shift_vars_concat :
   Expr.list_shift_vars threshold offset (m0 ++ m1)
 := by sorry
 
-theorem Expr.list_shift_vars_get_preservation threshold offset (i : Nat):
+theorem Expr.list_shift_vars_get_some_preservation threshold offset (i : Nat):
   m[i]? = some arg →
   (Expr.list_shift_vars threshold offset m)[i]? = some (Expr.shift_vars threshold offset arg)
+:= by sorry
+
+theorem Expr.list_shift_vars_get_none_preservation threshold offset (i : Nat):
+  m[i]? = none →
+  (Expr.list_shift_vars threshold offset m)[i]? = none
 := by sorry
 
 theorem Expr.shift_vars_zero_zero :
