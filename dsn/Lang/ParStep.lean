@@ -596,14 +596,46 @@ theorem ParStep.skip_reduction
     simp [Expr.is_value] at isval
 
 
-theorem Expr.shift_instantiate_inside_out :
-  (Expr.shift_vars threshold offset (Expr.instantiate 0 m e))
-  =
-  (Expr.instantiate 0
-    (Expr.list_shift_vars threshold offset m)
-    (Expr.shift_vars (threshold + List.length m) offset e)
-  )
-:= by sorry
+mutual
+  theorem Expr.shift_instantiate_inside_out :
+    (Expr.shift_vars threshold offset (Expr.instantiate 0 m e))
+    =
+    (Expr.instantiate 0
+      (Expr.list_shift_vars threshold offset m)
+      (Expr.shift_vars (threshold + List.length m) offset e)
+    )
+  := by cases e with
+  | bvar i x =>
+
+    simp [Expr.instantiate]
+    cases h0 : m[i]? with
+    | some arg =>
+      simp [Expr.shift_vars_zero_zero]
+      simp [Expr.shift_vars]
+
+      have h1 : i < List.length m := by
+        have ⟨h,g⟩ := Iff.mp List.getElem?_eq_some_iff h0
+        exact h
+      have h2 : i < threshold + List.length m := by
+        exact Nat.lt_add_left threshold h1
+      have h3 : ¬ (threshold + List.length m) ≤ i := by
+        exact Nat.not_le_of_lt h2
+      simp [h3]
+      simp [Expr.instantiate]
+
+      have h4 := Expr.list_shift_vars_get_preservation threshold offset i h0
+      simp [h4]
+      simp [Expr.shift_vars_zero_zero]
+    | none =>
+      simp
+      simp [Expr.shift_vars]
+      have h1 : List.length m ≤ i := by
+        exact Iff.mp List.getElem?_eq_none_iff h0
+
+      sorry
+
+  | _ => sorry
+end
 
 
 mutual

@@ -1445,6 +1445,11 @@ theorem Expr.list_shift_vars_concat :
   Expr.list_shift_vars threshold offset (m0 ++ m1)
 := by sorry
 
+theorem Expr.list_shift_vars_get_preservation threshold offset (i : Nat):
+  m[i]? = some arg →
+  (Expr.list_shift_vars threshold offset m)[i]? = some (Expr.shift_vars threshold offset arg)
+:= by sorry
+
 theorem Expr.shift_vars_zero_zero :
   Expr.shift_vars 0 0 e = e
 := by sorry
