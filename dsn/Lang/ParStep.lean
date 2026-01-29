@@ -596,12 +596,48 @@ theorem ParStep.skip_reduction
     simp [Expr.is_value] at isval
 
 mutual
-theorem Expr.shift_vars_inside_out threshold depth offset :
-  Expr.shift_vars (threshold + depth) offset (Expr.shift_vars 0 depth arg)
-  =
-  Expr.shift_vars 0 depth (Expr.shift_vars threshold offset arg)
 
-:= by sorry
+  theorem Expr.record_shift_vars_inside_out threshold depth offset level r:
+    List.record_shift_vars (threshold + depth) offset (List.record_shift_vars level depth r)
+    =
+    List.record_shift_vars level depth (List.record_shift_vars threshold offset r)
+  := by cases r with
+  | nil =>
+    simp [List.record_shift_vars]
+  | cons le r =>
+    have (l,e) := le
+    simp [List.record_shift_vars]
+    apply And.intro
+    { apply Expr.shift_vars_inside_out }
+    { apply Expr.record_shift_vars_inside_out }
+
+  theorem Expr.function_shift_vars_inside_out threshold depth offset level f :
+    List.function_shift_vars (threshold + depth) offset (List.function_shift_vars level depth f)
+    =
+    List.function_shift_vars level depth (List.function_shift_vars threshold offset f)
+  := by cases f with
+  | nil =>
+    simp [List.function_shift_vars]
+  | cons pe r =>
+    have (p,e) := pe
+    simp [List.function_shift_vars]
+
+    apply And.intro
+    {
+      have h0 :
+        threshold + depth + Pat.count_vars p =
+        threshold + Pat.count_vars p  + depth
+      := by exact Nat.add_right_comm threshold depth (Pat.count_vars p)
+      rw [h0]
+      apply Expr.shift_vars_inside_out
+    }
+    { apply Expr.function_shift_vars_inside_out }
+
+  theorem Expr.shift_vars_inside_out threshold depth offset level arg :
+    Expr.shift_vars (threshold + depth) offset (Expr.shift_vars level depth arg)
+    =
+    Expr.shift_vars level depth (Expr.shift_vars threshold offset arg)
+  := by sorry
 end
 
 
@@ -636,21 +672,21 @@ mutual
     have (p,e) := pe
     simp [List.function_shift_vars, List.function_instantiate]
 
-    have h0 :
-      threshold + depth + Pat.count_vars p
-      =
-      threshold + (depth + Pat.count_vars p)
-    := by exact Nat.add_assoc threshold depth (Pat.count_vars p)
-
-
-    have h1 :
-      threshold + List.length m + depth + Pat.count_vars p
-      =
-      threshold + List.length m + (depth + Pat.count_vars p)
-    := by exact Nat.add_assoc (threshold + List.length m) depth (Pat.count_vars p)
-
     apply And.intro
-    { rw [h0,h1]
+    {
+      have h0 :
+        threshold + depth + Pat.count_vars p
+        =
+        threshold + (depth + Pat.count_vars p)
+      := by exact Nat.add_assoc threshold depth (Pat.count_vars p)
+
+      have h1 :
+        threshold + List.length m + depth + Pat.count_vars p
+        =
+        threshold + List.length m + (depth + Pat.count_vars p)
+      := by exact Nat.add_assoc (threshold + List.length m) depth (Pat.count_vars p)
+
+      rw [h0,h1]
       apply Expr.shift_vars_instantiate_inside_out
     }
     { apply Expr.function_shift_vars_instantiate_inside_out }
@@ -689,7 +725,7 @@ mutual
         simp [h0]
         have h6 := Expr.list_shift_vars_get_some_preservation threshold offset (i - depth) h1
         simp [h6]
-        simp [Expr.shift_vars_inside_out]
+        apply Expr.shift_vars_inside_out
 
       | none =>
         simp
