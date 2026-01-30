@@ -649,28 +649,69 @@ mutual
     simp [Expr.shift_vars]
     by_cases  h0 : level ≤ i
     { simp [h0]
-      -- simp [Expr.shift_vars]
-      -- by_cases h1 : threshold ≤ i
-      -- { simp [h1]
-      --   simp [Expr.shift_vars]
-      --   have h2 : level ≤  i + offset := by exact Nat.le_add_right_of_le h0
-      --   simp [h2]
-      --   exact Nat.add_right_comm i depth offset
-      -- }
-      -- { simp [h1]
-      --   simp [Expr.shift_vars]
-      --   intro h2
-      --   have h3 : ¬ i < level := by
-      --     exact Iff.mpr Nat.not_lt h0
-      --   specialize h3 h2
-      --   simp at h3
-      -- }
-      sorry
+      simp [Expr.shift_vars]
+
+      by_cases h1 : threshold + level ≤ i
+      { simp [h1]
+        simp [Expr.shift_vars]
+
+        have h2 : level ≤  i + offset := by exact Nat.le_add_right_of_le h0
+        simp [h2]
+        exact Nat.add_right_comm i depth offset
+      }
+      { simp [h1]
+        simp [Expr.shift_vars]
+        intro h2
+        have h3 : ¬ i < level := by
+          exact Iff.mpr Nat.not_lt h0
+        apply False.elim (h3 h2)
+      }
     }
     { simp [h0]
-      sorry
+      simp [Expr.shift_vars]
+
+      have h1 : ¬ threshold + level ≤ i := by
+        intro h
+        apply h0
+        exact Nat.le_of_add_left_le h
+      simp [h1]
+
+      have h2 : ¬ threshold + level + depth ≤ i := by
+        intro h
+        apply h1
+        exact Nat.le_of_add_right_le h
+      simp [h2]
+
+      simp [Expr.shift_vars]
+      intro h3
+      apply False.elim (h0 h3)
     }
-  | _ => sorry
+  | fvar x =>
+    simp [Expr.shift_vars]
+  | iso l body =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_inside_out
+  | record r =>
+    simp [Expr.shift_vars]
+    apply Expr.record_shift_vars_inside_out
+
+  | function f =>
+    simp [Expr.shift_vars]
+    apply Expr.function_shift_vars_inside_out
+
+  | app ef ea =>
+    simp [Expr.shift_vars]
+    apply And.intro
+    { apply Expr.shift_vars_inside_out }
+    { apply Expr.shift_vars_inside_out }
+
+  | anno body t =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_inside_out
+
+  | loopi body =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_inside_out
 end
 
 theorem Expr.shift_vars_zero_inside_out threshold depth offset arg :
