@@ -1604,14 +1604,81 @@ mutual
           have ⟨h,eq⟩ := Iff.mp List.getElem?_eq_some_iff h12
           apply h
 
-
         sorry
       | none =>
         simp
         have h13 : List.length ma ≤ i - offset - List.length mb - depth
         := by exact Iff.mp List.getElem?_eq_none_iff h12
 
-        sorry
+
+        rw [←Nat.sub_add_eq] at h13
+        rw [←Nat.sub_add_eq] at h13
+        rw [←h2] at h13
+
+        have h14 :
+          offset + List.length mb + depth
+          =
+          offset + depth + List.length mb
+        := by exact h9
+        rw [h14] at h13
+
+        have h15 : List.length ma + (offset + depth + List.length mb) ≤ i := by
+          exact Nat.add_le_of_le_sub h0 h13
+
+        generalize h16 : i - List.length ma = i'
+        simp [Expr.instantiate]
+        rw [←h16] ; clear h16 i'
+        have h17 : offset + depth = depth + offset := by
+          exact Nat.add_comm offset depth
+
+        rw [h17] at h15
+
+        have h18 : depth + offset + List.length mb
+          = depth + (offset + List.length mb)
+        := by exact Nat.add_assoc depth offset (List.length mb)
+        rw [h18] at h15
+
+        simp [←Nat.add_assoc] at h15
+        have h19 : List.length ma + depth + offset ≤ i := by
+          exact Nat.le_of_add_right_le h15
+
+        have h20 : List.length ma + depth ≤ i := by
+          exact Nat.le_of_add_right_le h19
+
+
+        have h21 : depth ≤ i - List.length ma := by
+          exact Nat.le_sub_of_add_le' h20
+
+        simp [h21]
+
+        rw [Expr.list_instantiate_length_eq]
+
+        have h22 :
+          List.length ma + depth + offset + List.length mb =
+          List.length ma + depth + List.length mb  + offset
+        := by exact Nat.add_right_comm (List.length ma + depth) offset (List.length mb)
+
+        rw [h22] at h15
+
+        have h23 : List.length ma + depth + List.length mb ≤ i := by
+          exact Nat.le_of_add_right_le h15
+
+        rw [Nat.add_assoc] at h23
+
+        have h24 : depth + List.length mb ≤ i - List.length ma := by
+          exact Nat.le_sub_of_add_le' h23
+
+        have h22 : List.length mb ≤ i - List.length ma - depth := by
+          exact Iff.mpr (Nat.le_sub_iff_add_le' h21) h24
+
+        have h23 : mb[i - List.length ma - depth]? = none := by
+          exact Iff.mpr List.getElem?_eq_none_iff h22
+
+        have h24 : (Expr.list_instantiate offset ma mb)[i - List.length ma - depth]? = none := by
+          exact Expr.list_instantiate_get_none_preservation offset ma (i - List.length ma - depth) h23
+
+        simp [h24]
+        exact Nat.sub_right_comm i (List.length mb) (List.length ma)
 
     }
     { simp [h0]
