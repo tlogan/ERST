@@ -1563,10 +1563,56 @@ mutual
 
     by_cases h0 : offset + List.length mb + depth ≤ i
     { simp [h0]
+
       have h1 : depth ≤ i := by exact Nat.le_of_add_left_le h0
       simp [h1]
 
-      sorry
+      have h2 :
+        offset + List.length mb + depth =  offset + (List.length mb + depth)
+      := by exact
+        Nat.add_assoc offset (List.length mb) depth
+
+      rw [h2] at h0
+      have h4 : List.length mb + depth ≤ i := by exact Nat.le_of_add_left_le h0
+      have h5 : List.length mb ≤ i - depth := by exact Nat.le_sub_of_add_le h4
+      have h6 : mb[i - depth]? = none := by exact Iff.mpr List.getElem?_eq_none_iff h5
+      simp [h6]
+      simp [Expr.instantiate]
+
+      rw [←h2] at h0
+      have h9 : offset + List.length mb + depth = offset + depth + List.length mb := by
+        exact Nat.add_right_comm offset (List.length mb) depth
+
+      rw [h9] at h0
+
+      have h10 : offset + depth ≤ i - List.length mb := by exact Nat.le_sub_of_add_le h0
+      simp [h10]
+
+      rw [Nat.sub_add_eq]
+      rw [Nat.sub_add_eq]
+      rw [Nat.sub_add_eq]
+
+      have h11 : i - List.length mb - offset = i - offset - List.length mb := by
+        exact Nat.sub_right_comm i (List.length mb) offset
+
+      rw [h11]
+
+      cases h12 : ma[i - offset - List.length mb - depth]? with
+      | some ea =>
+        simp
+        have h13 : i - offset - List.length mb - depth < List.length ma := by
+          have ⟨h,eq⟩ := Iff.mp List.getElem?_eq_some_iff h12
+          apply h
+
+
+        sorry
+      | none =>
+        simp
+        have h13 : List.length ma ≤ i - offset - List.length mb - depth
+        := by exact Iff.mp List.getElem?_eq_none_iff h12
+
+        sorry
+
     }
     { simp [h0]
       simp [Expr.instantiate]
