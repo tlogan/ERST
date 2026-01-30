@@ -559,11 +559,33 @@ theorem ParRcdStep.skip_reduction
   have ⟨m1,h7⟩ := ParRcdStep.pattern_match_expansion isval step h5
   exact h0 h1 m0 h6 m1 h7
 
+theorem Expr.record_shift_vars_keys_is_fresh_key_preservation :
+  List.is_fresh_key l r →
+  List.is_fresh_key l  (List.record_shift_vars threshold offset r)
+:= by induction r with
+| nil =>
+  simp [List.record_shift_vars, List.is_fresh_key]
+| cons le r' ih =>
+  have (l',e) := le
+  simp [List.record_shift_vars, List.is_fresh_key]
+  intro h0 h1
+  simp [h0]
+  apply ih h1
+
 
 theorem Expr.record_shift_vars_keys_unique_preservation :
   List.keys_unique r →
   List.keys_unique (List.record_shift_vars threshold offset r)
-:= by sorry
+:= by induction r with
+| nil =>
+  simp [List.record_shift_vars, List.keys_unique]
+| cons le r' ih =>
+  have (l,e) := le
+  simp [List.record_shift_vars, List.keys_unique]
+  intro h0 h1
+  apply And.intro
+  { exact record_shift_vars_keys_is_fresh_key_preservation h0 }
+  { apply ih h1 }
 
 theorem ParStep.skip_reduction
   (isval : Expr.is_value e)
@@ -1460,18 +1482,210 @@ theorem Pattern.match_instantiate_preservation :
 := by sorry
 
 
-theorem Expr.is_value_instantiator_preservation :
+theorem Expr.is_value_instantiate_preservation :
   (Expr.is_value e) →
   ∀ offset m, (Expr.is_value (Expr.instantiate offset m e))
 := by sorry
 
-theorem  Expr.instantiate_inside_out :
+
+  -- theorem Expr.shift_vars_instantiate_inside_out threshold depth offset m e :
+  --   (Expr.shift_vars (threshold + depth) offset (Expr.instantiate depth m e))
+  --   =
+  --   (Expr.instantiate depth
+  --     (Expr.list_shift_vars threshold offset m)
+  --     (Expr.shift_vars (threshold + List.length m + depth) offset e)
+  --   )j
+  -- := by cases e with
+
+theorem Expr.instantiate_shift_vars_zero_inside_out offset depth m e :
+  Expr.instantiate (offset + depth) m (Expr.shift_vars 0 depth e) =
+  Expr.shift_vars 0 depth (Expr.instantiate offset m e)
+:= by sorry
+
+mutual
+
+  theorem  Expr.record_instantiate_inside_out offset depth ma mb r :
+    (List.record_instantiate (offset + depth) ma (List.record_instantiate depth mb r)) =
+    (List.record_instantiate depth
+      (Expr.list_instantiate offset ma mb)
+      (List.record_instantiate (offset + List.length mb + depth) ma r)
+    )
+  := by cases r with
+  | nil =>
+    simp [List.record_instantiate]
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.record_instantiate]
+    apply And.intro
+    { apply Expr.instantiate_inside_out }
+    { apply Expr.record_instantiate_inside_out }
+
+  theorem  Expr.function_instantiate_inside_out offset depth ma mb f :
+    (List.function_instantiate (offset + depth) ma (List.function_instantiate depth mb f)) =
+    (List.function_instantiate depth
+      (Expr.list_instantiate offset ma mb)
+      (List.function_instantiate (offset + List.length mb + depth) ma f)
+    )
+  := by cases f with
+  | nil =>
+    simp [List.function_instantiate]
+  | cons pe f' =>
+    have (p,e) := pe
+    simp [List.function_instantiate]
+    apply And.intro
+    {
+
+      have h0 :
+        offset + depth + Pat.count_vars p =
+        offset + (depth + Pat.count_vars p)
+      := by exact Nat.add_assoc offset depth (Pat.count_vars p)
+      rw [h0]
+
+      have h1 :
+        offset + List.length mb + depth + Pat.count_vars p =
+        offset + List.length mb + (depth + Pat.count_vars p)
+      := by exact Nat.add_assoc (offset + List.length mb) depth (Pat.count_vars p)
+      rw [h1]
+
+      apply Expr.instantiate_inside_out
+    }
+    { apply Expr.function_instantiate_inside_out }
+
+  theorem  Expr.instantiate_inside_out offset depth ma mb e:
+    (Expr.instantiate (offset + depth) ma (Expr.instantiate depth mb e)) =
+    (Expr.instantiate depth
+      (Expr.list_instantiate offset ma mb)
+      (Expr.instantiate (offset + List.length mb + depth) ma e)
+    )
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.instantiate]
+
+    by_cases h0 : offset + List.length mb + depth ≤ i
+    { simp [h0]
+      have h1 : depth ≤ i := by exact Nat.le_of_add_left_le h0
+      simp [h1]
+
+      sorry
+    }
+    { simp [h0]
+      simp [Expr.instantiate]
+      by_cases h1 : depth ≤ i
+      { simp [h1]
+
+        cases h2 : mb[i - depth]? with
+        | some eb =>
+          simp
+          have h3 := Expr.list_instantiate_get_some_preservation offset ma (i - depth) h2
+          simp [h3]
+          apply Expr.instantiate_shift_vars_zero_inside_out
+        | none =>
+          simp
+          have h3 := Expr.list_instantiate_get_none_preservation offset ma (i - depth) h2
+          simp [h3]
+
+          rw [Expr.list_instantiate_length_eq]
+          simp [Expr.instantiate]
+          intro h4
+          apply False.elim
+          apply h0 ; clear h0
+
+          have h5 : List.length mb ≤ i - depth := by
+            exact Iff.mp List.getElem?_eq_none_iff h2
+          have h6 : List.length mb + depth ≤ i := by exact Nat.add_le_of_le_sub h1 h5
+
+          have h7 : List.length mb ≤ i := by exact Nat.le_of_add_right_le h6
+
+          have h8 : offset + depth + List.length mb ≤ i := by
+            exact Nat.add_le_of_le_sub h7 h4
+
+          have h9 :
+            offset + depth + List.length mb =
+            offset + List.length mb  + depth
+          := by exact Nat.add_right_comm offset depth (List.length mb)
+
+          exact le_of_eq_of_le (Eq.symm h9) h8
+      }
+      { simp [h1]
+        simp [Expr.instantiate]
+        intro h2
+        apply False.elim
+        apply h1
+        exact Nat.le_of_add_left_le h2
+      }
+    }
+
+
+    -- by_cases h0 : depth ≤ i
+    -- { simp [h0]
+
+    --   by_cases  h1 : offset + List.length mb + depth ≤ i
+    --   { simp [h1]
+    --     match
+    --       h2 : mb[i - depth]?,
+    --       h3 :ma[i - (offset + List.length mb + depth)]?
+    --     with
+    --     | some eb, some ea =>
+    --       simp
+    --       sorry
+    --     | some eb,none =>
+    --       simp
+    --       simp [Expr.instantiate]
+    --       sorry
+    --     | none, some ea =>
+    --       simp
+    --       simp [Expr.instantiate]
+    --       sorry
+    --     | none, none =>
+    --       simp
+    --       simp [Expr.instantiate]
+    --       have h4 : List.length mb ≤ i - depth := by
+    --         exact Iff.mp List.getElem?_eq_none_iff h2
+
+    --       have h5 : List.length mb + depth ≤ i := by
+    --         exact Nat.add_le_of_le_sub h0 h4
+
+    --       have h6 : depth ≤ i - List.length mb := by
+    --         exact Nat.le_sub_of_add_le' h5
+
+
+    --       have h7 : List.length ma ≤ i - (offset + List.length mb + depth) := by
+    --         exact Iff.mp List.getElem?_eq_none_iff h3
+
+
+
+    --       -- have h5 :
+    --       --   offset + depth + List.length mb ≤ 1
+    --       -- := by exact?
+
+    --       sorry
+    --   }
+    --   { simp [h1]
+
+    --     sorry
+    --   }
+    -- }
+    -- { simp [h0]
+    --   have h1 : ¬ offset + List.length mb + depth ≤ i  := by
+    --     intro h
+    --     apply h0
+    --     exact Nat.le_of_add_left_le h
+    --   simp [h1]
+    --   sorry
+    -- }
+  | _ => sorry
+end
+
+theorem  Expr.instantiate_zero_inside_out offset ma mb e:
   (Expr.instantiate offset ma (Expr.instantiate 0 mb e)) =
   (Expr.instantiate 0
     (Expr.list_instantiate offset ma mb)
     (Expr.instantiate (offset + List.length mb) ma e)
   )
-:= by sorry
+:= by
+  have h0 : offset = offset + 0 := by rfl
+  rw [h0]
+  apply Expr.instantiate_inside_out
 
 mutual
 
@@ -1546,7 +1760,7 @@ mutual
 
   | @pattern_match body body' aa aa' pp mm' f step_body step_aa matching'' =>
     simp [Expr.instantiate, List.function_instantiate]
-    rw [Expr.instantiate_inside_out]
+    rw [Expr.instantiate_zero_inside_out]
     rw [← Pattern.match_count_eq]
     apply ParStep.pattern_match
     { apply ParStep.instantiate step_arg step_body matching matching' }
@@ -1559,7 +1773,7 @@ mutual
     apply ParStep.skip
     { apply ParFunStep.instantiate step_arg step_f matching matching' }
     { apply ParStep.instantiate step_arg step_aa matching matching'}
-    { apply Expr.is_value_instantiator_preservation isval }
+    { apply Expr.is_value_instantiate_preservation isval }
     { apply Pattern.skip_instantiate_preservation nomatching }
   | @anno e e' t step_e =>
     simp [Expr.instantiate]
@@ -1575,7 +1789,7 @@ mutual
     apply ParStep.instantiate step_arg step_body matching matching'
   | @recycle e e' x step_e =>
     simp [Expr.instantiate, List.function_instantiate]
-    rw [Expr.instantiate_inside_out]
+    rw [Expr.instantiate_zero_inside_out]
     apply ParStep.recycle
     apply ParStep.instantiate step_arg step_e matching matching'
 

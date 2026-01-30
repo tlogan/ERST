@@ -1510,6 +1510,20 @@ def Expr.list_instantiate (offset : Nat) (m : List Expr): List Expr → List Exp
 | e :: es =>
   Expr.instantiate offset m e :: (Expr.list_instantiate offset m es)
 
+theorem Expr.list_instantiate_length_eq offset d m:
+  List.length (Expr.list_instantiate offset d m) = List.length m
+:= by sorry
+
+theorem Expr.list_instantiate_get_some_preservation offset d (i : Nat):
+  m[i]? = some arg →
+  (Expr.list_instantiate offset d m)[i]? = some (Expr.instantiate offset d arg)
+:= by sorry
+
+theorem Expr.list_instantiate_get_none_preservation offset d (i : Nat):
+  m[i]? = none →
+  (Expr.list_instantiate offset d m)[i]? = none
+:= by sorry
+
 def Expr.liberate_vars (p : Pat) (e : Expr) : Expr :=
   let xs := Pat.index_vars p
   let fvs := List.map (fun x => Expr.fvar x) xs
