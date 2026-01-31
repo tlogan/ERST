@@ -1492,31 +1492,34 @@ theorem Expr.shift_vars_add :
   Expr.shift_vars threshold d (Expr.shift_vars threshold o e)
 := by sorry
 
-mutual
-  -- theorem Expr.record_shift_vars_instantiate_inside_out threshold depth offset m r:
-  --   List.record_shift_vars (threshold + depth) offset (List.record_instantiate depth m r)
-  --   =
-  --   List.record_instantiate depth
-  --     (Expr.list_shift_vars threshold offset m)
-  --     (List.record_shift_vars (threshold + List.length m + depth) offset r)
-  -- := by cases r with
-  -- | nil =>
-  --   simp [List.record_shift_vars, List.record_instantiate]
-  -- | cons le r =>
-  --   have (l,e) := le
-  --   simp [List.record_shift_vars, List.record_instantiate]
-  --   apply And.intro
-  --   { apply Expr.shift_vars_instantiate_inside_out }
-  --   { apply Expr.record_shift_vars_instantiate_inside_out }
 
-  theorem Expr.function_instantiate_shift_vars_inside_out offset depth m f :
-    List.function_instantiate (offset + depth) m (List.function_shift_vars 0 depth f)
+theorem Expr.shift_vars_level_drop :
+  Expr.shift_vars level depth (Expr.shift_vars 0 (offset + level) e) =
+  Expr.shift_vars 0 depth (Expr.shift_vars 0 (offset + level) e)
+:= by sorry
+
+mutual
+
+  theorem Expr.record_instantiate_shift_vars_inside_out offset depth level m r :
+    List.record_instantiate (offset + depth + level) m (List.record_shift_vars level depth r)
     =
-    List.function_shift_vars 0 depth (List.function_instantiate offset m f)
-  ---------------------------------------------------------------------------------------
-    -- List.function_instantiate (offset + level + depth) m (List.function_shift_vars 0 depth f)
-    -- =
-    -- List.function_shift_vars 0 depth (List.function_instantiate (offset + level) m f)
+    List.record_shift_vars level depth (List.record_instantiate (offset + level) m r)
+  := by cases r with
+  | nil =>
+    simp [List.record_instantiate, List.record_shift_vars]
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.record_instantiate,List.record_shift_vars]
+    apply And.intro
+    { apply Expr.instantiate_shift_vars_inside_out
+    }
+    { apply Expr.record_instantiate_shift_vars_inside_out }
+
+
+  theorem Expr.function_instantiate_shift_vars_inside_out offset depth level m f :
+    List.function_instantiate (offset + depth + level) m (List.function_shift_vars level depth f)
+    =
+    List.function_shift_vars level depth (List.function_instantiate (offset + level) m f)
   := by cases f with
   | nil =>
     simp [List.function_instantiate, List.function_shift_vars]
@@ -1525,81 +1528,149 @@ mutual
     simp [List.function_instantiate,List.function_shift_vars]
     apply And.intro
     {
-      -- have h0 :
-      --   offset + level + depth + Pat.count_vars p
-      --   =
-      --   offset + level + Pat.count_vars p + depth
-      -- := by exact Nat.add_right_comm (offset + level) depth (Pat.count_vars p)
-      -- rw [h0]
 
-      -- have h1 :
-      --   offset + level + Pat.count_vars p
-      --   =
-      --   offset + (level + Pat.count_vars p)
-      -- := by exact Nat.add_assoc offset level (Pat.count_vars p)
-      -- rw [h1]
+      have h0 :
+        offset + depth + level + Pat.count_vars p
+        =
+        offset + depth + (level + Pat.count_vars p)
+      := by exact Nat.add_assoc (offset + depth) level (Pat.count_vars p)
+      rw [h0]
+
+      have h1 :
+        offset + level + Pat.count_vars p
+        =
+        offset + (level + Pat.count_vars p)
+      := by exact Nat.add_assoc offset level (Pat.count_vars p)
+      rw [h1]
 
 
-      -- have h2 :
-      --   threshold + level + Pat.count_vars p
-      --   =
-      --   threshold + (level + Pat.count_vars p)
-      -- := by exact Nat.add_assoc threshold level (Pat.count_vars p)
-      -- rw [h2]
-      -- apply Expr.instantiate_shift_vars_inside_out
-      sorry
+
+      apply Expr.instantiate_shift_vars_inside_out
     }
     { apply Expr.function_instantiate_shift_vars_inside_out }
 
 
-  theorem Expr.instantiate_shift_vars_inside_out offset depth m e :
-    Expr.instantiate (offset + depth) m (Expr.shift_vars 0 depth e) =
-    Expr.shift_vars 0 depth (Expr.instantiate offset m e)
+
+  theorem Expr.instantiate_shift_vars_inside_out offset depth level m e :
+    Expr.instantiate (offset + depth + level) m (Expr.shift_vars level depth e)
+    =
+    Expr.shift_vars level depth (Expr.instantiate (offset + level) m e)
   := by cases e with
   | bvar i x =>
     simp [Expr.shift_vars, Expr.instantiate]
-    by_cases h1 : offset ≤ i
-    { simp [h1]
+    by_cases h0 : level ≤ i
+    { simp [h0]
+      simp [Expr.instantiate]
+      by_cases h1 : offset + depth + level ≤ i + depth
+      { simp [h1]
 
-      have h2 :
-        i + depth - (offset + depth)
-        =
-        i - offset
-      := by exact Nat.add_sub_add_right i depth offset
-      rw [h2]
+        have h2 :
+          offset + depth + level - depth ≤ i
+        := by exact Nat.sub_le_of_le_add h1
 
-      cases h3 : m[i - offset]? with
-      | some e  =>
-        simp
-        apply Expr.shift_vars_add
-      | none =>
-        simp
-        simp [Expr.shift_vars]
-        have h4 : List.length m ≤ i - offset := by
-          exact Iff.mp List.getElem?_eq_none_iff h3
+        have h3 :
+          offset + depth + level =
+          offset + level + depth
+        := by exact Nat.add_right_comm offset depth level
+        rw [h3] at h2
 
-        have h5 : List.length m + offset ≤ i := by
-          exact Nat.add_le_of_le_sub h1 h4
+        have h4 :
+          offset + level + depth - depth =
+          offset + level
+        := by exact Nat.add_sub_self_right (offset + level) depth
 
-        have h6 : List.length m ≤ i := by
-          exact Nat.le_of_add_right_le h5
+        rw [h4] at h2
+        simp [h2]
 
-        exact Nat.sub_add_comm h6
+        rw [h3]
+        have h5 :
+          i + depth - (offset + level + depth) =
+          i - (offset + level)
+        := by exact Nat.add_sub_add_right i depth (offset + level)
+        simp [h5]
+
+        cases h6 : m[i - (offset + level)]? with
+        | some e =>
+          simp
+          rw [Expr.shift_vars_level_drop]
+          apply Expr.shift_vars_add
+        | none =>
+          simp
+          simp [Expr.shift_vars]
+          have h7 : List.length m ≤ i - (offset + level) := by
+            exact Iff.mp List.getElem?_eq_none_iff h6
+
+
+          have h8 : List.length m + (offset + level) ≤ i := by
+            exact Nat.add_le_of_le_sub h2 h7
+
+          have h9 :
+              (offset + level) =
+              (level + offset)
+          := by exact Nat.add_comm offset level
+          rw [h9] at  h8
+
+          rw [←Nat.add_assoc] at h8
+
+          have h10 : List.length m + level ≤ i := by
+            exact Nat.le_of_add_right_le h8
+
+          have h11 : level ≤ i -  List.length m := by
+            exact Nat.le_sub_of_add_le' h10
+
+          simp [h11]
+
+          have h12 : List.length m ≤ i := by exact Nat.le_of_add_right_le h10
+
+          exact Nat.sub_add_comm h12
+
+      }
+      { simp [h1]
+        sorry
+      }
     }
-    { simp [h1]
-      simp [Expr.shift_vars]
+    { simp [h0]
+      simp [Expr.instantiate]
+      sorry
     }
+  | fvar x =>
+    simp [Expr.instantiate, Expr.shift_vars]
+  | iso l body =>
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply Expr.instantiate_shift_vars_inside_out
+  | record r =>
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply Expr.record_instantiate_shift_vars_inside_out
+
   | function f =>
-    simp [Expr.shift_vars, Expr.instantiate]
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply Expr.function_instantiate_shift_vars_inside_out
 
-    sorry
-  | _ => sorry
+  | app ef ea =>
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply And.intro
+    { apply Expr.instantiate_shift_vars_inside_out }
+    { apply Expr.instantiate_shift_vars_inside_out }
+
+  | anno body t =>
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply Expr.instantiate_shift_vars_inside_out
+
+  | loopi body =>
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply Expr.instantiate_shift_vars_inside_out
+
 end
+
 
 theorem Expr.instantiate_shift_vars_zero_inside_out offset depth m e :
   Expr.instantiate (offset + depth) m (Expr.shift_vars 0 depth e) =
   Expr.shift_vars 0 depth (Expr.instantiate offset m e)
-:= by exact instantiate_shift_vars_inside_out offset depth m e
+:= by
+  have h0 : offset + depth = offset + depth + 0 := by exact rfl
+  have h1 : offset = offset + 0 := by exact rfl
+  rw [h0,h1]
+  exact instantiate_shift_vars_inside_out (offset + 0) depth 0 m e
 
 
 theorem Expr.instantiate_miss :
@@ -1859,8 +1930,8 @@ mutual
 end
 
 theorem  Expr.instantiate_zero_inside_out offset ma mb e:
-  (Expr.instantiate offset ma (Expr.instantiate mb e)) =
-  (Expr.instantiate
+  (Expr.instantiate offset ma (Expr.instantiate 0 mb e)) =
+  (Expr.instantiate 0
     (Expr.list_instantiate offset ma mb)
     (Expr.instantiate (offset + List.length mb) ma e)
   )
