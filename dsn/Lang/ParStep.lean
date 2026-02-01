@@ -1880,11 +1880,183 @@ theorem Expr.instantiate_shift_vars_zero_inside_out offset depth m e :
   exact instantiate_shift_vars_inside_out (offset + 0) depth 0 m e
 
 
-theorem Expr.instantiate_miss :
+mutual
+
+  theorem Expr.record_instantiate_miss depth level m offset r :
+    List.record_instantiate (depth + level) m (List.record_shift_vars level (offset + depth + List.length m) r) =
+    List.record_shift_vars level (offset + depth) r
+  := by cases r with
+  | nil =>
+    simp [List.record_shift_vars, List.record_instantiate]
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.record_shift_vars, List.record_instantiate]
+    apply And.intro
+    { apply Expr.instantiate_miss
+    }
+    { apply Expr.record_instantiate_miss }
+
+  theorem Expr.function_instantiate_miss depth level m offset f :
+    List.function_instantiate (depth + level) m (List.function_shift_vars level (offset + depth + List.length m) f) =
+    List.function_shift_vars level (offset + depth) f
+  := by cases f with
+  | nil =>
+    simp [List.function_shift_vars, List.function_instantiate]
+  | cons pe f' =>
+    have (p,e) := pe
+    simp [List.function_shift_vars, List.function_instantiate]
+    apply And.intro
+    {
+
+      have h0 :
+        depth + level + Pat.count_vars p
+        =
+        depth + (level + Pat.count_vars p)
+      := by exact Nat.add_assoc depth level (Pat.count_vars p)
+      rw [h0] ; clear h0
+
+      apply Expr.instantiate_miss
+    }
+    { apply Expr.function_instantiate_miss }
+
+  theorem Expr.instantiate_miss depth level m offset e :
+    Expr.instantiate (depth + level) m (Expr.shift_vars level (offset + depth + List.length m) e)
+    =
+    (Expr.shift_vars level (offset + depth) e)
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.shift_vars]
+    by_cases h0 : level ≤ i
+    { simp [h0]
+      simp [Expr.instantiate]
+
+      have h1 : depth + level ≤ depth + i := by exact Iff.mpr Nat.add_le_add_iff_left h0
+      have h2 : depth + level ≤ depth + i + (offset + List.length m) := by
+        exact Nat.le_add_right_of_le h1
+
+      have h3 : depth + i = i + depth := by exact Nat.add_comm depth i
+
+      rw [h3] at h2
+
+      have h4 :
+        i + depth + (offset + List.length m) =
+        i + (depth + (offset + List.length m))
+      := by exact Nat.add_assoc i depth (offset + List.length m)
+
+      rw [h4] at h2
+
+      have h5 :
+        (depth + (offset + List.length m)) =
+        (depth + offset + List.length m)
+      := by exact Eq.symm (Nat.add_assoc depth offset (List.length m))
+
+      rw [h5] at h2
+      have h6 :
+        depth + offset =
+        offset + depth
+      := by exact Nat.add_comm depth offset
+      rw [h6] at h2
+      simp [h2]
+
+      have h7 : List.length m ≤  List.length m + (i + (offset + depth) - (depth + level))  := by
+        exact Nat.le_add_right (List.length m) (i + (offset + depth) - (depth + level))
+
+      have h8 : (depth + level) ≤ i + depth := by exact le_of_le_of_eq h1 h3
+      have h9 : (depth + level) ≤ i + depth + offset := by exact Nat.le_add_right_of_le h8
+
+
+      rw [Nat.add_assoc] at h9
+
+      have h10 :
+         depth + offset = offset + depth
+      := by exact h6
+
+      have h11 : (depth + level) ≤ i + (offset + depth) := by
+        exact le_of_le_of_eq h9 (congrArg (HAdd.hAdd i) h6)
+
+      have h12 :
+        List.length m + (i + (offset + depth) - (depth + level))
+        =
+        List.length m + (i + (offset + depth)) - (depth + level)
+      := by exact Eq.symm (Nat.add_sub_assoc h11 (List.length m))
+
+      rw [h12] at h7
+
+
+      have h13 :
+        List.length m + (i + (offset + depth)) =
+        i + (List.length m + (offset + depth))
+      := by exact Nat.add_left_comm (List.length m) i (offset + depth)
+      rw [h13] at h7
+
+      have h14 :
+        List.length m + (offset + depth) =
+        offset + depth + List.length m
+      := by exact Nat.add_comm (List.length m) (offset + depth)
+
+      rw [h14] at h7
+
+      have h15 : m[i + (offset + depth + List.length m) - (depth + level)]? = none := by
+        apply List.getElem?_eq_none h7
+
+      simp [h15]
+
+      have h17 :
+        List.length m ≤ offset + depth + List.length m
+      := by exact Nat.le_add_left (List.length m) (offset + depth)
+
+      have h18 :
+        i + (offset + depth + List.length m) - List.length m =
+        i + ((offset + depth + List.length m) - List.length m)
+      := by exact Nat.add_sub_assoc h17 i
+
+      simp [h18]
+    }
+    { simp [h0]
+      simp [Expr.instantiate]
+      intro h1
+      apply False.elim
+      have h2 : level ≤ i := by exact Nat.le_of_add_left_le h1
+      apply h0 h2
+    }
+
+  | fvar x =>
+    simp [Expr.instantiate, Expr.shift_vars]
+  | iso l body =>
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply Expr.instantiate_miss
+  | record r =>
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply Expr.record_instantiate_miss
+
+  | function f =>
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply Expr.function_instantiate_miss
+
+  | app ef ea =>
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply And.intro
+    { apply Expr.instantiate_miss }
+    { apply Expr.instantiate_miss }
+
+  | anno body t =>
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply Expr.instantiate_miss
+
+  | loopi body =>
+    simp [Expr.instantiate, Expr.shift_vars]
+    apply Expr.instantiate_miss
+
+end
+
+theorem Expr.instantiate_miss_zero depth m offset e :
   Expr.instantiate depth m (Expr.shift_vars 0 (offset + depth + List.length m) e)
   =
   (Expr.shift_vars 0 (offset + depth) e)
-:= by sorry
+:= by
+  have h0 : depth = depth + 0 := rfl
+  rw [h0]
+  exact instantiate_miss depth 0 m offset e
 
 mutual
 
@@ -1986,7 +2158,7 @@ mutual
         simp
         rw [h9]
         rw [←Expr.list_instantiate_length_eq]
-        rw [Expr.instantiate_miss]
+        rw [Expr.instantiate_miss_zero]
 
       | none =>
         simp
