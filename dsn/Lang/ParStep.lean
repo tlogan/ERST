@@ -1040,10 +1040,47 @@ mutual
       simp [Pattern.match]
 end
 
-theorem Expr.is_value_shift_vars_preservation :
-  (Expr.is_value e) →
-  ∀ threshold offset, (Expr.is_value (Expr.shift_vars threshold offset e))
-:= by sorry
+mutual
+
+  theorem Expr.record_is_value_shift_vars_preservation :
+    List.is_record_value r = true →
+    ∀ (threshold offset : ℕ), List.is_record_value (List.record_shift_vars threshold offset r) = true
+  := by cases r with
+  | nil =>
+    simp [List.is_record_value, List.record_shift_vars]
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.is_record_value, List.record_shift_vars]
+    intro h0 h1 h2 threshold offset
+    apply And.intro
+    {
+      apply And.intro
+      { exact record_shift_vars_keys_is_fresh_key_preservation h0 }
+      { apply Expr.is_value_shift_vars_preservation h1 }
+    }
+    { apply Expr.record_is_value_shift_vars_preservation h2 }
+
+
+  theorem Expr.is_value_shift_vars_preservation :
+    (Expr.is_value e) →
+    ∀ threshold offset, (Expr.is_value (Expr.shift_vars threshold offset e))
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.is_value]
+  | fvar x =>
+    simp [Expr.is_value]
+  | iso l body =>
+    simp [Expr.is_value]
+    intro isval threshold offset
+    apply Expr.is_value_shift_vars_preservation isval
+  | record r =>
+    simp [Expr.is_value, Expr.shift_vars]
+    apply Expr.record_is_value_shift_vars_preservation
+  | function f =>
+    simp [Expr.is_value, Expr.shift_vars]
+  | _ =>
+    simp [Expr.is_value, Expr.shift_vars]
+end
 
 theorem Pattern.skip_shift_vars_preservation :
   Pattern.match arg p = none →
