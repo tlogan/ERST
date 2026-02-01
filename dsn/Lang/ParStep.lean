@@ -572,6 +572,19 @@ theorem Expr.record_shift_vars_keys_is_fresh_key_preservation :
   simp [h0]
   apply ih h1
 
+theorem Expr.record_shift_vars_keys_is_fresh_key_reflection :
+  List.is_fresh_key l  (List.record_shift_vars threshold offset r) →
+  List.is_fresh_key l r
+:= by induction r with
+| nil =>
+  simp [List.record_shift_vars, List.is_fresh_key]
+| cons le r' ih =>
+  have (l',e) := le
+  simp [List.record_shift_vars, List.is_fresh_key]
+  intro h0 h1
+  simp [h0]
+  apply ih h1
+
 
 theorem Expr.record_shift_vars_keys_unique_preservation :
   List.keys_unique r →
@@ -585,6 +598,20 @@ theorem Expr.record_shift_vars_keys_unique_preservation :
   intro h0 h1
   apply And.intro
   { exact record_shift_vars_keys_is_fresh_key_preservation h0 }
+  { apply ih h1 }
+
+theorem Expr.record_shift_vars_keys_unique_reflection :
+  List.keys_unique (List.record_shift_vars threshold offset r) →
+  List.keys_unique r
+:= by induction r with
+| nil =>
+  simp [List.record_shift_vars, List.keys_unique]
+| cons le r' ih =>
+  have (l,e) := le
+  simp [List.record_shift_vars, List.keys_unique]
+  intro h0 h1
+  apply And.intro
+  { exact record_shift_vars_keys_is_fresh_key_reflection h0 }
   { apply ih h1 }
 
 theorem ParStep.skip_reduction
@@ -950,8 +977,8 @@ theorem Expr.shift_vars_instantiate_zero_inside_out threshold offset m e :
   rw [h0]
   rw [Expr.shift_vars_instantiate_inside_out threshold 0 offset m e]
   rfl
-mutual
 
+mutual
   theorem Pattern.match_entry_shift_vars_preservation :
     Pattern.match_entry l p r = some m →
     ∀ threshold offset,
@@ -1041,6 +1068,92 @@ mutual
 end
 
 mutual
+  theorem Pattern.match_entry_shift_vars_reflection :
+    Pattern.match_entry l p (List.record_shift_vars threshold offset r) = some m' →
+    ∃ m, Pattern.match_entry l p r = some m
+  := by cases r with
+  -- | nil =>
+  --   simp [Pattern.match_entry]
+  -- | cons le r' =>
+  --   have (l',e) := le
+  --   simp [*,List.record_shift_vars, Pattern.match_entry]
+  --   by_cases h0 : l' = l
+  --   { simp [*]
+  --     intro h1 threshold offset
+  --     apply Pattern.match_shift_vars_reflection h1
+  --   }
+  --   { simp [*]
+  --     intro h1 threshold offset
+  --     apply Pattern.match_entry_shift_vars_reflection h1
+  --   }
+  | _ => sorry
+
+  theorem Pattern.match_record_shift_vars_reflection :
+    Pattern.match_record (List.record_shift_vars threshold offset r) ps = some m' →
+    ∃ m , Pattern.match_record r ps = some m
+  := by cases ps with
+  -- | nil =>
+  --   simp [Pattern.match_record]
+  --   intro h0
+  --   simp [*, Expr.list_shift_vars]
+  -- | cons lp ps' =>
+  --   have (l,p) := lp
+  --   simp [Pattern.match_record]
+
+  --   match
+  --     h0 : (Pattern.match_entry l p r),
+  --     h1 : (Pattern.match_record r ps')
+  --   with
+  --   | some m0, some m1 =>
+  --     simp
+  --     intro h3 h4 threshold offset
+  --     simp [h3]
+
+  --     have ih0 := Pattern.match_entry_shift_vars_reflection h0 threshold offset
+  --     have ih1 := Pattern.match_record_shift_vars_reflection h1 threshold offset
+  --     simp [ih0,ih1,←h4]
+  --     exact Expr.list_shift_vars_concat
+  --   | none,_ =>
+  --     simp
+  --   | _,none =>
+  --     simp
+    | _ => sorry
+
+  theorem Pattern.match_shift_vars_reflection :
+    Pattern.match arg p = some m →
+    ∀ threshold offset,
+    Pattern.match (Expr.shift_vars threshold offset arg) p
+    =
+    some (Expr.list_shift_vars threshold offset m)
+  := by cases p with
+  -- | var x  =>
+  --   simp [Pattern.match]
+  --   intro h0
+  --   simp [←h0]
+  --   simp [Expr.list_shift_vars]
+  -- | iso l pb =>
+  --   cases arg with
+  --   | iso l' b =>
+  --     simp [Pattern.match, Expr.shift_vars]
+  --     intro h0 h1 threshold offset
+  --     simp [*]
+  --     apply Pattern.match_shift_vars_reflection h1 threshold offset
+  --   | _ =>
+  --     simp [Pattern.match]
+  -- | record ps =>
+  --   cases arg with
+  --   | record r =>
+  --     simp [Pattern.match, Expr.shift_vars]
+  --     intro h0 h1 threshold offset
+  --     apply And.intro
+  --     { exact Expr.record_shift_vars_keys_unique_reflection h0 }
+  --     { apply Pattern.match_record_shift_vars_reflection h1}
+  --   | _ =>
+  --     simp [Pattern.match]
+  | _ => sorry
+end
+
+mutual
 
   theorem Expr.record_is_value_shift_vars_preservation :
     List.is_record_value r = true →
@@ -1082,10 +1195,58 @@ mutual
     simp [Expr.is_value, Expr.shift_vars]
 end
 
-theorem Pattern.skip_shift_vars_preservation :
-  Pattern.match arg p = none →
-  ∀ threshold offset, Pattern.match (Expr.shift_vars threshold offset arg) p = none
-:= by sorry
+mutual
+
+  theorem Pattern.record_skip_shift_vars_preservation :
+    match_record r ps = none →
+    ∀ (threshold offset : ℕ),
+    match_record (List.record_shift_vars threshold offset r) ps = none
+  := by cases ps with
+  | nil =>
+    simp [Pattern.match_record]
+  | cons lp ps' =>
+    have (l,p) := lp
+    simp [Pattern.match_record]
+
+    intro h0 threshold offset h1 m0' h2 m1' h3
+    have ⟨m0,h4⟩ := Pattern.match_entry_shift_vars_reflection h2
+    have ⟨m1,h5⟩ := Pattern.match_record_shift_vars_reflection h3
+    apply h0 h1 _ h4 _ h5
+
+
+  theorem Pattern.skip_shift_vars_preservation :
+    Pattern.match arg p = none →
+    ∀ threshold offset, Pattern.match (Expr.shift_vars threshold offset arg) p = none
+  := by cases p with
+  | var x =>
+    simp [Pattern.match]
+  | iso l bp =>
+    cases arg with
+    | bvar i x =>
+      simp [Expr.shift_vars, Pattern.match]
+      intro threshold offset
+      by_cases h0 : threshold ≤ i <;> simp[h0, Pattern.match]
+    | iso l' body =>
+      simp [Expr.shift_vars, Pattern.match]
+      intro h0 threshold offset h1
+      apply Pattern.skip_shift_vars_preservation (h0 h1)
+    | _ =>
+      simp [Expr.shift_vars, Pattern.match]
+  | record ps =>
+    cases arg with
+    | bvar i x =>
+      simp [Expr.shift_vars, Pattern.match]
+      intro threshold offset
+      by_cases h0 : threshold ≤ i <;> simp[h0, Pattern.match]
+    | record r =>
+      simp [Expr.shift_vars, Pattern.match]
+      intro h0 threshold offset h2
+      apply Pattern.record_skip_shift_vars_preservation
+      apply h0
+      exact Expr.record_shift_vars_keys_unique_reflection h2
+    | _ =>
+      simp [Expr.shift_vars, Pattern.match]
+end
 
 
 mutual
