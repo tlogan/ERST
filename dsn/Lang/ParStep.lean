@@ -1732,12 +1732,42 @@ mutual
 
       }
       { simp [h1]
-        sorry
+        have h2 : offset + depth + level =  offset + level + depth := by
+          exact Nat.add_right_comm offset depth level
+        rw [h2] at  h1
+
+        have h3 : ¬ offset + level ≤ i := by
+          intro h
+          apply h1
+          exact Nat.add_le_add_right h depth
+
+        simp [h3]
+        simp [Expr.shift_vars]
+        intro h4
+
+        have h5 : ¬ level ≤ i := by exact Nat.not_le_of_lt h4
+        apply False.elim
+        apply h5 h0
+
       }
     }
     { simp [h0]
       simp [Expr.instantiate]
-      sorry
+
+      have h1 : ¬ offset + level ≤ i := by
+        intro h
+        apply h0
+        exact Nat.le_of_add_left_le h
+      simp [h1]
+      simp [Expr.shift_vars]
+      simp [h0]
+      intro h2
+      apply False.elim
+      have  h3 : offset + depth + level = offset + level + depth := by
+        exact Nat.add_right_comm offset depth level
+      rw [h3] at h2
+      have h4 : offset + level ≤ i := by exact Nat.le_of_add_right_le h2
+      apply h1 h4
     }
   | fvar x =>
     simp [Expr.instantiate, Expr.shift_vars]
