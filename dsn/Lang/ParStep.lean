@@ -1493,10 +1493,116 @@ theorem Expr.shift_vars_add :
 := by sorry
 
 
-theorem Expr.shift_vars_level_drop :
+mutual
+  theorem Expr.record_shift_vars_level_drop level z depth offset r :
+    List.record_shift_vars (level + z) depth (List.record_shift_vars z (offset + level) r) =
+    List.record_shift_vars z depth (List.record_shift_vars z (offset + level) r)
+  := by cases r with
+  | nil =>
+    simp [List.record_shift_vars]
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.record_shift_vars]
+    apply And.intro
+    { apply Expr.shift_vars_level_drop }
+    { apply Expr.record_shift_vars_level_drop }
+
+  theorem Expr.function_shift_vars_level_drop level z depth offset f :
+    List.function_shift_vars (level + z) depth (List.function_shift_vars z (offset + level) f) =
+    List.function_shift_vars z depth (List.function_shift_vars z (offset + level) f)
+  := by cases f with
+  | nil =>
+    simp [List.function_shift_vars]
+  | cons pe f' =>
+    have (p,e) := pe
+    simp [List.function_shift_vars]
+    apply And.intro
+    {
+      have h0 : level + z + Pat.count_vars p = level + (z + Pat.count_vars p) := by
+        exact Nat.add_assoc level z (Pat.count_vars p)
+      rw [h0]
+      apply Expr.shift_vars_level_drop
+    }
+    { apply Expr.function_shift_vars_level_drop }
+
+
+  theorem Expr.shift_vars_level_drop level z depth offset e :
+    Expr.shift_vars (level + z) depth (Expr.shift_vars z (offset + level) e) =
+    Expr.shift_vars z depth (Expr.shift_vars z (offset + level) e)
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.shift_vars]
+    by_cases h0 : z ≤ i
+    { simp [h0]
+      simp [Expr.shift_vars]
+
+      have h1 : z ≤ i + (offset + level) := by exact Nat.le_add_right_of_le h0
+      simp [h1]
+      intro h2
+
+      apply False.elim
+
+      have h3 : i + (offset + level) = i + offset + level := by
+        exact Eq.symm (Nat.add_assoc i offset level)
+      rw [h3] at h2
+
+      have h4 : i + offset + level = level + (i + offset) := by
+        exact Eq.symm (Nat.add_comm level (i + offset))
+      rw [h4] at h2
+
+      have h5 : i + offset < z := by exact Nat.lt_of_add_lt_add_left h2
+
+      have  h6 : i < z := by exact Nat.lt_of_add_right_lt h5
+
+      have h7 : ¬ z ≤ i := by exact Nat.not_le_of_lt h6
+
+      apply h7 h0
+
+    }
+    { simp [h0]
+      simp [Expr.shift_vars]
+      simp [h0]
+      intro h1
+      apply False.elim
+      have h2 : z ≤ i := by exact Nat.le_of_add_left_le h1
+      apply h0 h2
+    }
+  | fvar x =>
+    simp [Expr.shift_vars]
+  | iso l body =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_level_drop
+  | record r =>
+    simp [Expr.shift_vars]
+    apply Expr.record_shift_vars_level_drop
+
+  | function f =>
+    simp [Expr.shift_vars]
+    apply Expr.function_shift_vars_level_drop
+
+  | app ef ea =>
+    simp [Expr.shift_vars]
+    apply And.intro
+    { apply Expr.shift_vars_level_drop }
+    { apply Expr.shift_vars_level_drop }
+
+  | anno body t =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_level_drop
+
+  | loopi body =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_level_drop
+end
+
+theorem Expr.shift_vars_level_drop_to_zero :
   Expr.shift_vars level depth (Expr.shift_vars 0 (offset + level) e) =
   Expr.shift_vars 0 depth (Expr.shift_vars 0 (offset + level) e)
-:= by sorry
+:= by
+  have h0 : level = level + 0 := rfl
+  rw [h0]
+  rw [←Nat.add_assoc]
+  exact shift_vars_level_drop level 0 depth offset e
 
 mutual
 
@@ -1592,7 +1698,7 @@ mutual
         cases h6 : m[i - (offset + level)]? with
         | some e =>
           simp
-          rw [Expr.shift_vars_level_drop]
+          rw [Expr.shift_vars_level_drop_to_zero]
           apply Expr.shift_vars_add
         | none =>
           simp
