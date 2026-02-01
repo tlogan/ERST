@@ -1487,10 +1487,81 @@ theorem Expr.is_value_instantiate_preservation :
   ∀ offset m, (Expr.is_value (Expr.instantiate offset m e))
 := by sorry
 
-theorem Expr.shift_vars_add :
-  Expr.shift_vars threshold (o + d) e =
-  Expr.shift_vars threshold d (Expr.shift_vars threshold o e)
-:= by sorry
+mutual
+
+  theorem Expr.record_shift_vars_add threshold o d r :
+    List.record_shift_vars threshold (o + d) r =
+    List.record_shift_vars threshold d (List.record_shift_vars threshold o r)
+  := by cases r with
+  | nil =>
+    simp [List.record_shift_vars]
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.record_shift_vars]
+    apply And.intro
+    { apply Expr.shift_vars_add }
+    { apply Expr.record_shift_vars_add }
+
+  theorem Expr.function_shift_vars_add threshold o d f :
+    List.function_shift_vars threshold (o + d) f =
+    List.function_shift_vars threshold d (List.function_shift_vars threshold o f)
+  := by cases f with
+  | nil =>
+    simp [List.function_shift_vars]
+  | cons pe f' =>
+    have (p,e) := pe
+    simp [List.function_shift_vars]
+    apply And.intro
+    { apply Expr.shift_vars_add }
+    { apply Expr.function_shift_vars_add }
+
+  theorem Expr.shift_vars_add threshold o d e :
+    Expr.shift_vars threshold (o + d) e =
+    Expr.shift_vars threshold d (Expr.shift_vars threshold o e)
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.shift_vars]
+    by_cases h0 : threshold ≤ i
+    { simp [h0]
+      simp [Expr.shift_vars]
+
+      have h1 : threshold ≤ i + o := by exact Nat.le_add_right_of_le h0
+      simp [h1]
+      exact Eq.symm (Nat.add_assoc i o d)
+    }
+    { simp [h0]
+      simp [Expr.shift_vars]
+      intro h1
+      apply False.elim
+      apply h0 h1
+    }
+  | fvar x =>
+    simp [Expr.shift_vars]
+  | iso l body =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_add
+  | record r =>
+    simp [Expr.shift_vars]
+    apply Expr.record_shift_vars_add
+
+  | function f =>
+    simp [Expr.shift_vars]
+    apply Expr.function_shift_vars_add
+
+  | app ef ea =>
+    simp [Expr.shift_vars]
+    apply And.intro
+    { apply Expr.shift_vars_add }
+    { apply Expr.shift_vars_add }
+
+  | anno body t =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_add
+
+  | loopi body =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_add
+end
 
 
 mutual
