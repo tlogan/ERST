@@ -1684,6 +1684,7 @@ mutual
       | some e0, some e0' =>
         simp
         intro step0
+
         sorry
       | some e0, none =>
         simp
@@ -1829,15 +1830,37 @@ mutual
     }
     {
       simp [Expr.instantiate]
-      simp [hh0]
+      have hh0' := hh0
+      rw [len0] at hh0'
+      simp [hh0,hh0']
       by_cases hh1 : offset ≤ i
       { simp [hh1]
-        sorry
+
+        have h0 : ¬ List.length m0 ≤ i - offset := by
+          intro h
+          apply hh0
+          exact Iff.mp (Nat.le_sub_iff_add_le' hh1) h
+
+        have h0' : ¬ List.length m0' ≤ i - offset := by
+          exact Eq.mpr_not (congrFun (congrArg LE.le (id (Eq.symm len0))) (i - offset)) h0
+
+        apply Nat.lt_of_not_le at h0
+        apply Nat.lt_of_not_le at h0'
+
+        have h1 := Iff.mpr (List.getElem?_eq_some_getElem_iff h0) True.intro
+        have h1' := Iff.mpr (List.getElem?_eq_some_getElem_iff h0') True.intro
+
+        simp [h1,h1']
+
+
+        intro h2 h3
+        rw [List.getElem?_append_left h0]
+        rw [List.getElem?_append_left h0']
+
+        simp [h1, h1']
+        apply h2
       }
-      { simp [hh1]
-        intro h0 h1
-        apply ParStep.refl
-      }
+      { simp [hh1] }
     }
 
 
@@ -1918,8 +1941,10 @@ mutual
       apply ParStep.instantiate_concat_preservation h9 h10
       { apply ParRcdStep.entry_instantiator step h5 h7 }
       {
+
         rw [← Pattern.match_entry_count_eq h5]
         rw [← Pattern.match_entry_count_eq h7]
+
         apply ParRcdStep.instantiator step h6 h8
       }
 
