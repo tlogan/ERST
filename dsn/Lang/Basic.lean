@@ -1361,7 +1361,25 @@ theorem Typ.diff_drop {l body t l_sub body_sub} :
   l ≠ l_sub →
   (.iso l body) = t →
   (.iso l body) = Typ.do_diff t (Typ.capture (Typ.iso l_sub body_sub))
-:= by sorry
+:= by
+  intro h0 h1
+  rw [←h1]
+  simp [Typ.capture, Typ.free_vars]
+  by_cases h2 : Typ.free_vars body_sub = []
+
+  { simp [h2]
+    simp [Typ.do_diff]
+    intro h3
+    apply False.elim
+    apply h0 h3
+  }
+  {
+    simp [h2]
+    simp [Typ.do_diff]
+    intro h3
+    apply False.elim
+    apply h0 h3
+  }
 
 def List.typ_diff (t : Typ) : List Typ → Typ
 | .nil => t
@@ -1391,10 +1409,73 @@ def Typ.enrich : Typ → Typ
 -- <nil/> | <cons> (x, xs)
 
 
+example (id : String) (xs ys : List String):
+  id ∈ (xs ∪ ys) →
+  id ∈ xs ∨ id ∈ ys
+:= by
+  intro h0
+  exact Iff.mp List.mem_union_iff h0
+
+theorem Typ.free_vars_containment_left :
+  (l,r) ∈ ys → Typ.free_vars l ⊆ List.pair_typ_free_vars ys
+:= by induction ys with
+| nil =>
+  simp [List.pair_typ_free_vars]
+| cons y ys' ih =>
+  simp [List.pair_typ_free_vars]
+  intro h0 id h1
+  apply Iff.mpr List.mem_union_iff
+  cases h0 with
+  | inl h2 =>
+    apply Or.inl
+    apply Iff.mpr List.mem_union_iff
+    apply Or.inl
+    simp [←h2]
+    apply h1
+  | inr h2 =>
+    apply Or.inr
+    apply ih h2 h1
+
+theorem Typ.free_vars_containment_right :
+  (l,r) ∈ ys → Typ.free_vars r ⊆ List.pair_typ_free_vars ys
+:= by induction ys with
+| nil =>
+  simp [List.pair_typ_free_vars]
+| cons y ys' ih =>
+  simp [List.pair_typ_free_vars]
+  intro h0 id h1
+  apply Iff.mpr List.mem_union_iff
+  cases h0 with
+  | inl h2 =>
+    apply Or.inl
+    apply Iff.mpr List.mem_union_iff
+    apply Or.inr
+    simp [←h2]
+    apply h1
+  | inr h2 =>
+    apply Or.inr
+    apply ih h2 h1
+
 theorem List.pair_typ_free_vars_containment {xs ys : List (Typ × Typ)} :
   xs ⊆ ys → List.pair_typ_free_vars xs ⊆ List.pair_typ_free_vars ys
-:= by sorry
+:= by induction xs with
+| nil =>
+  simp [List.pair_typ_free_vars]
+| cons x xs' ih =>
+  simp [List.pair_typ_free_vars]
+  intro h0 h1 id h3
 
+  apply Iff.mp List.mem_union_iff at h3
+  cases h3 with
+  | inl h4 =>
+    apply Iff.mp List.mem_union_iff at h4
+    cases h4 with
+    | inl h5 =>
+      apply Typ.free_vars_containment_left h0 h5
+    | inr h5 =>
+      apply Typ.free_vars_containment_right h0 h5
+  | inr h4 =>
+    apply ih h1 h4
 
 
 def Expr.free_vars : Expr → List String
@@ -1452,7 +1533,12 @@ theorem List.get_none_add_preservation {α} (m : List α) (i : Nat) (i' : Nat):
 
 theorem Expr.list_shift_vars_length_eq threshold offset m:
   List.length (Expr.list_shift_vars threshold offset m) = List.length m
-:= by sorry
+:= by induction m with
+| nil =>
+  simp [Expr.list_shift_vars]
+| cons e m' ih =>
+  simp [Expr.list_shift_vars]
+  apply ih
 
 
 theorem Expr.list_shift_vars_concat :
@@ -1460,21 +1546,48 @@ theorem Expr.list_shift_vars_concat :
   (Expr.list_shift_vars threshold offset m1)
   =
   Expr.list_shift_vars threshold offset (m0 ++ m1)
-:= by sorry
+:= by induction m0 with
+| nil =>
+  simp [Expr.list_shift_vars]
+| cons e0 m0' ih =>
+  simp [Expr.list_shift_vars]
+  apply ih
 
-theorem Expr.list_shift_vars_get_some_preservation threshold offset (i : Nat):
+
+theorem Expr.list_shift_vars_get_some_preservation threshold offset :
+  ∀ (i : Nat),
   m[i]? = some arg →
   (Expr.list_shift_vars threshold offset m)[i]? = some (Expr.shift_vars threshold offset arg)
-:= by sorry
+:= by induction m with
+| nil =>
+  simp
+| cons e m' ih =>
+  intro i
+  simp [Expr.list_shift_vars]
+  rw [List.getElem?_cons]
+  by_cases h0 : i = 0
+  { simp [h0]
+    intro h1
+    simp [h1]
+  }
+  { simp [h0]
+    intro h1
+    rw [List.getElem?_cons]
+    simp [h0]
+    apply ih _ h1
+  }
 
-theorem Expr.list_shift_vars_get_none_preservation threshold offset (i : Nat):
+
+theorem Expr.list_shift_vars_get_none_preservation threshold offset :
+  ∀ (i : Nat),
   m[i]? = none →
   (Expr.list_shift_vars threshold offset m)[i]? = none
-:= by sorry
+:= by
+  intro i h0
+  apply Iff.mpr List.getElem?_eq_none_iff
+  rw [Expr.list_shift_vars_length_eq]
+  exact Iff.mp List.getElem?_eq_none_iff h0
 
-theorem Expr.shift_vars_zero_zero :
-  Expr.shift_vars 0 0 e = e
-:= by sorry
 
 mutual
   def List.record_instantiate (depth : Nat) (m : List Expr): List (String × Expr) → List (String × Expr)
@@ -1515,21 +1628,54 @@ theorem Expr.list_instantiate_concat :
   (Expr.list_instantiate depth d m1)
   =
   Expr.list_instantiate depth d (m0 ++ m1)
-:= by sorry
+:= by induction m0 with
+| nil =>
+  simp [Expr.list_instantiate]
+| cons e0 m0' ih =>
+  simp [Expr.list_instantiate]
+  apply ih
 
 theorem Expr.list_instantiate_length_eq offset d m:
   List.length (Expr.list_instantiate offset d m) = List.length m
-:= by sorry
+:= by induction m with
+| nil =>
+  simp [Expr.list_instantiate]
+| cons e m' ih =>
+  simp [Expr.list_instantiate]
+  apply ih
 
-theorem Expr.list_instantiate_get_some_preservation offset d (i : Nat):
+theorem Expr.list_instantiate_get_some_preservation offset d :
+  ∀ (i : Nat),
   m[i]? = some arg →
   (Expr.list_instantiate offset d m)[i]? = some (Expr.instantiate offset d arg)
-:= by sorry
+:= by induction m with
+| nil =>
+  simp
+| cons e m' ih =>
+  intro i
+  simp [Expr.list_instantiate]
+  rw [List.getElem?_cons]
+  by_cases h0 : i = 0
+  { simp [h0]
+    intro h1
+    simp [h1]
+  }
+  { simp [h0]
+    intro h1
+    rw [List.getElem?_cons]
+    simp [h0]
+    apply ih _ h1
+  }
 
-theorem Expr.list_instantiate_get_none_preservation offset d (i : Nat):
+theorem Expr.list_instantiate_get_none_preservation offset d :
+  ∀ (i : Nat),
   m[i]? = none →
   (Expr.list_instantiate offset d m)[i]? = none
-:= by sorry
+:= by
+  intro i h0
+  apply Iff.mpr List.getElem?_eq_none_iff
+  rw [Expr.list_instantiate_length_eq]
+  exact Iff.mp List.getElem?_eq_none_iff h0
 
 def Expr.liberate_vars (p : Pat) (e : Expr) : Expr :=
   let xs := Pat.index_vars p
