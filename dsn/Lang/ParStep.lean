@@ -1069,88 +1069,79 @@ end
 
 mutual
   theorem Pattern.match_entry_shift_vars_reflection :
+    List.is_record_value r →
     Pattern.match_entry l p (List.record_shift_vars threshold offset r) = some m' →
     ∃ m, Pattern.match_entry l p r = some m
   := by cases r with
-  -- | nil =>
-  --   simp [Pattern.match_entry]
-  -- | cons le r' =>
-  --   have (l',e) := le
-  --   simp [*,List.record_shift_vars, Pattern.match_entry]
-  --   by_cases h0 : l' = l
-  --   { simp [*]
-  --     intro h1 threshold offset
-  --     apply Pattern.match_shift_vars_reflection h1
-  --   }
-  --   { simp [*]
-  --     intro h1 threshold offset
-  --     apply Pattern.match_entry_shift_vars_reflection h1
-  --   }
-  | _ => sorry
+  | nil =>
+    simp [List.is_record_value, Pattern.match_entry, List.record_shift_vars]
+  | cons le r' =>
+    have (l',e) := le
+    simp [*,List.is_record_value, List.record_shift_vars, Pattern.match_entry]
+    by_cases h0 : l' = l
+    { simp [*]
+      intro h1 h2 h3
+      apply Pattern.match_shift_vars_reflection h2
+    }
+    { simp [*]
+      intro h1 h2 h3
+      apply Pattern.match_entry_shift_vars_reflection h3
+    }
 
   theorem Pattern.match_record_shift_vars_reflection :
+    List.is_record_value r →
     Pattern.match_record (List.record_shift_vars threshold offset r) ps = some m' →
     ∃ m , Pattern.match_record r ps = some m
   := by cases ps with
-  -- | nil =>
-  --   simp [Pattern.match_record]
-  --   intro h0
-  --   simp [*, Expr.list_shift_vars]
-  -- | cons lp ps' =>
-  --   have (l,p) := lp
-  --   simp [Pattern.match_record]
+  | nil =>
+    simp [Pattern.match_record]
+  | cons lp ps' =>
+    have (l,p) := lp
+    simp [Pattern.match_record]
 
-  --   match
-  --     h0 : (Pattern.match_entry l p r),
-  --     h1 : (Pattern.match_record r ps')
-  --   with
-  --   | some m0, some m1 =>
-  --     simp
-  --     intro h3 h4 threshold offset
-  --     simp [h3]
+    match
+      h0 : (match_entry l p (List.record_shift_vars threshold offset r)),
+      h1 : (Pattern.match_record (List.record_shift_vars threshold offset r) ps')
+    with
+    | some m0', some m1' =>
+      simp
+      intro isval h3 h4
+      simp [h3]
 
-  --     have ih0 := Pattern.match_entry_shift_vars_reflection h0 threshold offset
-  --     have ih1 := Pattern.match_record_shift_vars_reflection h1 threshold offset
-  --     simp [ih0,ih1,←h4]
-  --     exact Expr.list_shift_vars_concat
-  --   | none,_ =>
-  --     simp
-  --   | _,none =>
-  --     simp
-    | _ => sorry
+      have ⟨m0,ih0⟩ := Pattern.match_entry_shift_vars_reflection isval h0
+      have ⟨m1,ih1⟩ := Pattern.match_record_shift_vars_reflection isval h1
+      simp [ih0,ih1]
+    | none,_ =>
+      simp
+    | _,none =>
+      simp
 
   theorem Pattern.match_shift_vars_reflection :
-    Pattern.match arg p = some m →
-    ∀ threshold offset,
-    Pattern.match (Expr.shift_vars threshold offset arg) p
-    =
-    some (Expr.list_shift_vars threshold offset m)
+    Expr.is_value arg →
+    Pattern.match (Expr.shift_vars threshold offset arg) p = some m' →
+    ∃ m, Pattern.match arg p = some m
   := by cases p with
-  -- | var x  =>
-  --   simp [Pattern.match]
-  --   intro h0
-  --   simp [←h0]
-  --   simp [Expr.list_shift_vars]
-  -- | iso l pb =>
-  --   cases arg with
-  --   | iso l' b =>
-  --     simp [Pattern.match, Expr.shift_vars]
-  --     intro h0 h1 threshold offset
-  --     simp [*]
-  --     apply Pattern.match_shift_vars_reflection h1 threshold offset
-  --   | _ =>
-  --     simp [Pattern.match]
-  -- | record ps =>
-  --   cases arg with
-  --   | record r =>
-  --     simp [Pattern.match, Expr.shift_vars]
-  --     intro h0 h1 threshold offset
-  --     apply And.intro
-  --     { exact Expr.record_shift_vars_keys_unique_reflection h0 }
-  --     { apply Pattern.match_record_shift_vars_reflection h1}
-  --   | _ =>
-  --     simp [Pattern.match]
-  | _ => sorry
+  | var x  =>
+    simp [Pattern.match]
+  | iso l pb =>
+    cases arg with
+    | iso l' b =>
+      simp [Expr.is_value, Pattern.match, Expr.shift_vars]
+      intro isval h0 h1
+      simp [*]
+      apply Pattern.match_shift_vars_reflection isval h1
+    | _ =>
+      simp [Expr.is_value, Pattern.match, Expr.shift_vars]
+  | record ps =>
+    cases arg with
+    | record r =>
+      simp [Expr.is_value, Pattern.match, Expr.shift_vars]
+      intro ival h0 h1
+      apply And.intro
+      { exact Expr.record_shift_vars_keys_unique_reflection h0 }
+      { apply Pattern.match_record_shift_vars_reflection ival h1 }
+    | _ =>
+      simp [Expr.is_value, Pattern.match, Expr.shift_vars]
 end
 
 mutual
@@ -1198,6 +1189,7 @@ end
 mutual
 
   theorem Pattern.record_skip_shift_vars_preservation :
+    List.is_record_value r →
     match_record r ps = none →
     ∀ (threshold offset : ℕ),
     match_record (List.record_shift_vars threshold offset r) ps = none
@@ -1208,13 +1200,14 @@ mutual
     have (l,p) := lp
     simp [Pattern.match_record]
 
-    intro h0 threshold offset h1 m0' h2 m1' h3
-    have ⟨m0,h4⟩ := Pattern.match_entry_shift_vars_reflection h2
-    have ⟨m1,h5⟩ := Pattern.match_record_shift_vars_reflection h3
+    intro isval h0 threshold offset h1 m0' h2 m1' h3
+    have ⟨m0,h4⟩ := Pattern.match_entry_shift_vars_reflection isval h2
+    have ⟨m1,h5⟩ := Pattern.match_record_shift_vars_reflection isval h3
     apply h0 h1 _ h4 _ h5
 
 
   theorem Pattern.skip_shift_vars_preservation :
+    Expr.is_value arg →
     Pattern.match arg p = none →
     ∀ threshold offset, Pattern.match (Expr.shift_vars threshold offset arg) p = none
   := by cases p with
@@ -1222,30 +1215,22 @@ mutual
     simp [Pattern.match]
   | iso l bp =>
     cases arg with
-    | bvar i x =>
-      simp [Expr.shift_vars, Pattern.match]
-      intro threshold offset
-      by_cases h0 : threshold ≤ i <;> simp[h0, Pattern.match]
     | iso l' body =>
-      simp [Expr.shift_vars, Pattern.match]
-      intro h0 threshold offset h1
-      apply Pattern.skip_shift_vars_preservation (h0 h1)
+      simp [Expr.is_value, Expr.shift_vars, Pattern.match]
+      intro isval h0 threshold offset h1
+      apply Pattern.skip_shift_vars_preservation isval (h0 h1)
     | _ =>
-      simp [Expr.shift_vars, Pattern.match]
+      simp [Expr.is_value, Expr.shift_vars, Pattern.match]
   | record ps =>
     cases arg with
-    | bvar i x =>
-      simp [Expr.shift_vars, Pattern.match]
-      intro threshold offset
-      by_cases h0 : threshold ≤ i <;> simp[h0, Pattern.match]
     | record r =>
-      simp [Expr.shift_vars, Pattern.match]
-      intro h0 threshold offset h2
-      apply Pattern.record_skip_shift_vars_preservation
+      simp [Expr.is_value, Expr.shift_vars, Pattern.match]
+      intro isval h0 threshold offset h2
+      apply Pattern.record_skip_shift_vars_preservation isval
       apply h0
       exact Expr.record_shift_vars_keys_unique_reflection h2
     | _ =>
-      simp [Expr.shift_vars, Pattern.match]
+      simp [Expr.is_value, Expr.shift_vars, Pattern.match]
 end
 
 
@@ -1330,7 +1315,7 @@ mutual
     { apply ParFunStep.shift_vars_preservation _ _ step_f }
     { apply ParStep.shift_vars_preservation _ _  step_arg }
     { exact Expr.is_value_shift_vars_preservation isval threshold offset }
-    { exact Pattern.skip_shift_vars_preservation nomatching' threshold offset }
+    { exact Pattern.skip_shift_vars_preservation isval nomatching' threshold offset }
   | @anno e e' t step_e =>
     simp [Expr.shift_vars]
     apply ParStep.anno
