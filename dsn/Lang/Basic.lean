@@ -1510,6 +1510,13 @@ def Expr.list_instantiate (offset : Nat) (m : List Expr): List Expr → List Exp
 | e :: es =>
   Expr.instantiate offset m e :: (Expr.list_instantiate offset m es)
 
+theorem Expr.list_instantiate_concat :
+  (Expr.list_instantiate depth d m0) ++
+  (Expr.list_instantiate depth d m1)
+  =
+  Expr.list_instantiate depth d (m0 ++ m1)
+:= by sorry
+
 theorem Expr.list_instantiate_length_eq offset d m:
   List.length (Expr.list_instantiate offset d m) = List.length m
 := by sorry

@@ -585,6 +585,46 @@ theorem Expr.record_shift_vars_keys_is_fresh_key_reflection :
   simp [h0]
   apply ih h1
 
+theorem Expr.record_instantiate_keys_is_fresh_key_reflection :
+  List.is_fresh_key l  (List.record_instantiate depth d r) →
+  List.is_fresh_key l r
+:= by induction r with
+| nil =>
+  simp [List.record_instantiate, List.is_fresh_key]
+| cons le r' ih =>
+  have (l',e) := le
+  simp [List.record_instantiate, List.is_fresh_key]
+  intro h0 h1
+  simp [h0]
+  apply ih h1
+
+theorem Expr.record_instantiate_keys_is_fresh_key_preservation :
+  List.is_fresh_key l r →
+  List.is_fresh_key l  (List.record_instantiate depth d r)
+:= by induction r with
+| nil =>
+  simp [List.record_instantiate, List.is_fresh_key]
+| cons le r' ih =>
+  have (l',e) := le
+  simp [List.record_instantiate, List.is_fresh_key]
+  intro h0 h1
+  simp [h0]
+  apply ih h1
+
+theorem Expr.record_instantiate_keys_unique_preservation :
+  List.keys_unique r →
+  List.keys_unique (List.record_instantiate depth d r)
+:= by induction r with
+| nil =>
+  simp [List.record_instantiate, List.keys_unique]
+| cons le r' ih =>
+  have (l,e) := le
+  simp [List.record_instantiate, List.keys_unique]
+  intro h0 h1
+  apply And.intro
+  { exact record_instantiate_keys_is_fresh_key_preservation h0 }
+  { apply ih h1 }
+
 
 theorem Expr.record_shift_vars_keys_unique_preservation :
   List.keys_unique r →
@@ -612,6 +652,21 @@ theorem Expr.record_shift_vars_keys_unique_reflection :
   intro h0 h1
   apply And.intro
   { exact record_shift_vars_keys_is_fresh_key_reflection h0 }
+  { apply ih h1 }
+
+theorem Expr.record_instantiate_keys_unique_reflection :
+  List.keys_unique (List.record_instantiate depth d r) →
+  List.keys_unique r
+:= by induction r with
+| nil =>
+
+  simp [List.record_instantiate, List.keys_unique]
+| cons le r' ih =>
+  have (l,e) := le
+  simp [List.record_instantiate, List.keys_unique]
+  intro h0 h1
+  apply And.intro
+  { exact record_instantiate_keys_is_fresh_key_reflection h0 }
   { apply ih h1 }
 
 theorem ParStep.skip_reduction
@@ -1652,23 +1707,263 @@ mutual
 end
 
 
-theorem Pattern.skip_instantiate_preservation :
-  Pattern.match arg p = none →
-  ∀ offset m, Pattern.match (Expr.instantiate offset m arg) p = none
-:= by sorry
+mutual
+  theorem Pattern.match_entry_instantiate_preservation :
+    Pattern.match_entry l p r = some m →
+    ∀ depth d,
+    Pattern.match_entry l p (List.record_instantiate depth d r)
+    =
+    some (Expr.list_instantiate depth d m)
+  := by cases r with
+  | nil =>
+    simp [Pattern.match_entry]
+  | cons le r' =>
+    have (l',e) := le
+    simp [*,List.record_instantiate, Pattern.match_entry]
+    by_cases h0 : l' = l
+    { simp [*]
+      intro h1 threshold offset
+      apply Pattern.match_instantiate_preservation h1
+    }
+    { simp [*]
+      intro h1 threshold offset
+      apply Pattern.match_entry_instantiate_preservation h1
+    }
+
+  theorem Pattern.match_record_instantiate_preservation :
+    Pattern.match_record r ps = some m →
+    ∀ depth d,
+    Pattern.match_record (List.record_instantiate depth d r) ps
+    =
+    some (Expr.list_instantiate depth d m)
+  := by cases ps with
+  | nil =>
+    simp [Pattern.match_record]
+    intro h0
+    simp [*, Expr.list_instantiate]
+  | cons lp ps' =>
+    have (l,p) := lp
+    simp [Pattern.match_record]
+
+    match
+      h0 : (Pattern.match_entry l p r),
+      h1 : (Pattern.match_record r ps')
+    with
+    | some m0, some m1 =>
+      simp
+      intro h3 h4 threshold offset
+      simp [h3]
+
+      have ih0 := Pattern.match_entry_instantiate_preservation h0 threshold offset
+      have ih1 := Pattern.match_record_instantiate_preservation h1 threshold offset
+      simp [ih0,ih1,←h4]
+      exact Expr.list_instantiate_concat
+    | none,_ =>
+      simp
+    | _,none =>
+      simp
+
+  theorem Pattern.match_instantiate_preservation :
+    Pattern.match arg p = some m →
+    ∀ depth d,
+    Pattern.match (Expr.instantiate depth d arg) p
+    =
+    some (Expr.list_instantiate depth d m)
+  := by cases p with
+  | var x  =>
+    simp [Pattern.match]
+    intro h0
+    simp [←h0]
+    simp [Expr.list_instantiate]
+  | iso l pb =>
+    cases arg with
+    | iso l' b =>
+      simp [Pattern.match, Expr.instantiate]
+      intro h0 h1 threshold offset
+      simp [*]
+      apply Pattern.match_instantiate_preservation h1 threshold offset
+    | _ =>
+      simp [Pattern.match]
+  | record ps =>
+    cases arg with
+    | record r =>
+      simp [Pattern.match, Expr.instantiate]
+      intro h0 h1 threshold offset
+      apply And.intro
+      { exact Expr.record_instantiate_keys_unique_preservation h0 }
+      { apply Pattern.match_record_instantiate_preservation h1}
+    | _ =>
+      simp [Pattern.match]
+end
 
 
-theorem Pattern.match_instantiate_preservation :
-  Pattern.match arg p = some m →
-  ∀ offset d,
-  Pattern.match (Expr.instantiate offset d arg) p = some (Expr.list_instantiate offset d m)
-:= by sorry
+mutual
+  theorem Pattern.match_entry_instantiate_reflection :
+    List.is_record_value r →
+    Pattern.match_entry l p (List.record_instantiate depth d r) = some m' →
+    ∃ m, Pattern.match_entry l p r = some m
+  := by cases r with
+  | nil =>
+    simp [List.is_record_value, Pattern.match_entry, List.record_instantiate]
+  | cons le r' =>
+    have (l',e) := le
+    simp [*,List.is_record_value, List.record_instantiate, Pattern.match_entry]
+    by_cases h0 : l' = l
+    { simp [*]
+      intro h1 h2 h3
+      apply Pattern.match_instantiate_reflection h2
+    }
+    { simp [*]
+      intro h1 h2 h3
+      apply Pattern.match_entry_instantiate_reflection h3
+    }
+
+  theorem Pattern.match_record_instantiate_reflection :
+    List.is_record_value r →
+    Pattern.match_record (List.record_instantiate depth d r) ps = some m' →
+    ∃ m , Pattern.match_record r ps = some m
+  := by cases ps with
+  | nil =>
+    simp [Pattern.match_record]
+  | cons lp ps' =>
+    have (l,p) := lp
+    simp [Pattern.match_record]
+
+    match
+      h0 : (match_entry l p (List.record_instantiate depth d r)),
+      h1 : (Pattern.match_record (List.record_instantiate depth d r) ps')
+    with
+    | some m0', some m1' =>
+      simp
+      intro isval h3 h4
+      simp [h3]
+
+      have ⟨m0,ih0⟩ := Pattern.match_entry_instantiate_reflection isval h0
+      have ⟨m1,ih1⟩ := Pattern.match_record_instantiate_reflection isval h1
+      simp [ih0,ih1]
+    | none,_ =>
+      simp
+    | _,none =>
+      simp
+
+  theorem Pattern.match_instantiate_reflection :
+    Expr.is_value arg →
+    Pattern.match (Expr.instantiate offset d arg) p = some m' →
+    ∃ m, Pattern.match arg p = some m
+  := by cases p with
+  | var x  =>
+    simp [Pattern.match]
+  | iso l pb =>
+    cases arg with
+    | iso l' b =>
+      simp [Expr.is_value, Pattern.match, Expr.instantiate]
+      intro isval h0 h1
+      simp [*]
+      apply Pattern.match_instantiate_reflection isval h1
+    | _ =>
+      simp [Expr.is_value, Pattern.match, Expr.instantiate]
+  | record ps =>
+    cases arg with
+    | record r =>
+      simp [Expr.is_value, Pattern.match, Expr.instantiate]
+      intro ival h0 h1
+      apply And.intro
+      { exact Expr.record_instantiate_keys_unique_reflection h0 }
+      { apply Pattern.match_record_instantiate_reflection ival h1 }
+    | _ =>
+      simp [Expr.is_value, Pattern.match, Expr.instantiate]
+end
 
 
-theorem Expr.is_value_instantiate_preservation :
-  (Expr.is_value e) →
-  ∀ offset m, (Expr.is_value (Expr.instantiate offset m e))
-:= by sorry
+mutual
+
+  theorem Pattern.record_skip_instantiate_preservation :
+    List.is_record_value r →
+    match_record r ps = none →
+    ∀ depth d,
+    match_record (List.record_instantiate depth d r) ps = none
+  := by cases ps with
+  | nil =>
+    simp [Pattern.match_record]
+  | cons lp ps' =>
+    have (l,p) := lp
+    simp [Pattern.match_record]
+
+    intro isval h0 depth d h1 m0' h2 m1' h3
+    have ⟨m0,h4⟩ := Pattern.match_entry_instantiate_reflection isval h2
+    have ⟨m1,h5⟩ := Pattern.match_record_instantiate_reflection isval h3
+    apply h0 h1 _ h4 _ h5
+
+
+  theorem Pattern.skip_instantiate_preservation :
+    Expr.is_value arg →
+    Pattern.match arg p = none →
+    ∀ depth d, Pattern.match (Expr.instantiate depth d arg) p = none
+  := by cases p with
+  | var x =>
+    simp [Pattern.match]
+  | iso l bp =>
+    cases arg with
+    | iso l' body =>
+      simp [Expr.is_value, Expr.instantiate, Pattern.match]
+      intro isval h0 depth d h1
+      apply Pattern.skip_instantiate_preservation isval (h0 h1)
+    | _ =>
+      simp [Expr.is_value, Expr.instantiate, Pattern.match]
+  | record ps =>
+    cases arg with
+    | record r =>
+      simp [Expr.is_value, Expr.instantiate, Pattern.match]
+      intro isval h0 depth d h2
+      apply Pattern.record_skip_instantiate_preservation isval
+      apply h0
+      exact Expr.record_instantiate_keys_unique_reflection h2
+    | _ =>
+      simp [Expr.is_value, Expr.instantiate, Pattern.match]
+end
+
+mutual
+
+  theorem Expr.record_is_value_instantiate_preservation :
+    List.is_record_value r = true →
+    ∀ depth d, List.is_record_value (List.record_instantiate depth d r) = true
+  := by cases r with
+  | nil =>
+    simp [List.is_record_value, List.record_instantiate]
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.is_record_value, List.record_instantiate]
+    intro h0 h1 h2 depth d
+    apply And.intro
+    {
+      apply And.intro
+      { exact record_instantiate_keys_is_fresh_key_preservation h0 }
+      { apply Expr.is_value_instantiate_preservation h1 }
+    }
+    { apply Expr.record_is_value_instantiate_preservation h2 }
+
+
+  theorem Expr.is_value_instantiate_preservation :
+    (Expr.is_value e) →
+    ∀ depth d, (Expr.is_value (Expr.instantiate depth d e))
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.is_value]
+  | fvar x =>
+    simp [Expr.is_value]
+  | iso l body =>
+    simp [Expr.is_value]
+    intro isval depth d
+    apply Expr.is_value_instantiate_preservation isval
+  | record r =>
+    simp [Expr.is_value, Expr.instantiate]
+    apply Expr.record_is_value_instantiate_preservation
+  | function f =>
+    simp [Expr.is_value, Expr.instantiate]
+  | _ =>
+    simp [Expr.is_value, Expr.instantiate]
+end
+
 
 mutual
 
@@ -2589,7 +2884,7 @@ mutual
     { apply ParFunStep.instantiate step_arg step_f matching matching' }
     { apply ParStep.instantiate step_arg step_aa matching matching'}
     { apply Expr.is_value_instantiate_preservation isval }
-    { apply Pattern.skip_instantiate_preservation nomatching }
+    { apply Pattern.skip_instantiate_preservation isval nomatching }
   | @anno e e' t step_e =>
     simp [Expr.instantiate]
     apply ParStep.anno
