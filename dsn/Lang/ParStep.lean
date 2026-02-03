@@ -2332,6 +2332,30 @@ mutual
 end
 
 mutual
+  theorem ParRcdStep.instantiate_concat_preservation :
+    List.length m0 = List.length m0' →
+    List.length m1 = List.length m1' →
+    ParRcdStep
+      (List.record_instantiate offset m0 r)
+      (List.record_instantiate offset m0' r) →
+    ParRcdStep
+      (List.record_instantiate (offset + List.length m0) m1 r)
+      (List.record_instantiate (offset + List.length m0') m1' r) →
+    ParRcdStep (List.record_instantiate offset (m0 ++ m1) r) (List.record_instantiate offset (m0' ++ m1') r)
+  := by sorry
+
+  theorem ParFunStep.instantiate_concat_preservation :
+    List.length m0 = List.length m0' →
+    List.length m1 = List.length m1' →
+    ParFunStep
+      (List.function_instantiate offset m0 f)
+      (List.function_instantiate offset m0' f) →
+    ParFunStep
+      (List.function_instantiate (offset + List.length m0) m1 f)
+      (List.function_instantiate (offset + List.length m0') m1' f) →
+    ParFunStep (List.function_instantiate offset (m0 ++ m1) f) (List.function_instantiate offset (m0' ++ m1') f)
+  := by sorry
+
   theorem ParStep.instantiate_concat_preservation :
     List.length m0 = List.length m0' →
     List.length m1 = List.length m1' →
@@ -2504,9 +2528,126 @@ mutual
       }
       { simp [hh1] }
     }
+  | fvar x =>
+    simp [Expr.instantiate]
+  | iso l body =>
+    simp [Expr.instantiate]
+    intro h0 h1 h2 h3
+
+    match h2,h3 with
+    | ParStep.iso step0, ParStep.iso step1 =>
+      apply ParStep.iso
+      apply ParStep.instantiate_concat_preservation h0 h1 step0 step1
+
+  | record r =>
+    simp [Expr.instantiate]
+    intro h0 h1 h2 h3
+    match h2, h3 with
+    | ParStep.record step0, ParStep.record step1 =>
+      apply ParStep.record
+      apply ParRcdStep.instantiate_concat_preservation h0 h1 step0 step1
+
+  | function r =>
+    simp [Expr.instantiate]
+    intro h0 h1 h2 h3
+    match h2, h3 with
+    | ParStep.function step0, ParStep.function step1 =>
+      apply ParStep.function
+      apply ParFunStep.instantiate_concat_preservation h0 h1 step0 step1
+  | app ef ea =>
+    simp [Expr.instantiate]
+    intro h0 h1 h2 h3
+    generalize h4 : (Expr.instantiate offset m0 ef) = ef0 at h2
+    generalize h5 : (Expr.instantiate offset m0 ea) = ea0 at h2
+    generalize h6 : (Expr.instantiate offset m0' ef) = ef0' at h2
+    generalize h7 : (Expr.instantiate offset m0' ea) = ea0' at h2
+
+    generalize h8 : (Expr.instantiate (offset + List.length m0) m1 ef) = ef1 at h3
+    generalize h9 : (Expr.instantiate (offset + List.length m0) m1 ea) = ea1 at h3
+    generalize h10 : (Expr.instantiate (offset + List.length m0') m1' ef) = ef1' at h3
+    generalize h11 : (Expr.instantiate (offset + List.length m0') m1' ea) = ea1' at h3
 
 
-  | _ => sorry
+    generalize h12 : (Expr.app ef0' ea0') = e0' at h2
+    generalize h13 : (Expr.app ef1' ea1') = e1' at h3
+
+
+    match h2, h3 with
+    | ParStep.app step_f0 step_a0, ParStep.app step_f1 step_a1 =>
+      simp at h12
+      simp at h13
+
+      have ⟨h14,h15⟩ := h12
+      have ⟨h16,h17⟩ := h13
+      rw [←h14] at step_f0
+      rw [←h15] at step_a0
+      rw [←h16] at step_f1
+      rw [←h17] at step_a1
+
+      rw [←h4,←h6] at step_f0
+      rw [←h5,←h7] at step_a0
+
+      rw [←h8,←h10] at step_f1
+      rw [←h9,←h11] at step_a1
+
+      apply ParStep.app
+      { apply ParStep.instantiate_concat_preservation h0 h1 step_f0 step_f1 }
+      { apply ParStep.instantiate_concat_preservation h0 h1 step_a0 step_a1 }
+
+    | ParStep.pattern_match _ _ _ _, _ =>
+      /- contradiction -/
+      sorry
+
+    | ParStep.skip _ _ _ _ _, _ =>
+      /- contradiction -/
+      sorry
+
+    | _, ParStep.pattern_match _ _ _ _ =>
+      /- contradiction -/
+      sorry
+
+    | _, ParStep.skip _ _ _ _ _ =>
+      /- contradiction -/
+      sorry
+
+  | anno body t =>
+    simp [Expr.instantiate]
+    intro h0 h1 h2 h3
+
+    match h2,h3 with
+    | ParStep.anno step0, ParStep.anno step1 =>
+      apply ParStep.anno
+      apply ParStep.instantiate_concat_preservation h0 h1 step0 step1
+    | ParStep.erase _ _, _ =>
+      /- contradiction -/
+      sorry
+    | _, ParStep.erase _ _ =>
+      /- contradiction -/
+      sorry
+  | loopi body =>
+    simp [Expr.instantiate]
+    intro h0 h1 h2 h3
+
+    generalize h4 : (Expr.instantiate offset m0 body) = body0 at h2
+    generalize h5 : (Expr.instantiate (offset + List.length m0) m1 body) = body1 at h3
+
+    generalize h6 : (Expr.loopi (Expr.instantiate offset m0' body)) = e0' at h2
+    generalize h7 : (Expr.loopi (Expr.instantiate (offset + List.length m0') m1' body)) = e1' at h3
+
+    match h2,h3 with
+    | ParStep.loopi step0, ParStep.loopi step1 =>
+      simp at h6
+      simp at h7
+      rw [←h4,←h6] at step0
+      rw [←h5,←h7] at step1
+      apply ParStep.loopi
+      apply ParStep.instantiate_concat_preservation h0 h1 step0 step1
+    | ParStep.recycle _ _, _ =>
+      /- contradiction -/
+      sorry
+    | _, ParStep.recycle _ _ =>
+      /- contradiction -/
+      sorry
 end
 
 mutual
