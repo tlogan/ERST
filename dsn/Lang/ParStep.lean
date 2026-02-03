@@ -57,41 +57,6 @@ mutual
 end
 
 
-inductive ParGroupStep : List Expr → List Expr → Prop
-| nil : ParGroupStep [] []
-| cons :
-  ParStep e e' →  ParGroupStep es es' →
-  ParGroupStep (e :: es) (e' :: es')
-
-theorem ParGroupStep.entry :
-  ParRcdStep r r' →
-  Pattern.match_entry l p r = some m →
-  Pattern.match_entry l p r' = some m' →
-  ParGroupStep m m'
-:= by sorry
-
-theorem ParGroupStep.concat :
-  ParGroupStep m0 m1 →
-  ParGroupStep m2 m3 →
-  ParGroupStep (m0 ++ m2) (m1 ++ m3)
-:= by sorry
-
-
-
-
-
-theorem ParGroupStep.record :
-  ParRcdStep r r' →
-  Pattern.match_record r ps = some m →
-  Pattern.match_record r' ps = some m' →
-  ParGroupStep m m'
-:= by sorry
-
-theorem ParGroupStep.length_eq:
-  ParGroupStep m m' →
-  List.length m = List.length m'
-:= by sorry
-
 mutual
   theorem ParRcdStep.refl r :
     ParRcdStep r r
@@ -2364,7 +2329,7 @@ mutual
     have (l,e) := le
     simp [List.record_instantiate]
     apply ParRcdStep.cons
-    { apply ParStep.single_instantiator_preservation _ step }
+    { apply ParStep.instantiator_preservation _ step }
     { apply ParStep.instantiate_record_preservation _ step}
 
   theorem ParStep.instantiate_function_preservation
@@ -2382,10 +2347,10 @@ mutual
     have (p,e) := pe
     simp [List.function_instantiate]
     apply ParFunStep.cons
-    { apply ParStep.single_instantiator_preservation _ step }
+    { apply ParStep.instantiator_preservation _ step }
     { apply ParStep.instantiate_function_preservation _ step }
 
-  theorem ParStep.single_instantiator_preservation
+  theorem ParStep.instantiator_preservation
     offset
     (step : ParStep arg arg')
     e
@@ -2408,7 +2373,7 @@ mutual
   | iso l body =>
     simp [Expr.instantiate]
     apply ParStep.iso
-    apply ParStep.single_instantiator_preservation _ step body
+    apply ParStep.instantiator_preservation _ step body
   | record r =>
     simp [Expr.instantiate]
     apply ParStep.record
@@ -2420,33 +2385,17 @@ mutual
   | app ef ea =>
     simp [Expr.instantiate]
     apply ParStep.app
-    { apply ParStep.single_instantiator_preservation offset step ef }
-    { apply ParStep.single_instantiator_preservation offset step ea }
+    { apply ParStep.instantiator_preservation offset step ef }
+    { apply ParStep.instantiator_preservation offset step ea }
   | anno e t =>
     simp [Expr.instantiate]
     apply ParStep.anno
-    apply ParStep.single_instantiator_preservation offset step e
+    apply ParStep.instantiator_preservation offset step e
   | loopi e =>
     simp [Expr.instantiate]
     apply loopi
-    apply ParStep.single_instantiator_preservation offset step e
+    apply ParStep.instantiator_preservation offset step e
 end
-
-
-theorem ParStep.instantiator_preservation
-  (step : ParGroupStep m m')
-: ∀ depth e, ParStep (Expr.instantiate depth m e) (Expr.instantiate depth m' e)
-:= by induction step with
-| nil =>
-  intro depth e
-  exact refl (Expr.instantiate depth [] e)
-| @cons e e' es es' step_e step_es ih=>
-  intro depth body
-
-
-  sorry
-
-
 
 
 
@@ -2541,6 +2490,17 @@ mutual
   : ParStep e e'
   := by sorry
 end
+
+theorem ParStep.instantiate_concat_preservation :
+  List.length m0 = List.length m0' →
+  List.length m1 = List.length m1' →
+  ParStep (Expr.instantiate offset m0 e) (Expr.instantiate offset m0' e) →
+  ParStep
+    (Expr.instantiate (offset + List.length m0) m1 e)
+    (Expr.instantiate (offset + List.length m0') m1' e) →
+  ParStep (Expr.instantiate offset (m0 ++ m1) e) (Expr.instantiate offset (m0' ++ m1') e)
+:= by
+  sorry
 
 
 -- mutual
@@ -2935,10 +2895,15 @@ mutual
         { apply Pattern.match_record_count_eq h8 }
         { exact h6 }
 
-      apply ParStep.instantiator_preservation
-      apply ParGroupStep.concat
-      { apply ParGroupStep.entry step h5 h7 }
-      { apply ParGroupStep.record step h6 h8 }
+      apply ParStep.instantiate_concat_preservation h9 h10
+      { apply ParRcdStep.entry_instantiator step h5 h7 }
+      {
+
+        rw [← Pattern.match_entry_count_eq h5]
+        rw [← Pattern.match_entry_count_eq h7]
+
+        apply ParRcdStep.instantiator step h6 h8
+      }
 
     | none,_,_,_ =>
       simp [*] at h2
@@ -2963,7 +2928,7 @@ mutual
     rw [←matching, ←matching']
     clear matching matching'
 
-    apply ParStep.single_instantiator_preservation _ step
+    apply ParStep.instantiator_preservation _ step
   | @iso l p_body =>
     cases step with
     | bvar i x =>
