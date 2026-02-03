@@ -1089,10 +1089,153 @@ theorem Expr.shift_vars_instantiate_zero_inside_out threshold offset m e :
   rfl
 
 
-theorem Expr.shift_back_shit_vars_zero_inside_out threshold depth offset e:
+mutual
+  theorem Expr.record_shift_back_shift_vars_inside_out threshold depth offset level r:
+    List.record_shift_back (threshold + level + depth) offset (List.record_shift_vars level depth r) =
+    List.record_shift_vars level depth (List.record_shift_back (threshold + level) offset r)
+  := by cases r with
+  | nil =>
+    simp [List.record_shift_vars, List.record_shift_back]
+  | cons le f' =>
+    have (l,e) := le
+    simp [List.record_shift_vars, List.record_shift_back]
+    apply And.intro
+    { apply Expr.shift_back_shift_vars_inside_out }
+    { apply Expr.record_shift_back_shift_vars_inside_out }
+
+  theorem Expr.function_shift_back_shift_vars_inside_out threshold depth offset level f:
+    List.function_shift_back (threshold + level + depth) offset (List.function_shift_vars level depth f) =
+    List.function_shift_vars level depth (List.function_shift_back (threshold + level) offset f)
+  := by cases f with
+  | nil =>
+    simp [List.function_shift_vars, List.function_shift_back]
+  | cons pe f' =>
+    have (p,e) := pe
+    simp [List.function_shift_vars, List.function_shift_back]
+    apply And.intro
+    {
+      have h0 :
+       threshold + level + depth + Pat.count_vars p =
+       threshold + level + Pat.count_vars p + depth
+      := by exact Nat.add_right_comm (threshold + level) depth (Pat.count_vars p)
+      rw [h0]
+
+      have h1 :
+       threshold + level + Pat.count_vars p =
+       threshold + (level + Pat.count_vars p)
+      := by exact Nat.add_assoc threshold level (Pat.count_vars p)
+      rw [h1]
+      apply Expr.shift_back_shift_vars_inside_out
+    }
+    { apply Expr.function_shift_back_shift_vars_inside_out }
+
+  theorem Expr.shift_back_shift_vars_inside_out threshold depth offset level e:
+    Expr.shift_back (threshold + level + depth) offset (Expr.shift_vars level depth e) =
+    Expr.shift_vars level depth (Expr.shift_back (threshold + level) offset e)
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.shift_back, Expr.shift_vars]
+    by_cases h0 : level ≤ i
+    { simp [h0]
+      simp [Expr.shift_back]
+      by_cases h1 : threshold + level + offset ≤ i
+      { simp [h1]
+        simp [Expr.shift_vars]
+
+        have h2 :
+          threshold + level + offset + depth ≤ i + depth
+        := by exact Nat.add_le_add_right h1 depth
+
+        have h3 :
+          threshold + level + offset + depth =
+          threshold + level + depth + offset
+        := by exact Nat.add_right_comm (threshold + level) offset depth
+
+        rw [h3] at h2
+        simp [h2]
+
+        rw [Nat.add_assoc] at h1
+        have h4 : level + offset ≤ i := by exact Nat.le_of_add_left_le h1
+
+        have h5 :  level ≤ i - offset := by exact Nat.le_sub_of_add_le h4
+        simp [h5]
+
+        have h6 : offset ≤ i := by exact Nat.le_of_add_left_le h4
+
+        exact Nat.sub_add_comm h6
+      }
+      { simp [h1]
+        simp [Expr.shift_vars]
+        simp [h0]
+        intro h2
+        apply False.elim
+        apply h1
+        have h3 :
+          threshold + level + depth + offset =
+          threshold + level + offset + depth
+        := by exact Nat.add_right_comm (threshold + level) depth offset
+
+        rw[h3] at h2
+        exact Iff.mp Nat.add_le_add_iff_right h2
+      }
+    }
+    { simp [h0]
+      simp [Expr.shift_back]
+      have h1 :  ¬ threshold + level ≤ i := by
+        intro h
+        apply h0
+        exact Nat.le_of_add_left_le h
+
+      have h2 :  ¬ threshold + level + offset ≤ i := by
+        intro h
+        apply h1
+        exact Nat.le_of_add_right_le h
+
+      simp [h2]
+      simp [Expr.shift_vars]
+      simp [h0]
+      intro h3
+      apply False.elim
+      apply h2
+      have h4 :
+        threshold + level + depth + offset =
+        threshold + level + offset + depth
+      := by exact Nat.add_right_comm (threshold + level) depth offset
+      rw [h4] at h3
+      exact Nat.le_of_add_right_le h3
+    }
+  | fvar x =>
+    simp [Expr.shift_back, Expr.shift_vars]
+  | iso l body =>
+    simp [Expr.shift_back, Expr.shift_vars]
+    apply Expr.shift_back_shift_vars_inside_out
+  | record r =>
+    simp [Expr.shift_back, Expr.shift_vars]
+    apply Expr.record_shift_back_shift_vars_inside_out
+
+  | function f =>
+    simp [Expr.shift_back, Expr.shift_vars]
+    apply Expr.function_shift_back_shift_vars_inside_out
+
+  | app ef ea =>
+    simp [Expr.shift_back, Expr.shift_vars]
+    apply And.intro
+    { apply Expr.shift_back_shift_vars_inside_out }
+    { apply Expr.shift_back_shift_vars_inside_out }
+
+  | anno body t =>
+    simp [Expr.shift_back, Expr.shift_vars]
+    apply Expr.shift_back_shift_vars_inside_out
+
+  | loopi body =>
+    simp [Expr.shift_back, Expr.shift_vars]
+    apply Expr.shift_back_shift_vars_inside_out
+end
+
+theorem Expr.shift_back_shift_vars_zero_inside_out threshold depth offset e:
   Expr.shift_back (threshold + depth) offset (Expr.shift_vars 0 depth e) =
   Expr.shift_vars 0 depth (Expr.shift_back threshold offset e)
-:= by sorry
+:= by exact shift_back_shift_vars_inside_out threshold depth offset 0 e
 
 
 
@@ -1184,7 +1327,7 @@ mutual
         simp [h0]
         have h7 := Expr.list_shift_back_get_some_preservation threshold offset (i - depth) h1
         simp [h7]
-        exact shift_back_shit_vars_zero_inside_out threshold depth offset arg
+        exact shift_back_shift_vars_zero_inside_out threshold depth offset arg
 
       | none =>
         simp
