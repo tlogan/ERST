@@ -56,6 +56,42 @@ mutual
       (Expr.instantiate 0 [(.loopi (.function [(.var x, e')]))] e')
 end
 
+
+inductive ParGroupStep : List Expr → List Expr → Prop
+| nil : ParGroupStep [] []
+| cons :
+  ParStep e e' →  ParGroupStep es es' →
+  ParGroupStep (e :: es) (e' :: es')
+
+theorem ParGroupStep.entry :
+  ParRcdStep r r' →
+  Pattern.match_entry l p r = some m →
+  Pattern.match_entry l p r' = some m' →
+  ParGroupStep m m'
+:= by sorry
+
+theorem ParGroupStep.concat :
+  ParGroupStep m0 m1 →
+  ParGroupStep m2 m3 →
+  ParGroupStep (m0 ++ m2) (m1 ++ m3)
+:= by sorry
+
+
+
+
+
+theorem ParGroupStep.record :
+  ParRcdStep r r' →
+  Pattern.match_record r ps = some m →
+  Pattern.match_record r' ps = some m' →
+  ParGroupStep m m'
+:= by sorry
+
+theorem ParGroupStep.length_eq:
+  ParGroupStep m m' →
+  List.length m = List.length m'
+:= by sorry
+
 mutual
   theorem ParRcdStep.refl r :
     ParRcdStep r r
@@ -2328,7 +2364,7 @@ mutual
     have (l,e) := le
     simp [List.record_instantiate]
     apply ParRcdStep.cons
-    { apply ParStep.instantiator_preservation _ step }
+    { apply ParStep.single_instantiator_preservation _ step }
     { apply ParStep.instantiate_record_preservation _ step}
 
   theorem ParStep.instantiate_function_preservation
@@ -2346,10 +2382,10 @@ mutual
     have (p,e) := pe
     simp [List.function_instantiate]
     apply ParFunStep.cons
-    { apply ParStep.instantiator_preservation _ step }
+    { apply ParStep.single_instantiator_preservation _ step }
     { apply ParStep.instantiate_function_preservation _ step }
 
-  theorem ParStep.instantiator_preservation
+  theorem ParStep.single_instantiator_preservation
     offset
     (step : ParStep arg arg')
     e
@@ -2372,7 +2408,7 @@ mutual
   | iso l body =>
     simp [Expr.instantiate]
     apply ParStep.iso
-    apply ParStep.instantiator_preservation _ step body
+    apply ParStep.single_instantiator_preservation _ step body
   | record r =>
     simp [Expr.instantiate]
     apply ParStep.record
@@ -2384,17 +2420,33 @@ mutual
   | app ef ea =>
     simp [Expr.instantiate]
     apply ParStep.app
-    { apply ParStep.instantiator_preservation offset step ef }
-    { apply ParStep.instantiator_preservation offset step ea }
+    { apply ParStep.single_instantiator_preservation offset step ef }
+    { apply ParStep.single_instantiator_preservation offset step ea }
   | anno e t =>
     simp [Expr.instantiate]
     apply ParStep.anno
-    apply ParStep.instantiator_preservation offset step e
+    apply ParStep.single_instantiator_preservation offset step e
   | loopi e =>
     simp [Expr.instantiate]
     apply loopi
-    apply ParStep.instantiator_preservation offset step e
+    apply ParStep.single_instantiator_preservation offset step e
 end
+
+
+theorem ParStep.instantiator_preservation
+  (step : ParGroupStep m m')
+: ∀ depth e, ParStep (Expr.instantiate depth m e) (Expr.instantiate depth m' e)
+:= by induction step with
+| nil =>
+  intro depth e
+  exact refl (Expr.instantiate depth [] e)
+| @cons e e' es es' step_e step_es ih=>
+  intro depth body
+
+
+  sorry
+
+
 
 
 
@@ -2474,324 +2526,343 @@ mutual
     apply Expr.shift_vars_add
 end
 
+
 mutual
-  theorem ParRcdStep.instantiate_concat_preservation :
-    List.length m0 = List.length m0' →
-    List.length m1 = List.length m1' →
-    ParRcdStep
-      (List.record_instantiate offset m0 r)
-      (List.record_instantiate offset m0' r) →
-    ParRcdStep
-      (List.record_instantiate (offset + List.length m0) m1 r)
-      (List.record_instantiate (offset + List.length m0') m1' r) →
-    ParRcdStep (List.record_instantiate offset (m0 ++ m1) r) (List.record_instantiate offset (m0' ++ m1') r)
+  theorem ParStep.instantiattor_preservation
+    depth m
+    (step : ParStep e e')
+  : ParStep (Expr.instantiate depth m e) (Expr.instantiate depth m e')
   := by sorry
-
-  theorem ParFunStep.instantiate_concat_preservation :
-    List.length m0 = List.length m0' →
-    List.length m1 = List.length m1' →
-    ParFunStep
-      (List.function_instantiate offset m0 f)
-      (List.function_instantiate offset m0' f) →
-    ParFunStep
-      (List.function_instantiate (offset + List.length m0) m1 f)
-      (List.function_instantiate (offset + List.length m0') m1' f) →
-    ParFunStep (List.function_instantiate offset (m0 ++ m1) f) (List.function_instantiate offset (m0' ++ m1') f)
-  := by sorry
-
-  theorem ParStep.instantiate_concat_preservation :
-    List.length m0 = List.length m0' →
-    List.length m1 = List.length m1' →
-    ParStep (Expr.instantiate offset m0 e) (Expr.instantiate offset m0' e) →
-    ParStep
-      (Expr.instantiate (offset + List.length m0) m1 e)
-      (Expr.instantiate (offset + List.length m0') m1' e) →
-    ParStep (Expr.instantiate offset (m0 ++ m1) e) (Expr.instantiate offset (m0' ++ m1') e)
-  := by cases e with
-  | bvar i x =>
-    intro len0 len1
-    by_cases hh0 : (offset + List.length m0) ≤ i
-    {
-
-      simp [Expr.instantiate]
-      simp [hh0]
-      have hh0' : offset + List.length m0' ≤ i := by
-        exact le_of_eq_of_le (congrArg (HAdd.hAdd offset) (id (Eq.symm len0))) hh0
-      simp [hh0']
-      have hh2 : offset ≤ i := by exact Nat.le_of_add_right_le hh0
-      simp [hh2]
-
-
-      have h1 := Nat.le_sub_of_add_le' hh0
-      have h1' := Nat.le_sub_of_add_le' hh0'
-
-      have h2 : m0[i - offset]? = none := by
-        exact Iff.mpr List.getElem?_eq_none_iff h1
-
-      have h2' : m0'[i - offset]? = none := by
-        exact Iff.mpr List.getElem?_eq_none_iff h1'
-
-      simp [h2,h2']
-
-      intro step0
-
-      match
-        h3 : m1[i- (offset + List.length m0)]?,
-        h3' : m1'[i - (offset + List.length m0')]?
-      with
-      | some e1, some e1' =>
-        simp
-        intro step1
-
-        have h4 : ¬ i - offset < List.length m0 := by exact Iff.mpr Nat.not_lt h1
-        have h4' : ¬ i - offset < List.length m0' := by exact Iff.mpr Nat.not_lt h1'
-
-        rw [List.getElem?_append]
-        rw [List.getElem?_append]
-
-        simp [h4,h4']
-
-        have h5 :
-          i - offset - List.length m0 =
-          i - (offset + List.length m0)
-        := by exact Nat.sub_sub i offset (List.length m0)
-
-        have h5' :
-          i - offset - List.length m0' =
-          i - (offset + List.length m0')
-        := by exact Nat.sub_sub i offset (List.length m0')
-
-        rw [h5,h5']
-
-        simp [h3,h3']
-        rw [len0] at step1
-
-        rw [Expr.shift_vars_add] at step1
-        rw [Expr.shift_vars_add] at step1
-
-        apply ParStep.shift_vars_reflection step1
-
-      | some e1, none =>
-        simp
-        intro step1
-
-        apply False.elim
-        have h3 : i - (offset + List.length m0) < List.length m1 := by
-          have ⟨h,eq⟩ := Iff.mp List.getElem?_eq_some_iff h3
-          apply h
-
-        have h3': List.length m1' ≤ i- (offset + List.length m0'):= by
-          exact Iff.mp List.getElem?_eq_none_iff h3'
-
-        rw [len0,len1] at h3
-        have ⟨h4,h5⟩ := Iff.mp Nat.lt_iff_le_and_not_ge h3
-        apply h5 h3'
-
-      | none , some e1 =>
-        simp
-        intro step1
-
-        apply False.elim
-
-        have h3: List.length m1 ≤ i - (offset + List.length m0) := by
-          exact Iff.mp List.getElem?_eq_none_iff h3
-
-        have h3' : i - (offset + List.length m0') < List.length m1' := by
-          have ⟨h,eq⟩ := Iff.mp List.getElem?_eq_some_iff h3'
-          apply h
-
-
-        rw [len0,len1] at h3
-        have ⟨h4,h5⟩ := Iff.mp Nat.lt_iff_le_and_not_ge h3'
-        apply h5 h3
-
-      | none , none =>
-        simp
-        intro step1
-
-        have h4: List.length m1 ≤ i - (offset + List.length m0) := by
-          exact Iff.mp List.getElem?_eq_none_iff h3
-
-        have h4': List.length m1' ≤ i - (offset + List.length m0') := by
-          exact Iff.mp List.getElem?_eq_none_iff h3'
-
-        rw [Nat.sub_add_eq] at h4
-        rw [Nat.sub_add_eq] at h4'
-
-        have h5  : List.length m0 + List.length m1 ≤ i - offset := by
-          exact Iff.mp (Nat.le_sub_iff_add_le' h1) h4
-
-        have h5' : List.length m0' + List.length m1'  ≤ i - offset := by
-          exact Iff.mp (Nat.le_sub_iff_add_le' h1') h4'
-
-        rw [←List.length_append] at h5
-        rw [←List.length_append] at h5'
-
-        have h6 : (m0 ++ m1)[i - offset]? = none := by
-          exact Iff.mpr List.getElem?_eq_none_iff h5
-
-        have h6' : (m0' ++ m1')[i - offset]? = none := by
-          exact Iff.mpr List.getElem?_eq_none_iff h5'
-
-        simp [h6,h6']
-        rw [len0,len1]
-        apply ParStep.refl
-    }
-    {
-      simp [Expr.instantiate]
-      have hh0' := hh0
-      rw [len0] at hh0'
-      simp [hh0,hh0']
-      by_cases hh1 : offset ≤ i
-      { simp [hh1]
-
-        have h0 : ¬ List.length m0 ≤ i - offset := by
-          intro h
-          apply hh0
-          exact Iff.mp (Nat.le_sub_iff_add_le' hh1) h
-
-        have h0' : ¬ List.length m0' ≤ i - offset := by
-          exact Eq.mpr_not (congrFun (congrArg LE.le (id (Eq.symm len0))) (i - offset)) h0
-
-        apply Nat.lt_of_not_le at h0
-        apply Nat.lt_of_not_le at h0'
-
-        have h1 := Iff.mpr (List.getElem?_eq_some_getElem_iff h0) True.intro
-        have h1' := Iff.mpr (List.getElem?_eq_some_getElem_iff h0') True.intro
-
-        simp [h1,h1']
-
-
-        intro h2 h3
-        rw [List.getElem?_append_left h0]
-        rw [List.getElem?_append_left h0']
-
-        simp [h1, h1']
-        apply h2
-      }
-      { simp [hh1] }
-    }
-  | fvar x =>
-    simp [Expr.instantiate]
-  | iso l body =>
-    simp [Expr.instantiate]
-    intro h0 h1 h2 h3
-
-    match h2,h3 with
-    | ParStep.iso step0, ParStep.iso step1 =>
-      apply ParStep.iso
-      apply ParStep.instantiate_concat_preservation h0 h1 step0 step1
-
-  | record r =>
-    simp [Expr.instantiate]
-    intro h0 h1 h2 h3
-    match h2, h3 with
-    | ParStep.record step0, ParStep.record step1 =>
-      apply ParStep.record
-      apply ParRcdStep.instantiate_concat_preservation h0 h1 step0 step1
-
-  | function r =>
-    simp [Expr.instantiate]
-    intro h0 h1 h2 h3
-    match h2, h3 with
-    | ParStep.function step0, ParStep.function step1 =>
-      apply ParStep.function
-      apply ParFunStep.instantiate_concat_preservation h0 h1 step0 step1
-  | app ef ea =>
-    simp [Expr.instantiate]
-    intro h0 h1 h2 h3
-    generalize h4 : (Expr.instantiate offset m0 ef) = ef0 at h2
-    generalize h5 : (Expr.instantiate offset m0 ea) = ea0 at h2
-    generalize h6 : (Expr.instantiate offset m0' ef) = ef0' at h2
-    generalize h7 : (Expr.instantiate offset m0' ea) = ea0' at h2
-
-    generalize h8 : (Expr.instantiate (offset + List.length m0) m1 ef) = ef1 at h3
-    generalize h9 : (Expr.instantiate (offset + List.length m0) m1 ea) = ea1 at h3
-    generalize h10 : (Expr.instantiate (offset + List.length m0') m1' ef) = ef1' at h3
-    generalize h11 : (Expr.instantiate (offset + List.length m0') m1' ea) = ea1' at h3
-
-
-    generalize h12 : (Expr.app ef0' ea0') = e0' at h2
-    generalize h13 : (Expr.app ef1' ea1') = e1' at h3
-
-
-    match h2, h3 with
-    | ParStep.app step_f0 step_a0, ParStep.app step_f1 step_a1 =>
-      simp at h12
-      simp at h13
-
-      have ⟨h14,h15⟩ := h12
-      have ⟨h16,h17⟩ := h13
-      rw [←h14] at step_f0
-      rw [←h15] at step_a0
-      rw [←h16] at step_f1
-      rw [←h17] at step_a1
-
-      rw [←h4,←h6] at step_f0
-      rw [←h5,←h7] at step_a0
-
-      rw [←h8,←h10] at step_f1
-      rw [←h9,←h11] at step_a1
-
-      apply ParStep.app
-      { apply ParStep.instantiate_concat_preservation h0 h1 step_f0 step_f1 }
-      { apply ParStep.instantiate_concat_preservation h0 h1 step_a0 step_a1 }
-
-    | ParStep.pattern_match _ _ _ _, _ =>
-      /- contradiction -/
-      sorry
-
-    | ParStep.skip _ _ _ _ _, _ =>
-      /- contradiction -/
-      sorry
-
-    | _, ParStep.pattern_match _ _ _ _ =>
-      /- contradiction -/
-      sorry
-
-    | _, ParStep.skip _ _ _ _ _ =>
-      /- contradiction -/
-      sorry
-
-  | anno body t =>
-    simp [Expr.instantiate]
-    intro h0 h1 h2 h3
-
-    match h2,h3 with
-    | ParStep.anno step0, ParStep.anno step1 =>
-      apply ParStep.anno
-      apply ParStep.instantiate_concat_preservation h0 h1 step0 step1
-    | ParStep.erase _ _, _ =>
-      /- contradiction -/
-      sorry
-    | _, ParStep.erase _ _ =>
-      /- contradiction -/
-      sorry
-  | loopi body =>
-    simp [Expr.instantiate]
-    intro h0 h1 h2 h3
-
-    generalize h4 : (Expr.instantiate offset m0 body) = body0 at h2
-    generalize h5 : (Expr.instantiate (offset + List.length m0) m1 body) = body1 at h3
-
-    generalize h6 : (Expr.loopi (Expr.instantiate offset m0' body)) = e0' at h2
-    generalize h7 : (Expr.loopi (Expr.instantiate (offset + List.length m0') m1' body)) = e1' at h3
-
-    match h2,h3 with
-    | ParStep.loopi step0, ParStep.loopi step1 =>
-      simp at h6
-      simp at h7
-      rw [←h4,←h6] at step0
-      rw [←h5,←h7] at step1
-      apply ParStep.loopi
-      apply ParStep.instantiate_concat_preservation h0 h1 step0 step1
-    | ParStep.recycle _ _, _ =>
-      /- contradiction -/
-      sorry
-    | _, ParStep.recycle _ _ =>
-      /- contradiction -/
-      sorry
 end
+
+mutual
+  theorem ParStep.instantiate_reflection
+    (step : ParStep (Expr.instantiate depth m e) (Expr.instantiate depth m e'))
+  : ParStep e e'
+  := by sorry
+end
+
+
+-- mutual
+--   theorem ParRcdStep.instantiate_concat_preservation :
+--     List.length m0 = List.length m0' →
+--     List.length m1 = List.length m1' →
+--     ParRcdStep
+--       (List.record_instantiate offset m0 r)
+--       (List.record_instantiate offset m0' r) →
+--     ParRcdStep
+--       (List.record_instantiate (offset + List.length m0) m1 r)
+--       (List.record_instantiate (offset + List.length m0') m1' r) →
+--     ParRcdStep (List.record_instantiate offset (m0 ++ m1) r) (List.record_instantiate offset (m0' ++ m1') r)
+--   := by sorry
+
+--   theorem ParFunStep.instantiate_concat_preservation :
+--     List.length m0 = List.length m0' →
+--     List.length m1 = List.length m1' →
+--     ParFunStep
+--       (List.function_instantiate offset m0 f)
+--       (List.function_instantiate offset m0' f) →
+--     ParFunStep
+--       (List.function_instantiate (offset + List.length m0) m1 f)
+--       (List.function_instantiate (offset + List.length m0') m1' f) →
+--     ParFunStep (List.function_instantiate offset (m0 ++ m1) f) (List.function_instantiate offset (m0' ++ m1') f)
+--   := by sorry
+
+
+--   theorem ParStep.instantiate_concat_preservation :
+--     List.length m0 = List.length m0' →
+--     List.length m1 = List.length m1' →
+--     ParStep (Expr.instantiate offset m0 e) (Expr.instantiate offset m0' e) →
+--     ParStep
+--       (Expr.instantiate (offset + List.length m0) m1 e)
+--       (Expr.instantiate (offset + List.length m0') m1' e) →
+--     ParStep (Expr.instantiate offset (m0 ++ m1) e) (Expr.instantiate offset (m0' ++ m1') e)
+--   := by cases e with
+--   | bvar i x =>
+--     intro len0 len1
+--     by_cases hh0 : (offset + List.length m0) ≤ i
+--     {
+
+--       simp [Expr.instantiate]
+--       simp [hh0]
+--       have hh0' : offset + List.length m0' ≤ i := by
+--         exact le_of_eq_of_le (congrArg (HAdd.hAdd offset) (id (Eq.symm len0))) hh0
+--       simp [hh0']
+--       have hh2 : offset ≤ i := by exact Nat.le_of_add_right_le hh0
+--       simp [hh2]
+
+
+--       have h1 := Nat.le_sub_of_add_le' hh0
+--       have h1' := Nat.le_sub_of_add_le' hh0'
+
+--       have h2 : m0[i - offset]? = none := by
+--         exact Iff.mpr List.getElem?_eq_none_iff h1
+
+--       have h2' : m0'[i - offset]? = none := by
+--         exact Iff.mpr List.getElem?_eq_none_iff h1'
+
+--       simp [h2,h2']
+
+--       intro step0
+
+--       match
+--         h3 : m1[i- (offset + List.length m0)]?,
+--         h3' : m1'[i - (offset + List.length m0')]?
+--       with
+--       | some e1, some e1' =>
+--         simp
+--         intro step1
+
+--         have h4 : ¬ i - offset < List.length m0 := by exact Iff.mpr Nat.not_lt h1
+--         have h4' : ¬ i - offset < List.length m0' := by exact Iff.mpr Nat.not_lt h1'
+
+--         rw [List.getElem?_append]
+--         rw [List.getElem?_append]
+
+--         simp [h4,h4']
+
+--         have h5 :
+--           i - offset - List.length m0 =
+--           i - (offset + List.length m0)
+--         := by exact Nat.sub_sub i offset (List.length m0)
+
+--         have h5' :
+--           i - offset - List.length m0' =
+--           i - (offset + List.length m0')
+--         := by exact Nat.sub_sub i offset (List.length m0')
+
+--         rw [h5,h5']
+
+--         simp [h3,h3']
+--         rw [len0] at step1
+
+--         rw [Expr.shift_vars_add] at step1
+--         rw [Expr.shift_vars_add] at step1
+
+--         apply ParStep.shift_vars_reflection step1
+
+--       | some e1, none =>
+--         simp
+--         intro step1
+
+--         apply False.elim
+--         have h3 : i - (offset + List.length m0) < List.length m1 := by
+--           have ⟨h,eq⟩ := Iff.mp List.getElem?_eq_some_iff h3
+--           apply h
+
+--         have h3': List.length m1' ≤ i- (offset + List.length m0'):= by
+--           exact Iff.mp List.getElem?_eq_none_iff h3'
+
+--         rw [len0,len1] at h3
+--         have ⟨h4,h5⟩ := Iff.mp Nat.lt_iff_le_and_not_ge h3
+--         apply h5 h3'
+
+--       | none , some e1 =>
+--         simp
+--         intro step1
+
+--         apply False.elim
+
+--         have h3: List.length m1 ≤ i - (offset + List.length m0) := by
+--           exact Iff.mp List.getElem?_eq_none_iff h3
+
+--         have h3' : i - (offset + List.length m0') < List.length m1' := by
+--           have ⟨h,eq⟩ := Iff.mp List.getElem?_eq_some_iff h3'
+--           apply h
+
+
+--         rw [len0,len1] at h3
+--         have ⟨h4,h5⟩ := Iff.mp Nat.lt_iff_le_and_not_ge h3'
+--         apply h5 h3
+
+--       | none , none =>
+--         simp
+--         intro step1
+
+--         have h4: List.length m1 ≤ i - (offset + List.length m0) := by
+--           exact Iff.mp List.getElem?_eq_none_iff h3
+
+--         have h4': List.length m1' ≤ i - (offset + List.length m0') := by
+--           exact Iff.mp List.getElem?_eq_none_iff h3'
+
+--         rw [Nat.sub_add_eq] at h4
+--         rw [Nat.sub_add_eq] at h4'
+
+--         have h5  : List.length m0 + List.length m1 ≤ i - offset := by
+--           exact Iff.mp (Nat.le_sub_iff_add_le' h1) h4
+
+--         have h5' : List.length m0' + List.length m1'  ≤ i - offset := by
+--           exact Iff.mp (Nat.le_sub_iff_add_le' h1') h4'
+
+--         rw [←List.length_append] at h5
+--         rw [←List.length_append] at h5'
+
+--         have h6 : (m0 ++ m1)[i - offset]? = none := by
+--           exact Iff.mpr List.getElem?_eq_none_iff h5
+
+--         have h6' : (m0' ++ m1')[i - offset]? = none := by
+--           exact Iff.mpr List.getElem?_eq_none_iff h5'
+
+--         simp [h6,h6']
+--         rw [len0,len1]
+--         apply ParStep.refl
+--     }
+--     {
+--       simp [Expr.instantiate]
+--       have hh0' := hh0
+--       rw [len0] at hh0'
+--       simp [hh0,hh0']
+--       by_cases hh1 : offset ≤ i
+--       { simp [hh1]
+
+--         have h0 : ¬ List.length m0 ≤ i - offset := by
+--           intro h
+--           apply hh0
+--           exact Iff.mp (Nat.le_sub_iff_add_le' hh1) h
+
+--         have h0' : ¬ List.length m0' ≤ i - offset := by
+--           exact Eq.mpr_not (congrFun (congrArg LE.le (id (Eq.symm len0))) (i - offset)) h0
+
+--         apply Nat.lt_of_not_le at h0
+--         apply Nat.lt_of_not_le at h0'
+
+--         have h1 := Iff.mpr (List.getElem?_eq_some_getElem_iff h0) True.intro
+--         have h1' := Iff.mpr (List.getElem?_eq_some_getElem_iff h0') True.intro
+
+--         simp [h1,h1']
+
+
+--         intro h2 h3
+--         rw [List.getElem?_append_left h0]
+--         rw [List.getElem?_append_left h0']
+
+--         simp [h1, h1']
+--         apply h2
+--       }
+--       { simp [hh1] }
+--     }
+--   | fvar x =>
+--     simp [Expr.instantiate]
+--   | iso l body =>
+--     simp [Expr.instantiate]
+--     intro h0 h1 h2 h3
+
+--     match h2,h3 with
+--     | ParStep.iso step0, ParStep.iso step1 =>
+--       apply ParStep.iso
+--       apply ParStep.instantiate_concat_preservation h0 h1 step0 step1
+
+--   | record r =>
+--     simp [Expr.instantiate]
+--     intro h0 h1 h2 h3
+--     match h2, h3 with
+--     | ParStep.record step0, ParStep.record step1 =>
+--       apply ParStep.record
+--       apply ParRcdStep.instantiate_concat_preservation h0 h1 step0 step1
+
+--   | function r =>
+--     simp [Expr.instantiate]
+--     intro h0 h1 h2 h3
+--     match h2, h3 with
+--     | ParStep.function step0, ParStep.function step1 =>
+--       apply ParStep.function
+--       apply ParFunStep.instantiate_concat_preservation h0 h1 step0 step1
+--   | app ef ea =>
+--     simp [Expr.instantiate]
+--     intro h0 h1 h2 h3
+--     generalize h4 : (Expr.instantiate offset m0 ef) = ef0 at h2
+--     generalize h5 : (Expr.instantiate offset m0 ea) = ea0 at h2
+--     generalize h6 : (Expr.instantiate offset m0' ef) = ef0' at h2
+--     generalize h7 : (Expr.instantiate offset m0' ea) = ea0' at h2
+
+--     generalize h8 : (Expr.instantiate (offset + List.length m0) m1 ef) = ef1 at h3
+--     generalize h9 : (Expr.instantiate (offset + List.length m0) m1 ea) = ea1 at h3
+--     generalize h10 : (Expr.instantiate (offset + List.length m0') m1' ef) = ef1' at h3
+--     generalize h11 : (Expr.instantiate (offset + List.length m0') m1' ea) = ea1' at h3
+
+
+--     generalize h12 : (Expr.app ef0' ea0') = e0' at h2
+--     generalize h13 : (Expr.app ef1' ea1') = e1' at h3
+
+
+--     match h2, h3 with
+--     | ParStep.app step_f0 step_a0, ParStep.app step_f1 step_a1 =>
+--       simp at h12
+--       simp at h13
+
+--       have ⟨h14,h15⟩ := h12
+--       have ⟨h16,h17⟩ := h13
+--       rw [←h14] at step_f0
+--       rw [←h15] at step_a0
+--       rw [←h16] at step_f1
+--       rw [←h17] at step_a1
+
+--       rw [←h4,←h6] at step_f0
+--       rw [←h5,←h7] at step_a0
+
+--       rw [←h8,←h10] at step_f1
+--       rw [←h9,←h11] at step_a1
+
+--       apply ParStep.app
+--       { apply ParStep.instantiate_concat_preservation h0 h1 step_f0 step_f1 }
+--       { apply ParStep.instantiate_concat_preservation h0 h1 step_a0 step_a1 }
+
+--     | ParStep.pattern_match _ _ _ _, _ =>
+--       /- contradiction -/
+--       sorry
+
+--     | ParStep.skip _ _ _ _ _, _ =>
+--       /- contradiction -/
+--       sorry
+
+--     | _, ParStep.pattern_match _ _ _ _ =>
+--       /- contradiction -/
+--       sorry
+
+--     | _, ParStep.skip _ _ _ _ _ =>
+--       /- contradiction -/
+--       sorry
+
+--   | anno body t =>
+--     simp [Expr.instantiate]
+--     intro h0 h1 h2 h3
+
+--     match h2,h3 with
+--     | ParStep.anno step0, ParStep.anno step1 =>
+--       apply ParStep.anno
+--       apply ParStep.instantiate_concat_preservation h0 h1 step0 step1
+--     | ParStep.erase _ step0, _ =>
+
+--       sorry
+--     | _, ParStep.erase _ step1 =>
+--       sorry
+
+
+--   | loopi body =>
+--     simp [Expr.instantiate]
+--     intro h0 h1 h2 h3
+
+--     generalize h4 : (Expr.instantiate offset m0 body) = body0 at h2
+--     generalize h5 : (Expr.instantiate (offset + List.length m0) m1 body) = body1 at h3
+
+--     generalize h6 : (Expr.loopi (Expr.instantiate offset m0' body)) = e0' at h2
+--     generalize h7 : (Expr.loopi (Expr.instantiate (offset + List.length m0') m1' body)) = e1' at h3
+
+--     match h2,h3 with
+--     | ParStep.loopi step0, ParStep.loopi step1 =>
+--       simp at h6
+--       simp at h7
+--       rw [←h4,←h6] at step0
+--       rw [←h5,←h7] at step1
+--       apply ParStep.loopi
+--       apply ParStep.instantiate_concat_preservation h0 h1 step0 step1
+--     | ParStep.recycle _ _, _ =>
+--       /- contradiction -/
+--       sorry
+--     | _, ParStep.recycle _ _ =>
+--       /- contradiction -/
+--       sorry
+-- end
 
 mutual
 
@@ -2864,15 +2935,10 @@ mutual
         { apply Pattern.match_record_count_eq h8 }
         { exact h6 }
 
-      apply ParStep.instantiate_concat_preservation h9 h10
-      { apply ParRcdStep.entry_instantiator step h5 h7 }
-      {
-
-        rw [← Pattern.match_entry_count_eq h5]
-        rw [← Pattern.match_entry_count_eq h7]
-
-        apply ParRcdStep.instantiator step h6 h8
-      }
+      apply ParStep.instantiator_preservation
+      apply ParGroupStep.concat
+      { apply ParGroupStep.entry step h5 h7 }
+      { apply ParGroupStep.record step h6 h8 }
 
     | none,_,_,_ =>
       simp [*] at h2
@@ -2897,7 +2963,7 @@ mutual
     rw [←matching, ←matching']
     clear matching matching'
 
-    apply ParStep.instantiator_preservation _ step
+    apply ParStep.single_instantiator_preservation _ step
   | @iso l p_body =>
     cases step with
     | bvar i x =>
