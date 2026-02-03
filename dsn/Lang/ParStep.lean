@@ -572,6 +572,19 @@ theorem Expr.record_shift_vars_keys_is_fresh_key_preservation :
   simp [h0]
   apply ih h1
 
+theorem Expr.record_shift_back_keys_is_fresh_key_preservation :
+  List.is_fresh_key l r →
+  List.is_fresh_key l  (List.record_shift_back threshold offset r)
+:= by induction r with
+| nil =>
+  simp [List.record_shift_back, List.is_fresh_key]
+| cons le r' ih =>
+  have (l',e) := le
+  simp [List.record_shift_back, List.is_fresh_key]
+  intro h0 h1
+  simp [h0]
+  apply ih h1
+
 theorem Expr.record_shift_vars_keys_is_fresh_key_reflection :
   List.is_fresh_key l  (List.record_shift_vars threshold offset r) →
   List.is_fresh_key l r
@@ -581,6 +594,19 @@ theorem Expr.record_shift_vars_keys_is_fresh_key_reflection :
 | cons le r' ih =>
   have (l',e) := le
   simp [List.record_shift_vars, List.is_fresh_key]
+  intro h0 h1
+  simp [h0]
+  apply ih h1
+
+theorem Expr.record_shift_back_keys_is_fresh_key_reflection :
+  List.is_fresh_key l  (List.record_shift_back threshold offset r) →
+  List.is_fresh_key l r
+:= by induction r with
+| nil =>
+  simp [List.record_shift_back, List.is_fresh_key]
+| cons le r' ih =>
+  have (l',e) := le
+  simp [List.record_shift_back, List.is_fresh_key]
   intro h0 h1
   simp [h0]
   apply ih h1
@@ -640,6 +666,20 @@ theorem Expr.record_shift_vars_keys_unique_preservation :
   { exact record_shift_vars_keys_is_fresh_key_preservation h0 }
   { apply ih h1 }
 
+theorem Expr.record_shift_back_keys_unique_preservation :
+  List.keys_unique r →
+  List.keys_unique (List.record_shift_back threshold offset r)
+:= by induction r with
+| nil =>
+  simp [List.record_shift_back, List.keys_unique]
+| cons le r' ih =>
+  have (l,e) := le
+  simp [List.record_shift_back, List.keys_unique]
+  intro h0 h1
+  apply And.intro
+  { exact record_shift_back_keys_is_fresh_key_preservation h0 }
+  { apply ih h1 }
+
 theorem Expr.record_shift_vars_keys_unique_reflection :
   List.keys_unique (List.record_shift_vars threshold offset r) →
   List.keys_unique r
@@ -652,6 +692,20 @@ theorem Expr.record_shift_vars_keys_unique_reflection :
   intro h0 h1
   apply And.intro
   { exact record_shift_vars_keys_is_fresh_key_reflection h0 }
+  { apply ih h1 }
+
+theorem Expr.record_shift_back_keys_unique_reflection :
+  List.keys_unique (List.record_shift_back threshold offset r) →
+  List.keys_unique r
+:= by induction r with
+| nil =>
+  simp [List.record_shift_back, List.keys_unique]
+| cons le r' ih =>
+  have (l,e) := le
+  simp [List.record_shift_back, List.keys_unique]
+  intro h0 h1
+  apply And.intro
+  { exact record_shift_back_keys_is_fresh_key_reflection h0 }
   { apply ih h1 }
 
 theorem Expr.record_instantiate_keys_unique_reflection :
@@ -698,6 +752,7 @@ theorem ParStep.skip_reduction
   | _ =>
     simp [Pattern.match] <;>
     simp [Expr.is_value] at isval
+
 
 mutual
 
@@ -1033,6 +1088,264 @@ theorem Expr.shift_vars_instantiate_zero_inside_out threshold offset m e :
   rw [Expr.shift_vars_instantiate_inside_out threshold 0 offset m e]
   rfl
 
+
+theorem Expr.shift_back_shit_vars_zero_inside_out threshold depth offset e:
+  Expr.shift_back (threshold + depth) offset (Expr.shift_vars 0 depth e) =
+  Expr.shift_vars 0 depth (Expr.shift_back threshold offset e)
+:= by sorry
+
+
+
+
+mutual
+  theorem Expr.record_shift_back_instantiate_inside_out threshold depth offset m r:
+    List.record_shift_back (threshold + depth) offset (List.record_instantiate depth m r)
+    =
+    List.record_instantiate depth
+      (Expr.list_shift_back threshold offset m)
+      (List.record_shift_back (threshold + List.length m + depth) offset r)
+  := by cases r with
+  | nil =>
+    simp [List.record_shift_back, List.record_instantiate]
+  | cons le r =>
+    have (l,e) := le
+    simp [List.record_shift_back, List.record_instantiate]
+    apply And.intro
+    { apply Expr.shift_back_instantiate_inside_out }
+    { apply Expr.record_shift_back_instantiate_inside_out }
+
+  theorem Expr.function_shift_back_instantiate_inside_out threshold depth offset m f :
+    List.function_shift_back (threshold + depth) offset
+      (List.function_instantiate depth m f)
+    =
+    List.function_instantiate depth
+      (Expr.list_shift_back threshold offset m)
+      (List.function_shift_back (threshold + List.length m + depth) offset f)
+  := by cases f with
+  | nil =>
+    simp [List.function_shift_back, List.function_instantiate]
+  | cons pe r =>
+    have (p,e) := pe
+    simp [List.function_shift_back, List.function_instantiate]
+
+    apply And.intro
+    {
+      have h0 :
+        threshold + depth + Pat.count_vars p
+        =
+        threshold + (depth + Pat.count_vars p)
+      := by exact Nat.add_assoc threshold depth (Pat.count_vars p)
+
+      have h1 :
+        threshold + List.length m + depth + Pat.count_vars p
+        =
+        threshold + List.length m + (depth + Pat.count_vars p)
+      := by exact Nat.add_assoc (threshold + List.length m) depth (Pat.count_vars p)
+
+      rw [h0,h1]
+      apply Expr.shift_back_instantiate_inside_out
+    }
+    { apply Expr.function_shift_back_instantiate_inside_out }
+
+
+  theorem Expr.shift_back_instantiate_inside_out threshold depth offset m e :
+    (Expr.shift_back (threshold + depth) offset (Expr.instantiate depth m e))
+    =
+    (Expr.instantiate depth
+      (Expr.list_shift_back threshold offset m)
+      (Expr.shift_back (threshold + List.length m + depth) offset e)
+    )
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.instantiate]
+    by_cases h0 : depth ≤ i
+    {
+      simp [h0]
+      cases h1 : m[i - depth]? with
+      | some arg =>
+        simp [Expr.shift_back]
+
+        have h2 : i - depth < List.length m := by
+          have ⟨h,g⟩ := Iff.mp List.getElem?_eq_some_iff h1
+          exact h
+        have h3 : i - depth < threshold + List.length m := by
+          exact Nat.lt_add_left threshold h2
+        have h4 : i < threshold + List.length m + depth := by
+          exact Iff.mp (Nat.sub_lt_iff_lt_add h0) h3
+
+        have h5 : i < threshold + List.length m + depth + offset := by
+          exact Nat.lt_add_right offset h4
+
+        have h6 : ¬ (threshold + List.length m + depth + offset) ≤ i := by
+          exact Nat.not_le_of_lt h5
+
+        simp [h6]
+        simp [Expr.instantiate]
+        simp [h0]
+        have h7 := Expr.list_shift_back_get_some_preservation threshold offset (i - depth) h1
+        simp [h7]
+        exact shift_back_shit_vars_zero_inside_out threshold depth offset arg
+
+      | none =>
+        simp
+        simp [Expr.shift_back]
+        have h2 : List.length m ≤ i - depth := by
+          exact Iff.mp List.getElem?_eq_none_iff h1
+
+        by_cases h3 : threshold + depth + offset ≤ i - List.length m
+        { simp [h3]
+
+          have h4 : List.length m ≤ i - depth + depth := by exact Nat.le_add_right_of_le h2
+          have h5 : i - depth + depth = i := by exact Nat.sub_add_cancel h0
+          rw [h5] at h4
+
+          have h6 : threshold + depth + offset + List.length m ≤ i := by
+            exact Nat.add_le_of_le_sub h4 h3
+
+          have h7 :
+            threshold + depth + offset + List.length m =  threshold + depth + List.length m + offset
+          := by exact Nat.add_right_comm (threshold + depth) offset (List.length m)
+          rw [h7] at h6
+
+          have h8 :
+             threshold + depth + List.length m =
+             threshold + List.length m + depth
+          := by exact Nat.add_right_comm threshold depth (List.length m)
+
+          rw [h8] at h6
+          simp [h6]
+          simp [Expr.instantiate]
+
+
+          have h9 : threshold + List.length m + depth  ≤ i - offset := by
+            exact Nat.le_sub_of_add_le h6
+
+          have h10 : depth  ≤ i - offset := by
+            exact Nat.le_of_add_left_le h9
+
+          simp [h10]
+
+
+          have h11 : threshold + List.length m ≤ i - offset - depth := by
+            exact Nat.le_sub_of_add_le h9
+
+          have h12 : List.length m ≤ i - offset - depth := by
+            exact Nat.le_of_add_left_le h11
+
+          have h13 : m[i - offset - depth]? = none := by
+            exact Iff.mpr List.getElem?_eq_none_iff h12
+
+          apply Expr.list_shift_back_get_none_preservation threshold offset at h13
+
+          simp [h13]
+          rw [Expr.list_shift_back_length_eq]
+          exact Nat.sub_right_comm i (List.length m) offset
+        }
+        {
+          simp [h3]
+
+          have h4 : ¬ threshold + depth + offset +List.length m ≤ i := by
+            intro h
+            apply h3
+            exact Nat.le_sub_of_add_le h
+
+          have h5 :
+            threshold + depth + offset + List.length m = threshold + depth + List.length m + offset
+          := by exact Nat.add_right_comm (threshold + depth) offset (List.length m)
+          rw [h5] at h4
+
+          have h6 :
+            threshold + depth + List.length m = threshold + List.length m + depth
+          := by exact Nat.add_right_comm threshold depth (List.length m)
+          rw [h6] at h4
+
+          simp [h4]
+          simp [Expr.instantiate]
+          simp [h0]
+          have h6 := Expr.list_shift_back_get_none_preservation threshold offset (i - depth) h1
+          simp [h6]
+          simp [Expr.list_shift_back_length_eq]
+        }
+    }
+    { simp [h0]
+      simp [Expr.shift_back]
+      have h1 : ¬ threshold + depth ≤ i := by
+        intro h
+        apply h0
+        exact Nat.le_of_add_left_le h
+
+      have h2 : ¬ threshold + depth + offset ≤ i := by
+        intro h
+        apply h1
+        exact Nat.le_of_add_right_le h
+      simp [h2]
+
+      have h3 : ¬ threshold + depth + offset + List.length m ≤ i := by
+        intro h
+        apply h2
+        exact Nat.le_of_add_right_le h
+
+      have h4 :
+        threshold + depth + offset + List.length m =
+        threshold + depth + List.length m + offset
+      := by exact Nat.add_right_comm (threshold + depth) offset (List.length m)
+      rw [h4] at h3
+
+      have h5 :
+        threshold + depth + List.length m =
+        threshold + List.length m + depth
+      := by exact Nat.add_right_comm threshold depth (List.length m)
+      rw [h5] at h3
+
+      simp [h3]
+      simp [Expr.instantiate]
+      simp [h0]
+    }
+
+  | fvar x =>
+    simp [Expr.shift_back, Expr.instantiate]
+  | iso l body =>
+    simp [Expr.shift_back, Expr.instantiate]
+    apply Expr.shift_back_instantiate_inside_out
+  | record r =>
+    simp [Expr.shift_back, Expr.instantiate]
+    apply Expr.record_shift_back_instantiate_inside_out
+
+  | function f =>
+    simp [Expr.shift_back, Expr.instantiate]
+    apply Expr.function_shift_back_instantiate_inside_out
+
+  | app ef ea =>
+    simp [Expr.shift_back, Expr.instantiate]
+    apply And.intro
+    { apply Expr.shift_back_instantiate_inside_out }
+    { apply Expr.shift_back_instantiate_inside_out }
+
+  | anno body t =>
+    simp [Expr.shift_back, Expr.instantiate]
+    apply Expr.shift_back_instantiate_inside_out
+
+  | loopi body =>
+    simp [Expr.shift_back, Expr.instantiate]
+    apply Expr.shift_back_instantiate_inside_out
+end
+
+
+theorem Expr.shift_back_instantiate_zero_inside_out threshold offset m e :
+  (Expr.shift_back threshold offset (Expr.instantiate 0 m e))
+  =
+  (Expr.instantiate 0
+    (Expr.list_shift_back threshold offset m)
+    (Expr.shift_back (threshold + List.length m) offset e)
+  )
+:= by
+  have h0 : threshold = threshold + 0 := by
+    exact rfl
+  rw [h0]
+  rw [Expr.shift_back_instantiate_inside_out threshold 0 offset m e]
+  rfl
+
+
 mutual
   theorem Pattern.match_entry_shift_vars_preservation :
     Pattern.match_entry l p r = some m →
@@ -1123,6 +1436,96 @@ mutual
 end
 
 mutual
+  theorem Pattern.match_entry_shift_back_preservation :
+    Pattern.match_entry l p r = some m →
+    ∀ threshold offset,
+    Pattern.match_entry l p (List.record_shift_back threshold offset r)
+    =
+    some (Expr.list_shift_back threshold offset m)
+  := by cases r with
+  | nil =>
+    simp [Pattern.match_entry]
+  | cons le r' =>
+    have (l',e) := le
+    simp [*,List.record_shift_back, Pattern.match_entry]
+    by_cases h0 : l' = l
+    { simp [*]
+      intro h1 threshold offset
+      apply Pattern.match_shift_back_preservation h1
+    }
+    { simp [*]
+      intro h1 threshold offset
+      apply Pattern.match_entry_shift_back_preservation h1
+    }
+
+  theorem Pattern.match_record_shift_back_preservation :
+    Pattern.match_record r ps = some m →
+    ∀ threshold offset,
+    Pattern.match_record (List.record_shift_back threshold offset r) ps
+    =
+    some (Expr.list_shift_back threshold offset m)
+  := by cases ps with
+  | nil =>
+    simp [Pattern.match_record]
+    intro h0
+    simp [*, Expr.list_shift_back]
+  | cons lp ps' =>
+    have (l,p) := lp
+    simp [Pattern.match_record]
+
+    match
+      h0 : (Pattern.match_entry l p r),
+      h1 : (Pattern.match_record r ps')
+    with
+    | some m0, some m1 =>
+      simp
+      intro h3 h4 threshold offset
+      simp [h3]
+
+      have ih0 := Pattern.match_entry_shift_back_preservation h0 threshold offset
+      have ih1 := Pattern.match_record_shift_back_preservation h1 threshold offset
+      simp [ih0,ih1,←h4]
+      exact Expr.list_shift_back_concat
+    | none,_ =>
+      simp
+    | _,none =>
+      simp
+
+  theorem Pattern.match_shift_back_preservation :
+    Pattern.match arg p = some m →
+    ∀ threshold offset,
+    Pattern.match (Expr.shift_back threshold offset arg) p
+    =
+    some (Expr.list_shift_back threshold offset m)
+  := by cases p with
+  | var x  =>
+    simp [Pattern.match]
+    intro h0
+    simp [←h0]
+    simp [Expr.list_shift_back]
+  | iso l pb =>
+    cases arg with
+    | iso l' b =>
+      simp [Pattern.match, Expr.shift_back]
+      intro h0 h1 threshold offset
+      simp [*]
+      apply Pattern.match_shift_back_preservation h1 threshold offset
+    | _ =>
+      simp [Pattern.match]
+  | record ps =>
+    cases arg with
+    | record r =>
+      simp [Pattern.match, Expr.shift_back]
+      intro h0 h1 threshold offset
+      apply And.intro
+      { exact Expr.record_shift_back_keys_unique_preservation h0 }
+      { apply Pattern.match_record_shift_back_preservation h1}
+    | _ =>
+      simp [Pattern.match]
+end
+
+
+mutual
   theorem Pattern.match_entry_shift_vars_reflection :
     List.is_record_value r →
     Pattern.match_entry l p (List.record_shift_vars threshold offset r) = some m' →
@@ -1200,6 +1603,83 @@ mutual
 end
 
 mutual
+  theorem Pattern.match_entry_shift_back_reflection :
+    List.is_record_value r →
+    Pattern.match_entry l p (List.record_shift_back threshold offset r) = some m' →
+    ∃ m, Pattern.match_entry l p r = some m
+  := by cases r with
+  | nil =>
+    simp [List.is_record_value, Pattern.match_entry, List.record_shift_back]
+  | cons le r' =>
+    have (l',e) := le
+    simp [*,List.is_record_value, List.record_shift_back, Pattern.match_entry]
+    by_cases h0 : l' = l
+    { simp [*]
+      intro h1 h2 h3
+      apply Pattern.match_shift_back_reflection h2
+    }
+    { simp [*]
+      intro h1 h2 h3
+      apply Pattern.match_entry_shift_back_reflection h3
+    }
+
+  theorem Pattern.match_record_shift_back_reflection :
+    List.is_record_value r →
+    Pattern.match_record (List.record_shift_back threshold offset r) ps = some m' →
+    ∃ m , Pattern.match_record r ps = some m
+  := by cases ps with
+  | nil =>
+    simp [Pattern.match_record]
+  | cons lp ps' =>
+    have (l,p) := lp
+    simp [Pattern.match_record]
+
+    match
+      h0 : (match_entry l p (List.record_shift_back threshold offset r)),
+      h1 : (Pattern.match_record (List.record_shift_back threshold offset r) ps')
+    with
+    | some m0', some m1' =>
+      simp
+      intro isval h3 h4
+      simp [h3]
+
+      have ⟨m0,ih0⟩ := Pattern.match_entry_shift_back_reflection isval h0
+      have ⟨m1,ih1⟩ := Pattern.match_record_shift_back_reflection isval h1
+      simp [ih0,ih1]
+    | none,_ =>
+      simp
+    | _,none =>
+      simp
+
+  theorem Pattern.match_shift_back_reflection :
+    Expr.is_value arg →
+    Pattern.match (Expr.shift_back threshold offset arg) p = some m' →
+    ∃ m, Pattern.match arg p = some m
+  := by cases p with
+  | var x  =>
+    simp [Pattern.match]
+  | iso l pb =>
+    cases arg with
+    | iso l' b =>
+      simp [Expr.is_value, Pattern.match, Expr.shift_back]
+      intro isval h0 h1
+      simp [*]
+      apply Pattern.match_shift_back_reflection isval h1
+    | _ =>
+      simp [Expr.is_value, Pattern.match, Expr.shift_back]
+  | record ps =>
+    cases arg with
+    | record r =>
+      simp [Expr.is_value, Pattern.match, Expr.shift_back]
+      intro ival h0 h1
+      apply And.intro
+      { exact Expr.record_shift_back_keys_unique_reflection h0 }
+      { apply Pattern.match_record_shift_back_reflection ival h1 }
+    | _ =>
+      simp [Expr.is_value, Pattern.match, Expr.shift_back]
+end
+
+mutual
 
   theorem Expr.record_is_value_shift_vars_preservation :
     List.is_record_value r = true →
@@ -1239,6 +1719,48 @@ mutual
     simp [Expr.is_value, Expr.shift_vars]
   | _ =>
     simp [Expr.is_value, Expr.shift_vars]
+end
+
+mutual
+
+  theorem Expr.record_is_value_shift_back_preservation :
+    List.is_record_value r = true →
+    ∀ (threshold offset : ℕ), List.is_record_value (List.record_shift_back threshold offset r) = true
+  := by cases r with
+  | nil =>
+    simp [List.is_record_value, List.record_shift_back]
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.is_record_value, List.record_shift_back]
+    intro h0 h1 h2 threshold offset
+    apply And.intro
+    {
+      apply And.intro
+      { exact record_shift_back_keys_is_fresh_key_preservation h0 }
+      { apply Expr.is_value_shift_back_preservation h1 }
+    }
+    { apply Expr.record_is_value_shift_back_preservation h2 }
+
+
+  theorem Expr.is_value_shift_back_preservation :
+    (Expr.is_value e) →
+    ∀ threshold offset, (Expr.is_value (Expr.shift_back threshold offset e))
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.is_value]
+  | fvar x =>
+    simp [Expr.is_value]
+  | iso l body =>
+    simp [Expr.is_value]
+    intro isval threshold offset
+    apply Expr.is_value_shift_back_preservation isval
+  | record r =>
+    simp [Expr.is_value, Expr.shift_back]
+    apply Expr.record_is_value_shift_back_preservation
+  | function f =>
+    simp [Expr.is_value, Expr.shift_back]
+  | _ =>
+    simp [Expr.is_value, Expr.shift_back]
 end
 
 mutual
@@ -1286,6 +1808,53 @@ mutual
       exact Expr.record_shift_vars_keys_unique_reflection h2
     | _ =>
       simp [Expr.is_value, Expr.shift_vars, Pattern.match]
+end
+
+mutual
+
+  theorem Pattern.record_skip_shift_back_preservation :
+    List.is_record_value r →
+    match_record r ps = none →
+    ∀ (threshold offset : ℕ),
+    match_record (List.record_shift_back threshold offset r) ps = none
+  := by cases ps with
+  | nil =>
+    simp [Pattern.match_record]
+  | cons lp ps' =>
+    have (l,p) := lp
+    simp [Pattern.match_record]
+
+    intro isval h0 threshold offset h1 m0' h2 m1' h3
+    have ⟨m0,h4⟩ := Pattern.match_entry_shift_back_reflection isval h2
+    have ⟨m1,h5⟩ := Pattern.match_record_shift_back_reflection isval h3
+    apply h0 h1 _ h4 _ h5
+
+
+  theorem Pattern.skip_shift_back_preservation :
+    Expr.is_value arg →
+    Pattern.match arg p = none →
+    ∀ threshold offset, Pattern.match (Expr.shift_back threshold offset arg) p = none
+  := by cases p with
+  | var x =>
+    simp [Pattern.match]
+  | iso l bp =>
+    cases arg with
+    | iso l' body =>
+      simp [Expr.is_value, Expr.shift_back, Pattern.match]
+      intro isval h0 threshold offset h1
+      apply Pattern.skip_shift_back_preservation isval (h0 h1)
+    | _ =>
+      simp [Expr.is_value, Expr.shift_back, Pattern.match]
+  | record ps =>
+    cases arg with
+    | record r =>
+      simp [Expr.is_value, Expr.shift_back, Pattern.match]
+      intro isval h0 threshold offset h2
+      apply Pattern.record_skip_shift_back_preservation isval
+      apply h0
+      exact Expr.record_shift_back_keys_unique_reflection h2
+    | _ =>
+      simp [Expr.is_value, Expr.shift_back, Pattern.match]
 end
 
 
@@ -1393,10 +1962,117 @@ end
 
 
 mutual
+
+  theorem ParRcdStep.shift_back_preservation
+    threshold
+    offset
+    (step : ParRcdStep r r')
+  : ParRcdStep
+    (List.record_shift_back threshold offset r)
+    (List.record_shift_back threshold offset r')
+  := by cases step with
+  | nil =>
+    simp [List.record_shift_back]
+    exact ParRcdStep.nil
+  | @cons e e' rr rr' l step_e step_rr =>
+    simp [List.record_shift_back]
+    apply ParRcdStep.cons
+    { apply ParStep.shift_back_preservation _ _ step_e}
+    { apply ParRcdStep.shift_back_preservation _ _ step_rr }
+
+  theorem ParFunStep.shift_back_preservation
+    threshold
+    offset
+    (step : ParFunStep f f')
+  : ParFunStep
+    (List.function_shift_back threshold offset f)
+    (List.function_shift_back threshold offset f')
+  := by cases step with
+  | nil =>
+    simp [List.function_shift_back]
+    exact ParFunStep.nil
+  | @cons e e' ff ff' p step_e step_ff =>
+    simp [List.function_shift_back]
+    apply ParFunStep.cons
+    { apply ParStep.shift_back_preservation _ _ step_e }
+    { apply ParFunStep.shift_back_preservation _ _ step_ff}
+
+
+
+  theorem ParStep.shift_back_preservation
+    threshold
+    offset
+    (step : ParStep e e')
+  : ParStep (Expr.shift_back threshold offset e) (Expr.shift_back threshold offset e')
+  := by cases step with
+  | bvar i x =>
+    exact ParStep.refl (Expr.shift_back threshold offset (Expr.bvar i x))
+  | fvar x =>
+    exact ParStep.refl (Expr.shift_back threshold offset (Expr.fvar x))
+  | @iso body body' l step_body =>
+    simp [Expr.shift_back]
+    apply ParStep.iso
+    apply ParStep.shift_back_preservation _ _ step_body
+  | @record r r' step_r =>
+    simp [Expr.shift_back]
+    apply ParStep.record
+    apply ParRcdStep.shift_back_preservation _ _ step_r
+  | @function f f' step_f =>
+    simp [Expr.shift_back]
+    apply ParStep.function
+    apply ParFunStep.shift_back_preservation _ _ step_f
+  | @app cator cator' arg arg' step_cator step_arg =>
+    simp [Expr.shift_back]
+    apply ParStep.app
+    { apply ParStep.shift_back_preservation _ _ step_cator }
+    { apply ParStep.shift_back_preservation _ _ step_arg }
+  | @pattern_match body body' arg arg' p m' f step_body step_arg matching' =>
+    simp [Expr.shift_back, List.function_shift_back]
+
+    rw [Expr.shift_back_instantiate_zero_inside_out]
+    apply ParStep.pattern_match
+    { rw [←Pattern.match_count_eq matching']
+      apply ParStep.shift_back_preservation _ _ step_body
+    }
+    { apply ParStep.shift_back_preservation _ _ step_arg }
+    { exact Pattern.match_shift_back_preservation matching' threshold offset }
+  | @skip f f' arg arg' p body step_f step_arg isval nomatching' =>
+    simp [Expr.shift_back]
+    apply ParStep.skip
+    { apply ParFunStep.shift_back_preservation _ _ step_f }
+    { apply ParStep.shift_back_preservation _ _  step_arg }
+    { exact Expr.is_value_shift_back_preservation isval threshold offset }
+    { exact Pattern.skip_shift_back_preservation isval nomatching' threshold offset }
+  | @anno e e' t step_e =>
+    simp [Expr.shift_back]
+    apply ParStep.anno
+    apply ParStep.shift_back_preservation _ _ step_e
+  | @erase e e' t step_e =>
+    simp [Expr.shift_back]
+    apply ParStep.erase
+    apply ParStep.shift_back_preservation _ _ step_e
+  | @loopi body body' step_body =>
+    simp [Expr.shift_back]
+    apply ParStep.loopi
+    apply ParStep.shift_back_preservation _ _ step_body
+  | @recycle e e' x step_e =>
+    simp [Expr.shift_back]
+
+    rw [Expr.shift_back_instantiate_zero_inside_out]
+    apply ParStep.recycle
+    apply ParStep.shift_back_preservation _ _ step_e
+end
+
+
+
+mutual
   theorem ParStep.shift_vars_reflection
   (step : ParStep (Expr.shift_vars threshold offset e) (Expr.shift_vars threshold offset e'))
   : ParStep e e'
-  := by sorry
+  := by
+    rw [←Expr.shift_forward_then_back threshold offset e]
+    rw [←Expr.shift_forward_then_back threshold offset e']
+    exact shift_back_preservation threshold offset step
 end
 
 
@@ -2550,6 +3226,7 @@ theorem Expr.instantiate_shift_vars_zero_inside_out offset depth m e :
   have h1 : offset = offset + 0 := by exact rfl
   rw [h0,h1]
   exact instantiate_shift_vars_inside_out (offset + 0) depth 0 m e
+
 
 
 mutual

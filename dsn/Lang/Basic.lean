@@ -1518,6 +1518,115 @@ def Expr.list_shift_vars (threshold : Nat) (offset : Nat) : List Expr → List E
 | e :: es =>
   Expr.shift_vars threshold offset e :: (Expr.list_shift_vars threshold offset es)
 
+mutual
+
+  def List.record_shift_back (threshold : Nat) (offset : Nat) : List (String × Expr) → List (String × Expr)
+  | .nil => .nil
+  | (l, e) :: r =>
+    (l, Expr.shift_back threshold offset e) :: (List.record_shift_back threshold offset r)
+
+  def List.function_shift_back (threshold : Nat) (offset : Nat) : List (Pat × Expr) → List (Pat × Expr)
+  | .nil => .nil
+  | (p, e) :: f =>
+    let threshold' := threshold + Pat.count_vars p
+    (p, Expr.shift_back threshold' offset e) :: (List.function_shift_back threshold offset f)
+
+  def Expr.shift_back (threshold : Nat) (offset : Nat) : Expr → Expr
+  | .bvar i x =>
+    if i >= threshold + offset then
+      (.bvar (i - offset) x)
+    else
+      (.bvar i x)
+  | .fvar id => .fvar id
+  | .iso l body => .iso l (Expr.shift_back threshold offset body)
+  | .record r => .record (List.record_shift_back threshold offset r)
+  | .function f => .function (List.function_shift_back threshold offset f)
+  | .app ef ea => .app (Expr.shift_back threshold offset ef) (Expr.shift_back threshold offset ea)
+  | .anno e t => .anno (Expr.shift_back threshold offset e) t
+  | .loopi e => .loopi (Expr.shift_back threshold offset e)
+end
+
+def Expr.list_shift_back (threshold : Nat) (offset : Nat) : List Expr → List Expr
+| .nil => .nil
+| e :: es =>
+  Expr.shift_back threshold offset e :: (Expr.list_shift_back threshold offset es)
+
+
+mutual
+  theorem Expr.record_shift_forward_then_back level offset r :
+    List.record_shift_back level offset (List.record_shift_vars level offset r) = r
+  := by cases r with
+  | nil =>
+    simp [List.record_shift_vars, List.record_shift_back]
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.record_shift_vars, List.record_shift_back]
+    apply And.intro
+    { apply Expr.shift_forward_then_back }
+    { apply Expr.record_shift_forward_then_back }
+
+  theorem Expr.function_shift_forward_then_back level offset f :
+    List.function_shift_back level offset (List.function_shift_vars level offset f) = f
+  := by cases f with
+  | nil =>
+    simp [List.function_shift_vars, List.function_shift_back]
+  | cons pe f' =>
+    have (p,e) := pe
+    simp [List.function_shift_vars, List.function_shift_back]
+    apply And.intro
+    { apply Expr.shift_forward_then_back }
+    { apply Expr.function_shift_forward_then_back }
+
+
+
+  theorem Expr.shift_forward_then_back level offset e :
+    Expr.shift_back level offset (Expr.shift_vars level offset e) = e
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.shift_vars]
+    by_cases h0 : level ≤ i
+    { simp [h0]
+      simp [Expr.shift_back]
+      intro h1
+      apply False.elim
+      have h2 : ¬ level ≤ i := by exact Nat.not_le_of_lt h1
+      apply h2 h0
+    }
+    { simp [h0]
+      simp [Expr.shift_back]
+      intro h1
+      have h2 : level ≤ i := by exact Nat.le_of_add_right_le h1
+      apply False.elim
+      apply h0 h2
+    }
+  | fvar x =>
+    simp [Expr.shift_vars, Expr.shift_back]
+  | iso l body =>
+    simp [Expr.shift_vars, Expr.shift_back]
+    apply Expr.shift_forward_then_back
+  | record r =>
+    simp [Expr.shift_vars, Expr.shift_back]
+    apply Expr.record_shift_forward_then_back
+
+  | function f =>
+    simp [Expr.shift_vars, Expr.shift_back]
+    apply Expr.function_shift_forward_then_back
+
+  | app ef ea =>
+    simp [Expr.shift_vars, Expr.shift_back]
+    apply And.intro
+    { apply Expr.shift_forward_then_back }
+    { apply Expr.shift_forward_then_back }
+
+  | anno body t =>
+    simp [Expr.shift_vars, Expr.shift_back]
+    apply Expr.shift_forward_then_back
+
+  | loopi body =>
+    simp [Expr.shift_vars, Expr.shift_back]
+    apply Expr.shift_forward_then_back
+end
+
 
 theorem List.get_none_add_preservation {α} (m : List α) (i : Nat) (i' : Nat):
   m[i]? = none →
@@ -1540,6 +1649,15 @@ theorem Expr.list_shift_vars_length_eq threshold offset m:
   simp [Expr.list_shift_vars]
   apply ih
 
+theorem Expr.list_shift_back_length_eq threshold offset m:
+  List.length (Expr.list_shift_back threshold offset m) = List.length m
+:= by induction m with
+| nil =>
+  simp [Expr.list_shift_back]
+| cons e m' ih =>
+  simp [Expr.list_shift_back]
+  apply ih
+
 
 theorem Expr.list_shift_vars_concat :
   (Expr.list_shift_vars threshold offset m0) ++
@@ -1551,6 +1669,18 @@ theorem Expr.list_shift_vars_concat :
   simp [Expr.list_shift_vars]
 | cons e0 m0' ih =>
   simp [Expr.list_shift_vars]
+  apply ih
+
+theorem Expr.list_shift_back_concat :
+  (Expr.list_shift_back threshold offset m0) ++
+  (Expr.list_shift_back threshold offset m1)
+  =
+  Expr.list_shift_back threshold offset (m0 ++ m1)
+:= by induction m0 with
+| nil =>
+  simp [Expr.list_shift_back]
+| cons e0 m0' ih =>
+  simp [Expr.list_shift_back]
   apply ih
 
 
@@ -1577,6 +1707,29 @@ theorem Expr.list_shift_vars_get_some_preservation threshold offset :
     apply ih _ h1
   }
 
+theorem Expr.list_shift_back_get_some_preservation threshold offset :
+  ∀ (i : Nat),
+  m[i]? = some arg →
+  (Expr.list_shift_back threshold offset m)[i]? = some (Expr.shift_back threshold offset arg)
+:= by induction m with
+| nil =>
+  simp
+| cons e m' ih =>
+  intro i
+  simp [Expr.list_shift_back]
+  rw [List.getElem?_cons]
+  by_cases h0 : i = 0
+  { simp [h0]
+    intro h1
+    simp [h1]
+  }
+  { simp [h0]
+    intro h1
+    rw [List.getElem?_cons]
+    simp [h0]
+    apply ih _ h1
+  }
+
 
 theorem Expr.list_shift_vars_get_none_preservation threshold offset :
   ∀ (i : Nat),
@@ -1586,6 +1739,16 @@ theorem Expr.list_shift_vars_get_none_preservation threshold offset :
   intro i h0
   apply Iff.mpr List.getElem?_eq_none_iff
   rw [Expr.list_shift_vars_length_eq]
+  exact Iff.mp List.getElem?_eq_none_iff h0
+
+theorem Expr.list_shift_back_get_none_preservation threshold offset :
+  ∀ (i : Nat),
+  m[i]? = none →
+  (Expr.list_shift_back threshold offset m)[i]? = none
+:= by
+  intro i h0
+  apply Iff.mpr List.getElem?_eq_none_iff
+  rw [Expr.list_shift_back_length_eq]
   exact Iff.mp List.getElem?_eq_none_iff h0
 
 
