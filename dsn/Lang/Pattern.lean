@@ -46,6 +46,7 @@ mutual
   | _, _ => none
 end
 
+
 mutual
   theorem Pattern.match_entry_count_eq :
     Pattern.match_entry l p r = some m →
