@@ -159,5 +159,33 @@ mutual
     simp
 end
 
+/- NOTE: need to prove the expression is safe so that inductive hypothesis is strong enough -/
+theorem FinTyping.safety :
+  FinTyping e t → Safe e
+:= by cases t with
+| var t =>
+  simp [FinTyping]
+| iso l t =>
+  simp [FinTyping]
+  intro h0
+  have ih := FinTyping.safety h0
+  sorry
+
+-- | entry l t =>
+-- | path t0 t1 =>
+-- | bot =>
+-- | top =>
+-- | unio t0 t1 =>
+-- | inter t0 t1 =>
+-- | diff t0 t1 =>
+| _ => sorry
+
+theorem FinTyping.progress :
+  FinTyping e t → Expr.is_value e ∨ ∃ e', NStep e e'
+:= by
+  intro h0
+  apply Safe.progress
+  apply FinTyping.safety h0
+
 
 end Lang

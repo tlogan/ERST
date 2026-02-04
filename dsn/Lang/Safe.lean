@@ -11,6 +11,15 @@ namespace Lang
 def Safe (e : Expr) : Prop :=
   (∀ e', ReflTrans NStep e e' → Expr.is_value e' ∨ (∃ e'' , NStep e' e''))
 
+
+theorem Safe.progress :
+  Safe e → Expr.is_value e ∨ ∃ e', NStep e e'
+:= by
+  unfold Safe
+  intro h0
+  apply h0
+  exact ReflTrans.refl e
+
 theorem Safe.subject_star_reduction
   (step_star : ReflTrans NStep e e')
 : Safe e → Safe e'

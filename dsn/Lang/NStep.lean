@@ -58,6 +58,15 @@ theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
     List.keys_unique, List.is_fresh_key
   ]
 
+theorem NStep.extract : NStep (Expr.extract (Expr.iso l e) l) e := by
+  unfold Expr.extract
+  have h1 : e = Expr.instantiate 0 [e] (.bvar 0 "x") := by
+    simp [Expr.instantiate, Expr.shift_vars_zero]
+  rw [h1]
+  apply NStep.pattern_match
+  simp [Expr.instantiate, Expr.shift_vars_zero]
+  simp [Pattern.match]
+
 
 
 
