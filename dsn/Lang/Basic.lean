@@ -1513,6 +1513,62 @@ mutual
   | .loopi e => .loopi (Expr.shift_vars threshold offset e)
 end
 
+mutual
+
+
+  theorem Expr.record_shift_vars_zero r :
+    List.record_shift_vars level 0 r = r
+  := by cases r with
+  | nil =>
+    simp [List.record_shift_vars]
+  | cons le r' =>
+    have (l,e) := le
+    simp [List.record_shift_vars]
+    apply And.intro
+    { apply Expr.shift_vars_zero }
+    { apply Expr.record_shift_vars_zero }
+
+  theorem Expr.function_shift_vars_zero f :
+    List.function_shift_vars level 0 f = f
+  := by cases f with
+  | nil =>
+    simp [List.function_shift_vars]
+  | cons pe f' =>
+    have (p,e) := pe
+    simp [List.function_shift_vars]
+    apply And.intro
+    { apply Expr.shift_vars_zero }
+    { apply Expr.function_shift_vars_zero }
+
+  theorem Expr.shift_vars_zero e :
+    Expr.shift_vars level 0 e = e
+  := by cases e with
+  | bvar i x =>
+    simp [Expr.shift_vars]
+  | fvar x =>
+    simp [Expr.shift_vars]
+  | iso l body =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_zero
+  | record r =>
+    simp [Expr.shift_vars]
+    apply Expr.record_shift_vars_zero
+  | function f =>
+    simp [Expr.shift_vars]
+    apply Expr.function_shift_vars_zero
+  | app ea ef =>
+    simp [Expr.shift_vars]
+    apply And.intro
+    { apply Expr.shift_vars_zero }
+    { apply Expr.shift_vars_zero }
+  | anno body t =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_zero
+  | loopi body =>
+    simp [Expr.shift_vars]
+    apply Expr.shift_vars_zero
+end
+
 def Expr.list_shift_vars (threshold : Nat) (offset : Nat) : List Expr → List Expr
 | .nil => .nil
 | e :: es =>
