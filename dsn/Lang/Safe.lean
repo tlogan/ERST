@@ -62,5 +62,22 @@ theorem Safe.subject_expansion
   exact ReflTrans.refl e'
 
 
+theorem Safe.entry_intro l :
+  Safe e →
+  Safe (Expr.record [(l, e)])
+:= by sorry
+
+theorem Safe.function f :
+  Safe (.function f)
+:= by
+  unfold Safe
+  intro e' h0
+  apply Or.inl
+  have ⟨f',h1⟩ := NStep.refl_trans_function_inversion f h0
+  rw [h1]
+  simp [Expr.is_value]
+
+
+
 
 end Lang

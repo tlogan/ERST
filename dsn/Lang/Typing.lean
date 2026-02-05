@@ -36,10 +36,11 @@ mutual
   def Typing (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
   | .top => Safe e
-  | .iso l t => Typing am (.extract e l) t
-  | .entry l t => Typing am (.project e l) t
-  | .path left right => ∀ arg ,
-    Typing am arg left → Typing am (.app e arg) right
+  | .iso l t => Safe e ∧ Typing am (.extract e l) t
+  | .entry l t => Safe e ∧ Typing am (.project e l) t
+  | .path left right =>
+    Safe e ∧
+    ∀ arg , Typing am arg left → Typing am (.app e arg) right
   | .unio left right => Typing am e left ∨ Typing am e right
   | .inter left right => Typing am e left ∧ Typing am e right
   | .diff left right => Typing am e left ∧ ¬ (Typing am e right)
@@ -48,10 +49,15 @@ mutual
     (MultiSubtyping (am' ++ am) quals) ∧
     (Typing (am' ++ am) e body)
   | .all ids quals body =>
+    Safe e ∧
     (∀ am' , (ListPair.dom am') ⊆ ids → (MultiSubtyping (am' ++ am) quals) →
       (Typing (am' ++ am) e body)
-    ) ∧
-    (∃ am' , (ListPair.dom am') ⊆ ids ∧ (MultiSubtyping (am' ++ am) quals))
+    )
+  -- | .all ids quals body =>
+  --   (∀ am' , (ListPair.dom am') ⊆ ids → (MultiSubtyping (am' ++ am) quals) →
+  --     (Typing (am' ++ am) e body)
+  --   ) ∧
+  --   (∃ am' , (ListPair.dom am') ⊆ ids ∧ (MultiSubtyping (am' ++ am) quals))
   | .lfp id body =>
     Monotonic am id body ∧
     /- TODO: remove this size requirement -/
@@ -74,6 +80,66 @@ mutual
     all_goals try linarith
 end
 
+theorem Typing.safety :
+  Typing am e t → Safe e
+:= by cases t with
+| var t =>
+  simp [Typing]
+  intro x h0 h1
+  apply FinTyping.safety h1
+| iso l t =>
+  simp [Typing]
+  intro h0 h1
+  apply h0
+| entry l t =>
+  simp [Typing]
+  intro h0 h1
+  apply h0
+| path t0 t1 =>
+  simp [Typing]
+  intro h0 h1
+  apply h0
+| bot =>
+  simp [Typing]
+| top =>
+  simp [Typing]
+| unio t0 t1 =>
+  simp [Typing]
+  intro h0
+  cases h0 with
+  | inl h0 =>
+    apply Typing.safety h0
+  | inr h0 =>
+    apply Typing.safety h0
+| inter t0 t1 =>
+  simp [Typing]
+  intro h0 h1
+  apply Typing.safety h0
+| diff t0 t1 =>
+  simp [Typing]
+  intro h0 h1
+  apply Typing.safety h0
+| all ids cs body =>
+  simp [Typing]
+  intro h0 h1
+  apply h0
+| exi ids cs body =>
+  simp [Typing]
+  intro h0 h1 h2 h3
+  apply Typing.safety h3
+| lfp x body =>
+  simp [Typing]
+  intro h0 h1 h2 h3 h4
+  apply Typing.safety h4
+
+
+theorem Typing.progress :
+  Typing am e t → Expr.is_value e ∨ ∃ e', NStep e e'
+:= by
+  intro h0
+  apply Safe.progress
+  apply Typing.safety h0
+
 
 mutual
   theorem Typing.subject_reduction
@@ -90,26 +156,37 @@ mutual
 
   | iso label body =>
     unfold Typing
-    intro h0
-    apply Typing.subject_reduction
-    { apply NStep.applicand _ transition }
-    { exact h0 }
+    intro ⟨h0,h1⟩
+    apply And.intro
+    { exact Safe.subject_reduction transition h0 }
+    { apply Typing.subject_reduction
+      { apply NStep.applicand _ transition }
+      { exact h1 }
+    }
 
   | entry label body =>
     unfold Typing
-    intro h0
-    apply Typing.subject_reduction
-    { apply NStep.applicand _ transition }
-    { exact h0 }
+    intro ⟨h0,h1⟩
+    apply And.intro
+    { exact Safe.subject_reduction transition h0 }
+    { apply Typing.subject_reduction
+      { apply NStep.applicand _ transition }
+      { exact h1 }
+    }
 
 
   | path left right =>
     unfold Typing
-    intro h0 e'' h1
-    specialize h0 e'' h1
-    apply Typing.subject_reduction
-    { apply NStep.applicator _ transition }
-    { exact h0 }
+    intro ⟨h0,h1⟩
+
+    apply And.intro
+    { exact Safe.subject_reduction transition h0 }
+    { intro e'' h2
+      specialize h1 e'' h2
+      apply Typing.subject_reduction
+      { apply NStep.applicator _ transition }
+      { exact h1 }
+    }
 
   | unio left right =>
     unfold Typing
@@ -152,11 +229,11 @@ mutual
     unfold Typing
     intro ⟨h0,h1⟩
     apply And.intro
-    {
-      intro am' h2 h3
-      apply Typing.subject_reduction transition (h0 am' h2 h3)
+    { exact Safe.subject_reduction transition h0 }
+    { intro am' h2 h3
+      apply Typing.subject_reduction transition
+      exact h1 am' h2 h3
     }
-    { exact h1 }
 
   | lfp id body =>
     unfold Typing
@@ -188,26 +265,36 @@ mutual
 
   | iso label body =>
     unfold Typing
-    intro h0
-    apply Typing.subject_expansion
-    { apply NStep.applicand _ transition }
-    { exact h0 }
+    intro ⟨h0,h1⟩
+    apply And.intro
+    { exact Safe.subject_expansion transition h0 }
+    { apply Typing.subject_expansion
+      { apply NStep.applicand _ transition }
+      { exact h1 }
+    }
 
   | entry label body =>
     unfold Typing
-    intro h0
-    apply Typing.subject_expansion
-    { apply NStep.applicand _ transition }
-    { exact h0 }
+    intro ⟨h0,h1⟩
+    apply And.intro
+    { exact Safe.subject_expansion transition h0 }
+    { apply Typing.subject_expansion
+      { apply NStep.applicand _ transition }
+      { exact h1 }
+    }
 
 
   | path left right =>
     unfold Typing
-    intro h0 e'' h1
-    specialize h0 e'' h1
-    apply Typing.subject_expansion
-    { apply NStep.applicator _ transition }
-    { exact h0 }
+    intro ⟨h0,h1⟩
+    apply And.intro
+    { exact Safe.subject_expansion transition h0 }
+    { intro e'' h2
+      specialize h1 e'' h2
+      apply Typing.subject_expansion
+      { apply NStep.applicator _ transition }
+      { exact h1 }
+    }
 
   | unio left right =>
     unfold Typing
@@ -250,11 +337,11 @@ mutual
     unfold Typing
     intro ⟨h0,h1⟩
     apply And.intro
-    {
-      intro am' h2 h3
-      apply Typing.subject_expansion transition (h0 am' h2 h3)
+    { exact Safe.subject_expansion transition h0 }
+    { intro am' h2 h3
+      apply Typing.subject_expansion transition
+      exact h1 am' h2 h3
     }
-    { exact h1 }
 
   | lfp id body =>
     unfold Typing
@@ -593,14 +680,6 @@ theorem Expr.sub_sub_removal :
 
 
 
-theorem Typing.progress :
-  Typing am e t →
-  Expr.is_value e ∨ ∃ e' , NStep e e'
-:= by
-  sorry
-
-
-
 -- theorem Divergent.necxt_preservation :
 --   NEvalCxt E →
 --   Divergent e →
@@ -646,7 +725,9 @@ theorem Typing.entry_intro l :
 := by
   intro h0
   unfold Typing
-  exact subject_expansion NStep.project h0
+  apply And.intro
+  { apply Safe.entry_intro _ (Typing.safety h0) }
+  { exact subject_expansion NStep.project h0 }
 
 theorem Subtyping.elimination :
   Subtyping am t0 t1 →
@@ -672,13 +753,17 @@ theorem Typing.path_intro :
 := by
   intro h0
   unfold Typing
-  intro e' h1
-  have h3 := Subtyping.elimination Subtyping.list_typ_diff_elim h1
-  have ⟨eam,h4,h5⟩ := h0 e' h3
+  apply And.intro
+  { apply Safe.function }
+  {
+    intro e' h1
+    have h3 := Subtyping.elimination Subtyping.list_typ_diff_elim h1
+    have ⟨eam,h4,h5⟩ := h0 e' h3
 
-  have h1 : NStep (Expr.app (Expr.function ((p, e) :: f)) e') (Expr.instantiate 0 eam e) := by
-    exact NStep.pattern_match e f h4
-  exact subject_expansion h1 h5
+    have h1 : NStep (Expr.app (Expr.function ((p, e) :: f)) e') (Expr.instantiate 0 eam e) := by
+      exact NStep.pattern_match e f h4
+    exact subject_expansion h1 h5
+  }
 
 
 theorem Typing.function_preservation {am p tp e f t } :
@@ -702,8 +787,8 @@ theorem Typing.path_elim
 : Typing am (.app ef ea) t'
 := by
   unfold Typing at typing_cator
-  exact typing_cator ea typing_arg
-
+  have ⟨h0,h1⟩ := typing_cator
+  exact h1 ea typing_arg
 
 theorem Typing.loop_path_elim {am e t} id :
   Typing am e (.path (.var id) t) →
@@ -809,9 +894,11 @@ theorem Subtyping.entry_preservation :
   unfold Subtyping
   intro h0 e h1
   unfold Typing
-  apply h0
   unfold Typing at h1
-  apply h1
+  have ⟨h2,h3⟩ := h1
+  apply And.intro h2
+  apply h0
+  exact h3
 
 theorem Subtyping.transitivity :
   Subtyping am t0 t1 →

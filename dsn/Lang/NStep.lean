@@ -94,6 +94,11 @@ theorem NStep.refl_trans_record :
     { apply NStep.record h1 }
     { exact ih }
 
+theorem NStep.refl_trans_function_inversion f:
+  ReflTrans NStep (.function f) e →
+  ∃ f', e = .function f'
+:= by sorry
+
 theorem NStep.refl_trans_function :
   ReflTrans NFunStep f f' →
   ReflTrans NStep (.function f) (.function f')
