@@ -1,0 +1,4425 @@
+\documentclass[table,dvipsnames,acmsmall]{acmart}
+% \documentclass[letterpaper]{llncs}
+% \usepackage[letterpaper, margin=1.5in]{geometry}
+
+
+\usepackage{multicol}
+\usepackage{mathpartir}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{nccmath}
+\usepackage{stmaryrd}
+\usepackage{listings}
+\usepackage[scaled]{beramono}
+\usepackage[T1]{fontenc}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage{array}
+\usepackage{wasysym}
+
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+
+\usepackage{url}
+
+\newcounter{pdc}
+\newcounter{sdc}
+
+\makeatletter % allow us to mention @-commands
+\def\arcr{\@arraycr}
+\makeatother
+
+\lstset{
+    % identifierstyle=\color{violet},
+    % textcolor=blue,
+    % keywordstyle=\color{blue},
+    % keywordstyle=\text,
+    basicstyle=\ttfamily\small,
+    % mathescape=true,
+    % showspaces=false,
+    % morekeywords={def, fix, in}
+}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{requirement}{Requirement}[section]
+\newtheorem{definition}{Definition}[section]
+\newtheorem{property}{Property}[section]
+% \newtheorem{proof}{Proof}[section]
+
+\newtheorem{instances}{Instances}[section]
+
+
+\title{Extrinsic Relational Types (DRAFT 2026-02-07)}
+\author{Thomas Logan}
+
+
+
+\begin{document}
+
+
+
+\newcommand{\stoprule}{
+  \addlinespace[2pt]
+  \toprule
+  \addlinespace[5pt]
+}
+
+\newcommand{\sbottomrule}{
+  \addlinespace[2pt]
+  \bottomrule
+  \addlinespace[2pt]
+}
+
+\newcommand{\smidrule}[1]{
+  \addlinespace[2pt]
+  \midrule
+  \addlinespace[2pt]
+}
+
+\newcommand{\scmidrule}[1]{
+  \addlinespace[2pt]
+  \cmidrule{#1}
+  \addlinespace[2pt]
+}
+
+
+\newcommand{\sline}{
+  \arrayrulecolor{gray!50}
+  \specialrule{0.4pt}{2pt}{2pt}
+  \arrayrulecolor{black}
+}
+
+\newcommand{\pdc}{\stepcounter{pdc}\arabic{pdc}}
+\newcommand{\sdc}{\stepcounter{sdc}\arabic{sdc}}
+
+\newcommand{\Par}[1]{\paragraph{\textbf{#1}}}
+\newcommand{\J}[1]{\texttt{\fontfamily{pcr}\selectfont #1}}
+\newcommand{\lab}[1]{\text{\color{Gray}\ [#1]}}
+\newcommand{\entails}{\vdash}
+\newcommand{\satisfies}{\vDash}
+\newcommand{\given}{\dashv}
+
+% inflatable
+\newcommand{\inflatable}{\star}
+
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+\newcommand{\pass}{\text{\scriptsize \color{Green} \ding{51}}}
+\newcommand{\assisted}{\text{\scriptsize \color{Purple} \ding{45}}}
+\newcommand{\fail}{\text{\scriptsize \color{red} \ding{55}}}
+
+\newcommand{\qua}{\ .\ }
+
+
+
+\newcommand{\ignore}{\varnothing}
+\newcommand{\dTheta}{\dot{\Theta}}
+\newcommand{\closed}{\bullet}
+\newcommand{\local}{\blacktriangle}
+\newcommand{\open}{\circ}
+
+
+
+\newcommand{\up}{\ \land\ }
+\newcommand{\down}{\ \lor\ }
+
+% \newcommand{\tl}{\textasciitilde{}}
+
+\newcommand{\multi}[1]{\widebar{\ #1\ }}
+\newcommand{\hastype}{:}
+\newcommand{\pattype}{\ \lozenge\ }
+\newcommand{\restricted}{\ \blacklozenge\ }
+\newcommand{\dentails}{\Vdash}
+\newcommand{\liftfun}{:}
+
+\newcommand{\sz}[1]{\text{\small #1}}
+
+
+\newcommand{\nopad}{
+  \setlength{\abovedisplayskip}{4pt}
+  \setlength{\belowdisplayskip}{4pt}
+}
+
+\newcommand{\examp}[1]{{\nopad \footnotesize 
+\[
+\begin{array}[t]{@{}l}
+#1
+\end{array}
+\]
+}}
+
+
+\newcommand{\cb}[1]{
+$
+\begin{array}[t]{@{}l}#1\end{array}
+$
+}
+
+
+
+
+\newcommand{\ms}[1]{{\footnotesize $(#1)$}}
+
+\newcommand{\code}[1]{\ms{\J{#1}}}
+
+
+\newcommand{\R}[1]{\color{teal}\ \ [\emph{#1}]}
+ 
+\newcommand{\subtypes}{<:}
+\newcommand{\supertypes}{:>}
+\newcommand{\I}{\hspace{4mm}}
+\newcommand{\Z}{.\hspace{4mm}}
+\newcommand{\Alpha}{\mathrm{A}}
+\newcommand{\Tau}{\mathrm{T}}
+\newcommand{\B}[1]{\textbf{#1}}
+\newcommand{\F}[1]{\text{#1}}
+\newcommand{\bigand}{\bigwedge\nolimits}
+\newcommand{\bigor}{\bigvee\nolimits}
+\newcommand{\C}[1]{\color{teal} \rhd\ \emph{#1}}
+\newcommand{\com}[1]{\I \emph{#1}}
+\newcommand{\D}[1]{\small \textsc{#1}}
+% \newcommand{\fig}[1]{Fig. {\color{red} \fig{#1}}}
+\newcommand{\FIG}[1]{Fig. {\color{red} \ref{#1}}}
+\newcommand{\TODO}[1]{\noindent \B{\color{red} TODO: #1}}
+
+\newcommand{\is}{\ ::=\ }
+\newcommand{\sep}{\ \ |\ \ }
+\newcommand{\nonterm}[1]{#1\ }
+\newcommand{\contin}{|\ \ \ \ \ \ \ }
+\newcommand{\wrt}{\B{wrt }}
+% \newcommand{\let}{\B{def }}
+% \newcommand{\for}{\B{for }}
+
+
+
+\newcommand{\pc}{\hfill \break \noindent \ $\diamond$ \ }
+
+
+\newcommand{\N}{\ $\cdot$\ \ }
+
+\newcommand{\pitem}{\item[$\diamond$]}
+
+\newcommand{\tl}{\textasciitilde{}}
+\newcommand{\typdiff}{\J{\textbackslash}}
+
+\maketitle
+
+\TODO{lean uses the term "metavariable" for our concept of "placeholder variable". Should we conform to Lean's terminology?}
+
+\TODO{Metavariable term: the variable is meta in the sense that its interpretation is chosen by the metaprogram.
+Even though it's actually still a variable in the object language.}
+
+\TODO{Mention how reconstruction of recursive types is the last hurdle to fully extrinsic types}
+
+\TODO{if recursive types can be reconstructed than so can everything else}
+
+\TODO{inductive reasoning, in the general sense, consists of learning sufficient conditions P that enable deriving Q }
+
+\TODO{reasoning by cases consists of deriving P implies Q 
+by ensuresing P' implies Q for every P' that implie P
+}
+
+\TODO{mathematical induction is a particular form of reasoning by cases
+where P is recursively defines, so P' resembles it, and for any P' that resembles P,
+we can assume that P' -> Q', where Q' resembles Q.
+}
+
+\section{Introduction}
+\label{sec:introduction}
+
+While it is commonly accepted that types are a useful tool for specification and verification
+of programs, type systems vary significantly in their expressivity and their flexibility. 
+At one end of the spectrum is the system Lean, whose types can express 
+complex mathematical relations, but require that programs are constructed in rigid ways to be typed.
+A the other end is the system TypeScript, whose types are limited to describing shapes, but can adapt to pre-existing programs.
+From the perspective of verification, the importance of expressive types seems obvious, 
+while the importance of a flexible type system is less so. However, recent trends in
+programming language usage indicate that flexibility of programming has a far greater weight
+than expressivity of verification. That is, people prioritize flexible programs with a high-degree of code reusability
+and are uninterested in writing tedious boiler plate code in order to conform 
+to the artificial restrictions of a verification system. Thus, for expressive verification system
+to be adopted by the masses, they must also be flexible.
+To address this issue, we have designed an extrinsic relational type system, which is both flexible and expressive.
+
+\begin{itemize}
+  \item Extrinsic: The types describe programs. Types need not be prescribed for constructors in the program. 
+  \item Relational: A type may represent an infinite space of complex values (or tuples), such that 
+    the value of one part constrains the value of another part.
+\end{itemize}
+
+
+
+
+Type inference in practical programming languages has historically relied on intrinsic types.
+An expression has an intrinsic type if it is annotated with a type, such that the type
+constrains the control flow of the program.  
+Intrinsic types can occur in at least three ways: by annotating
+expressions, constructions, or patterns.     
+For example, the Standard ML expression \code{fn x => (f x)}
+could be annotated with \code{val f' : int -> int = fn x => (f x)},
+which artificially prunes the allowed control flow of expressions that use \code{f'}.
+As for constructions and sums of patterns, consider a Standard ML program that computes the length of a list,
+using \code{nil} and \code{cons} as data constructors representing lists, 
+and using \code{zero} and \code{succ} as data constructors representing natural numbers.
+
+\examp{
+  \J{fun len(nil) = zero}
+  \\
+  \J{\ \ | len(cons(x,xs)) = succ(len(xs))}
+}
+
+\noindent
+Standard ML uses the datatype mechanism to specify intrinsic types on both patterns and structures.
+
+\examp{
+  \J{datatype nat = zero | succ of nat} 
+  \\
+  \J{datatype 'a list = nil | cons of 'a * 'a list}
+}
+
+\noindent
+For the constructions with \code{zero} and \code{succ}, the nat specification 
+means that the weakest type the constructions could belong to is \code{nat},
+which forbids mixing the constructions with those not specificated in the datatype, like \code{zero} with \code{nil}: 
+
+\examp{
+  \J{fn nil => zero}
+  \\
+  \J{\ | cons(x,xs) => nil}
+}
+
+\noindent
+As for the patterns with \code{nil} and \code{cons}, the list specification 
+means that the strongest assumed for the sum of the patterns
+is \code{'a list}. 
+Thus, it forbids pattern matching fewer patterns than those in the datatype.
+
+\examp{
+  \J{fun nlen(nil) = zero}
+}
+
+\noindent
+Additionally, the list specification 
+means that the strongest assumption allowed for \code{cons} is that its
+content has type \code{'a * 'a list}. Thus, 
+it forbids overspecifying pattern contents,
+like a length function that only works on even length lists.  
+
+\examp{
+  \J{fun evlen(nil) = zero}
+  \\
+  \J{\ \ | evlen(cons(x,cons(y,zs))) = succ(succ(evlen(zs)))}
+}
+
+\noindent
+With the datatype being both the strongest type of a sum of patterns and also the weakest
+type of each construction, there is no additional loss in expressivity by
+requiring that the weakest type of a sum of patterns to be the datatype, 
+or inferring the strongest type of each construction to be the datatype.
+
+
+Even with all the intrinsic specifications required for structural expressions, Standard ML,
+and languages like it, ease the burden on the programmer by leveraging Hindley-Milner
+type inference \cite{}, which can fairly general predicative types of 
+non-structural expressions extrinsically, without intrinsic specifications. 
+Despite the mitigating type inference capabilities of intrinsically typed systems, 
+much more software these days is written
+in untyped scripting languages, like Python and Javascript. 
+These programs are not written with any control flow restrictions in mind,
+and the are unlikely to conform to the control flow restrictions imposed by intrinsic types.
+In fact, the lack of control flow restrictions may be one of the reasons that people
+choose scripting languages over intrinsically typed languages.
+Without artificial restrictions, programers can write code with a high degree of reusability,
+with very little effort.
+For instance, one might want a comparison function that works on both numbers and strings,
+so that the caller can sort lists of numbers or lists of strings without having to
+clutter the call site with a particular comparison function.  
+Some have tried reconcile intrinsic types with code reusability by adding
+advanced construct to languages, classes and type classes.
+Indeed, these constructs do enable reusability, but they require additional
+complexity and may fragment code in ways that obscures its essence.   
+An alternative approach is to simply relax the intrinsic type requirements,
+and infer types extrinsically according to the control flow of the program. 
+
+There have been some relaxations of intrinsic types to enable sightly more code reusability.
+Refinement types (Pfenning) \cite{} removed the intrinsic strongest type of sums of patters,
+allowing pattern matching with incomplete pattern coverage. It inferred stronger
+types too, by using intersection against the intrinsic weakest type to find safe but stronger types
+that could be used in functions with stronger assumptions. 
+Unfortunately, refinements aren't sufficient to handle the full range of structural mixing 
+and code reusability allowed by untyped languages.
+More recently, SuperF \cite{} demonstrated removal the the weakest intrinsic type,
+which enabled it infer principal types with subtyping constraints, 
+where second-order parametric
+types were insufficient. However, SuperF was not concerned with how functions
+with mixed structures could be represented literally.
+On the other hand, MLstruct \cite{} consisted of a detailed language design that allows
+constructing functions that mix structures, as long as information about the constructors
+are specified in particular ways. 
+MLStruct relaxed intrinsic requirements in a few ways, but still required a heavy annotation
+burden and restricted control flow in a significant way.
+
+This work tackles these limitations, in order to achieve a language design and type inference system,
+such that there are almost no annotations are required, code reusability is uninhibited, and error-free programs
+are guaranteed. The system is extremely extrinsic, requiring no annotations on structures.  
+Despite the lack of assistance from intrinsic types, our system appears to be able to admit
+nearly all the programs admitted by MLStruct and SuperF.
+Moreover, our system's lack of certain intrinsic restrictions, which exists in MLstruct, 
+clears the way for automatic reasoning by induction, which allows even greater code reusability
+without sacrificing safety.  
+
+\TODO{summarize contributions}
+\TODO{full extrinsic, no annotations required to very programs on par with untyped pgograms in terms of code reusability}
+\TODO{Normalizing all approximate control flow information into subtyping, allowing types to be infered in both directions}
+\TODO{inductive reasoning on scalars without any intrinsic specifications}
+
+\section{Overview}
+\label{sec:overview}
+We designed the type system around a simple applicative language with pattern matching,
+since such a language is syntactically close to predicate logic. Likewise,
+we designed the language of types to share many similarities with predicate logic. 
+The extrinsic type system is able to infer very precise types by analyzing the control
+flow of program in the form of generating and solving subtyping constraints. 
+In many cases the type system can infer the weakest possible types of parameters,
+and the strongest possible (i.e. most general or principal) types of results,
+all without inhibiting the reusability the code.
+To get a feel for the languages and reasoning capabilities, it's best to start by
+looking at a few examples.
+
+\Par{Finite Isomorphism.}
+A function can be constructed from multiple paths. 
+Consider the function \ms{\J{talky}}, which completes a simple English phrase.
+
+\examp{
+  \J{def talky = (}
+  \\
+  \I \J{[hello;@ => world;@]}
+  \\
+  \I \J{[good;@ => morning;@]} 
+  \\
+  \I \J{[thank;@ => you;@]} 
+  \\
+  \J{)}
+}
+
+\noindent
+Since there is no recursion, the number of paths is finite.
+For these simple finite functions, the type system constructs
+an isomorphic type without any weakening in precision. 
+
+\examp{
+  \J{(<hello>@ -> <world>@) \&}
+  \\
+  \J{(<good>@ -> <morning>@) \&} 
+  \\
+  \J{(<thank>@ -> <you>@)} 
+}
+
+\noindent
+Each path is represented using the path type,
+and the paths are joined together using the intersection type.
+
+\Par{Selection.}
+Although the type of function $\J{talky}$ is no weaker than the actual function,
+lifting into the type syntax avails it to approximate reasoning at application.
+Consider an application of the function to a variable argument. 
+
+\examp{
+  \J{def x : <hello> @ | <thank> @ = ... in}
+  \\
+  \J{...}
+  \\
+  \J{talky(x)} 
+  \\
+  \J{...}
+}
+
+\noindent
+If the type system affirms the type annotation,
+then it goes on to infer the type of the application. 
+
+\examp{
+  \J{<world> @ | <you> @}
+}
+
+\noindent
+In effect, the type system applies application to all possible arguments
+and unions the results derived from only the paths of those arguments. 
+
+\Par{Learning.}
+The paths of a function are not always syntactically apparent. 
+If a variable is applied to arguments, the variable should implicitly behave 
+like a function, or else the program is erroneous. 
+Consider the higher order function $\J{foo}$ which takes a function as input
+and applies it to the number two and the boolean true.
+
+\examp{
+  \J{def foo = [f => (f(succ;succ;zero;@), f(true;@))]}
+}
+
+\noindent
+Type systems for System F have traditionally struggled to find the best
+type for such programs. If restricted to unqualified parametric types, there are many choices,
+without there being a clear best or principal type, 
+which is because it's not possible to find the weakest type for the function parameter
+$\J{f}$.
+One possibility is that the type system requires that $\J{f}$ is a function that wraps its
+input in an option. 
+
+\examp{
+  \J{f : ALL[X] X -> <some> X}
+}
+
+\noindent
+Another possibility is that the type system requires that $\J{f}$ is a function that wraps its
+input in an list. 
+
+\examp{
+  \J{f : ALL[X] X -> (LFP[R] <nil> @ | <cons> X*R)}
+}
+
+\noindent
+Both are valid, but neither is weaker than the other. The problem is that unqualified parametric
+types are insufficient for describing the weakest safe input type.
+It was not until SuperF introduced a technique for solving subtyping constraints
+that a principal type could be automatically constructed for functions like $\J{foo}$
+Our extrinsic type system relies on similar principles of solving subtyping constraints,
+and likewise, can construct the weakest safe type for $\J{f}$, and thus the principal type for $\J{foo}$.
+
+\examp{
+  \J{ALL[X Y] (<succ> <succ> <zero> @ -> X) \& (<true> @ -> Y) -> X*Y}
+}
+
+\noindent
+Although the subtyping constraints are not present in the type's notation,
+the intersection of paths is chosen because it represents the weakest type
+consistent with the subtyping constraints on a variable representing the parameter's type. 
+Suppose the type system chooses the variable type $\J{F}$ for the input parameter $\J{f}$.
+Eventually, due to the applications of the parameter $\J{f}$, the type
+system will attempt to find a solution to two constraints on $\J{F}$
+
+\examp{
+  \J{F} \subtypes \J{(<succ> <succ> <zero> @ -> X)}
+  \\
+  \J{F} \subtypes \J{(<true> @ -> Y)}
+}
+
+\Par{Factorization.}
+A function can represent infinite paths by using recursion.
+Consider the function $\J{repeat}$, which takes an item and a natural number
+as inputs and returns a list of that item repeated the input number of times.
+
+\examp{
+  \J{def repeat = [x => loop([self => [}
+  \\
+  \I \J{[zero;@ => nil;@]}
+  \\
+  \I \J{[succ;n => <cons>(x,self(n))]}
+  \\
+  \J{])]}
+}
+
+\noindent
+One possibility for constructing the type of the recursive function would
+be to follow the idea of finite isomorphism and construct a type 
+that preserves all the paths. If our type system had a greatest fixed point
+type constructor, then we could concisely represent such a type with minimal
+rewriting.
+
+\examp{
+  \J{ALL[T] T -> GFP[R](} 
+  \\
+  \I \J{(<zero> @ -> <nil> @) \&}
+  \\
+  \I \J{(ALL[N L](R <: N->L) <succ> N -> <cons> T*L)}
+  \\
+  \J{)} 
+}
+
+\noindent
+Although the strength of precision of this type would be very beneficial,
+reasoning with such a type would be complicated. To keep the type system as
+simple as possible for the purpose of extrinsic type inference with a high-degree
+of code reusability, we leave such relational reasoning of recursive and co-recursive types out of
+the type system. 
+In this work, the type system actually avoids constructing a relational type, and instead, it
+constructs a type that is significantly weaker than the actual behavior of the function,
+by factoring the paths into a recursive space of inputs and a recursive space of outputs. 
+
+\examp{
+  \J{ALL[T] T ->} 
+  \\
+  \I \J{(LFP[R] <zero> @ | <succ> R)}
+  \\
+  \I \J{->}
+  \\
+  \I \J{(LFP[R] <nil> @ | <cons> T*R)}
+}
+
+\noindent
+This eager weakening approximation enables the type system
+to simply reason with recursive scalars and avoids the need for complicated
+relational reasoning. In a follow up paper,
+we will show how to remedy this limitation by augmenting the type system with
+mechanisms for inductive relational reasoning.
+
+\Par{Scalar Inflation.} 
+Since the inputs to functions may have recursive types, the type 
+system must be able to check for errors at function application by unrolling
+recursive types.
+Consider applying the function $\J{repeat}$ to some item and the number two, 
+which results in the type system checking that two is in fact an instance of the natural numbers.
+
+\examp{
+  \J{ <succ> <succ> <zero> @} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
+}
+
+\noindent
+The type system confirms that two is a valid input by unrolling the recursive type three times.
+Unfortunately, because the type system eagerly factored the type of $\J{repeat}$, it
+is unable to infer a stronger type for the application than the original list type. 
+In the followup paper, inductive relational reasoning will remedy this limitation.
+
+
+\Par{Scalar Induction.} 
+Another scenario that may arise is one in which the input to a function has an recursive type.
+Consider the application of the function $\J{repeat}$ to a variable whose type represents the even natural numbers.
+
+\examp{
+  \J{def x : (LFP[R] <zero> @ | <succ> <succ> R) = ... in}
+  \\
+  \J{...}
+  \\
+  \J{repeat(...)(x)} 
+  \\
+  \J{...}
+}
+
+\noindent
+The application results in the type system checking that natural numbers are weaker than even numbers. 
+
+\examp{
+  \J{LFP[R] <zero> @ | <succ> <succ> R}
+  \\
+  \subtypes
+  \\
+  \J{LFP[R] <zero> @ | <succ> R}
+}
+
+\noindent
+Since even numbers are represented recursively, the type system performs mathematical induction,
+proving under the assumption that the subtyping relation holds for the self reference of the even numbers. 
+
+\examp{
+  \J{E} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
+  \\
+  \entails
+  \\
+  \J{(<zero> @ | <succ> <succ> E)} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
+}
+
+\noindent
+In practice, the type system actually substitutes the supertype into
+the self reference of the subtype, if the self reference occurs in a positive position of the subtype.
+
+\examp{
+  \J{(<zero> @ | <succ> <succ> (LFP[R] <zero> @ | <succ> R))} 
+  \\
+  \subtypes 
+  \\
+  \J{(LFP[R] <zero> @ | <succ> R)}
+}
+
+\noindent
+In effect, by using mathematical induction, the type system ensures that 
+every type contained within the type of even natural numbers is also
+contained within the type of natural numbers.
+In followup work, we will extend this inductive reasoning to handle inductive relations. 
+
+\Par{Path Sensitivity} 
+Functions on lists can be generic, in that they may be independent of the item values, as in \code{repeat}.
+Additionally, they may factor out the details that depend on item values, as in \code{sort}. 
+
+\examp{
+  \J{def sort : ALL[T] (T*T->} \textbf{Bool} \J{) -> }\textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T}) \J{ = }
+  \\
+  \J{[ cmp => ...] in ...}
+}
+
+\noindent
+The notation \ms{\textbf{Bool}} and \ms{\textbf{List}(\J{X})} are meta-language terms representing types.
+The function $\J{sort}$ can be specialized by passing in different implementations of comparison functions.
+Suppose we already have one scalar comparison function and one lexicographic comparison function.
+
+\examp{
+  \J{def scalarCmp : }\textbf{Nat} \J{ -> } \textbf{Nat} \J{ -> } \textbf{Bool} \J{ = ... in}
+  \\
+  \J{def lexicoCmp : }\textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat}) \J{ -> } \textbf{Bool} \J{ = ... in} 
+  \\
+  \J{...} 
+}
+
+\noindent
+In Standard ML, the programmer would need a different specialization for every predefined
+datatype. 
+
+\examp{
+  \J{def scalarSort = sort(scalarCmp) in}
+  \\
+  \J{def lexicoSort = sort(lexicoCmp) in} 
+  \\
+  \J{...} 
+}
+
+\noindent
+Having many different specializations burdens the client of
+the generic function to know many different names for roughly the same behavior and can obscure the meaning
+of code at the call site. 
+Untyped languages or extrinsically typed languages can bypass this rigidity found in 
+intrinsically typed languages by mixing the specialized procedures into a single generalized procedures.
+
+\examp{
+  \J{def genCmp = [a,b => } 
+  \\
+  \I \J{a |> (}
+  \\
+  \I\I \J{[zero;@ => scalarCmp(a,b)]}
+  \\
+  \I\I \J{[succ;n => scalarCmp(a,b)]}
+  \\
+  \I\I \J{[nil;@ => lexicoCmp(a,b)]}
+  \\
+  \I\I \J{[cons;(x,xs) => lexicoCmp(a,b)]}
+  \\
+  \I \J{)}
+  \\
+  \J{] in} 
+  \\
+  \J{...} 
+}
+
+\noindent
+Extrinsic type inference allows this mixing by inferring types locally for each path,
+such that the type inferred from one path is not required for another.
+As such, a generalized comparison procedure may be constructed and the
+programmer can use the same sort function no matter if its inputs are scalars or vectors.
+
+\examp{
+  \J{def genSort : (TOP}
+  \\
+  \I \J{\& (}\textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat})
+  \\
+  \I \J{\& (}\textbf{List}(\textbf{List}(\textbf{nat})) \J{ -> } \textbf{List}(\textbf{List}(\textbf{Nat}))
+  \\
+  \J{) = sort(genCmp)}
+}
+
+\noindent
+This particular form of type inference, known as occurrence typing \cite{},
+has already been studied and used to great effect in type inference for Python and Javascript.
+Additionally, the path sensitivity of type inference obviates the need 
+for destruction in pattern matching.  
+For example, the \code{repeat} function can be rewritten.
+
+\examp{
+  \J{def repeat = [x => loop([self => [n =>}
+  \\
+  \I\J{n |> [}
+  \\
+  \I\I \J{[zero;\_ => nil;(n.zero)]}
+  \\
+  \I\I \J{[succ;\_ => cons;(x,self(n.succ))]}
+  \\
+  \I \J{]}
+  \\
+  \J{]])]}
+}
+
+\noindent
+Thus, programs in Python and Javascript, which only having conditional branching,
+and no pattern matching, can rely on path sensitivity to simulate pattern matching. 
+
+\Par{Pruning} 
+
+\TODO{...}
+
+\Par{Streaming} 
+
+\TODO{...}
+
+\examp{
+  \J{loop([self => [x =>}
+  \\
+  \I\J{[@ => (x, self(succ;x))]}
+  \\
+  \J{]]}
+}
+
+\TODO{...}
+
+
+
+\examp{
+  \J{ALL[T] T -> @ ->}
+  \\
+  \I\J{LFP[U] (LFP[R] T | <succ> R) * (@ -> U)}
+}
+
+% (ALL[G009] (G009 -> (LFP[G007] (EXI[G010] (G010 <: G007)  : (@ -> ((LFP[G007] (<succ> G007 | G009)) * G010))))))
+
+\Par{Subtraction} 
+
+\TODO{...}
+
+\examp{
+  \J{LFP[R] (<zero> @) | (<succ> <succ> R)}
+  \\
+  \subtypes
+  \\
+  \J{TOP\typdiff (<succ> <succ> <succ> <zero> @)}
+}
+
+\section{Dynamic System}
+\label{sec:dynamic_system}
+
+\TODO{factor out definitions common to both dynamic and static systems into basic system}
+
+\TODO{flip records, functions and other collections to associate right (matching Lean design)}
+
+\noindent
+To demonstrate the capabilities of our extrinsic type system, 
+we rely on an applicative programming language with pattern matching.
+The design attempts to keep the forms of expressions and types relatively 
+similar to each other when their semantics are also similar. 
+Although the expression language is based on pattern matching, 
+the type inference techniques apply just as well to languages
+that are based on conditional branching and destructors instead of pattern matching.
+In fact, conditional branching and destructors can be encoded from pattern matching,
+and used without any loss in type inference precision.
+
+\begin{definition}
+  \label{def:expression}
+  \nopad 
+  \small
+  \[\begin{array}[t]{rr@{}l}
+    \com{expression} &
+    \nonterm{e} 
+    & 
+    \is 
+    \begin{array}[t]{@{}l}
+      x \sep 
+      \J{@} \sep
+      r \sep
+      f \sep 
+      e\J{.}l \sep
+      e\J{(}e\J{)} \sep
+      \J{loop(}e\J{)} \sep
+      \J{def}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e \sep
+      s
+    \end{array}
+    \\
+    \com{record} &
+    \nonterm{r} & \is \epsilon \sep r\ \J{<}l\J{>}e 
+    \\
+    \com{function} &
+    \nonterm{f} & \is \epsilon \sep f\ \J{[}p\J{=>}e \J{]}
+    \\
+    \com{sugar} &
+    \nonterm{s} 
+    & 
+    \is 
+    \begin{array}[t]{@{}l}
+      l \J{;} e \sep
+      e \J{,} e \sep
+      e\ \J{|>}\ e \sep
+      \J{if}\ e\ \J{then}\ e\ \J{else}\ e \sep
+      \J{def}\ x\ \J{=}\ e\ \J{in}\ e
+    \end{array}
+  \end{array}\]
+\end{definition}
+
+\noindent
+An expression is a variable \ms{x}, unit \code{@},
+a record \ms{... \J{<}l\J{>} e ...}, a function \ms{...\J{[}p \J{=>} e \J{]}...}, 
+a projection \ms{e\J{.}l}, an application \ms{e\J{(}e\J{)}}, 
+a loop \ms{\J{loop(}e\J{)}},
+an annotation \ms{\J{def}\ x\ \J{:}\ \tau\ \J{=}\ e\ \J{in}\ e},
+or sugar.
+These forms are similar to those seen in other applicative structural languages,
+with a few choices that are a bit less common. One thing that may be
+a bit unconventional is that a function may syntactically consist of 
+multiple paths guarded by patterns.  
+
+\begin{definition} 
+  \label{def:expression_desugaring}
+  \emph{expression desugaring}
+  \hfill
+  \small
+  \boxed{\llbracket s \rrbracket^\square = e}
+  \nopad
+  \begin{align*}
+      \llbracket l \J{;} e \rrbracket^\square &= \J{<}l \J{>}\ e
+      \\
+      \llbracket e_l \J{,} e_r \rrbracket^\square &= \J{<left>}\ e_l \ \J{<right>}\ e_r
+      \\
+      \llbracket e_l\ \J{|>}\ e_r \rrbracket^\square &= e_r\J{(}e_l\J{)}
+      \\
+      \llbracket \J{if}\ e_c\ \J{then}\ e_t\ \J{else}\ e_f \rrbracket^\square &= 
+      \begin{array}[t]{@{} l}
+        e_c \J{ |> (}
+          \\
+          \I \J{[true;@ => } e_t \J{]}
+          \\
+          \I \J{[false;@ => } e_f \J{]}
+          \\
+        \J{)}
+      \end{array}
+      \\
+      \llbracket \J{def}\ x\ \J{=}\ e\ \J{in}\ e' \rrbracket^\square &= \J{[}x \J{=>} e'\J{]}\J{(}e\J{)}
+  \end{align*}
+
+\end{definition} 
+
+\noindent
+For convenience and clarity, there is sugar for 
+singleton records \ms{l\J{;}e},
+tuples \ms{e\J{,}e}, 
+unannotated bindings \ms{\J{def}\ x\ \J{=}\ e\ \J{in}\ e}, flow \ms{e\ \J{|>}\ e},
+and conditional branching \ms{\J{if}\ e\ \J{then}\ e\ \J{else}\ e}.
+For any metalanguage statement or term containing sugar $s$, we assume that $s$ is implicitly replaced with $\llbracket s \rrbracket^\square$.
+
+\begin{definition}
+  \label{def:pattern}
+  \small
+  \nopad
+  \[\begin{array}[t]{rr@{}l}
+    \com{pattern} &
+    \nonterm{p} & \is 
+      x \sep
+      \J{@} \sep
+      k
+    \\
+    \com{record} &
+    \nonterm{k} & \is \epsilon \sep k\ \J{<}l\J{>}p
+  \end{array}\]
+\end{definition}
+
+\noindent
+A pattern is either unit or a record consisting of patterns.
+
+\begin{definition}
+  \label{def:value}
+  \small
+  \nopad
+  \[\begin{array}[t]{rr@{}l}
+    \com{value} &
+    \nonterm{v} & \is 
+      \J{@} \sep
+      g \sep
+      f
+    \\
+    \com{record} &
+    \nonterm{g} & \is \epsilon \sep g\ \J{<}l\J{>}v
+  \end{array}\]
+\end{definition}
+
+\noindent
+A value may be unit, a function, or a record consisting of only values. 
+
+\begin{definition}
+  \label{def:progression}
+  \emph{progression}
+  \hfill 
+  \small
+  \boxed{e \rightsquigarrow e}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      r\ \J{<}l\J{>}e \rightsquigarrow r\ \J{<}l\J{>}e'
+    }
+
+    \inferrule {
+      r \rightsquigarrow r'
+    } {
+      r\ \J{<}l\J{>} v \rightsquigarrow r'\ \J{<} l \J{>} v
+    }
+
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      e\J{.}l \rightsquigarrow e'\J{.}l
+    }
+
+    \inferrule {
+      \J{<}l\J{>}v \in g
+      \\
+      \forall\ e .\ \J{<}l\J{>}e \in g \implies e = v
+    } {
+      g\J{.}l \rightsquigarrow v
+    }
+
+    \inferrule {
+      e_f \rightsquigarrow e_f'
+    } {
+      e_f\J{(}e\J{)} \rightsquigarrow e_f'\J{(}e\J{)}
+    }
+
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      f\J{(}e\J{)} \rightsquigarrow f\J{(}e'\J{)}
+    }
+
+    \inferrule {
+      f\J{(}v\J{)} \rightsquigarrow e'
+      \\
+      \textbf{fv}(e) \subseteq \textbf{fv}(p)
+    } {
+      (f\ \J{[}p\J{=>}e\J{]})\J{(}v\J{)} \rightsquigarrow e' 
+    }
+
+    \inferrule {
+      \nexists e' .\ f\J{(}v\J{)} \rightsquigarrow e'
+      \\
+      v  \simeq p \given \sigma 
+    } {
+      (f\ \J{[}p\J{=>}e\J{]})\J{(}v\J{)} \rightsquigarrow e[\sigma]
+    }
+
+    \inferrule {
+      e \rightsquigarrow e'
+    } {
+      \J{loop(}e\J{)} \rightsquigarrow \J{loop(}e'\J{)}
+    }
+
+    \inferrule {
+    } {
+      \J{loop([}x\J{=>}e\J{])} \rightsquigarrow e[x \slash \J{loop([}x\J{=>}e\J{])}]
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Progression of an expression is a fairly typical small-step operational semantics. 
+Its most atypical aspect is handling the unconventional multi-path syntax of
+functions.
+Since a function may consist of multiple paths guarded by patterns, 
+application subsumes pattern matching.
+Recursion is enabled by the \code{loop} keyword, such that
+\code{loop} behaves like a fixed point combinator.
+
+
+\begin{definition}
+  \label{def:value_map}
+  \small
+  \nopad
+  \[\begin{array}[t]{rr@{}l}
+    \com{value map} &
+    \nonterm{\sigma} & \is \epsilon \sep \sigma\ x \slash v 
+  \end{array}\]
+\end{definition}
+
+\noindent
+A value map assigns variables to values.
+Progression relies on interpretation maps to collect
+values that are relevant from pattern matching \ms{v \simeq p \given \sigma},
+and then to use them in a subsequent expression via substitution 
+\ms{e[\sigma]}
+
+
+\begin{definition}
+  \label{def:type}
+  \small
+  \nopad
+  \[\begin{array}[t]{rr@{}l}
+    \com{type} &
+    \nonterm{\tau} & \is 
+    \begin{array}[t]{@{}l}
+      \alpha \sep
+      \J{@} \sep
+      \kappa \sep 
+      \phi \sep 
+      \psi \sep 
+      \J{LFP[}\alpha\J{]}\tau \sep
+      \tau \typdiff \eta \sep
+      \gamma
+    \end{array}
+    \\
+    \com{implication} &
+    \nonterm{\kappa} & \is 
+    \begin{array}[t]{@{}l}
+      \J{<} l \J{>} \tau \sep 
+      \tau\J{->}\tau
+    \end{array}
+    \\
+    \com{expansion} &
+    \nonterm{\phi} & \is 
+    \begin{array}[t]{@{}l}
+      \tau\J{|}\tau \sep 
+      \J{EXI[}\Theta\J{]} \Delta \J{:} \tau
+    \end{array}
+    \\
+    \com{refinement} &
+    \nonterm{\psi} & \is 
+    \begin{array}[t]{@{}l}
+      \tau\J{\&}\tau \sep 
+      \J{ALL[}\Theta\J{]} \Delta \J{:} \tau
+    \end{array}
+    \\
+    \com{subtractable} &
+    \nonterm{\eta} & \is 
+    \begin{array}[t]{@{}l}
+      \J{EXI[}\Theta \J{]} \eta \sep 
+      \rho
+    \end{array}
+    \\
+    \com{pattern} &
+    \nonterm{\rho} & \is 
+    \begin{array}[t]{@{}l}
+      \alpha \sep
+      \J{@} \sep
+      \J{<}l\J{>}\rho \sep 
+      \rho\J{\&}\rho \sep
+      \rho\J{*}\rho
+    \end{array}
+    \\
+    \com{sugar} &
+    \nonterm{\gamma} & \is 
+    \begin{array}[t]{@{}l}
+      \J{TOP} \sep \J{BOT} \sep 
+      \tau \J{*} \tau 
+    \end{array}
+  \end{array}\]
+\end{definition}
+
+\noindent
+Types provide the representation for approximate specification.
+To accommodate a high degree of structure reusability,
+it is important that the forms of types accommodate a wide range of precision.
+To manage the complexity of the various forms, we subdivide the type forms
+according to some themes.
+A type \ms{\tau} may consist of unit \code{@}, variables \ms{\alpha}, 
+implications, expansions, refinements,
+least fixed points \ms{\J{LFP[}\alpha \J{]} \tau},
+differences \ms{\tau \typdiff \eta}, and sugar.
+
+
+An implication \ms{\kappa} may take the form of  
+an entry \ms{\J{<}l\J{>}\tau} or a path \ms{\tau \J{->} \tau},
+reflecting the structure of its inhabitants.
+An expansion \ms{\phi} is either a union \ms{\tau \J{|} \tau} or 
+an existential \ms{\J{EXI[}\Theta \J{]} \Delta \J{:} \tau},
+representing weakenings of their constituent types. 
+An existential is parameterized by type variables \ms{\Theta}
+and positively qualified by subtyping constraints \ms{\Delta}, 
+such that the weaker the qualification, the weaker the existential.
+A refinement \ms{\psi} is either an intersection \ms{\tau \J{\&} \tau} or 
+a universal \ms{\J{ALL[} \Theta \J{]} \Delta \J{:}\tau},
+representing strengthenings of their constituent types. 
+An universal is parametrized by type variables \ms{\Theta} 
+and negatively qualified by subtyping constraints $\Delta$,
+such that the weaker the qualification, the stronger the universal.
+
+
+A least fixed point \ms{\J{LFP[}\alpha \J{]}}
+represents an infinite space of structures, 
+such as natural numbers or lists. 
+A difference \ms{\tau \typdiff \eta} is a space without inhabitation by certain structures.
+The subtracted part is restricted to a subtractable form,
+which is a form that our system can decide the inhabitation
+assuming additional semantics restrictions.
+
+
+\begin{definition} 
+  \label{def:type_desugaring}
+  \emph{type desugaring}
+  \hfill 
+  \small
+  \boxed{\llbracket \gamma \rrbracket^\square = \tau}
+  \nopad
+  \begin{align*}
+    \llbracket \J{TOP} \rrbracket^\square &= \J{EXI[} \alpha \J{]} \alpha
+    \\
+    \llbracket \J{BOT} \rrbracket^\square &= \J{ALL[} \alpha \J{]} \alpha
+    \\
+    \llbracket \tau_l \J{*} \tau_r \rrbracket^\square &= (\J{<left>}\ \tau_l)  \J{\&} (\J{<right>}\ \tau_r)
+  \end{align*}
+\end{definition} 
+
+
+
+\noindent
+For convenience and clarity, types include syntactic sugar for top $\J{TOP}$, 
+bottom $\J{BOT}$, and pairs $\tau \J{*} \tau$.
+For any metalanguage statement or term containing sugar $\gamma$, we assume that $\gamma$ is implicitly replaced with $\llbracket \gamma \rrbracket^\square$.
+
+\begin{definition}
+  \label{def:sequence}
+  \small
+  \nopad
+  \[\begin{array}[t]{rr@{}l}
+    \com{type var seq} &
+    \nonterm{\Theta} & \is \epsilon \sep \Theta\ \alpha 
+    \\
+    \com{subtyping seq} &
+    \nonterm{\Delta} & \is \epsilon \sep \Delta \  \tau \J{<:} \tau
+    \\
+    \com{typing seq} &
+    \nonterm{\Gamma} & \is \epsilon \sep \Gamma\ x \hastype \tau
+    \\
+    \com{zone seq} &
+    \nonterm{\Pi} & \is \epsilon \sep \Pi\ (\Theta, \Delta, \tau) 
+    \\
+    \com{subtractable type seq} &
+    \nonterm{\Xi} & \is \epsilon \sep \Xi\ \eta 
+    \\
+    \com{negatable subtyping seq} &
+    \nonterm{\Omega} & \is \epsilon \sep 
+      \Omega\ \tau \J{<:} \eta \sep 
+      \Omega\ \alpha \J{<:} \tau
+    \\
+    \com{composite seq} &
+    \nonterm{C} & \is \epsilon \sep C\ \iota 
+    \\
+    \com{item} &
+    \nonterm{\iota} & \is 
+    \alpha
+    \sep 
+    \tau \J{<:} \tau
+    \sep
+    x \hastype \tau
+    \sep
+    (\Theta, \Delta, \tau)
+    \sep
+    \eta
+    \sep
+    \tau \J{<:} \eta
+
+  \end{array}\]
+\end{definition}
+
+
+\noindent
+There are various scenarios where objects should be collected into in sequences or sets.
+For metalanguage operations or predicates that are generic with respect the form of a collection's items,
+it is convenient to have a composite sequence.
+A sequence is either empty \ms{\epsilon} or an extension,
+such as \ms{C\ \iota} in the case of the composite sequence. 
+For clarity, we omit writing \ms{\epsilon} explicitly when describing semantics or instances of the forms.
+That is, for any structure, if there is a malformed structure due to a missing piece, 
+we assume it is replaced by a well-formed structure, 
+where \ms{\epsilon} is inserted wherever necessary to make it well-formed.
+
+
+\begin{definition} 
+  \label{def:sequence_setting}
+  \emph{sequence setting}
+  \hfill 
+  \small
+  \boxed{\textbf{set}(C) = S}
+  \nopad
+  \[
+  \begin{array}[t]{r@{}c@{}l}
+      \textbf{set}(\epsilon)
+      &\ =\ & 
+      \emptyset 
+
+      \\
+
+      \textbf{set}(C\ \iota)
+      &\ =\ & 
+      \textbf{set}(C) \cup [ \iota ] 
+  \end{array}
+  \]
+\end{definition} 
+
+\noindent
+In order to leverage set arithmetic and its theory,
+we implicitly convert sequences into sets. 
+We assume that any sequence \ms{C} may be implicitly replaced with \ms{\textbf{set}(C)}.
+
+\begin{definition} 
+  \label{def:set_sequencing}
+  \emph{set sequencing}
+  \hfill 
+  \small
+  \boxed{\textbf{seq}(S) = C}
+  \nopad
+  \\
+  \[
+  \begin{array}[t]{r@{}c@{}l}
+      \textbf{seq}(\emptyset)
+      &\ =\ & 
+      \epsilon 
+
+      \\
+
+      \textbf{seq}(S \cup [\iota])
+      &\ =\ & 
+      \textbf{seq}(S \backslash [\iota])\ \iota 
+  \end{array}
+  \]
+\end{definition} 
+
+\noindent
+Likewise, it also beneficial to convert sets back into sequences, to leverage
+definitions that decompose sequences according to their structures. 
+We assume that any set \ms{S} may be implicitly replaced with \ms{\textbf{seq}(S)}.
+
+\begin{definition}
+  \label{def:type_map}
+  \small
+  \nopad
+  \[\begin{array}[t]{rr@{}l}
+    \com{type map} &
+    \nonterm{\delta} & \is \epsilon \sep \delta\ \alpha \slash \tau
+  \end{array}\]
+\end{definition}
+
+\noindent
+A type map assigns variables to types.
+Since a type may be constructed from variables, it 
+is necessary to specify an interpretation of the variables
+when judging the inhabitation of the type.
+Thus, typing relies on type maps to provide interpretations
+for type variables.
+
+\begin{definition}
+  \label{def:valuing}
+  \emph{valuing}
+  \hfill
+  \small
+  \boxed{\downharpoonleft e}
+  \nopad
+  \begin{mathpar}
+    \inferrule { 
+      \TODO{...}
+    } {
+      \downharpoonleft 
+      e 
+    } 
+  \end{mathpar}
+\end{definition}
+
+\begin{definition} 
+  \label{def:type_sub_fold}
+  Type Substitution Fold 
+  \hfill
+  \small
+  \boxed{
+    \tau [\alpha \slash \tau']^n
+  }
+  \\
+  \[
+  \begin{array}[t]{rclcl}
+      \tau [\alpha \slash \tau']^0 
+      &=& 
+      \tau' 
+      \\
+      \tau [\alpha \slash \tau']^{(n + 1)} 
+      &=& 
+      \tau [\alpha \slash \tau[\alpha \slash \tau']^n]
+  \end{array}
+  \]
+\end{definition}
+
+
+\TODO{create a seperate relation restricted negations of model typing}
+
+\TODO{use antec rules to compensate for non-self reference in negative position}
+
+\TODO{consider renaming to dynamic typing}
+
+\TODO{completely redo model typing with well founded recursion}
+
+\TODO{define monotonicity/antitonicity/polarity check}
+
+\TODO{create recursive definition of least fixed point check}
+
+\TODO{use separate typing for interpreting variables as finite types}
+
+\TODO{use non-syntactic description of implication}
+
+\TODO{remove implication antecedent rules}
+
+\TODO{lift progression rule out to highest level for monotonic recursion}
+
+% \begin{definition}
+%   \label{def:model_progress_typing}
+%   \emph{model progressive typing}
+%   \hfill
+%   \small
+%   \boxed{\delta \satisfies e \hastype^* \tau}
+%   \nopad
+%   \begin{mathpar}
+%     \inferrule { 
+%       \downharpoonleft e
+%       \up
+%       \delta \satisfies e \hastype \tau 
+%     } {
+%       \delta \satisfies e \hastype^* \tau 
+%     } 
+
+%     \inferrule { 
+%       e \rightsquigarrow e'
+%       \\
+%       \delta \satisfies e' \hastype^* \tau 
+%     } {
+%       \delta \satisfies e \hastype^* \tau 
+%     } 
+%   \end{mathpar}
+
+% \end{definition}
+
+
+\begin{definition}
+  \label{def:model_typing}
+  \emph{model typing}
+  \hfill
+  \small
+  \boxed{\delta \satisfies e \hastype \tau}
+  \nopad
+  \[
+  \begin{array}[t]{rclcl}
+      \delta \satisfies e \hastype \J{@}
+      &\iff& 
+      e \rightsquigarrow^* \J{@}
+
+      \\
+
+      \delta \satisfies e \hastype \J{<} l \J{>} \tau
+      &\iff& 
+      \delta \satisfies e\J{.}l \hastype \tau 
+
+      \\
+
+      \delta \satisfies e \hastype \tau_l \J{->} \tau_r
+      &\iff& 
+      \forall e' \qua
+      \delta \satisfies e' \hastype \tau_l 
+      \implies
+      \delta \satisfies e\J{(}e'\J{)} \hastype \tau_r
+
+      \\
+
+      \delta \satisfies e \hastype \tau_l \J{|} \tau_r 
+      &\iff& 
+      \delta \satisfies e \hastype \tau_l
+      \down
+      \delta \satisfies e \hastype \tau_r
+
+      \\
+
+      \delta \satisfies e \hastype \tau_l \J{\&} \tau_r 
+      &\iff& 
+      \delta \satisfies e \hastype \tau_l
+      \up
+      \delta \satisfies e \hastype \tau_r
+
+      \\
+
+      \delta \satisfies e \hastype \tau_l \typdiff \tau_r
+      &\iff& 
+      \delta \satisfies e \hastype \tau_l
+      \up
+      \delta \not\satisfies e \hastype \tau_r
+
+      \\
+
+      \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta \J{:} \tau
+      &\iff& 
+      \exists \delta' \qua
+      \textbf{dom}(\delta') \subseteq \Theta
+      \up
+      \delta' \oplus \delta \satisfies \Delta 
+      \up
+      \delta' \oplus \delta \satisfies e \hastype \tau
+
+      \\
+
+      \delta \satisfies e \hastype \J{ALL[}\Theta\J{]}\Delta \J{:} \tau
+      &\iff& 
+      \forall \delta' \qua
+      \textbf{dom}(\delta') \subseteq \Theta
+      \implies
+      \delta' \oplus \delta \satisfies \Delta 
+      \implies
+      \delta' \oplus \delta \satisfies e \hastype \tau
+
+      \\
+
+      \delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\tau 
+      &\iff& 
+      \alpha \wr \tau
+      \up
+      \exists \tau' \qua
+        \delta \satisfies \tau' \subtypes \tau \cdot \alpha \slash \tau'
+        \up
+        \alpha \slash \tau'\ \delta \satisfies e \hastype \tau
+
+      \\
+
+      \delta \satisfies e \hastype \alpha 
+      &\iff& 
+      \VDash e \hastype \delta(\alpha) 
+  \end{array}
+  \]
+\end{definition}
+
+\TODO{
+RATIONALE -- SEMANTICS-DIRECTED TYPING:
+note that we use semantics-directed typing (i.e. dynamic) rather than syntax-directed typing (i.e. static), in order
+to avoid overly restricting the types of constructions like functions or records.
+That is, in a syntax-directed semantics, we strive to have functions 
+introduce the strongest type possible, which requires combining numerous type forms,
+and parsing the structures of expressions.
+To ensure the semantics of type forms is clear and intuitive, 
+we use sementics-directed typing, which allows
+each type form to be specified separately.
+In essence, the semantics-directed typing is a denotation
+from type syntax to predicate logic.
+By contrast, simple type systems are so simple that the syntax-directed typing definitions
+are intuitive already, and so there is no need for a separate semantics-directed definition.
+}
+
+\begin{definition}
+  \label{def:model_finite_typing}
+  \emph{model finite typing}
+  \hfill
+  \small
+  \boxed{\VDash e \hastype \tau}
+  \nopad
+  \[
+  \begin{array}[t]{rclcl}
+
+      \VDash e \hastype \J{@}
+      &\iff& 
+      e \rightsquigarrow^* \J{@}
+
+      \\
+
+      \VDash e \hastype \J{<} l \J{>} \tau
+      &\iff& 
+      \VDash e\J{.}l \hastype \tau 
+
+      \\
+
+      \VDash e \hastype \tau_l \J{->} \tau_r
+      &\iff& 
+      \forall e' \qua
+      \VDash e' \hastype \tau_l 
+      \implies
+      \VDash e\J{(}e'\J{)} \hastype \tau_r
+
+      \\
+
+      \VDash e \hastype \tau_l \J{|} \tau_r 
+      &\iff& 
+      \VDash e \hastype \tau_l
+      \down
+      \VDash e \hastype \tau_r
+
+      \\
+
+      \VDash e \hastype \tau_l \J{\&} \tau_r 
+      &\iff& 
+      \VDash e \hastype \tau_l
+      \up
+      \VDash e \hastype \tau_r
+
+      \\
+
+      \VDash e \hastype \tau_l \typdiff \tau_r
+      &\iff& 
+      \VDash e \hastype \tau_l
+      \up
+      \not\VDash e \hastype \tau_r
+  \end{array}
+  \]
+\end{definition}
+
+\TODO{note that the semantics allows progam to get stuck under vacuously inhabited types}
+
+% \begin{definition}
+%   \label{def:model_scratch_typing}
+%   \emph{model scratch typing}
+%   \hfill
+%   \small
+%   \boxed{\delta \satisfies e \hastype \tau}
+%   \nopad
+%   \begin{mathpar}
+    % \inferrule { 
+    %   \TODO{alt def}
+    %   \\\\
+    %   \forall \tau' \qua  
+    %   \delta \satisfies \tau[\alpha\slash\tau'] \subtypes \tau'
+    %   \implies
+    %   \delta \satisfies e \hastype \tau'
+    % } {
+    %   \delta \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
+    % } 
+
+    % \inferrule { 
+    %   \delta \ \alpha \slash \J{LFP[}\alpha \J{]} \tau \satisfies e \hastype \tau
+    % } {
+    %   \delta \satisfies e \hastype \J{LFP[} \alpha \J{]} \tau
+    % } 
+
+
+    % \inferrule { 
+    %   \delta \satisfies e \hastype \tau_l
+    % } {
+    %   \delta \satisfies e \hastype \tau_l \J{|} \tau_r
+    % } 
+
+    % \inferrule { 
+    %   \delta \satisfies e \hastype \tau_r
+    % } {
+    %   \delta \satisfies e \hastype \tau_l \J{|} \tau_r
+    % } 
+
+
+    % \inferrule { 
+    %   \textbf{dom}(\delta') \subseteq \Theta
+    %   \\
+    %   \delta \oplus \delta' \satisfies \Delta 
+    %   \\
+    %   \delta \oplus \delta' \satisfies e \hastype \tau
+    % } {
+    %   \delta \satisfies e \hastype \J{EXI[}\Theta\J{]}\Delta \J{:} \tau
+    % } 
+
+    % \inferrule { 
+    %   \delta \satisfies e \hastype \tau_l
+    %   \\
+    %   \delta \satisfies e \hastype \tau_r
+    % } {
+    %   \delta \satisfies e \hastype \tau_l \J{\&} \tau_r
+    % } 
+
+    % \inferrule { 
+    %   \forall \delta' \qua
+    %   \textbf{dom}(\delta') \subseteq \Theta \implies
+    %   \delta \oplus \delta' \VDash \Delta \implies 
+    %   \delta \oplus \delta' \satisfies e \hastype \tau
+    %   \\\\
+    %   \exists \delta' \qua 
+    %   \textbf{dom}(\delta') \subseteq \Theta \up 
+    %   \delta \oplus \delta' \satisfies \Delta
+    % } {
+    %   \delta \satisfies e \hastype \J{ALL[}\Theta\J{]}\Delta \J{:} \tau
+    % } 
+
+    % \inferrule { 
+    %   \J{<}l \J{>} v \in g
+    %   \\
+    %   \delta \satisfies v \hastype \tau 
+    %   \\
+    %   \forall v' \qua \J{<} l \J{>} v' \in g \implies v' = v
+    % } {
+    %   \delta \satisfies g \hastype \J{<} l \J{>} \tau
+    % } 
+
+    % \inferrule { 
+    %   \TODO{diff antec}
+    %   \\\\
+    %   p \Uparrow \eta 
+    %   \\
+    %   \delta \satisfies f \hastype \tau_l \J{->} \tau_r
+    % } {
+    %   \delta \satisfies \J{[}p \J{=>} e \J{]}\ f \hastype \tau_l \typdiff \eta \J{->} \tau_r
+    % } 
+
+
+    % \inferrule { 
+    %   \TODO{needs separate inter antec}
+    %   \\\\
+    %   \forall \sigma \qua 
+    %   \delta \VDash p[\sigma] \hastype \tau_l
+    %   \implies
+    %   \delta  \satisfies e[\sigma] \hastype \tau_r
+    % } {
+    %   \delta \satisfies \J{[}p \J{=>} e \J{]}\ f\hastype \tau_l \J{->} \tau_r
+    % }
+
+    % \inferrule { 
+    %   \TODO{inter antec left}
+    %   \\\\
+    %   \delta \satisfies e \hastype \tau_l \J{->} \tau
+    % } {
+    %   \delta \satisfies e \hastype (\tau_l \J{\&} \tau_r) \J{->} \tau
+    % }
+
+    % \inferrule { 
+    %   \TODO{inter antec right}
+    %   \\\\
+    %   \delta \satisfies e \hastype \tau_r \J{->} \tau
+    % } {
+    %   \delta \satisfies e \hastype (\tau_l \J{\&} \tau_r) \J{->} \tau
+    % }
+
+    % \inferrule { 
+    %   \TODO{all antec}
+    %   \\\\
+    %   \textbf{dom}(\delta') \subseteq \Theta 
+    %   \\
+    %   \delta \oplus \delta' \satisfies \Delta 
+    %   \\
+    %   \delta \oplus \delta' \satisfies e \hastype \tau_l \J{->} \tau_r
+    % } {
+    %   \delta \satisfies e \hastype (\J{ALL[}\Theta \J{]}\Delta\ \tau_l) \J{->} \tau_r
+    % }
+
+    % \inferrule { 
+    %   \TODO{union antec}
+    %   \\\\
+    %   \delta \satisfies e \hastype \tau_l \J{->} \tau
+    %   \\
+    %   \delta \satisfies e \hastype \tau_r \J{->} \tau
+    % } {
+    %   \delta \satisfies e \hastype (\tau_l \J{|} \tau_r) \J{->} \tau
+    % }
+
+    % \inferrule { 
+    %   \TODO{exi antec}
+    %   \\\\
+    %   \forall \delta' \qua 
+    %   \textbf{dom}(\delta') \subseteq \Theta
+    %   \implies
+    %   \delta \oplus \delta' \VDash \Delta 
+    %   \implies
+    %   \delta \satisfies e \hastype \tau_l \J{->} \tau_r
+    % } {
+    %   \delta \satisfies e \hastype (\J{EXI[} \Theta \J{]}\Delta\ \tau_l) \J{->} \tau_r
+    % }
+
+    % \inferrule { 
+    %   \TODO{lfp antec}
+    %   \\\\
+    %   \alpha \notin \textbf{ftv}(\tau_l[\alpha\slash\J{@}]^+)
+    %   \\
+    %   \delta\ \alpha \slash (\J{LFP[}\alpha \J{]} \tau_l) \satisfies e \hastype \tau_l \J{->} \tau_r
+    % } {
+    %   \delta \satisfies e \hastype (\J{LFP[}\alpha \J{]} \tau_l) \J{->} \tau_r
+    % }
+
+    % \inferrule { 
+    %   \delta \satisfies e \hastype \tau_l
+    %   \\
+    %   \neg\ (\delta \satisfies e \hastype \tau_r)
+    % } {
+    %   \delta \satisfies e \hastype \tau_l \typdiff \tau_r
+    % } 
+
+    % \inferrule { 
+    % } {
+    %   \delta \satisfies \J{@} \hastype \J{@}
+    % } 
+
+    % \inferrule { 
+    %   \TODO{remove unflipped}
+    %   \\\\
+    %   \delta \satisfies f \hastype \tau_l \J{->} \tau_r
+    % } {
+    %   \delta \satisfies f\ \J{[}p \J{=>} e \J{]}\hastype \tau_l \J{->} \tau_r
+    % } 
+
+    % \inferrule { 
+    %   \TODO{remove unflipped}
+    %   \\\\
+    %   \forall \sigma \qua
+    %   \delta \satisfies p[\sigma] \hastype \tau_l
+    %   \implies
+    %   \delta  \satisfies e[\sigma] \hastype \tau_r
+    %   \\\\
+    %   \forall \tau_l', \tau_r' \qua
+    %   \delta \satisfies f \hastype \tau_l' \J{->} \tau_r'
+    %   \implies
+    %   \delta \satisfies \tau_l \subtypes \tau_l'
+    %   \implies
+    %   \delta \satisfies \tau_r' \subtypes \tau_r
+    % } {
+    %   \delta \satisfies f\ \J{[}p \J{=>} e \J{]}\hastype \tau_l \J{->} \tau_r
+    % }
+
+    % \inferrule { 
+    %   \delta \satisfies f \hastype \tau_l \J{->} \tau_r
+    %   \\\\
+    %   \forall \tau_l', \tau_r' \qua
+    %   \delta \satisfies \J{[}p \J{=>} e \J{]} \hastype \tau_l' \J{->} \tau_r'
+    %   \implies
+    %   \delta \satisfies \tau_l \subtypes \tau_l'
+    %   \implies
+    %   \delta \satisfies \tau_r' \subtypes \tau_r
+    % } {
+    %   \delta \satisfies \J{[}p \J{=>} e \J{]}\ f \hastype \tau_l \J{->} \tau_r
+    % } 
+
+    % \inferrule { 
+    %   \TODO{how to deal with recursive negative occurence?}
+    %   \\\\
+    %   \forall v \qua 
+    %   \delta \satisfies v \hastype \tau_l
+    %   \implies
+    %   \exists \sigma \qua
+    %   v \simeq p \given \sigma 
+    %   \up
+    %   \delta  \satisfies e[\sigma] \hastype \tau_r
+    % } {
+    %   \delta \satisfies \J{[}p \J{=>} e \J{]}\ f\hastype \tau_l \J{->} \tau_r
+    % }
+
+    % \inferrule { 
+    %   \TODO{how to deal with recursive negative occurence?}
+    %   \\\\
+    %   \TODO{intersection elim is built into pattern matching}
+    %   \\\\
+    %   \forall v \qua 
+    %   \delta \VDash v \hastype \rho
+    %   \implies
+    %   \exists \sigma \qua
+    %   v \simeq p \given \sigma 
+    %   \up
+    %   \delta  \satisfies e[\sigma] \hastype \tau_r
+    % } {
+    %   \delta \satisfies \J{[}p \J{=>} e \J{]}\ f\hastype \rho \J{->} \tau_r
+    % }
+
+%   \end{mathpar}
+% \end{definition}
+
+\noindent
+Model typing describes what expressions inhabit what types,
+according to the forms of types, the forms of values, and how expressions
+progress into values. 
+It imbues types with semantics, which we use
+to guide and judge the design of our type inference system. 
+In general, a typing holds if its expression can make progress and 
+the typing holds for the reduced form.
+
+For inhabitation of a entry \ms{\delta \satisfies g \hastype \J{<}l\J{>}\tau},
+the typing holds if the the expression is a record value, and
+there is an entry in the record whose content inhabits     
+the content of the entry type. Additionally, there must be just one
+value per entry in the record. 
+For inhabitation of a path 
+\ms{\delta \satisfies f\ \J{[}p \J{=>} e \J{]} \hastype \tau_l\J{->}\tau_r},
+the typing holds if the the expression is a function,
+and there is one path in the function where 
+the typing of the path body holds whenever the typing of the pattern holds.   
+Additionally, since the paths of a function are tried in order, such that 
+only the result of the first matched path is returned,
+it is required that either the antecedent of the path type
+is not weaker than the antecedent of preceding paths 
+or the consequent of the path type is weaker than the consequent
+of preceding paths. 
+
+For inhabitation of a difference 
+\ms{\delta \satisfies e \hastype \tau_l \typdiff \tau_r},
+the typing holds if the expression inhabits the left type
+but not the right right.
+For inhabitation of a intersection 
+\ms{\delta \satisfies e \hastype \tau_l \J{\&} \tau_r},
+the typing holds if the expression inhabits both the
+left type and the right type. 
+For inhabitation of a union 
+\ms{\delta \satisfies e \hastype \tau_l \J{|} \tau_r},
+the typing holds if the expression inhabits either the
+left type or the right type. 
+
+For inhabitation of a universal 
+\ms{\delta \satisfies e \hastype \J{ALL[} \Theta \J{]}\Delta\J{:}\tau},
+the typing holds if the expression inhabits the constituent type,
+under all interpretations of bound variables that satisfy the qualifiers. 
+To avoid accepting an erroneous expression inhabiting a vacuous
+type, it is required that the qualifiers are satisfiable.  
+For inhabitation of an existential 
+\ms{\delta \satisfies e \hastype \J{ALL[} \Theta \J{]}\Delta\J{:}\tau},
+the typing holds if qualifiers and the inhabitation of the constituent type
+are satisfiable by an interpretation of the bound variables.
+
+For inhabitation of a variable \ms{\delta \satisfies e \hastype \alpha},
+the typing holds if there's an interpretation for which the typing holds. 
+For inhabitation of unit \ms{\delta \satisfies \J{@} \hastype \J{@}},
+the typing holds if the expression is unit.
+For inhabitation of a least fixed point \ms{\delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\alpha},
+the typing holds if the expression also inhabits the inflated type. 
+
+\begin{definition}
+  \label{def:model_subtyping}
+  \emph{model subtyping}
+  \hfill
+  \small
+  \boxed{\delta \satisfies \tau <: \tau}
+  \nopad
+  \begin{mathpar}
+    \inferrule { 
+      \forall e .\ 
+      \delta \satisfies e \hastype \tau_l \implies 
+      \delta \satisfies e \hastype \tau_r 
+    } {
+      \delta \satisfies \tau_l <: \tau_r
+    } 
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Model subtyping describes how the spaces of two types compare to each other.
+
+\begin{definition}
+  \label{def:model_subtyping_sequence}
+  \emph{model subtyping sequence} 
+  \hfill
+  \small
+  \boxed{\delta \satisfies \Delta}
+  \nopad
+  \begin{mathpar}
+    \inferrule { 
+    } {
+      \delta \satisfies \epsilon 
+    } 
+
+    \inferrule { 
+      \delta \satisfies \Delta 
+      \\
+      \delta \satisfies \tau_l \subtypes \tau_r
+    } {
+      \delta \satisfies \Delta \  \tau_l \J{<:} \tau_r
+    } 
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Model subtyping sequence describes multiple subtyping constraints. 
+
+\begin{definition}
+  \label{def:model_typing_sequence}
+  \emph{model typing sequence} 
+  \hfill
+  \small
+  \boxed{\delta, \sigma \satisfies \Gamma}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \forall x \qua
+      x \hastype \tau \in \Gamma
+      \implies
+      \delta \satisfies x[\sigma] \hastype \tau
+    } {
+      \delta, \sigma \satisfies \Gamma
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Model typing sequence describes multiples typings of variables.
+
+\section{Static System}
+\label{sec:static_system}
+
+The static system consists of ways to characterize abstract expressions 
+and abstract types without relying on progression to concretize and reduce expressions. 
+The two main components are proof typing and proof subtyping.
+Proof typing is a strengthening of model typing, and 
+proof subtyping is a strengthening of model subtyping.
+When viewed as an algorithm,
+they form the core of the type inference system. 
+Proof typing generates subtyping constraints approximating the control flow of an expression, 
+and then leverages proof subtyping to solve for the variables in the the subtyping constraints,
+where the variables represent possible types of expressions.
+
+
+\begin{definition} 
+  \label{def:proof_typing}
+  \emph{proof typing}
+  \hfill 
+  \small
+  \boxed{\Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \Theta, \Delta, \Gamma \entails \J{@} \hastype \J{@} \given \Theta, \Delta
+    }
+
+    \inferrule {
+    } {
+      \Theta, \Delta, \Gamma \entails x \hastype \Gamma(x)  \given \Theta, \Delta 
+    }
+
+    \inferrule {
+    } {
+      \Theta, \Delta, \Gamma \entails \epsilon \hastype \J{TOP} \given \Theta, \Delta
+    }
+
+    \inferrule {
+      \Theta, \Delta, \Gamma \entails r \hastype \tau \given \Theta', \Delta'  
+      \\
+      \Theta', \Delta', \Gamma \entails e \hastype \tau' \given \Theta'', \Delta'' 
+    } {
+      \Theta, \Delta, \Gamma \entails r\ \J{<}l \J{>} e \hastype (\tau\ \J{\&}\ \J{<} l \J{>} \tau') 
+      \given \Theta'', \Delta'' 
+    }
+
+    \inferrule {
+      \exists \Xi \qua \Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi 
+      \\
+      \textbf{pack}^+(\textbf{ftv}(\Delta) \entails \Pi) = \tau 
+    } {
+      \Theta, \Delta, \Gamma \entails f \hastype \tau \given \Theta, \Delta
+    }
+
+    \inferrule {
+      \Theta, \Delta, \Gamma \entails e_f \hastype \tau_f \given \Theta', \Delta'
+      \\
+      \Theta', \Delta', \Gamma \entails e_a \hastype \tau_a \given \Theta'', \Delta''
+      \\
+      \Theta'', \Delta'' \entails \tau_f \subtypes \tau_a\J{->}\alpha \given \Theta''', \Delta'''
+    } {
+      \Theta, \Delta, \Gamma \entails e_f\J{(}e_a \J{)} \hastype \alpha \given \Theta''', \Delta'''
+    }
+
+    \inferrule {
+      \Theta, \Delta, \Gamma \entails e \hastype \tau \given  \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails \tau \subtypes \alpha \rightarrow \Pi
+      \\
+      \textbf{ftv}(\Delta') \entails \alpha \circlearrowleft \Pi \subtypes \tau'
+    } {
+      \Theta, \Delta, \Gamma \entails \J{loop(}e\J{)} 
+      \hastype \tau' 
+      \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \textbf{ftv}(\tau_a) \subseteq \emptyset
+      \\
+      \Theta, \Delta, \Gamma \entails e \hastype \tau_e \given \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails \tau_e \subtypes \tau_a \given \Theta'', \Delta''
+    } {
+      \Theta, \Delta, \Gamma \entails e \J{ as } \tau_a \hastype \tau_a \given \Theta'', \Delta''
+    }
+  \end{mathpar}
+\end{definition}
+
+
+\begin{definition} 
+  \label{def:loop_subtyping}
+  \emph{loop subtyping}
+  \hfill 
+  \small
+  \boxed{\Theta^\dagger \entails \alpha \circlearrowleft \Pi \subtypes \tau}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \textbf{invert}(\alpha \entails \Pi) = \Pi'
+      \\
+      \textbf{pack}^-(\alpha\ \Theta^\dagger \entails \Pi') = \tau'
+      \\\\
+      \textbf{factor}(\alpha \entails \tau' \cdot \J{left}) = \tau_l
+      \\
+      \textbf{factor}(\alpha \entails \tau' \cdot \J{right}) = \tau_r
+    } {
+      \Theta^\dagger \entails 
+      \alpha \circlearrowleft \Pi 
+      \subtypes
+      \J{LFP[} \alpha \J{]} \tau_l \J{->} \J{LFP[} \alpha \J{]} \tau_r
+    }
+
+    \inferrule {
+      \alpha \neq \alpha_l
+      \\\\
+      \textbf{invert}(\alpha \entails \Delta) = \Delta' 
+      \\
+      \textbf{pack}^-(\alpha\ \alpha_l\ \Theta^\dagger \entails \Theta, \Delta', \alpha_l \J{*} \tau_r) = \tau'
+      \\\\
+      \textbf{factor}(\alpha \entails \tau' \cdot \J{left}) = \tau_l
+      \\
+      \textbf{factor}(\alpha \entails \tau' \cdot \J{right}) = \tau_r'
+      \\\\
+      \alpha_l \wr^+ \J{LFP[} \alpha \J{]}\tau_r'
+      \\
+      % founded upper bound
+      \alpha \downarrow \tau_l \subtypes \tau_l'
+      \\
+      (\J{LFP[} \alpha \J{]}\tau_r')[\alpha_l\slash \J{LFP[} \alpha \J{]} \tau_l'] = \tau_r''
+    } {
+      \Theta^\dagger \entails \alpha \circlearrowleft (\Theta, \Delta, \alpha_l \J{->}\tau_r) \subtypes \alpha_l \J{->} \tau_r''
+    }
+  \end{mathpar}
+\end{definition}
+
+
+\noindent
+For a given context and expression, 
+proof typing attempts to infer a type and a subtyping sequence,
+such that if the context holds,
+then there is a solution to the generated subtyping sequence, under which 
+the expression inhabits the inferred type.
+The context consists of skolems \ms{\Theta}, subtyping constraints \ms{\Delta}, and typings \ms{\Gamma}. 
+The contextual subtyping constraints and typings constrain the search space of valid typings, 
+such that the generated subtyping constraints are consistent with them. 
+In fact, the generated subtyping constraints contain
+all the contextual subtyping constraints, as it keeps the definition a bit less cluttered.
+Skolems are variables that further constrain the search space. 
+The generated subtyping constraints must be satisfiable under every interpretation of
+skolems for which the contextual constraints are satisfiable.  
+Proof typing may also generate additional skolems, which can be used to constrain
+subsequent sub-problems.
+If a variable is not in the set of skolems, then we consider it to be placeholder,
+in that it can be constrained in any way that is consistent with the other subtyping constraints
+and the typing. 
+
+
+
+\noindent
+For unit \code{@}, it infers the unit type \J{@}. 
+For a variable, \ms{x}, it looks for a corresponding typing in the context, 
+and infers the type it finds.
+For an empty sequence \ms{\epsilon}, 
+it infers top \code{TOP},
+thereby providing a basis for inferring types of records. 
+For a record \ms{r\ \J{<}l\J{>}e},  
+it recursively constructs the type for each entry, and
+refines their types against each other by compounding intersection.
+
+For a function \ms{f},  
+it delegates the work to two helpers. 
+First, it leverages function typing consolidation 
+\ms{\Theta, \Delta, \Gamma \entails f \liftfun \Pi \sim \Xi}
+to infer as many types as possible
+and consolidates the results into a sequence of zones \ms{\Pi}.
+It must consolidate all of the inferred types in order to
+ensure that the inferred type of each 
+path's pattern does not subtype the type of subsequent paths' patterns. 
+The sequence of subtractable types \ms{\Xi} can be ignored, as it is only
+exposed for the sake of being used recursively.
+Next, it leverage positive packing 
+\ms{\textbf{pack}^+(... \entails \Pi) = \tau}
+to rewrite each zone into a type,
+such that the skolems and placeholders are converted to
+existential and universal bindings,
+and then combine all the types by compounding intersection.
+Packing the path types together ensures that certain
+control flows of application can be verified even when  
+the best approximation of the type of the argument
+is less precise than the pattern of any one path.
+
+
+For projection \ms{e\J{.}l}, 
+it delegates to proof subtyping 
+\ms{... \entails \tau \subtypes \J{<}l\J{>}\alpha \given ...}
+to check that there is an entry with the label \ms{l}
+in the source expression's type \ms{\tau}.
+With subtyping, it learns a lower bound on the type of the entry's content \ms{\alpha}.
+For application \ms{e_f\J{(}e_a\J{)}}, 
+it delates to proof subtyping 
+\ms{... \entails \tau_f \subtypes \tau_a \J{->} \alpha \given ...}
+to check that that the function \ms{e_f} can actually
+map the argument \ms{e_a} to a result. With subtyping, 
+it learns a lower bound on the type of the result \ms{\alpha}.
+For an annotation \ms{\J{def}\ x \J{:} \tau_a\ \J{=}\ e\ \J{in}\ e'}, 
+it first delegates to a few helpers. 
+First it leverages typing consolidation \ms{\Theta, \Delta, \Gamma \entails e \hastype \Pi}
+to infer as many possible zones for the source expression \ms{e}.
+Then it packs all the zones together and ensures that the packed type
+subtypes the type annotation.
+It assigns the annotated type to the defined variable in the contextual typing
+as it proceeds to infer the type of the continuation \ms{e'}, thereby
+artificially restricting the permissible control flow. 
+
+
+For a loop \ms{\J{loop(}e\J{)}}, 
+it eagerly factors the paths of the recursive function 
+to construct a single path type 
+with an recursive type as its antecedent and an recursive type as its consequent. 
+First, it infers the type of the fixed point combinators argument \ms{e},
+and it leverages loop subtyping consolidation 
+\ms{\Theta', \Delta' \entails \tau \subtypes \alpha_\nu \rightarrow \Pi^\nu}
+to ensure the argument has a  
+form compatible with looping and 
+to collect as many type zones of its paths as possible.  
+It leverage zone sequence duality 
+\ms{
+  \alpha_\nu \downarrow \Pi_\nu
+  \fallingdotseq 
+  \alpha_\mu \uparrow \Pi_\mu
+}, which rewrites the implicitly co-recursive path zones into
+implicitly recursive pair zones. 
+Then, it leverages negative packing \ms{\textbf{pack}^-(... \entails \Pi_\mu) = \tau_\mu},
+and constructs an explicitly recursive type by wrapping it in a least fixed point
+\ms{\J{LFP[}\alpha_\mu\J{]}\tau_\mu}.
+It then leverages factorization \ms{
+  \Vdash \J{LFP[} \alpha_\mu \J{]}\tau_\mu \subtypes \J{<left>}\ \tau_l
+} to factor out the left part of the recursive pair, and does the same for the right part. 
+Finally from the left and right parts, it forms a single path type
+with a least fixed point for both the antecedent and the consequent. 
+
+
+\begin{definition} 
+  \label{def:proof_subtyping}
+  \emph{proof subtyping}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
+\end{definition}
+
+\noindent
+For a given context and two abstract types,
+proof subtyping attempts to solve the subtyping between the two types,
+by generating a subtyping sequence, such that if the context holds,
+then there is a solution to the generated subtyping sequence, under which   
+the initial subtyping also holds. 
+
+The context consists of skolems \ms{\Theta} and subtyping constraints \ms{\Delta}. 
+The contextual subtyping constraints constrain the search space of valid subtyping constraints, 
+such that the generated subtyping constraints are consistent with them. 
+In fact, the generated subtyping constraints contain all the contextual subtyping constraints.
+As with proof typing, skolems constrain the search space,
+such that the generated subtyping constraints must be satisfiable
+for every interpretation of skolems for which the contextual subtyping constraints are satisfiable.
+
+In order to find a solution, the solver considers the forms 
+of both types in the subtyping relation.
+There are elimination rules, which reason according to the form of the subtype,
+and there are introduction rules, which reason according to the form of the supertype.
+Some rules handle both elimination and introduction of type forms.
+Due to the numerous forms of types where each form is considered for each of the two types,
+proof subtyping relies on many rules.  
+For clarity, we subdivide into the rules into smaller groups according to some themes.
+
+\begin{definition} 
+  \label{def:proof_subtyping_reflection}
+  \emph{proof subtyping (reflection)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \Theta, \Delta \entails \tau \subtypes \tau \given \Theta, \Delta 
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Proof subtyping is reflexive. A type
+is considered both weaker and stronger than itself. 
+We implicitly assume alpha conversion for variables
+bound in existentials and universals.
+Our implementation of proof typing converts to a nameless representation,
+based on de Bruijn indexes \cite{} before checking equality.
+
+\begin{definition} 
+  \label{def:proof_subtyping_implication_preservation}
+  \emph{proof subtyping (implication preservation)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \kappa_l \subtypes \kappa_r \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes \tau_r
+      \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \J{<}l \J{>} \tau_l \subtypes \J{<} l \J{>} \tau_r
+      \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau_{x} \subtypes \tau_{p} \given \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails \tau_{q} \subtypes \tau_{y} \given \Theta'', \Delta'' 
+    } {
+      \Theta, \Delta \entails 
+      \tau_{p} \J{->} \tau_{q} 
+      \subtypes 
+      \tau_{x} \J{->} \tau_{y}
+      \given \Theta'', \Delta'' 
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Both entry types and path types are analogous to propositional implication. 
+However, unlike the typical separate rules for introduction and elimination in propositional implication,
+the subtyping solver combines the semantics for introduction
+and elimination into rules that preserve the implication structures.
+
+For preservation of entries 
+\ms{\J{<}l \J{>} \tau_l \subtypes \J{<} l \J{>} \tau_r},
+it checks that the entries' labels match and that 
+subtyping holds for their contents.
+For preservation of paths 
+\ms{\tau_p \J{->} \tau_q \subtypes \tau_x \J{->} \tau_y},
+it checks that the antecedent of the subtype
+is weaker than the antecedent of the supertype, 
+and the consequent of the subtype 
+is stronger than the consequent of the supertype. 
+
+\begin{definition} 
+  \label{def:proof_subtyping_expansion_elimination}
+  \emph{proof subtyping (expansion elimination)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \phi \subtypes \tau \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails
+      \tau_a \subtypes \tau
+      \given \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails
+      \tau_b \subtypes \tau
+      \given \Theta'', \Delta''
+    } {
+      \Theta, \Delta \entails
+      \tau_a\J{|}\tau_b \subtypes \tau
+      \given \Theta'', \Delta'' 
+    }
+
+    \inferrule {
+      \Theta, \Delta \restricted \Omega
+      \\
+      \Theta, \Delta \entails \Omega \given \Theta', \Delta'
+      \\
+      \Theta' \cup \Theta_l, \Delta' \entails
+      \tau_l \subtypes \tau_r \given \Theta'', \Delta''
+    } {
+      \Theta, \Delta \entails
+      \J{EXI[}\Theta_l\J{]}\Omega \J{:} \tau_l \subtypes \tau_r
+      \given \Theta'', \Delta'' 
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+For union elimination \ms{
+\tau_a\J{|}\tau_b \subtypes \tau
+},
+it solves elimination for both of union's constituents.
+For existential elimination \ms{ 
+\J{EXI[}\Theta_l \J{]} \Omega \J{:}\tau_l \subtypes \tau_r
+}, 
+it ensures that the existential's qualifiers
+are negatable \ms{\Theta,\Delta \Vvdash \Omega}, 
+and then it finds a solution for the qualifiers.
+It then solves the elimination of the existential's constituent type,
+constrained by the skolemized bound variables,
+and the solution to the qualifiers. 
+The negatable check is necessary to ensure
+that a solution the the qualifiers implies
+a solution to the subtyping constraints generated by solving the qualifiers.
+Thus, if the solver can eliminate the existential, 
+then a solution to the qualifiers implies a solution to the constituent's elimination.
+
+
+\begin{definition} 
+  \label{def:proof_subtyping_refinement_introduction}
+  \emph{proof subtyping (refinement introduction)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau \subtypes \psi \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails
+      \tau \subtypes \tau_{a} \given \Theta', \Delta' 
+      \\
+      \Theta', \Delta' \entails
+      \tau \subtypes \tau_{b} \given \Theta'', \Delta''
+    } {
+      \Theta, \Delta \entails
+      \tau \subtypes \tau_{a}\J{\&}\tau_{b} \given \Theta'', \Delta''
+    }
+
+    \inferrule {
+      \Theta, \Delta \restricted \Omega
+      \\
+      \Theta, \Delta \given \Omega \entails \Theta', \Delta'
+      \\
+      \Theta' \cup \Theta_r, \Delta' \entails \tau_l \subtypes \tau_r \given \Theta'', \Delta'' 
+    } {
+      \Theta, \Delta \entails \tau_l \subtypes \J{ALL[}\Theta_r\J{]}\Omega \J{:} \tau_r \given \Theta'', \Delta''
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Refinement introduction is the dual of expansion elimination, so its rules
+rely on analogous techniques.
+
+\begin{definition} 
+  \label{def:proof_subtyping_placeholder_elimination}
+  \emph{proof subtyping (placeholder elimination)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \alpha \notin \Theta
+      \\
+      (\forall \tau' \qua \tau' \J{<:} \alpha \in \Delta \implies \tau' \J{<:} \tau \in \Delta^\dagger)
+      \\
+      \Theta, \Delta \entails \Delta^\dagger \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'\ \alpha\J{<:}\tau
+    }
+    % \inferrule {
+    %   \alpha \notin \Theta
+    %   \\
+    %   \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \given \Theta', \Delta'
+    % } {
+    %   \Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'\ \alpha\J{<:}\tau
+    % }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+For placeholder elimination \ms{\alpha \subtypes \tau} where \ms{\alpha \notin \Theta}, 
+it ensures that the supertype is consistent with all lower bounds of the placeholder,
+solutions against those lower bounds. Then it learns that the supertype is an upper bound 
+of the placeholder.
+
+\begin{definition} 
+  \label{def:proof_subtyping_placeholder_introduction}
+  \emph{proof subtyping (placeholder introduction)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \alpha \notin \Theta
+      \\
+      (\forall \tau' \qua \alpha \J{<:} \tau' \in \Delta \implies \tau \J{<:} \tau' \in \Delta^\dagger) 
+      \\
+      \Theta, \Delta \entails \Delta^\dagger \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \tau \subtypes \alpha \given \Theta', \Delta'\ \tau\J{<:}\alpha
+    }
+    % \inferrule {
+    %   \alpha \notin \Theta
+    %   \\
+    %   \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \given \Theta', \Delta'
+    % } {
+    %   \Theta, \Delta \entails 
+    %   \tau \subtypes \alpha \given \Theta', \Delta'\ \tau\J{<:}\alpha
+    % }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Placeholder introduction is the dual of placeholder elimination, so its rule
+relies on analogous techniques.
+
+\begin{definition} 
+  \label{def:proof_subtyping_skolem_introduction}
+  \emph{proof subtyping (skolem introduction)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau \subtypes \alpha \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \alpha \in \Theta 
+      \\
+      \exists \alpha' \qua \alpha' \J{<:} \alpha \in \Delta \up \alpha' \notin \Theta 
+      % \\\\
+      % \exists \Theta', \Delta' \qua \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{-} \backslash \Delta \given \Theta', \Delta'
+      \\\\
+      (\forall \tau' \qua \alpha \J{<:} \tau' \in \Delta \implies \tau \J{<:} \tau' \in \Delta^\dagger)
+      \\
+      \Theta, \Delta \entails 
+      \Delta^\dagger 
+      \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \tau \subtypes \alpha 
+      \given \Theta', \Delta'\ \tau \J{<:} \alpha 
+    }
+
+    \inferrule {
+      \alpha \in \Theta 
+      \\
+      \tau' \J{<:} \alpha \in \Delta
+      \\\\
+      (\forall \alpha' \qua \alpha' = \tau' \implies \alpha' \in \Theta) 
+      \\
+      \Theta, \Delta \entails \tau \subtypes \tau' \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \tau \subtypes \alpha 
+      \given \Theta', \Delta' 
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+For skolem introduction \ms{\tau \subtypes \alpha} where \ms{\alpha \in \Theta},
+there are two possibilities.
+In the first scenario, the skolem has a placeholder as a lower bound.
+If effect, this enables learning lower bounds on the skolem,
+so the solver uses the same techniques as it did for placeholder elimination.
+I the second scenario, there is a lower bound that's not a placeholder,
+so the solver ensures that the skolem introduction is weaker
+than the constraints by checking that the subtype subtypes the lower bound that
+was found. In practice, the solver avoids checking the subtype against the lower bound, 
+if the lower bound is a placeholder, as that would cause the solver to diverge due to
+a mutual dependence between placeholder elimination and skolem elimination.      
+
+\begin{definition} 
+  \label{def:proof_subtyping_skolem_elimination}
+  \emph{proof subtyping (skolem elimination)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \alpha \subtypes \tau \given \Theta', \Delta'} 
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \alpha \in \Theta 
+      \\
+      \exists \alpha' \qua \alpha \J{<:} \alpha' \in \Delta \up \alpha' \notin \Theta 
+      % \\\\
+      % \exists \Theta', \Delta' \qua \Theta, \Delta \entails \Delta[\alpha\slash\tau]^{+} \backslash \Delta \given \Theta', \Delta'
+      \\\\
+      (\forall \tau' \qua \tau' \J{<:} \alpha \in \Delta \implies \tau' \J{<:} \tau \in \Delta^\dagger)
+      \\
+      \Theta, \Delta \entails 
+      \Delta^\dagger 
+      \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \alpha \subtypes \tau
+      \given \Theta', \Delta'\ \alpha \J{<:} \tau
+    }
+
+    \inferrule {
+      \alpha \in \Theta 
+      \\
+      \alpha \J{<:} \tau' \in \Delta
+      \\\\
+      (\forall \alpha' \qua \alpha' = \tau' \implies \alpha' \in \Theta) 
+      \\
+      \Theta, \Delta \entails \tau' \subtypes \tau \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \alpha \subtypes \tau
+      \given \Theta', \Delta'
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Skolem elimination is the dual of skolem introduction, so its rules
+rely on analogous techniques.
+
+\begin{definition} 
+  \label{def:proof_subtyping_implication_rewriting}
+  \emph{proof subtyping (implication rewriting)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes
+      (\tau_a\J{->}\tau_r)\J{\&}(\tau_b\J{->}\tau_r)
+      \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes 
+      (\tau_a\J{|}\tau_b)\J{->}\tau_r
+      \given \Theta', \Delta' 
+    }
+
+
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau_l
+      \subtypes
+      (\tau_r\J{->}\tau_a)
+      \J{\&}
+      (\tau_r\J{->}\tau_b)
+      \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes 
+      \tau_r\J{->}(\tau_{a}\J{\&}\tau_{b})
+      \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau
+      \subtypes
+      (\J{<} l \J{>} \tau_a)
+      \J{\&}
+      (\J{<} l \J{>} \tau_b)
+      \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \tau \subtypes 
+      \J{<} l \J{>} (\tau_{a}\J{\&}\tau_{b})
+      \given \Theta', \Delta'
+    }
+
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Just as entries and paths are analogous to propositional implication,
+unions and intersections are analogous to disjunction and conjunction, respectively.
+Just as disjunction elimination or propositional logic relies on two cases of implication,
+the solver recognizes that union in the antecedent of a path,
+can be solved by rewriting into two cases of paths.  
+Additionally, since must preserve implications, there is no direct no single
+rule that corresponds modus ponens. Thus, the solver 
+recognizes that intersection in the consequent of a path or (the content of an entry),
+may need to be rewritten as two paths (or two entries).
+
+
+\begin{definition} 
+  \label{def:proof_subtyping_lfp_elimination}
+  \emph{proof subtyping (least fixed point elimination)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \textbf{factor}(\alpha \entails \tau_l \cdot l) = \tau
+      \\
+      \Theta, \Delta \entails 
+      \J{LFP[}\alpha\J{]} \tau
+      \subtypes 
+      \tau_r \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \J{LFP[}\alpha\J{]}\tau_l \subtypes \J{<} l \J{>} \tau_r 
+      \given \Theta', \Delta' 
+    }
+
+    \inferrule {
+      \alpha \notin \textbf{ftv}(\tau_l)
+      \\
+      \Theta, \Delta \entails 
+      \tau_l \subtypes \tau_r 
+      \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r 
+      \given \Theta', \Delta' 
+    }
+
+    \inferrule {
+      \alpha \wr^+ \tau_l
+      \\
+      \Theta, \Delta \entails 
+      \tau_l[\alpha \slash \tau_r] \subtypes \tau_r \given 
+      \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \J{LFP[}\alpha\J{]}\tau_l \subtypes \tau_r 
+      \given \Theta', \Delta' 
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+For least fixed point elimination \ms{
+\J{LFP[} \alpha \J{]} \tau_l \subtypes \tau_r
+}, there are a few scenarios
+that may work. 
+In the first scenario, the solver recognizes that the supertype
+is an entry, so it factors out the corresponding column from
+the least fixed point.
+In the second scenario, the solver recognizes that 
+the constituent type doesn't contain the self reference,
+so it's sufficient to simply solve the elimination of the constituent.  
+In the third case, the solver performs mathematical induction.
+It substitutes the super type \ms{\tau_r}
+into all positive occurrences of the self reference \ms{\alpha} within
+the least fixed point's constituent type \ms{\tau_l}.
+It then solves the elimination of this substitution into the super type.
+In effect, solving the least fixed point elimination under the positive substitution is 
+akin to deriving the least fixed point elimination under the assumption of the induction hypothesis,
+\ms{\alpha \subtypes \tau_r}.
+
+\begin{definition} 
+  \label{def:proof_subtyping_difference_intro}
+  \emph{proof subtyping (difference introduction)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau \subtypes \tau_l \typdiff \tau_r \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \TODO{Update proof, deriving that lower does not intersect with subtraction}
+      \\\\
+      \TODO{in lean, prove that subtyping is equivalent to decidable definition under restricted subtyping form}
+      \\\\
+      \TODO{the pattern restriction on both sides is more restrictive than subtyping restriction}
+      \\\\
+      \epsilon \pattype \tau_r
+      \\
+      \Theta, \Delta \not\dentails \tau \subtypes \tau_r
+      \\
+      \Theta, \Delta \not\dentails \tau_r \subtypes \tau
+      \\
+      \Theta, \Delta \entails \tau \subtypes \tau_l \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \tau \subtypes \tau_l \typdiff \tau_r
+      \given \Theta', \Delta'
+    }
+
+
+    \inferrule {
+      \TODO{proof rules should not require induction to construct premises}
+      \\\\
+      \epsilon \pattype \tau_r
+      \\
+      \alpha \prec \tau
+      \\
+      \alpha \wr^+ \tau
+      \\\\
+      \Theta, \Delta \not\dentails \tau[\alpha\slash\J{BOT}]^1 \subtypes \tau_r
+      \\
+      \Theta, \Delta \not\dentails \tau_r \subtypes \tau[\alpha\slash\J{BOT}]^{\textbf{height}(\tau_r)}
+      \\
+      \Theta, \Delta \entails \tau \subtypes \tau_l \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails 
+      \J{LFP[} \alpha \J{]} \tau \subtypes \tau_l \typdiff \tau_r
+      \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \TODO{meta-theory}
+      \\\\
+      \epsilon \pattype \tau_r
+      \\
+      \alpha \prec \tau % struct-less-than
+      \\
+      \alpha \wr^+ \tau
+      \\
+    } {
+      \Theta, \Delta \not\dentails \tau[\alpha\slash\J{BOT}]^1 \subtypes \tau_r
+      \implies
+      \nexists n \qua \Theta, \Delta \dentails \tau[\alpha\slash\J{BOT}]^n \subtypes \tau_r
+    }
+
+    \inferrule {
+      \TODO{meta-theory}
+      \\\\
+      \epsilon \pattype \tau_r
+      \\
+      \alpha \prec \tau
+      \\
+      \alpha \wr^+ \tau
+      \\
+    } {
+      \Theta, \Delta \not\dentails \tau_r \subtypes \tau[\alpha\slash\J{BOT}]^{\textbf{height}(\tau_r)}
+      \implies
+      \nexists n \qua \Theta, \Delta \dentails \tau_r \subtypes \tau[\alpha\slash\J{BOT}]^n
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+For difference introduction \ms{\tau \subtypes \tau_r \typdiff \eta}, 
+it checks that subtyping holds for the positive part 
+and fails for the subtracted part.
+Additionally, it requires that the subtracted part is subtractable 
+\ms{\Theta, \Delta \Vvdash \eta}, 
+which ensures that its introduction is complete,
+thus failure of its introduction is sound. 
+
+\begin{definition} 
+  \label{def:proof_subtyping_lfp_intro}
+  \emph{proof subtyping (least fixed point introduction)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      % inflatable iff founded
+      \Theta, \Delta \inflatable \tau_l \subtypes \J{LFP[} \alpha \J{]} \tau_r
+      \\
+      \Theta, \Delta \entails
+      \tau_l \subtypes \tau_r[\alpha \slash \J{LFP[} \alpha \J{]} \tau_r]
+      \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails
+      \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails
+      \tau_l \subtypes \textbf{drop}(\alpha \entails \tau_r) \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails
+      \tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r \given \Theta', \Delta'
+    }
+
+  \end{mathpar}
+\end{definition}
+
+\noindent
+For least fixed point introduction \ms{
+\tau_l \subtypes \J{LFP[} \alpha \J{]}\tau_r
+}, the solver has a couple options.
+One option is to check for a syntactic guarantee that the least fixed point is inflatable without diverging 
+\ms{
+... \inflatable \tau_l \subtypes \J{LFP[} \alpha \J{]} \tau_r
+} and then solve the inflated introduction.
+Alternatively, it can strengthen the least fixed point
+with union drop \ms{\textbf{drop}(\alpha entails \tau_r) = \tau_r'},
+which drops any parts of the union containing the self reference. 
+
+\begin{definition} 
+  \label{def:proof_subtyping_diff_elimination}
+  \emph{proof subtyping (difference elimination)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau_l \typdiff \tau_r \subtypes \tau \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails 
+      \tau_l \subtypes \tau_r \J{|} \tau \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails 
+      \tau_l \typdiff \tau_r \subtypes \tau \given \Theta', \Delta'
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+For difference elimination \ms{ 
+\rho \typdiff \eta \subtypes \tau
+},
+it simply rewrites the problem in terms of union.
+
+\begin{definition} 
+  \label{def:proof_subtyping_expansion_introduction}
+  \emph{proof subtyping (expansion introduction)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \tau \subtypes \phi \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau \subtypes \tau_{l} \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau \subtypes \tau_{r} \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails \tau \subtypes \tau_{l}\J{|}\tau_{r} \given \Theta', \Delta' 
+    }
+
+    \inferrule {
+      \TODO{maybe learned subtypings on bound variabes can be removed}
+      \\\\
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+      \\\\
+      \Theta', \Delta' \entails \Delta_r \given \Theta'', \Delta'' 
+    } {
+      \Theta, \Delta \entails 
+      \tau_l
+      \subtypes 
+      \J{EXI[}\Theta_r\J{]}\Delta_r \J{:} \tau_r \given \Theta'', \Delta'' 
+    }
+  \end{mathpar}
+\end{definition}
+\noindent
+For union introduction \ms{
+\tau \subtypes \tau_{l}\J{|}\tau_{r}
+}, 
+it can choose from two possible options:
+solving the introduction of of left part, 
+or solving the introduction of the right part.
+For existential introduction \ms{ 
+\tau_l \subtypes \J{EXI[}\Theta_r \J{]} \Delta_r \J{:}\tau_r
+},
+it constructs witnesses by solving the introduction
+of the existential's constituent type \ms{\entails \tau_l \subtypes \tau_r \given}, 
+from which the witnesses can be inferred from the generated subtyping constraints.
+It then attempts to solve the qualifiers by leveraging the witnesses.
+
+\begin{definition} 
+  \label{def:proof_subtyping_refinement_elimination}
+  \emph{proof subtyping (refinement elimination)}
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \psi \subtypes \tau \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta'
+    } {
+      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta' 
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau_{l} \subtypes \tau \given \Theta', \Delta' 
+    } {
+      \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau \given \Theta', \Delta'
+    }
+
+    %% TODO: remove merge rule. Should be subsumed by antecedent union
+    % \inferrule {
+    %   \Theta, \Delta \entails \textbf{merge}(\tau_{l}\J{\&}\tau_{r}) \subtypes \tau_a \J{->} \tau_b \given \Theta', \Delta'
+    % } {
+    %   \Theta, \Delta \entails \tau_{l}\J{\&}\tau_{r}  \subtypes \tau_a \J{->} \tau_b \given \Theta', \Delta'
+    % }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails \Delta_l \given \Theta'', \Delta'' 
+    } {
+      \Theta, \Delta \entails 
+      \J{ALL[}\Theta_l\J{]} \Delta_l \J{:} \tau_l
+      \subtypes 
+      \tau_r
+      \given \Theta'', \Delta'' 
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Refinement elimination is the dual of expansion introduction, so its rules
+rely on analogous techniques.
+However, there is one additional rule
+for eliminating an intersection and introducing an implication \ms{
+\tau_l \& \tau_r \subtypes \tau_a \J{->} \tau_b
+}.
+As we mentioned earlier when discussing packing together the inferred types of 
+multiple paths of functions, sometimes the argument type is weaker than each
+path type antecedent, yet could be stronger than union of all the path type antecedents.    
+As such, the solver may leverage path type merging \ms{
+\textbf{merge}(\tau_l \J{\&} \tau_r)
+} to weaken a function type
+into a single path type where the antecedent and the consequent may consist
+of compounded unions. 
+
+\begin{definition} 
+  \label{def:proof_subtyping_sequence}
+  \emph{proof subtyping sequence} 
+  \hfill
+  \small
+  \boxed{\Theta, \Delta \entails \Delta_q \given \Theta', \Delta'}
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+    } {
+      \Theta, \Delta \entails \epsilon \given \Theta', \Delta'
+    }
+
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \J{<:} \tau_r \given \Theta', \Delta'
+      \\
+      \Theta', \Delta' \entails \tau_l \J{<:} \tau_r \given \Theta'', \Delta''
+    } {
+      \Theta, \Delta \entails \Delta_q\ \tau_l \J{<:} \tau_r \given \Theta'', \Delta''
+    }
+  \end{mathpar}
+\end{definition}
+
+\noindent
+Proof subtyping sequence very simply solves a sequence of subtyping goals
+and compounds their results, such that the solution from one constrains the next. 
+
+\section{General Theory}
+\label{sec:general_theory}
+
+Our design depends on numerous helpers to rewrite and check the syntax
+of types. The details of these helpers play a key role in 
+determining the level of expressivity allowed by the type inference system. 
+However, these details are beyond the scope of the theory in work.
+In this theory, we are agnostic to their specific details,
+but we require that they meet certain requirements. 
+From these abstract requirements, we can guarantee
+that the design of our proof semantics is correct with respect
+to our model semantics. 
+
+\begin{requirement}
+  \label{req:positive_substitution_soundness}
+  \emph{positive substitution soundness}
+  \small
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \alpha \notin \textbf{ftv}(\tau[\alpha \slash \tau_r]^+)
+    } {
+      \delta \satisfies \tau_l \subtypes \tau_r
+      \implies
+      \delta\ \alpha \slash \tau_l \satisfies \tau \subtypes \tau[\alpha \slash \tau_r]^+
+    }
+  \end{mathpar}
+\end{requirement}
+
+\noindent
+The requirement of positive substitution soundness says that
+if a variable \ms{\alpha} only occurs in positive positions of a type \ms{\tau},
+then the result of the substituting in another type \ms{\tau_r} is weaker than 
+any interpretation of the original type \ms{\tau} 
+if the replaced variable \ms{\alpha} is interpreted with a type \ms{\tau_l} 
+that is weaker than the subbed in type \ms{\tau_r}.
+This property is necessary so that our proof typing rules can use positive substitution
+as a proxy reasoning under the induction hypothesis without violating soundness. 
+
+\begin{requirement}
+  \label{req:zone_sequence_duality_correspondence}
+  \emph{zone sequence duality correspondence}
+  \footnotesize
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \alpha_\nu \downarrow \Pi_\nu \fallingdotseq \alpha_\mu \uparrow \Pi_\mu
+      \\
+      \delta \satisfies \Delta
+      \\
+      \alpha_\nu \notin \textbf{ftv}(\Delta)
+      \\
+      \alpha_\mu \notin \textbf{ftv}(\Delta)
+    } {
+      (
+      \forall \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
+      (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\nu \implies
+      \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger \up
+      \\\\
+      (
+      \forall \delta' \qua
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \implies
+      % \delta\ \alpha_\nu \slash \J{BOT} \oplus \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \implies
+      % \delta\ \alpha_\nu \slash \J{BOT} \oplus \delta' \oplus \delta^\dagger \satisfies e_f \hastype \tau^\dagger
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \implies
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies e_f \hastype \tau^\dagger
+      )
+      )
+      \\\\
+      \iff
+      \\\\
+      (\forall e_a, e_r \qua
+      (
+      \exists \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua
+      (\Theta^\dagger,\Delta^\dagger, \tau^\dagger) \in \Pi_\mu \up
+      (\forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger \implies
+      \\\\
+      \exists \delta' \qua
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \epsilon \up
+      % \delta\ \alpha_\mu \slash \J{TOP} \oplus \delta' \oplus \delta^\dagger \satisfies \Delta^\dagger \up
+      % \delta\ \alpha_\mu \slash \J{TOP} \oplus \delta' \oplus \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \up
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies (e_a \J{,} e_r) \hastype \tau^\dagger 
+      )
+      )
+      \implies
+      e_r \cong e_f\J{(}e_a\J{)}
+      )
+    }
+  \end{mathpar}
+\end{requirement}
+
+
+\noindent
+The requirement of zone sequence duality has an ungodly amount of symbolic clutter,
+but the essence of its meaning is actually quite simple and natural.
+It says that a function inhabits all zones in some 
+some collection if and only if for any input/ouput pair, if the pair inhabits some
+zone from the dual collection, then the function applied to the input
+gives the output. 
+The requirement is essential to ensure that rewriting inferred zones
+to construct least fixed point types does not violate soundness.
+
+
+
+\begin{requirement}
+  \label{req:positive packing correspondence}
+  \emph{positive packing correspondence}
+  \footnotesize
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \textbf{pack}^+(\Theta \entails \Pi) = \tau 
+      \\
+      \delta \satisfies \Delta
+      \\
+      \Theta \subseteq \textbf{dom}(\delta)
+    } {
+      (\forall  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \implies
+      (
+      \exists \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger \backslash \Theta \up 
+      \\\\
+      (
+      \forall \delta' \qua 
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset \implies
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \implies
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies e \hastype \tau^\dagger
+      )
+      ) 
+      \\\\
+      \iff
+      \\\\
+      \delta \satisfies e \hastype \tau
+    }
+  \end{mathpar}
+\end{requirement}
+
+\begin{requirement}
+  \label{req:negative packing correspondence}
+  \emph{negative packing correspondence}
+  \footnotesize
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \textbf{pack}^-(\Theta \entails \Pi) = \tau 
+      \\
+      \delta \satisfies \Delta
+      \\
+      \Theta \subseteq \textbf{dom}(\delta)
+    } {
+      (\exists  \Theta^\dagger, \Delta^\dagger, \tau^\dagger \qua 
+      (\Theta^\dagger, \Delta^\dagger, \tau^\dagger) \in \Pi \up
+      (
+      \forall \delta^\dagger \qua \textbf{dom}(\delta^\dagger) \subseteq \Theta^\dagger \backslash \Theta \implies
+      \\\\
+      (
+      \exists \delta' \qua 
+      \textbf{dom}(\delta') \cap \textbf{ftv}(\Delta) = \emptyset \up
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies \Delta \cup \Delta^\dagger \up
+      \delta \oplus \delta' \oplus \delta^\dagger \satisfies e \hastype \tau^\dagger
+      )
+      ) 
+      \\\\
+      \iff
+      \\\\
+      \delta \satisfies e \hastype \tau
+    }
+  \end{mathpar}
+\end{requirement}
+
+
+\noindent
+
+
+\begin{requirement}
+  \label{req:proof_subtyping_sequence_completeness_under_negatability}
+  \emph{proof subtyping sequence completeness under negatability} 
+  \small
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \Vvdash \Omega
+      \\
+      \Theta, \Delta \entails \Omega \given \Theta', \Delta'
+      \\
+      \delta' \satisfies \Delta'
+    } {
+      \forall \delta^\dagger \qua
+      \delta' \oplus \delta^\dagger \satisfies \Omega \implies
+      \delta' \oplus \delta^\dagger \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{requirement}
+
+
+\begin{requirement}
+  \label{req:proof_subtyping_solution_completeness_under_negatability}
+  \emph{proof subtyping solution completeness under negatability}  
+  \small
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \Vvdash \eta
+      \\
+      \Theta, \Delta \entails \tau \subtypes \eta \given \Theta', \Delta'
+      \\
+      \delta' \satisfies \Delta'
+    } {
+      \forall \delta^\dagger \qua
+      \delta' \oplus \delta^\dagger \satisfies \tau \subtypes \eta \implies
+      \delta' \oplus \delta^\dagger \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{requirement}
+
+\begin{requirement}
+  \label{req:proof_subtyping_existential_completeness_under_negatability}
+  \emph{proof subtyping existential completeness under negatability}  
+  \small
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \Vvdash \eta
+      \\
+      \delta \satisfies \tau \subtypes \eta
+      \\
+      \delta \satisfies \Delta
+    } {
+      \exists \Theta', \Delta' \qua \Theta, \Delta \entails \tau \subtypes \eta \given \Theta', \Delta'
+    }
+  \end{mathpar}
+\end{requirement}
+
+
+\begin{requirement}
+  \label{req:factorization_soundness}
+  \emph{factorization soundness}  
+  \small
+  \begin{mathpar}
+    \inferrule {
+      \textbf{factor}(\alpha \entails \tau \cdot l) = \tau'
+    } {
+      \forall e' \qua
+      e' \hastype \tau' 
+      \iff 
+      (\exists e \qua e \J{.} l \cong e' \up \delta \satisfies e \hastype \J{LFP[}\alpha\J{]}\tau)
+    }
+  \end{mathpar}
+\end{requirement}
+
+
+\TODO{consider replacing "substance" with some variation on "conditional completemness"}
+\begin{theorem}
+  \label{thm:proof_subtyping_substance}
+  \emph{proof subtyping substance}
+  \small
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+    } {
+      \delta \satisfies \Delta
+      \implies
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{theorem}
+
+\noindent
+Proof subtyping substance states that the generated constraints are satisfiable
+assuming the contextual constraints are satisfiable, with respect
+to all interpretations of the contextual skolems.   
+This property follows directly from a slightly stronger theorem,
+which states that the generated constraints are satisfiable and 
+that the constraints on a single variable are as strong or stronger
+than all the constraints with respect to that variable.
+The proof of the stronger statement is by induction.
+The only cases that are actually interesting are the variable rules
+where new constraints are generated.
+In every case that a new constraint is added, it is a constraint on
+a single variable, and in each case the solver compares the new bound on the variable
+to the previous bounds on the other side of the variable. Since bounds on
+opposite sides are the only opportunities for contradictions, the requirement
+preserves the strengthened substance property from the induction hypothesis.
+
+\TODO{note how substance allows positive packing to place generated constraints into qualified types without violating soundness }
+
+\begin{theorem} 
+  \label{thm:proof_subtyping_soundness}
+  \emph{proof subtyping soundness} 
+  \small
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \TODO{switch ordering of assignment maps}
+      \\\\
+      \TODO{look up from left to right}
+      \\\\
+      \Theta, \Delta \entails \tau_l \subtypes \tau_r \given \Theta', \Delta'
+    } {
+      \exists \delta' \qua 
+      \textbf{dom}(\delta') \subseteq \Theta' \backslash \Theta
+      \up
+      (
+      \forall \delta \qua 
+      \delta \oplus \delta' \satisfies \Delta' \implies
+      \delta \oplus \delta' \satisfies \tau_l \subtypes \tau_r
+      )
+    }
+  \end{mathpar}
+\end{theorem}
+
+\noindent
+Proof subtyping soundness states that if proof subtyping generates subtyping constraints \ms{\Delta'} 
+for a subtyping goal \ms{\tau_l \subtypes \tau_r},
+then any solution for the generated subtyping constraints
+is a solution for the subtyping goal, with the caveat that
+it only needs to hold for some interpretation of the generated skolems \ms{\Theta'\backslash\Theta}. 
+The proof is by induction, leveraging numerous lemmas to derive the semantics
+defined by model typing in each case. 
+Completeness of restricted forms is necessary whenever the corresponding model semantics 
+is used in a negative position, such as in negation or in the antecedent of an implication.     
+Additionally, when rewriting an object, it is necessary to characterize how the model
+semantics of its input form relates to the model semantics of its output form.
+Lastly, when pruning subtyping constraints generated by the solver, it is necessary
+that the remaining subtyping are as strong or stronger that the removed subtyping constraints
+with respect to the variables used in the goal.
+The property of proof subtyping soundness is a bit weak on its own. 
+It does not guarantee that there is a solution for the subtyping goal,
+it could be met vacuously by having proof subtyping 
+generate an unsatisfiable subtyping constraints.
+To make the stronger guarantee, we can combine it with another theorem.
+
+\begin{theorem}
+  \label{thm:proof_typing_substance}
+  \emph{proof typing substance} 
+  \small
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
+    } {
+      \forall \delta \qua \textbf{dom}(\delta) \subseteq \Theta \implies
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta 
+      \implies
+      \exists \delta' \qua \delta \oplus \delta' \satisfies \Delta'
+    }
+  \end{mathpar}
+\end{theorem}
+
+\noindent
+Proof typing substance states that the generated subtyping constraints are satisfiable
+assuming the contextual constraints are satisfiable, with respect
+to all interpretations of the contextual skolems.   
+The proof is by induction, and it follows easily from the induction hypothesis
+and proof subtyping soundness. 
+
+\begin{theorem}
+  \label{thm:proof_typing_soundness}
+  \emph{proof typing soundness} 
+  \small
+  \nopad
+  \begin{mathpar}
+    \inferrule {
+      \Theta, \Delta, \Gamma \entails e \hastype \tau \given \Theta', \Delta'
+    } {
+      \exists \delta' \qua \textbf{dom}(\delta') \subseteq \Theta' \backslash \Theta \up 
+      (
+      \forall \delta \qua
+      \delta \oplus \delta' \satisfies \Delta' \implies
+      \delta, \sigma \satisfies \Gamma \implies
+      \delta \oplus \delta' \satisfies e[\sigma] \hastype \tau
+      )
+    }
+  \end{mathpar}
+\end{theorem}
+
+\noindent
+Proof typing soundness states that if proof typing generates subtyping constraints \ms{\Delta'} 
+for a typing goal \ms{e \subtypes \tau},
+then any solution for the contextual typing constraints 
+and the generated subtyping constraints
+is a solution for the typing goal, with the caveat that
+it only needs to hold for some interpretation of the generated skolems \ms{\Theta'\backslash\Theta}. 
+We prove soundness by induction, leveraging subtyping soundness,
+and additional lemmas the characterize the relationships between rewritten forms of objects. 
+Proof typing soundness as the same limitations as proof subtyping soundness. 
+It's not strong enough to guarantee our goal of type inference,
+but we can easily compose it with another property to do so.
+
+% \begin{theorem}
+%   \label{prop:proof_typing_annotation_soundness}
+%   \emph{proof typing annotation soudness}
+%   \\
+%   \begin{mathpar}
+%     \inferrule {
+%       \Theta, \Delta, \Gamma \entails \J{def } x \J{:} \tau_a \J{ = } e \J{ in } e' \hastype \tau' \given \Theta', \Delta'
+%     } {
+%       \forall \delta, \sigma \qua 
+%       \delta, \sigma \satisfies \Gamma \implies
+%       \delta \satisfies e \hastype \tau_a
+%     }
+%   \end{mathpar}
+% \end{theorem}
+
+% \noindent
+% In addition to inferring type according to the control flow of a program,
+% we are also interested in checking that programs meet specifications 
+% annotated by the programmer. Proof typing soundness 
+% does not directly reference these annotations, 
+% so we need an additional theorem to ensure
+% the annotations are respected. 
+
+
+\section{Instance Theory}
+\label{sec:}
+
+\noindent
+From the declarative definitions, we extracted procedures to infer types and 
+solve subtyping.
+We constructed tactics to automatically prove 
+static typing on instances of expressions and their inferred types.
+
+We constructed and proved instances with both functions and constructors. 
+These two categories have historically been tackled independently of each other, where parametric types
+tend to rely on notions of instantiation, and structural types rely on notions of equality or subtyping.
+Our system unifies these historically distinct problems by describing both kinds of types in terms of subtyping.
+However, the distinction is useful for comparing our design to previous work. 
+
+We implemented an extrinsic type inference system that corresponds to the predicate definitions
+presented thus far. 
+To observe the expressiveness of our system on functions, 
+we evaluated our implementation on the same suite of programs 
+that SuperF was evaluated on, as presented in the paper on SuperF \cite{}.
+Based on these instances, our system admits all reported be admitted by SuperF \cite{}, as well as some programs 
+that SuperF is unable to admit.
+Thus, our system appears to be more expressive on functions than the previous most expressive
+type inference system that we know of.
+To observe the expressiveness of our system on constructors, 
+we constructed simple programs that represent the kind of flexible and reusable code
+often found programs written in untyped scripting languages. 
+We ran these examples in our implementation, and created analogous version to run
+in the online implementation of MLScript \cite{},
+which represents the theoretical system MLStruct \cite{}. 
+All of these examples are admitted by our system, while MLStruct
+can either requires intrinsic specifications to admit the program, 
+or simply can't admit the program.
+
+
+
+\begin{definition} 
+  \label{def:expressions_and_type_instances}
+  \emph{expression and type instances} 
+  \scriptsize
+  \nopad
+  \[
+  \begin{array}[t]{ll}
+    \begin{array}[t]{r@{}c@{}l}
+      \textbf{Bool} 
+      &\ \ =\ \ & 
+      \J{(<true>@ | <false>@)} 
+      \\
+      \textbf{Nat} 
+      &\ \ =\ \ & 
+      \J{(LFP[R] <zero>@ | <succ>R)} 
+      \\
+      \textbf{Even} 
+      &\ \ =\ \ & 
+      \J{(LFP[R] <zero>@ | <succ><succ>R)} 
+      \\
+      \textbf{List}(\alpha) 
+      &\ \ =\ \ & 
+      \J{(LFP[R] <nil>@ | <cons>((}\alpha\J{)*R))} 
+      \\
+      \textbf{ChurchNum} 
+      &\ \ =\ \ & 
+      \J{(ALL[T] (T -> T) -> T -> T)}
+    \end{array}
+    &
+    \begin{array}[t]{r@{}c@{}l}
+      \textbf{ST}(\alpha^\dagger, \alpha) 
+      &\ \ =\ \ & 
+      \J{(<tag>(}\alpha^\dagger \J{) <result>(} \alpha \J{))}
+      \\
+      \textbf{z} 
+      &\ \ =\ \ & 
+      \J{[f => [x => x]]} 
+      \\
+      \textbf{s} 
+      &\ \ =\ \ & 
+      \J{[n => [f => [x => f(n(f(x)))]]]} 
+      \\
+      \textbf{n3} 
+      &\ \ =\ \ & 
+      \textbf{s}\J{(}\textbf{s}\J{(}\textbf{s}\J{(}\textbf{z}\J{)}\J{)}\J{)} 
+    \end{array}
+  \end{array}
+  \]
+\end{definition}
+
+\noindent
+For clarity, we define a few metalinguistic terms to stand in for 
+types and expressions used as inputs to our system. 
+
+
+\begin{definition} 
+  \label{def:tying_context_instance}
+  \emph{tying context instance}
+  \tiny
+  \nopad
+  \[
+  \begin{array}[t]{ll}
+    \begin{array}[t]{r@{}c@{}l}
+      \textbf{ctx} & = &  \hfill
+      \\
+      \J{head} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})\J{ -> T}
+      \\
+      \J{tail} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})\J{ -> }\textbf{List}(\J{T})
+      \\
+      \J{nil} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T})
+      \\
+      \J{single} &\J{ : }& \J{ALL[T] T -> }\textbf{List}(\J{T})
+      \\
+      \J{append} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T})
+      \\
+      \J{length} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T}) \J{ -> } \textbf{Nat}
+      \\
+      \J{const} &\J{ : }& \J{ALL[T U] T -> U -> T}
+      \\
+      \J{id} &\J{ : }& \J{ALL[T] T -> T}
+      \\
+      \J{ids} &\J{ : }& \textbf{List}(\J{ALL[T] T -> T}\J{)}
+      \\
+      \J{inc} &\J{ : }& \textbf{Nat}\J{ -> }\textbf{Nat}
+      \\
+      \J{choose} &\J{ : }& \J{ALL[T] T -> T -> T}
+      \\
+      \J{poly} &\J{ : }& \J{(ALL[T] T -> T) -> } \textbf{Nat}\J{*}\textbf{Bool}
+      \\
+      \J{fst} &\J{ : }& \J{ALL[T U] T*U -> T}
+      \\
+      \J{sort} &\J{ : }& \J{ALL[T] (T * T -> } \textbf{Bool} \J{) -> }\textbf{List}(\J{T})\J{ -> }\textbf{List}(\J{T})
+      \\
+      \J{scalarCmp} &\J{ : }& \textbf{Nat} \J{\*} \textbf{Nat} \J{ -> } \textbf{Bool} 
+      \\
+      \J{lexicoCmp} &\J{ : }& \textbf{List}(\textbf{Nat}) \J{\*} \textbf{List}(\textbf{Nat}) \J{ -> } \textbf{Bool} 
+    \end{array}
+    &
+    \begin{array}[t]{r@{}c@{}l}
+      \\
+      \J{auto} &\J{ : }& \J{(ALL[T] T -> T) -> (ALL[T] T -> T)}
+      \\
+      \J{auto'} &\J{ : }& \J{ALL[U] (ALL[T] T -> T) -> U -> U}
+      \\
+      \J{map} &\J{ : }& \J{ALL[T U] (T -> U) -> } \textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{U})
+      \\
+      \J{app} &\J{ : }& \J{ALL[T U] (T -> U) -> T -> U}
+      \\
+      \J{revapp} &\J{ : }& \J{ALL[T U] T -> (T -> U) -> U}
+      \\
+      \J{runST} &\J{ : }& \J{ALL[T] (ALL[U] } \textbf{ST}(\J{U}, \J{T})\J{) -> T}
+      \\
+      \J{argST} &\J{ : }& \J{ALL[U] } \textbf{ST}(\J{U}, \textbf{Nat})
+      \\
+      \J{zero} &\J{ : }& \textbf{ChurchNum}
+      \\
+      \J{succ} &\J{ : }& \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum}
+      \\
+      \J{foo} &\J{ : }& \J{ALL[T] (T -> T) -> } \textbf{List}(\J{T}) \J{ -> T}
+      \\
+      \J{g} &\J{ : }& \J{ALL[T] }\textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T}) \J{ -> T}
+      \\
+      \J{k} &\J{ : }& \J{ALL[T] T -> } \textbf{List}(\J{T}) \J{ -> T}
+      \\
+      \J{h} &\J{ : }& \textbf{Nat} \J{-> ALL[T] T -> T}
+      \\
+      \J{l} &\J{ : }& \textbf{List}(\J{ALL[T] } \textbf{Nat} \J{ -> T -> T}\J{)}
+      \\
+      \J{r} &\J{ : }& \J{(ALL[T] T -> ALL[U] B -> B) -> }\textbf{Nat}
+    \end{array}
+  \end{array}
+  \]
+\end{definition}
+
+\noindent
+Additionally, it is illustrative to assume that   
+the typing of some identifiers have already been learned or verified.
+
+\begin{instances}
+  \label{exp:part_1}
+  Something
+  \hfill
+  \scriptsize
+  \nopad
+  \begin{center}
+  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
+    \multicolumn{5}{l}{
+      \small
+      Does the implementation admit an expression under typing constraints \textbf{ctx}?
+    } \\
+
+    \multicolumn{4}{l}{
+      \small
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+    } \\
+
+    \stoprule
+
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{\small implementation} \\ 
+
+    \scmidrule{3-5}
+
+    \multicolumn{2}{c}{\small expression} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+
+    \smidrule
+    \pdc. &
+    \J{[x => [y => y]]} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{choose(id)} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{choose(nil)(id)} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{[x => x(x)]} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{id(auto)} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{id(auto')} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{choose(id)(auto)} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{choose(id)(auto')} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{foo(choose(ids))(ids)} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{poly(id)} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{poly([x => x])} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{id(poly)([x => x])} 
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{[f => f(succ;zero;@), f(true;@)]}
+    & \pass & \pass & \pass \\
+
+    \sline
+
+    \pdc. &
+    \J{[xs => poly(head(xs))]}
+    & \pass & \pass & \pass \\
+
+    \sbottomrule
+  \end{tabular}
+  \end{center}
+\end{instances}
+
+\noindent
+In the instances with functions, we 
+are interested to observe if our implementation (\textbf{Extrinsic})
+can admit various programs on functions. 
+For our implementation, we reject a program if the implementation
+finds a contradiction, diverges, or infers the top type. 
+In our system, we infer a top type when the top level 
+expression represents a function and all of its branches 
+have errors. Since the top level function is not applied,
+the program technically cannot produce an error, but it's 
+perfectly useless and would produce an error if applied to any value. 
+We compare our system to SuperF and Super without Distributivity (\textbf{SF no D}). 
+
+% $\approx \exists \tau, \Delta, \Theta \qua \epsilon, \epsilon, \textbf{ctx} \entails e \hastype \tau \given \Theta, \Delta$ 
+
+\begin{instances}
+  \label{experi:part_2}
+  \hfill
+  \scriptsize
+  \nopad
+  \begin{center}
+  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
+    \multicolumn{5}{l}{
+      \small
+      Does the implementation admit an expression under typing constraints \textbf{ctx}?
+    } \\
+
+    \multicolumn{4}{l}{
+      \small
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+    } \\
+
+    \stoprule
+
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{\small implementation} \\ 
+
+    \scmidrule{3-5}
+
+    \multicolumn{2}{c}{\small expression} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+
+    \smidrule
+
+    \pdc. &
+    \J{length(ids)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{tail(ids)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{head(ids)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{single(id)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{cons(id)(ids)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{cons([x => x])(ids)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{append(single(inc))(single(id))}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{g(single(id))(ids)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{map(poly)(single(id))}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{map(head)(single(ids))}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{app(poly)(id)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{revapp(id)(poly)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{runST(argST)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{app(runST)(argST)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{revapp(argST)(runST)}
+    & \pass & \pass & \pass \\
+
+    \sbottomrule
+  \end{tabular}
+  \end{center}
+\end{instances}
+
+\begin{instances}
+  \label{experi:part_3}
+  \hfill
+  \scriptsize
+  \nopad
+  \begin{center}
+  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
+    \multicolumn{5}{l}{
+      \small
+      Does the implementation admit an expression under typing constraints \textbf{ctx}?
+    } \\
+
+    \multicolumn{4}{l}{
+      \small
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+    } \\
+
+    \stoprule
+
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{\small implementation} \\ 
+
+    \scmidrule{3-5}
+
+    \multicolumn{2}{c}{\small expression} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+
+    \smidrule
+    
+    \pdc. &
+    \J{k(h)(l)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{k([x => h(x)])(l)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{r([x => [y => y]])}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{auto(id)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{cons(head(ids))(ids)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{head(ids)(succ;succ;succ;zero;@)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{choose(head(ids))}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{def f = revapp(id) in f(poly)}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{choose(id)([x => auto'(x)])}
+    & \pass & \pass & \pass \\
+
+    \sbottomrule
+  \end{tabular}
+  \end{center}
+\end{instances}
+
+\begin{instances}
+  \label{experi:part_4}
+  \hfill
+  \nopad
+  \scriptsize
+  \begin{center}
+  \begin{tabular}{l m{30em} >{\centering}m{5em} >{\centering}m{5em} >{\centering\arraybackslash}m{5em} } 
+    \multicolumn{5}{l}{
+      \small
+      Does the implementation admit an expression under typing constraints \textbf{ctx}?
+    } \\
+
+    \multicolumn{4}{l}{
+      \small
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+    } \\
+
+    \stoprule
+
+    \multicolumn{2}{c}{} & \multicolumn{3}{c}{\small implementation} \\ 
+
+    \scmidrule{3-5}
+
+    \multicolumn{2}{c}{\small expression} & \textbf{Extrinsic} & \textbf{SuperF} & \textbf{SF no D} \\ 
+
+    \smidrule
+    
+    \pdc. &
+    \J{def ignore : } \textbf{ChurchNum} \J{ = z in @}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{s}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{def ignore : } \textbf{ChurchNum} \J{ -> } \textbf{ChurchNum} \J{ = s in @}
+    & \pass & \pass & \fail \\
+
+    \sline
+    
+    \pdc. &
+    \J{def ignore : } \textbf{ChurchNum} \J{ = n3 in @}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{def ignore : } \J{@ -> }\textbf{ChurchNum} \J{ = [@ => n3(n3)] in @}
+    & \pass & \pass & \fail \\
+
+    \sline
+    
+    \pdc. &
+    \J{fst(fst(fst(n3([x => x,(zero;@)])(succ;zero;@))))}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{(s(s(z)))(s(s(z)))}
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \cb{
+      \J{def to\_church = loop([self => } 
+      \\
+      \I \J{[zero;@ => z]}
+      \\
+      \I \J{[succ;n => s(self(n))]}
+      \\
+      \J{]) in ...}
+    }
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \J{def ignore : } \textbf{Nat} \J{ -> } \textbf{ChurchInt} \J{ = to\_church in @}
+    & \pass & \pass & \fail \\
+
+    \sline
+    
+    \pdc. &
+    \J{loop([self => [x => if true;@ then x else self(self)(x)]]} 
+    & \fail & \fail & \fail \\
+
+    \sline
+    
+    \pdc. &
+    \J{[x => x(x)]([x => x(x)])}
+    & \pass & \fail & \fail \\
+
+    \sline
+    
+    \pdc. &
+    \J{auto(auto'(id))}
+    & \pass & \pass & \fail \\
+
+    \sline
+    
+    \pdc. &
+    \cb{
+      \J{[y => } 
+      \\
+      \I \J{def tmp = y in}
+      \\
+      \I \J{y(const)}
+      \\
+      \J{][x => x(x)]}
+    }
+    & \fail & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \cb{
+      \J{[k => (k([x => x])),(k([x => single(x)])) ](}
+      \\
+      \I \J{[f => (f(succ;zero;@)),(f(true;@))]}
+      \\
+      \J{)}
+    }
+    & \pass & \pass & \pass \\
+
+    \sline
+    
+    \pdc. &
+    \cb{
+      \J{[f => } 
+      \\
+      \I \J{def a = [@ => f(id)] in }
+      \\
+      \I \J{def y : } \textbf{Nat} \J{ -> (ALL[T] T -> T) = a(@) in }
+      \\
+      \I \J{y}
+      \\
+      \J{](const(const(id)))}
+    }
+    & \fail & \fail & \pass \\
+
+    \sbottomrule
+    
+  \end{tabular}
+  \end{center}
+\end{instances}
+
+
+\begin{instances}
+  \label{experi:part_5}
+  \hfill
+  \nopad
+  \scriptsize
+  \begin{center}
+  \begin{tabular}{p{1em} l >{\centering}p{5em} >{\centering\arraybackslash}p{5em}} 
+    \multicolumn{4}{l}{
+      \small
+      Does the implementation admit an expression under typing constraints \textbf{ctx}?
+    } \\
+
+    \multicolumn{4}{l}{
+      \small
+      \pass\ yes \ \ $\cdot$\ \ \fail\ no \ \ $\cdot$\ \ \assisted\ conditionally w/ annotations 
+    } \\
+
+    \stoprule
+
+    \multicolumn{2}{c}{} & \multicolumn{2}{c}{\small implementation} \\ 
+
+    \scmidrule{3-4}
+
+    \multicolumn{2}{c}{\small expression} & \textbf{Extrinsic} & \textbf{MLStruct} \\ 
+
+    \smidrule
+
+    \sdc. &
+    \cb{
+      \J{def stdCmp = [ a,b => } 
+      \\
+      \I \J{a |> (}
+      \\
+      \I\I \J{[zero;@ => scalarCmp(a,b)]}
+      \\
+      \I\I \J{[succ;n => scalarCmp(a,b)]}
+      \\
+      \I\I \J{[nil;@ => lexicoCmp(a,b)]}
+      \\
+      \I\I \J{[cons;(x,xs) => lexicoCmp(a,b)]}
+      \\
+      \I \J{)}
+      \\
+      \J{] in ...}
+    }
+    & \pass & \assisted \\
+
+    \sline
+
+    \sdc. &
+    \cb{
+      \J{def stdSort : (TOP } 
+      \\
+      \I \J{ \& (} \textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat}) \J{)}
+      \\
+      \I \J{ \& (} \textbf{List}(\textbf{List}(\textbf{Nat})) \J{ -> } \textbf{List}(\textbf{List}(\textbf{Nat})) \J{)}
+      \\
+      \J{) = sort(stdCmp) in ...} 
+    }
+    & \pass & \assisted \\
+
+    \sline
+
+    \sdc. &
+    \cb{
+      \J{def double : } \textbf{Nat} \J{ -> } \textbf{Even} \J{ = loop([self => } 
+      \\
+      \I \J{[zero;@ => zero;@]}
+      \\
+      \I \J{[succ;n => succ;succ;(self(n))]}
+      \\
+      \J{]) in ...}
+    }
+    & \pass & \fail \\
+    
+    \sline
+
+    \sdc. &
+    \cb{
+      \J{def halve : } \textbf{Even} \J{ -> } \textbf{Nat} \J{ = loop([self => } 
+      \\
+      \I \J{[zero;@ => zero;@]}
+      \\
+      \I \J{[succ;succ;n => succ;(self(n))]}
+      \\
+      \J{]) in ...}
+    }
+    & \pass & \fail \\
+    
+    \sline
+
+    \sdc. &
+    \cb{
+      \J{[x => halve(double(x))]}
+    }
+    & \pass & \fail \\
+
+    \sline
+
+    \sdc. &
+    \cb{
+      \J{[zero;@ => [zero;@ => @](@)]}
+      \\
+      \J{[nil;@ => @]}
+    }
+    & \pass & \fail \\
+
+    \sbottomrule
+    
+  \end{tabular}
+  \end{center}
+\end{instances}
+
+
+\TODO{add more interesting examples and explain why they're interesting}
+
+\TODO{add example of of inductive reasoning to prove that an even number is not three}
+
+\TODO{add example of path sensitivity for if then else conditional}
+
+\TODO{add example of a counter stream}
+
+\noindent
+The instances with constructors demonstrate
+that our system is roughly as expressive as untyped languages
+without sacrificing safety guarantees.
+Our system can easily mix structures together, reducing
+the need for programmers to call different interfaces for different data.  
+If there is an error in one branch of a function, the
+system can still admit the program by ensuring 
+that the erroneous branch is never used, and there
+is at least one branch that could be used.
+
+
+\section{Related Work}
+\label{sec:related_work}
+
+Our system approximates values with many forms of types
+and reasons over their control with with subtyping. Our work
+builds on the techniques from MLStruct \cite{} and SuperF \cite{}, which
+like our system must reason over the combination of numerous forms of types.
+Leading up to these systems, there have been numerous techniques developed
+to reason over subsets of these type forms, with varying degrees 
+of intrinsic typing. 
+
+% Over the past decades many type inference have been designed and analyzed 
+% with varying degrees of expressivity and varying degrees of intrinsic requirements
+% or extrinsic relaxations, with respect to both functions (e.g. functions or paths dependent on variables)
+% and constructors (e.g. data constructors or records).  
+
+The first technique to infer parametric types without any assistance 
+from annotations was Hindley-Milner type inference (HM)\cite{}. 
+Despite its age, it remains one of the foundational 
+theoretical underpinnings of practical programming languages used today, such as Standard ML \cite{}. 
+For instance, in Standard ML, the system infers the identifier \code{foo} in \code{fun foo f = (f 123)}
+to have type \code{forall 'a . (int -> 'a) -> 'a}
+Despite its practical utility, a significant drawback of HM is that
+certain kinds of general-purpose expressions are simply not allowed.
+For instance, in Standard ML, the system rejects the program \code{fun fooPair f = (f 123, f true)}.
+
+In order to type the program \code{fooPair}, a type system would either need to determine that
+\code{f} is parametric, or that the types of \code{123} and \code{true} are compatible.
+Treating the parameter \code{f} is allowed in systems that have impredicative parametric polymorphism \cite{}, 
+which was introduced by System F \cite{}.
+
+
+To reduce the annotation burden and increase expressivity, researchers
+developed ways to infer type instantiations and compare types with varying
+multiple possible instantiations, by combining impredicative types
+with type inference techniques and ways to compare approximations of varying precision . 
+
+One of possibility is bidirectional type inference \cite{}  
+is one such technique where bounds on type variables can be inferred in 
+both directions of the control flow.
+It propagates inferred and annotated knowledge directly from
+the structures of the program and relies on subtyping merely to check compatibility between
+types. Additionally, whether a non-parametric type is an instantiation
+of a parametric type is treated as distinct from subtyping. 
+
+In order to maintain HM's implicit first-order types in the context
+of higher-order types, other techniques were explored.  
+These techniques include boxed polymorphism \cite{}, ML$^F$ \cite{}, and various other systems \cite{}. 
+Unfortunately, it's not clear what parametric type should be inferred for \code{f}.
+There are an infinite number of
+parametric types that could be used, but none is weaker than all the rest.
+
+\examp{
+  \J{forall 'a . 'a -> 'a}
+  \\
+  \J{forall 'a . 'a -> 'a list}
+  \\
+  \J{forall 'a . 'a -> 'a option}
+}
+
+Thus, these systems with impredicative parametric polymorphism rely on annotations of parameters to
+determine second order parametric types, which constitutes intrinsic typing of
+of functions. 
+Since there is no parameter type that is weaker than all the rest,
+merely relying on intrinsic second order parametric types 
+significantly restricts the reusability of expressions.
+Additionally, many of these techniques require explicit instantiation to use parametrically typed
+expressions, which can be seen as an intrinsic restriction that 
+delays pruning the control-flow until a particular usage. 
+
+
+
+
+
+All the type inference techniques depend reasoning over the observed control flow  
+of programs, but the reasoning to particular situations and objects and use different
+relations for solving vs checking.  The subtyping relation was generalized in the theory of implicit coercions (Cretin) \cite{},
+such that even instantiation is treated as subtyping (or implicit coercion).  
+Based on these ideas, SuperF \cite{} introduced type inference techniques for generating actually solving
+these generalized subtyping constraints
+
+SuperF \cite{} introduced 
+a technique that relies on extrinsic subtyping polymorphism, 
+which bypasses the need for intrinsic parametric polymorphism.
+In the previous example, SuperF can infer the principal type for \code{fooPair} by inferring the 
+weakest type of its parameter \code{f}, which it achieved by leveraging subtyping to find 
+a type that is compatible with both \code{123} and \code{true}.
+The SuperF type system infers subtyping constraints that represent the data flow represented by
+function application and pattern matching. It relies 
+intersection and union type combinators to represent the strongest or weakest interpretations
+of type variables that meet certain subtyping constraints.   
+With SuperF's type inference mechanism, it is possible to infer the principal type for the 
+previous problematic example \code{fooPair: (forall 'a 'b . (int -> 'a) /\textbackslash\ (bool -> 'b) -> 'a * 'b)}.
+
+SuperF has a restricted language of types. It is concerned with the type inference
+of functions, and it is agnostic towards type inference of constructors. 
+It restricts the type and subtyping syntax according to polarity; that is, a
+types position within an implication type or subtyping relation. Depending on polar position,
+universal types (i.e. universals) may or may not be qualified by subtyping constraints.
+The authors of SuperF highlight some technical features, including extrusion and distributivity.
+Their extrusion technique ensures that types are not overly specialized
+when inferring types of nested functions. Their distributivity technique allows
+rewriting universal quantifiers to increase the chance that skolemization occurs before instantiation. 
+They point out that the distributivity rule is an improvement for most cases, but there are certain
+problems for which it more actually more restrictive.
+
+
+The high level ideas in SuperF of relying on subtyping constraints were very influential in our work.
+Like SuperF, our system relies on syntax-directed subtyping rules to check constraints and to learn 
+new subtyping constraints by traversing previously learned constraints;
+Additionally, our system also relies on instantiation and skolemization in its subtyping rules. 
+Type polarity is also important in our system.
+However, our system does not restrict the syntax of types based on polarity. Instead, we rely on
+polarity to constrain proof typing and proof subtyping when interpreting or checking interpretations
+of type variables.    
+Our system does not need extrusion because Packing \ms{\textbf{pack(...)}} preserves the nested structure of 
+functions at the type level, such that the constraint between inner and outer bound type variables
+qualifies the inner parametric type, which ensures that instantiation of the inner parametric type 
+continues to constrain the outer bound type variables.  
+Our system does not need distributivity of type variable bindings, because it requires
+that skolemization occurs before learning constraints on type variables. Therefore, it is fine to allow
+instantiation to occur before skolemization in our system, 
+since it does not cause learning constraints before skolemization.  
+
+\TODO{look into what SuperF folks mean by no backtracking in light of rhs union}
+
+\TODO{backtracking is necesary to infer strongest possible functions (all the cases)}
+
+\TODO{therefore, they must mean they avoid redundant backtracking, that mearely learns weaker constraints}
+
+
+\TODO{recursive types only matter in light of structures}
+
+
+
+In addition to functions, practical programming languages need to have some form of constructors.
+Although Hindley-Milner type inference offered an extrinsic type inference solution for predicative functions
+very early on, type inference has always relied on some degree of intrinsic types for constructors.
+intrinsically typed constructors is exemplified by the datatype mechanism of Standard ML.
+For instance, the list datatype \code{'a list = nil | cons 'a * 'a list} specifies that 
+data constructed with \code{nil} or \code{cons} have the type \code{'a list}. Additionally,
+it requires that the input to the constructor \code{cons}  has the types \code{'a * 'a list}
+Although the datatype mechanism has been used with great success across many languages (including Lean, Haskell, Ocaml, and Isabelle),
+it enforces a very rigid form of programming. For instance, there is no way to guarantee
+that the output of a function is a nonempty list and then use that output in a function that expects an optionally empty list.
+
+To get around this limitation, refinement types \cite{} relaxed the meaning of the datatype mechanism, to 
+allow constructions to represent types that are stronger than their intrinsic type.
+For instance, \code{nil} could have a type as strong as the single type \code{?nil} or as weak as \code{'a list}.
+Likewise, a list of two elements \code{cons(x, cons(y, nil))} could have a type as strong 
+\code{?cons 'a * (?cons 'a * nil)}
+or as weak as \code{'a list}. 
+A refinement type system can choose how strong to make the type based on how the data is used, 
+which depends on how data flows, for which subtyping provides a natural formulation. 
+It can find these stronger types by starting with intrinsic weakest type and using intersection with 
+all the ways it sees the data being used.
+However, the refinement relaxation is not enough to allow common flexible idioms used in untyped languages. 
+For instance, it would allow pattern matching that chooses between a list and a number.
+
+
+To allow arbitrary mixing of constructions in pattern matching, the extrinsic type of constructions
+must be abolished so that there is no intrinsic weakest type other than a top type. 
+In MLSub and algebraic subtyping \cite{}, forgoes the datatype mechanism.
+Instead, it uses type inference to generates subtyping constraints and solve them, akin to unification in HM.
+
+Structures, when combined with loops, enable the construction of nested data (i.e. trees) 
+of arbitrary size. To ensure recursive functions on trees are error-free,
+systems have used regular tree grammars and recursive types to characterize spaces of trees.
+There has been plenty of research on reasoning over regular tree grammars/automata and recursive types \cite{}.
+Most relevant to our system is previous work on subtyping of recursive types \cite{}.  
+
+\TODO{compare inductive subtyping to tree interpolation}
+
+\TODO{is this something we should/can prove?}
+
+\TODO{note how CHC uses predefined constraints, while this system learns constraints from applications}
+
+\TODO{other systems (using CHC) can construct recursive horn clauses from programs, but not local constraints, right?}
+
+\TODO{that is the language of recursive types is used as both the constraint language and the target language}
+
+\TODO{understand the capabilities and limitations of MLSub better}
+
+Popular scripting languages have also been augmented with some type inference capabilities.
+Typescript \cite{} does not have an intrinsic weakest type for constructions,
+and it can infer output types of functions that return different structural forms in different branches.
+However, it is unable to infer a weak type for the parameters, and thus requires annotation of parameters.  
+Typescript and other systems for scripting languages, rely on flow-sensitive, or occurrence typing \cite{},
+which can refine the types of variables in branches based on the condition guarding each branch.
+For Typescript, this flow information is only used in one direction, and it is not leveraged to infer
+the weakest type of parameters.
+
+To extend type inference of scripting languages further, MLStruct \cite{} and others like MLSub \cite{}, 
+leveraged the flow information to infer both input types and output types of functions.
+MLStruct, along with SuperF, represents some of the foundational ideas of the MLScript language.
+Like SuperF, it learns the data flow of programs in terms of subtyping constraints.
+Other than our system, it appears that MLStruct has the best type inference of constructors
+with the least amount of intrinsic type requirements. 
+However, MLStruct still has a significant intrinsic type requirement, which reduces flexibility compared
+to untyped languages. It requires that the inputs to data constructors have an intrinsic type.  
+In essence, this requirement prescribes a lower bound on data constructions,
+which reduces the flexibility of programs compared to untyped languages. 
+As our tests (Experiment \ref{experi:typing_structures})
+illustrate, it is not possible to type a function that expects only even numbers that is interoperable with natural numbers.
+Moreover, the additional annotation burden alone would prevent the analysis of untyped code without
+significant effort in augmenting the code with annotations.
+In contrast to MLStruct, our system relies completely on learning data flow in the form of subtyping constraints
+without any annotation requirements on constructors. 
+
+\TODO{note work on recursive types and regular trees}
+
+The common ingredient in all of these systems that perform some amount of extrinsic type inference is
+learning data flow. Data flow analysis comes in many forms. As the goal for these systems is verification,
+subtyping is a natural choice. There has been some work on extracting rules for checking subtyping relations
+from the semantic interpretation of types, known as semantic subtyping \cite{}, or set-theoretic types \cite{}.
+Other approaches, like algebraic subtyping \cite{}, and Cretin \cite{}, and superF, 
+rely on designing syntax-directed subtyping rules and then proving their soundness with respect to some semantic interpretation. 
+Additionally, there are similarities between type inference with subtyping and control-flow analysis \cite{}, or polyvariant flow analysis \cite{}.
+In control-flow analysis, expressions can be associated with a label, and each label can map to a set of abstract values,
+determined by learning subset constraints from the control-flow of the program. 
+Instead of labels, type inference with subtyping associate types  
+with expressions and learns subtyping constraints.
+
+\section{Conclusion}
+\label{sec:conclusion}
+We have presented a novel extrinsic type inference system
+that can guarantee programs are bug-free while maintaining
+code-reusability nearly on par with untyped scripting languages,
+and exceeding that of an previous type inference system we know of.  
+We have incorporated previous studied ideas of subtyping constraints,
+intersection types, union types, parametric types, and recursive types into
+a cohesive design that enables more principal types to be inferred 
+and more subtyping relations to be verified than in previous systems. 
+In particular, our system is able to learn recursive types of function inputs
+and outputs purely from the construction of recursive functions without 
+any intrinsic recursive type specifications.
+Additionally, our system can perform inductive reasoning to
+verify than one recursive type subtypes another.
+In the future, we will extend the recursive type reasoning capabilities
+to handle recursive relational types, enabling the infinite paths
+of recursive functions to be represented and reasoned with at the type level. 
+With inductive reasoning over relational types, we will be
+moving closer to a full fledged theorem proving system,
+in which subtyping enables a form of proof automation,
+by reusing the proof of one proposition as a proof for another. 
+We may also explore different strategies for rewriting types 
+to get as much expressivity as possible.
+
+
+\newpage
+
+\begin{thebibliography}{9}
+
+% \bibitem{syngar}
+% X. Wang, I, Dillig, R. Singh. Program synthesis using abstraction refinement. In POPL, 2017.
+
+% \bibitem{love}
+% M. Heizmann, J. Hoenicke, A. Podelski. Software model checking for people who love automata. In CAV, 2013. 
+
+% \bibitem{synquid}
+% N. Polikarpova, I. Kuraj, A. Solar-Lezama. Program synthesis from polymorphic refinement types. In PLDI, 2016.
+
+\end{thebibliography}
+
+\end{document}
