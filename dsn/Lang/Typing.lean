@@ -80,6 +80,18 @@ mutual
     all_goals try linarith
 end
 
+example : Subtyping []
+  [typ| LFP [N] <zero/> | <succ> <succ> N ]
+  [typ| LFP [N] <zero/> | <succ> N ]
+:= by
+  unfold Subtyping
+  simp [Typing]
+  intro e h0 h1 h2a h3 h4
+  /-
+  Need to derive an induction rule to make this easier
+  -/
+  sorry
+
 theorem Typing.safety :
   Typing am e t → Safe e
 := by cases t with

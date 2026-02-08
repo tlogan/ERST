@@ -406,6 +406,8 @@ containing all safe expressions. The inputs and outputs, e.g. \code{<hello>@} an
 are singleton data constructions distinguished by their labels. Rather than declaring data constructors,
 it simply use angle brackets to distinguish labels from variables.
 A data construction can inhabit a structural type e.g. \code{<world>TOP}.
+For convenience, we can write \code{<world/>} to mean the expression \code{<world>@} or 
+the type \code{<world>TOP}.
    
 
 \Par{Selection.}
@@ -414,7 +416,7 @@ lifting into the type syntax avails it to approximate reasoning at application.
 Consider an application of the function to a variable argument. 
 
 \examp{
-  \J{def x : <hello>@ | <thank>@ = ... in}
+  \J{def x : <hello/> | <thank/> = ... in}
   \\
   \J{...}
   \\
@@ -429,8 +431,9 @@ The the application can inhabit to an union type,
 which is imprecise but strong enough to be useful. 
 
 \examp{
-  \J{<world>@ | <you>@}
+  \J{<world/> | <you/>}
 }
+
 
 \Par{Learning.}
 The paths of a function are not always syntactically apparent. 
@@ -440,7 +443,7 @@ Consider the higher order function \code{foo} which takes a function as input
 and applies it to the number two and the boolean true.
 
 \examp{
-  \J{def foo = [f => (f(<succ><succ><zero>@), f(<true>@))]}
+  \J{def foo = [f => (f(<succ><succ><zero/>), f(<true/>))]}
 }
 
 \noindent
@@ -461,7 +464,7 @@ Another possibility is that the type system requires that \code{f} is a function
 input in an list. 
 
 \examp{
-  \J{f : ALL[X] X -> (LFP[R] <nil>@ | <cons>X*R)}
+  \J{f : ALL[X] X -> (LFP[R] <nil/> | <cons>X*R)}
 }
 
 \noindent
@@ -474,9 +477,7 @@ However, using intersection we can easily describe the principal type of \code{f
 }
 
 
-\TODO{edit below starting here}
-
-\Par{Factorization.}
+\Par{Infinite Isomorphism.}
 A function can represent infinite paths by using recursion.
 Consider the function \code{repeat}, which takes an item and a natural number
 as inputs and returns a list of that item repeated the input number of times.
@@ -484,15 +485,15 @@ as inputs and returns a list of that item repeated the input number of times.
 \examp{
   \J{def repeat = [x => loop([self => [}
   \\
-  \I \J{[zero;@ => nil;@]}
+  \I \J{[<zero/> => <nil/>]}
   \\
-  \I \J{[succ;n => <cons>(x,self(n))]}
+  \I \J{[<succ>n => <cons>(x,self(n))]}
   \\
   \J{])]}
 }
 
 \noindent
-One possibility for constructing the type of the recursive function would
+One possibility for constructing a precise type of the recursive function would
 be to follow the idea of finite isomorphism and construct a type 
 that preserves all the paths. If our type system had a greatest fixed point
 type constructor, then we could concisely represent such a type with minimal
@@ -501,59 +502,41 @@ rewriting.
 \examp{
   \J{ALL[T] T -> GFP[R](} 
   \\
-  \I \J{(<zero> @ -> <nil> @) \&}
+  \I \J{(<zero/> -> <nil/>) \&}
   \\
   \I \J{(ALL[N L](R <: N->L) <succ> N -> <cons> T*L)}
   \\
   \J{)} 
 }
+Although, this representation is syntactically concise, we have chosen to not include 
+the greatest fixed point type constructor, and instead rely on least fixed points, since
+those are necessary represent results of applications and sufficient for representing
+infinite paths when combined with existential and universal constraint type constructors.
+Using least fixed points, the parameter type and the relation between input and output must be described separately
+from the path types.
 
-\noindent
-Although the strength of precision of this type would be very beneficial,
-reasoning with such a type would be complicated. To keep the type system as
-simple as possible for the purpose of extrinsic type inference with a high-degree
-of code reusability, we leave such relational reasoning of recursive and co-recursive types out of
-the type system. 
-In this work, the type system actually avoids constructing a relational type, and instead, it
-constructs a type that is significantly weaker than the actual behavior of the function,
-by factoring the paths into a recursive space of inputs and a recursive space of outputs. 
+\examp{
+  P = \J{(LFP[N] <zero/> | <succ> N)}
+  \\
+  \\
+  R(\alpha) = \J{LFP [R]} 
+  \\
+  \I \J{(<zero/> * <nil/>) | }
+  \\
+  \I \J{(EXI[N L] [(N*L <: R)] ((<succ>N) * (<cons>}\alpha\J{*L)))}
+
+}
+
+Then the parameter type and relational type can be combined with universal constraint types and path types. 
 
 \examp{
   \J{ALL[T] T ->} 
   \\
-  \I \J{(LFP[R] <zero> @ | <succ> R)}
-  \\
-  \I \J{->}
-  \\
-  \I \J{(LFP[R] <nil> @ | <cons> T*R)}
+  \J{\ \ ALL[X] [(X <: } P \J{)] X -> EXI[Y] [(X*Y <: }R(\J{T})\J{)] Y} 
 }
 
-\noindent
-This eager weakening approximation enables the type system
-to simply reason with recursive scalars and avoids the need for complicated
-relational reasoning. In a follow up paper,
-we will show how to remedy this limitation by augmenting the type system with
-mechanisms for inductive relational reasoning.
 
-\Par{Scalar Inflation.} 
-Since the inputs to functions may have recursive types, the type 
-system must be able to check for errors at function application by unrolling
-recursive types.
-Consider applying the function \code{repeat} to some item and the number two, 
-which results in the type system checking that two is in fact an instance of the natural numbers.
-
-\examp{
-  \J{ <succ> <succ> <zero> @} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
-}
-
-\noindent
-The type system confirms that two is a valid input by unrolling the recursive type three times.
-Unfortunately, because the type system eagerly factored the type of \code{repeat}, it
-is unable to infer a stronger type for the application than the original list type. 
-In the followup paper, inductive relational reasoning will remedy this limitation.
-
-
-\Par{Scalar Induction.} 
+\Par{Induction.} 
 Another scenario that may arise is one in which the input to a function has an recursive type.
 Consider the application of the function \code{repeat} to a variable whose type represents the even natural numbers.
 
@@ -568,7 +551,8 @@ Consider the application of the function \code{repeat} to a variable whose type 
 }
 
 \noindent
-The application results in the type system checking that natural numbers are weaker than even numbers. 
+The application is well typed because the least fixed point of even numbers subtypes the least fixed point
+of natural numbers by induction. 
 
 \examp{
   \J{LFP[R] <zero> @ | <succ> <succ> R}
@@ -578,178 +562,50 @@ The application results in the type system checking that natural numbers are wea
   \J{LFP[R] <zero> @ | <succ> R}
 }
 
-\noindent
-Since even numbers are represented recursively, the type system performs mathematical induction,
-proving under the assumption that the subtyping relation holds for the self reference of the even numbers. 
 
-\examp{
-  \J{E} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
-  \\
-  \entails
-  \\
-  \J{(<zero> @ | <succ> <succ> E)} \subtypes \J{(LFP[R] <zero> @ | <succ> R)}
-}
-
-\noindent
-In practice, the type system actually substitutes the supertype into
-the self reference of the subtype, if the self reference occurs in a positive position of the subtype.
-
-\examp{
-  \J{(<zero> @ | <succ> <succ> (LFP[R] <zero> @ | <succ> R))} 
-  \\
-  \subtypes 
-  \\
-  \J{(LFP[R] <zero> @ | <succ> R)}
-}
-
-\noindent
-In effect, by using mathematical induction, the type system ensures that 
-every type contained within the type of even natural numbers is also
-contained within the type of natural numbers.
-In followup work, we will extend this inductive reasoning to handle inductive relations. 
+\TODO{update below}
 
 \Par{Path Sensitivity} 
-Functions on lists can be generic, in that they may be independent of the item values, as in \code{repeat}.
-Additionally, they may factor out the details that depend on item values, as in \code{sort}. 
-
-\examp{
-  \J{def sort : ALL[T] (T*T->} \textbf{Bool} \J{) -> }\textbf{List}(\J{T}) \J{ -> } \textbf{List}(\J{T}) \J{ = }
-  \\
-  \J{[ cmp => ...] in ...}
-}
-
-\noindent
-The notation \ms{\textbf{Bool}} and \ms{\textbf{List}(\J{X})} are meta-language terms representing types.
-The function $\J{sort}$ can be specialized by passing in different implementations of comparison functions.
-Suppose we already have one scalar comparison function and one lexicographic comparison function.
-
-\examp{
-  \J{def scalarCmp : }\textbf{Nat} \J{ -> } \textbf{Nat} \J{ -> } \textbf{Bool} \J{ = ... in}
-  \\
-  \J{def lexicoCmp : }\textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat}) \J{ -> } \textbf{Bool} \J{ = ... in} 
-  \\
-  \J{...} 
-}
-
-\noindent
-In Standard ML, the programmer would need a different specialization for every predefined
-datatype. 
-
-\examp{
-  \J{def scalarSort = sort(scalarCmp) in}
-  \\
-  \J{def lexicoSort = sort(lexicoCmp) in} 
-  \\
-  \J{...} 
-}
-
-\noindent
-Having many different specializations burdens the client of
-the generic function to know many different names for roughly the same behavior and can obscure the meaning
-of code at the call site. 
-Untyped languages or extrinsically typed languages can bypass this rigidity found in 
-intrinsically typed languages by mixing the specialized procedures into a single generalized procedures.
+Suppose we have a simple comparison function, perhaps for sorting lists. 
+In order to have a high degree of code reusability, 
+we want to use it to sort either lists of scalars or lists of vectors. 
 
 \examp{
   \J{def genCmp = [a,b => } 
   \\
-  \I \J{a |> (}
+  \I \J{if isScalar(a) then}
   \\
-  \I\I \J{[zero;@ => scalarCmp(a,b)]}
+  \I \J{\ \ scalarCmp(a,b)}
   \\
-  \I\I \J{[succ;n => scalarCmp(a,b)]}
+  \I \J{else}
   \\
-  \I\I \J{[nil;@ => lexicoCmp(a,b)]}
+  \I \J{\ \ lexicoCmp(a,b)}
   \\
-  \I\I \J{[cons;(x,xs) => lexicoCmp(a,b)]}
-  \\
-  \I \J{)}
-  \\
-  \J{] in} 
-  \\
-  \J{...} 
+  \J{]} 
 }
 
-\noindent
-Extrinsic type inference allows this mixing by inferring types locally for each path,
-such that the type inferred from one path is not required for another.
-As such, a generalized comparison procedure may be constructed and the
-programmer can use the same sort function no matter if its inputs are scalars or vectors.
+We use \code{if-then-else} as syntactic sugar for pattern matching on \code{<true/>} or \code{<false/>}
+structures. Even though the same variable is used in both branches, the most precise type that
+this function can inhabit would associated the same variables with different types in different paths.
 
 \examp{
-  \J{def genSort : (TOP}
+  Bool = \J{<true/> | <false/>}
   \\
-  \I \J{\& (}\textbf{List}(\textbf{Nat}) \J{ -> } \textbf{List}(\textbf{Nat})
+  Nat = \J{LFP[N] <zero/> | <succ> N}
   \\
-  \I \J{\& (}\textbf{List}(\textbf{List}(\textbf{nat})) \J{ -> } \textbf{List}(\textbf{List}(\textbf{Nat}))
+  List(\alpha) = \J{LFP[L] <nil/> | <cons>(}\alpha\J{*L)}
   \\
-  \J{) = sort(genCmp)}
+  Vec = List(Nat) 
+  \\
+  \\
+  \I Nat \J{ * } Nat \J{ -> } Bool \J{ \&}
+  \\
+  \I Vec \J{ * } Vec \J{ -> } Bool
 }
 
-\noindent
-This particular form of type inference, known as occurrence typing \cite{},
-has already been studied and used to great effect in type inference for Python and Javascript.
-Additionally, the path sensitivity of type inference obviates the need 
-for destruction in pattern matching.  
-For example, the \code{repeat} function can be rewritten.
+The typing of this kind of pattern is known as occurrence typing \cite{},
+since it associates types with particular occurrences of variables rather than the variable itself. 
 
-\examp{
-  \J{def repeat = [x => loop([self => [n =>}
-  \\
-  \I\J{n |> [}
-  \\
-  \I\I \J{[zero;\_ => nil;(n.zero)]}
-  \\
-  \I\I \J{[succ;\_ => cons;(x,self(n.succ))]}
-  \\
-  \I \J{]}
-  \\
-  \J{]])]}
-}
-
-\noindent
-Thus, programs in Python and Javascript, which only having conditional branching,
-and no pattern matching, can rely on path sensitivity to simulate pattern matching. 
-
-\Par{Pruning} 
-
-\TODO{...}
-
-\Par{Streaming} 
-
-\TODO{...}
-
-\examp{
-  \J{loop([self => [x =>}
-  \\
-  \I\J{[@ => (x, self(succ;x))]}
-  \\
-  \J{]]}
-}
-
-\TODO{...}
-
-
-
-\examp{
-  \J{ALL[T] T -> @ ->}
-  \\
-  \I\J{LFP[U] (LFP[R] T | <succ> R) * (@ -> U)}
-}
-
-% (ALL[G009] (G009 -> (LFP[G007] (EXI[G010] (G010 <: G007)  : (@ -> ((LFP[G007] (<succ> G007 | G009)) * G010))))))
-
-\Par{Subtraction} 
-
-\TODO{...}
-
-\examp{
-  \J{LFP[R] (<zero> @) | (<succ> <succ> R)}
-  \\
-  \subtypes
-  \\
-  \J{TOP\typdiff (<succ> <succ> <succ> <zero> @)}
-}
 
 \section{Dynamic System}
 \label{sec:dynamic_system}
