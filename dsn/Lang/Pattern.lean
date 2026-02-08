@@ -131,4 +131,50 @@ theorem Pattern.match_var e x :
   Pattern.match e (.var x) = some [e]
 := by simp [Pattern.match]
 
+
+
+
+
+
+
+
+
+inductive N
+| Zero : N
+| Succ : N → N
+
+
+inductive L α
+| Nil : L α
+| Cons : α → L α → L α
+
+def len : L α → N
+| .Nil => .Zero
+| .Cons x xs => .Succ (len xs)
+
+
+
+inductive V α
+| Some : α → V α
+| Nil : V α
+| Cons : α → V α → V α
+
+def thing : V α → Unit
+| .Some x => ()
+| .Nil => ()
+| .Cons x xs => ()
+
+
+#eval (thing (L.Cons () L.Nil))
+
+#eval (thing (V.Cons () V.Nil))
+
+
+-- def get : L α → α
+-- | .Cons x .Nil => x
+
+
+
+
+
 end Lang

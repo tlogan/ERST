@@ -207,26 +207,6 @@ $
 
 \maketitle
 
-\TODO{lean uses the term "metavariable" for our concept of "placeholder variable". Should we conform to Lean's terminology?}
-
-\TODO{Metavariable term: the variable is meta in the sense that its interpretation is chosen by the metaprogram.
-Even though it's actually still a variable in the object language.}
-
-\TODO{Mention how reconstruction of recursive types is the last hurdle to fully extrinsic types}
-
-\TODO{if recursive types can be reconstructed than so can everything else}
-
-\TODO{inductive reasoning, in the general sense, consists of learning sufficient conditions P that enable deriving Q }
-
-\TODO{reasoning by cases consists of deriving P implies Q 
-by ensuresing P' implies Q for every P' that implie P
-}
-
-\TODO{mathematical induction is a particular form of reasoning by cases
-where P is recursively defines, so P' resembles it, and for any P' that resembles P,
-we can assume that P' -> Q', where Q' resembles Q.
-}
-
 \section{Introduction}
 \label{sec:introduction}
 
@@ -234,14 +214,14 @@ While it is commonly accepted that types are a useful tool for specification and
 of programs, type systems vary significantly in their expressivity and their flexibility. 
 At one end of the spectrum is the system Lean, whose types can express 
 complex mathematical relations, but require that programs are constructed in rigid ways to be typed.
-A the other end is the system TypeScript, whose types are limited to describing shapes, but can adapt to pre-existing programs.
+At the other end is the system TypeScript, whose types are limited to describing shapes, but can adapt to pre-existing programs.
 From the perspective of verification, the importance of expressive types seems obvious, 
 while the importance of a flexible type system is less so. However, recent trends in
 programming language usage indicate that flexibility of programming has a far greater weight
 than expressivity of verification. That is, people prioritize flexible programs with a high-degree of code reusability
 and are uninterested in writing tedious boiler plate code in order to conform 
-to the artificial restrictions of a verification system. Thus, for expressive verification system
-to be adopted by the masses, they must also be flexible.
+to the artificial restrictions of a verification system. Thus, for an expressive verification system
+to be adopted by the masses, it must also be flexible.
 To address this issue, we have designed an extrinsic relational type system, which is both flexible and expressive.
 
 \begin{itemize}
@@ -252,18 +232,106 @@ To address this issue, we have designed an extrinsic relational type system, whi
 
 
 
+Historically, intrinsic type systems have been the more widely accepted approach to designing type systems,
+even in systems with merely unexpressive simple types. By requiring constructors to be restricted to
+certain types, type checking and type inference becomes more tractable by reducing the need for control-flow analysis. 
+A typing is intrinsic if the type system requires that the input or output to a constructor or function abstraction is annotated
+with a type.  
+In Lean, data constructors are intrinsically typed according to users' annotations, The intrinsic typing of 
+function abstractions are inferred from the data constructors' types whenever possible, and type annotations are required
+when type inference is not possible.
 
-Type inference in practical programming languages has historically relied on intrinsic types.
-An expression has an intrinsic type if it is annotated with a type, such that the type
-constrains the control flow of the program.  
-Intrinsic types can occur in at least three ways: by annotating
-expressions, constructions, or patterns.     
-For example, the Standard ML expression \code{fn x => (f x)}
-could be annotated with \code{val f' : int -> int = fn x => (f x)},
-which artificially prunes the allowed control flow of expressions that use \code{f'}.
+For example, to define a function that calculates the length of a list, the constructors representing lists and natural
+numbers must first be prescribed with types.
+
+\examp{
+  \J{inductive Nat}
+  \\
+  \J{| Zero : Nat }
+  \\
+  \J{| Succ : Nat -> Nat}
+  \\
+  \\
+  \J{inductive List T}
+  \\
+  \J{| Nil : List T}
+  \\
+  \J{| Cons : T -> List T -> List T}
+  \\
+  \\
+  \J{def length : List T -> Nat}
+  \\
+  \J{| .Nil => .Zero }
+  \\
+  \J{| .Cons x xs => .Succ (length xs) }
+}
+
+The overhead of prescribing types is not a significant issue. 
+One would most likely want numerous functions defined on lists and natural numbers,
+meaning the overhead would be a small fraction of the overall effort.
+The actual drawback of intrinsic typing is the inability to reuse the constructors
+in contexts that don't match perfectly with the requirements of their intrinsic types.
+For instance, in Lean, it is impossible to define a program
+that gets the element from a singleton list, without using additional structures or auxiliary proofs.
+
+
+\examp{
+  \J{def get : List T -> T}
+  \\
+  \J{| .Cons x .Nil => x }
+  \\
+  \\
+  \J{-- Missing cases:}
+  \\
+  \J{-- (List.Cons \_ (List.Cons \_ \_))}
+  \\
+  \J{-- List.Nil}
+}
+
+Another scenario might be that a programmer would like a function to handle
+variations of lists, such as lists that can terminate in multiple ways. However, Lean 
+does not allow reusing list constructors in the list variations.
+
+\examp{
+  \J{inductive AltList T}
+  \\
+  \J{| Some : T -> AltList T}
+  \\
+  \J{| Nil : AltList T}
+  \\
+  \J{| Cons : T -> AltList T -> AltList T}
+  \\
+  \\
+  \J{def process : AltList T -> Unit } 
+  \\
+  \J{| .Some x => () }
+  \\
+  \J{| .Nil => () }
+  \\
+  \J{| .Cons x xs => () }
+  \\
+  \\
+  \J{\#eval process (List.Cons () List.Nil) }
+  \\
+  \J{--  Application type mismatch }
+  \\
+}
+
+In order to use the process function on normal lists, the programmer would
+need to write a translation function from normal list constructors to alternative list constructors. 
+In large projects, variations on a theme are actually quite common, so this rigidity of intrinsic typing
+can result in needing significant amounts of tedious boiler plate code. 
+For some, this burden is more than made up for by Lean's elegant and expressive type system.
+However, for many, the increased complexity and verbosity of programming will be too great of a price,
+and they would prefer the flexibility of TypeScript, despite the limited expressivity of its types.
+
+----------------------
+----------------------
+
 As for constructions and sums of patterns, consider a Standard ML program that computes the length of a list,
 using \code{nil} and \code{cons} as data constructors representing lists, 
 and using \code{zero} and \code{succ} as data constructors representing natural numbers.
+
 
 \examp{
   \J{fun len(nil) = zero}
