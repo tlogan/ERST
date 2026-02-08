@@ -222,15 +222,6 @@ than expressivity of verification. That is, people prioritize flexible programs 
 and are uninterested in writing tedious boiler plate code in order to conform 
 to the artificial restrictions of a verification system. Thus, for an expressive verification system
 to be adopted by the masses, it must also be flexible.
-To address this issue, we have designed an extrinsic relational type system, which is both flexible and expressive.
-
-\begin{itemize}
-  \item Extrinsic: The types describe programs. Types need not be prescribed for constructors in the program. 
-  \item Relational: A type may represent an infinite space of complex values (or tuples), such that 
-    the value of one part constrains the value of another part.
-\end{itemize}
-
-
 
 Historically, intrinsic type systems have been the more widely accepted approach to designing type systems,
 even in systems with merely unexpressive simple types. By requiring constructors to be restricted to
@@ -274,7 +265,6 @@ in contexts that don't match perfectly with the requirements of their intrinsic 
 For instance, in Lean, it is impossible to define a program
 that gets the element from a singleton list, without using additional structures or auxiliary proofs.
 
-
 \examp{
   \J{def get : List T -> T}
   \\
@@ -287,6 +277,12 @@ that gets the element from a singleton list, without using additional structures
   \\
   \J{-- List.Nil}
 }
+
+This singleton list example is an involves refinement, and this particular kind of rigidity has
+been addressed by refinement types \cite{}, which allows type systems to be more flexible, while still
+benefiting algorithmically from intrinsic typing. Additionally, Liquid types offers a mathematical level
+of expressivity.   
+
 
 Another scenario might be that a programmer would like a function to handle
 variations of lists, such as lists that can terminate in multiple ways. However, Lean 
@@ -324,6 +320,48 @@ can result in needing significant amounts of tedious boiler plate code.
 For some, this burden is more than made up for by Lean's elegant and expressive type system.
 However, for many, the increased complexity and verbosity of programming will be too great of a price,
 and they would prefer the flexibility of TypeScript, despite the limited expressivity of its types.
+
+
+To address these issues, we have designed an extrinsic relational type system, 
+which is both flexible and expressive.
+\begin{itemize}
+  \item Extrinsic: The types describe programs. 
+    Types need not be prescribed for constructors in the program. 
+  \item Relational: A type may represent an infinite space of complex values (or tuples), 
+    such that the value of one part constrains the value of another part.
+\end{itemize}
+The types in our system are able to be extrinsic by including intersection and union type constructors.  
+This allows expressions to belong to a range of types of varying precision. The semantics of intersection
+and union are related to their components by subtyping. By leveraging this subtyping semantics,  
+expressions may be composed together that would fail in a system based on type equivalence. In other words,
+expressions are highly reusable while being well typed.
+The types in our system are able to be relational by including 
+least fixed point, universal constraint, and existential constraint type constructors. 
+The least fixed point type enabled describing infinite spaces while the constraint types can
+declare dependencies between subparts of complex values.   
+
+This work contains the foundational theory of our extrinsic relational type system. 
+Key contributions:
+\begin{itemize}
+  \item The design of a semantics-driven extrinsic relational type system 
+  \item The design of a corresponding small-step pattern matching semantics 
+  \item Formally proven theorems of safety, progress, subject reduction, subject expansion, and confluence. 
+\end{itemize}
+The type system is semantics-driven due to the requirement that the types be highly expressive. 
+Syntax-directed rules would overly restrict the expressivity of types. However, this foundational
+theory provides the necessary tools to derive introduction and elimination rules, which
+would be necessary to prove soundness of downstream syntax-directed type inference or analysis tools.
+
+Paper organization:
+\begin{itemize}
+  \item Section \ref{sec:overview}: Overview of the kinds of programs and types that may occur in our type system.  
+  \item Section \ref{sec:expressions}: Syntax, semantics, and theorems of expressions.  
+  \item Section \ref{sec:types}: Syntax, semantics, and theorems of types.  
+  \item Section \ref{sec:rules}: Corollaries for some introduction and elimination rules. 
+  \item Section \ref{sec:related_work}: Related work.  
+  \item Section \ref{sec:future_work}: Future work.  
+\end{itemize}
+
 
 ----------------------
 ----------------------
