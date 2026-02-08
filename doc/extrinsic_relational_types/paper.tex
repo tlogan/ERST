@@ -363,178 +363,58 @@ Paper organization:
 \end{itemize}
 
 
-----------------------
-----------------------
-
-As for constructions and sums of patterns, consider a Standard ML program that computes the length of a list,
-using \code{nil} and \code{cons} as data constructors representing lists, 
-and using \code{zero} and \code{succ} as data constructors representing natural numbers.
-
-
-\examp{
-  \J{fun len(nil) = zero}
-  \\
-  \J{\ \ | len(cons(x,xs)) = succ(len(xs))}
-}
-
-\noindent
-Standard ML uses the datatype mechanism to specify intrinsic types on both patterns and structures.
-
-\examp{
-  \J{datatype nat = zero | succ of nat} 
-  \\
-  \J{datatype 'a list = nil | cons of 'a * 'a list}
-}
-
-\noindent
-For the constructions with \code{zero} and \code{succ}, the nat specification 
-means that the weakest type the constructions could belong to is \code{nat},
-which forbids mixing the constructions with those not specificated in the datatype, like \code{zero} with \code{nil}: 
-
-\examp{
-  \J{fn nil => zero}
-  \\
-  \J{\ | cons(x,xs) => nil}
-}
-
-\noindent
-As for the patterns with \code{nil} and \code{cons}, the list specification 
-means that the strongest assumed for the sum of the patterns
-is \code{'a list}. 
-Thus, it forbids pattern matching fewer patterns than those in the datatype.
-
-\examp{
-  \J{fun nlen(nil) = zero}
-}
-
-\noindent
-Additionally, the list specification 
-means that the strongest assumption allowed for \code{cons} is that its
-content has type \code{'a * 'a list}. Thus, 
-it forbids overspecifying pattern contents,
-like a length function that only works on even length lists.  
-
-\examp{
-  \J{fun evlen(nil) = zero}
-  \\
-  \J{\ \ | evlen(cons(x,cons(y,zs))) = succ(succ(evlen(zs)))}
-}
-
-\noindent
-With the datatype being both the strongest type of a sum of patterns and also the weakest
-type of each construction, there is no additional loss in expressivity by
-requiring that the weakest type of a sum of patterns to be the datatype, 
-or inferring the strongest type of each construction to be the datatype.
-
-
-Even with all the intrinsic specifications required for structural expressions, Standard ML,
-and languages like it, ease the burden on the programmer by leveraging Hindley-Milner
-type inference \cite{}, which can fairly general predicative types of 
-non-structural expressions extrinsically, without intrinsic specifications. 
-Despite the mitigating type inference capabilities of intrinsically typed systems, 
-much more software these days is written
-in untyped scripting languages, like Python and Javascript. 
-These programs are not written with any control flow restrictions in mind,
-and the are unlikely to conform to the control flow restrictions imposed by intrinsic types.
-In fact, the lack of control flow restrictions may be one of the reasons that people
-choose scripting languages over intrinsically typed languages.
-Without artificial restrictions, programers can write code with a high degree of reusability,
-with very little effort.
-For instance, one might want a comparison function that works on both numbers and strings,
-so that the caller can sort lists of numbers or lists of strings without having to
-clutter the call site with a particular comparison function.  
-Some have tried reconcile intrinsic types with code reusability by adding
-advanced construct to languages, classes and type classes.
-Indeed, these constructs do enable reusability, but they require additional
-complexity and may fragment code in ways that obscures its essence.   
-An alternative approach is to simply relax the intrinsic type requirements,
-and infer types extrinsically according to the control flow of the program. 
-
-There have been some relaxations of intrinsic types to enable sightly more code reusability.
-Refinement types (Pfenning) \cite{} removed the intrinsic strongest type of sums of patters,
-allowing pattern matching with incomplete pattern coverage. It inferred stronger
-types too, by using intersection against the intrinsic weakest type to find safe but stronger types
-that could be used in functions with stronger assumptions. 
-Unfortunately, refinements aren't sufficient to handle the full range of structural mixing 
-and code reusability allowed by untyped languages.
-More recently, SuperF \cite{} demonstrated removal the the weakest intrinsic type,
-which enabled it infer principal types with subtyping constraints, 
-where second-order parametric
-types were insufficient. However, SuperF was not concerned with how functions
-with mixed structures could be represented literally.
-On the other hand, MLstruct \cite{} consisted of a detailed language design that allows
-constructing functions that mix structures, as long as information about the constructors
-are specified in particular ways. 
-MLStruct relaxed intrinsic requirements in a few ways, but still required a heavy annotation
-burden and restricted control flow in a significant way.
-
-This work tackles these limitations, in order to achieve a language design and type inference system,
-such that there are almost no annotations are required, code reusability is uninhibited, and error-free programs
-are guaranteed. The system is extremely extrinsic, requiring no annotations on structures.  
-Despite the lack of assistance from intrinsic types, our system appears to be able to admit
-nearly all the programs admitted by MLStruct and SuperF.
-Moreover, our system's lack of certain intrinsic restrictions, which exists in MLstruct, 
-clears the way for automatic reasoning by induction, which allows even greater code reusability
-without sacrificing safety.  
-
-\TODO{summarize contributions}
-\TODO{full extrinsic, no annotations required to very programs on par with untyped pgograms in terms of code reusability}
-\TODO{Normalizing all approximate control flow information into subtyping, allowing types to be infered in both directions}
-\TODO{inductive reasoning on scalars without any intrinsic specifications}
-
 \section{Overview}
 \label{sec:overview}
 We designed the type system around a simple applicative language with pattern matching,
-since such a language is syntactically close to predicate logic. Likewise,
-we designed the language of types to share many similarities with predicate logic. 
-The extrinsic type system is able to infer very precise types by analyzing the control
-flow of program in the form of generating and solving subtyping constraints. 
-In many cases the type system can infer the weakest possible types of parameters,
-and the strongest possible (i.e. most general or principal) types of results,
-all without inhibiting the reusability the code.
-To get a feel for the languages and reasoning capabilities, it's best to start by
+such that the syntax of expressions and types mirror each other. The language of types 
+shares many similarities with predicate logic. 
+To see how the types are both flexible and expressive, it's best to start by
 looking at a few examples.
 
 \Par{Finite Isomorphism.}
 A function can be constructed from multiple paths. 
-Consider the function \ms{\J{talky}}, which completes a simple English phrase.
+Consider the function \code{talky}, which completes a simple English phrase.
 
 \examp{
   \J{def talky = (}
   \\
-  \I \J{[hello;@ => world;@]}
+  \I \J{[<hello>@ => <world>@]}
   \\
-  \I \J{[good;@ => morning;@]} 
+  \I \J{[<good>@ => <morning>@]} 
   \\
-  \I \J{[thank;@ => you;@]} 
+  \I \J{[<thank>@ => <you>@]} 
   \\
   \J{)}
 }
 
 \noindent
 Since there is no recursion, the number of paths is finite.
-For these simple finite functions, the type system constructs
-an isomorphic type without any weakening in precision. 
+Such a simple function can is described precisely in the language of types
+by using an intersection of path types.
 
 \examp{
-  \J{(<hello>@ -> <world>@) \&}
+  \J{(<hello>TOP -> <world>TOP) \&}
   \\
-  \J{(<good>@ -> <morning>@) \&} 
+  \J{(<good>TOP -> <morning>TOP) \&} 
   \\
-  \J{(<thank>@ -> <you>@)} 
+  \J{(<thank>TOP -> <you>TOP)} 
 }
 
-\noindent
-Each path is represented using the path type,
-and the paths are joined together using the intersection type.
+The symbol \code{@} represents an empty record, which is merely a convenient way to express
+no-op data, like unit in other languages. the type \code{TOP} is the weakest possible type, 
+containing all safe expressions. The inputs and outputs, e.g. \code{<hello>@} and \code{<world>@}
+are singleton data constructions distinguished by their labels. Rather than declaring data constructors,
+it simply use angle brackets to distinguish labels from variables.
+A data construction can inhabit a structural type e.g. \code{<world>TOP}.
+   
 
 \Par{Selection.}
-Although the type of function $\J{talky}$ is no weaker than the actual function,
+Although the type of function \code{talky} is no weaker than the actual function,
 lifting into the type syntax avails it to approximate reasoning at application.
 Consider an application of the function to a variable argument. 
 
 \examp{
-  \J{def x : <hello> @ | <thank> @ = ... in}
+  \J{def x : <hello>@ | <thank>@ = ... in}
   \\
   \J{...}
   \\
@@ -544,78 +424,61 @@ Consider an application of the function to a variable argument.
 }
 
 \noindent
-If the type system affirms the type annotation,
-then it goes on to infer the type of the application. 
+If the type annotation holds,
+The the application can inhabit to an union type, 
+which is imprecise but strong enough to be useful. 
 
 \examp{
-  \J{<world> @ | <you> @}
+  \J{<world>@ | <you>@}
 }
-
-\noindent
-In effect, the type system applies application to all possible arguments
-and unions the results derived from only the paths of those arguments. 
 
 \Par{Learning.}
 The paths of a function are not always syntactically apparent. 
 If a variable is applied to arguments, the variable should implicitly behave 
 like a function, or else the program is erroneous. 
-Consider the higher order function $\J{foo}$ which takes a function as input
+Consider the higher order function \code{foo} which takes a function as input
 and applies it to the number two and the boolean true.
 
 \examp{
-  \J{def foo = [f => (f(succ;succ;zero;@), f(true;@))]}
+  \J{def foo = [f => (f(<succ><succ><zero>@), f(<true>@))]}
 }
 
 \noindent
 Type systems for System F have traditionally struggled to find the best
 type for such programs. If restricted to unqualified parametric types, there are many choices,
 without there being a clear best or principal type, 
-which is because it's not possible to find the weakest type for the function parameter
-$\J{f}$.
-One possibility is that the type system requires that $\J{f}$ is a function that wraps its
+which is because it's not possible to construct the weakest type for the function parameter
+\code{f}.
+One possibility is that the type system requires that \code{f} is a function that wraps its
 input in an option. 
 
 \examp{
-  \J{f : ALL[X] X -> <some> X}
+  \J{f : ALL[X] X -> <some>X}
 }
 
 \noindent
-Another possibility is that the type system requires that $\J{f}$ is a function that wraps its
+Another possibility is that the type system requires that \code{f} is a function that wraps its
 input in an list. 
 
 \examp{
-  \J{f : ALL[X] X -> (LFP[R] <nil> @ | <cons> X*R)}
+  \J{f : ALL[X] X -> (LFP[R] <nil>@ | <cons>X*R)}
 }
 
 \noindent
 Both are valid, but neither is weaker than the other. The problem is that unqualified parametric
 types are insufficient for describing the weakest safe input type.
-It was not until SuperF introduced a technique for solving subtyping constraints
-that a principal type could be automatically constructed for functions like $\J{foo}$
-Our extrinsic type system relies on similar principles of solving subtyping constraints,
-and likewise, can construct the weakest safe type for $\J{f}$, and thus the principal type for $\J{foo}$.
+However, using intersection we can easily describe the principal type of \code{foo}.
 
 \examp{
-  \J{ALL[X Y] (<succ> <succ> <zero> @ -> X) \& (<true> @ -> Y) -> X*Y}
+  \J{ALL[X Y] (<succ><succ><zero>@ -> X) \& (<true>@ -> Y) -> X*Y}
 }
 
-\noindent
-Although the subtyping constraints are not present in the type's notation,
-the intersection of paths is chosen because it represents the weakest type
-consistent with the subtyping constraints on a variable representing the parameter's type. 
-Suppose the type system chooses the variable type $\J{F}$ for the input parameter $\J{f}$.
-Eventually, due to the applications of the parameter $\J{f}$, the type
-system will attempt to find a solution to two constraints on $\J{F}$
 
-\examp{
-  \J{F} \subtypes \J{(<succ> <succ> <zero> @ -> X)}
-  \\
-  \J{F} \subtypes \J{(<true> @ -> Y)}
-}
+\TODO{edit below starting here}
 
 \Par{Factorization.}
 A function can represent infinite paths by using recursion.
-Consider the function $\J{repeat}$, which takes an item and a natural number
+Consider the function \code{repeat}, which takes an item and a natural number
 as inputs and returns a list of that item repeated the input number of times.
 
 \examp{
@@ -676,7 +539,7 @@ mechanisms for inductive relational reasoning.
 Since the inputs to functions may have recursive types, the type 
 system must be able to check for errors at function application by unrolling
 recursive types.
-Consider applying the function $\J{repeat}$ to some item and the number two, 
+Consider applying the function \code{repeat} to some item and the number two, 
 which results in the type system checking that two is in fact an instance of the natural numbers.
 
 \examp{
@@ -685,14 +548,14 @@ which results in the type system checking that two is in fact an instance of the
 
 \noindent
 The type system confirms that two is a valid input by unrolling the recursive type three times.
-Unfortunately, because the type system eagerly factored the type of $\J{repeat}$, it
+Unfortunately, because the type system eagerly factored the type of \code{repeat}, it
 is unable to infer a stronger type for the application than the original list type. 
 In the followup paper, inductive relational reasoning will remedy this limitation.
 
 
 \Par{Scalar Induction.} 
 Another scenario that may arise is one in which the input to a function has an recursive type.
-Consider the application of the function $\J{repeat}$ to a variable whose type represents the even natural numbers.
+Consider the application of the function \code{repeat} to a variable whose type represents the even natural numbers.
 
 \examp{
   \J{def x : (LFP[R] <zero> @ | <succ> <succ> R) = ... in}
