@@ -639,6 +639,7 @@ mutual
 end
 
 
+/- Subtyping recycling -/
 theorem Subtyping.lfp_intro {am t a body} :
   Monotonic am a body →
   Subtyping am t (Typ.sub [(a, (Typ.lfp a body))] body) →
