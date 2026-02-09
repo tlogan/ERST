@@ -11,35 +11,6 @@ set_option pp.fieldNotation false
 open Lang
 
 
-mutual
-  def List.pair_typ_sub (δ : List (String × Typ)) : List (Typ × Typ) → List (Typ × Typ)
-  | .nil => .nil
-  | .cons (l,r) remainder => .cons (Typ.sub δ l, Typ.sub δ r) (List.pair_typ_sub δ remainder)
-
-  def Typ.sub (δ : List (String × Typ)) : Typ → Typ
-  | .var id => match find id δ with
-    | .none => .var id
-    | .some t => t
-  | .iso l body => .iso l (Typ.sub δ body)
-  | .entry l body => .entry l (Typ.sub δ body)
-  | .path left right => .path (Typ.sub δ left) (Typ.sub δ right)
-  | .bot => .bot
-  | .top => .top
-  | .unio left right => .unio (Typ.sub δ left) (Typ.sub δ right)
-  | .inter left right => .inter (Typ.sub δ left) (Typ.sub δ right)
-  | .diff left right => .diff (Typ.sub δ left) (Typ.sub δ right)
-  | .all ids subtypings body =>
-      let δ' := remove_all δ ids
-      .all ids (List.pair_typ_sub δ' subtypings) (Typ.sub δ' body)
-  | .exi ids subtypings body =>
-      let δ' := remove_all δ ids
-      .exi ids (List.pair_typ_sub δ' subtypings) (Typ.sub δ' body)
-  | .lfp id body =>
-      let δ' := remove id δ
-      .lfp id (Typ.sub δ' body)
-end
-
-
 
 
 

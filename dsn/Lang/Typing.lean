@@ -5,6 +5,7 @@ import Lang.Safe
 import Lang.FinTyping
 
 set_option pp.fieldNotation false
+set_option eval.pp false
 
 namespace Lang
 
@@ -68,18 +69,6 @@ mutual
     all_goals (apply Prod.Lex.left ; simp [Typ.size] ; try linarith)
 
 end
-
-example : Subtyping []
-  [typ| LFP [N] <zero/> | <succ> <succ> N ]
-  [typ| LFP [N] <zero/> | <succ> N ]
-:= by
-  unfold Subtyping
-  simp [Typing]
-  intro e h0 h1 h2a h3
-  /-
-  Need to derive an induction rule to make this easier
-  -/
-  sorry
 
 theorem Typing.safety :
   Typing am e t → Safe e
@@ -494,6 +483,16 @@ theorem Subtyping.unio_elim {am left right t} :
   Subtyping am (Typ.unio left right) t
 := by sorry
 
+theorem Subtyping.unio_intro_left right :
+  Subtyping am t left →
+  Subtyping am t (Typ.unio left right)
+:= by sorry
+
+theorem Subtyping.unio_intro_right left :
+  Subtyping am t right →
+  Subtyping am t (Typ.unio left right)
+:= by sorry
+
 
 theorem Subtyping.inter_intro {am t left right} :
   Subtyping am t left →
@@ -611,18 +610,87 @@ theorem Subtyping.all_intro {am t ids quals body} :
   Subtyping am t (Typ.all ids quals body)
 := by sorry
 
-theorem Subtyping.lfp_intro {am t id body} :
-  Monotonic am id body →
-  Subtyping ((id, (Typ.lfp id body)) :: am) t body →
-  Subtyping am t (Typ.lfp id body)
+mutual
+  def List.pair_typ_sub (δ : List (String × Typ)) : List (Typ × Typ) → List (Typ × Typ)
+  | .nil => .nil
+  | .cons (l,r) remainder => .cons (Typ.sub δ l, Typ.sub δ r) (List.pair_typ_sub δ remainder)
+
+  def Typ.sub (δ : List (String × Typ)) : Typ → Typ
+  | .var id => match find id δ with
+    | .none => .var id
+    | .some t => t
+  | .iso l body => .iso l (Typ.sub δ body)
+  | .entry l body => .entry l (Typ.sub δ body)
+  | .path left right => .path (Typ.sub δ left) (Typ.sub δ right)
+  | .bot => .bot
+  | .top => .top
+  | .unio left right => .unio (Typ.sub δ left) (Typ.sub δ right)
+  | .inter left right => .inter (Typ.sub δ left) (Typ.sub δ right)
+  | .diff left right => .diff (Typ.sub δ left) (Typ.sub δ right)
+  | .all ids subtypings body =>
+      let δ' := remove_all δ ids
+      .all ids (List.pair_typ_sub δ' subtypings) (Typ.sub δ' body)
+  | .exi ids subtypings body =>
+      let δ' := remove_all δ ids
+      .exi ids (List.pair_typ_sub δ' subtypings) (Typ.sub δ' body)
+  | .lfp id body =>
+      let δ' := remove id δ
+      .lfp id (Typ.sub δ' body)
+end
+
+
+theorem Subtyping.lfp_intro {am t a body} :
+  Monotonic am a body →
+  Subtyping am t (Typ.sub [(a, (Typ.lfp a body))] body) →
+  Subtyping am t (Typ.lfp a body)
 := by sorry
 
-theorem Subtyping.lfp_elim {am id body t} :
-  Monotonic am id body →
-  id ∉ Typ.free_vars t →
-  Subtyping ((id, t) :: am) t body →
-  Subtyping am (Typ.lfp id body) t
+/- Subtyping Induction -/
+theorem Subtyping.lfp_elim :
+  Monotonic am a body →
+  Subtyping (am) (Typ.sub [(a, t)] body) t →
+  Subtyping am (Typ.lfp a body) t
 := by sorry
+
+set_option eval.pp false
+
+#eval [typ| LFP [N] <zero/> | <succ> <succ> N ]
+
+example : Subtyping []
+  [typ| LFP [N] <zero/> | <succ> <succ> N ]
+  [typ| LFP [N] <zero/> | <succ> N ]
+:= by
+  apply Subtyping.lfp_elim
+  { sorry }
+  { reduce
+    apply Subtyping.lfp_intro
+    { sorry }
+    { reduce
+      apply Subtyping.unio_elim
+      { apply Subtyping.unio_intro_left
+        apply Subtyping.refl
+      }
+      { apply Subtyping.unio_intro_right
+        apply Subtyping.iso_pres
+        apply Subtyping.lfp_intro
+        { sorry }
+        { reduce
+          apply Subtyping.unio_intro_right
+          apply Subtyping.iso_pres
+          apply Subtyping.refl
+        }
+      }
+    }
+  }
+
+
+-- theorem Subtyping.lfp_elim {am id body t} :
+--   Monotonic am id body →
+--   id ∉ Typ.free_vars t →
+--   Subtyping ((id, t) :: am) t body →
+--   Subtyping am (Typ.lfp id body) t
+-- := by sorry
+
 
 
 theorem Subtyping.rename_lower {am lower lower' upper} :
