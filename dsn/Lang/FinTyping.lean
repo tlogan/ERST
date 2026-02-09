@@ -23,6 +23,9 @@ def FinTyping (e : Expr) : Typ → Prop
 | .diff left right => FinTyping e left ∧ ¬ (FinTyping e right)
 | _ => False
 
+def FinSubtyping (l r : Typ) : Prop :=
+  ∀ e , FinTyping e l → FinTyping e r
+
 /- NOTE: need to prove the expression is safe so that inductive hypothesis is strong enough -/
 theorem FinTyping.safety :
   FinTyping e t → Safe e

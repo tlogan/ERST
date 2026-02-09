@@ -8,30 +8,28 @@ set_option pp.fieldNotation false
 
 namespace Lang
 
-
 mutual
   def Subtyping (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
     ∀ e, Typing am e left → Typing am e right
-  termination_by Typ.size left + Typ.size right
+  termination_by (Typ.size left + Typ.size right, 0)
   decreasing_by
-    all_goals simp [Typ.zero_lt_size]
+    all_goals (apply Prod.Lex.left ; simp [Typ.zero_lt_size])
+
 
   def MultiSubtyping (am : List (String × Typ)) : List (Typ × Typ) → Prop
   | .nil => True
   | .cons (left, right) remainder =>
     Subtyping am left right ∧ MultiSubtyping am remainder
-  termination_by sts => List.pair_typ_size sts
+  termination_by sts => (List.pair_typ_size sts, 0)
   decreasing_by
-    all_goals simp [List.pair_typ_size, List.pair_typ_zero_lt_size, Typ.zero_lt_size]
+    all_goals (apply Prod.Lex.left ; simp [List.pair_typ_size, List.pair_typ_zero_lt_size, Typ.zero_lt_size])
 
   def Monotonic (am : List (String × Typ)) (id : String) (body : Typ) : Prop :=
     (∀ t0 t1,
-      Subtyping am t0 t1 →
+      FinSubtyping t0 t1 →
       ∀ e, Typing ((id,t0):: am) e body → Typing ((id,t1):: am) e body
     )
-  termination_by Typ.size body
-  decreasing_by
-    all_goals sorry
+  termination_by (Typ.size body, 1)
 
   def Typing (am : List (String × Typ)) (e : Expr) : Typ → Prop
   | .bot => False
@@ -53,20 +51,11 @@ mutual
     (∀ am' , (ListPair.dom am') ⊆ ids → (MultiSubtyping (am' ++ am) quals) →
       (Typing (am' ++ am) e body)
     )
-  -- | .all ids quals body =>
-  --   (∀ am' , (ListPair.dom am') ⊆ ids → (MultiSubtyping (am' ++ am) quals) →
-  --     (Typing (am' ++ am) e body)
-  --   ) ∧
-  --   (∃ am' , (ListPair.dom am') ⊆ ids ∧ (MultiSubtyping (am' ++ am) quals))
   | .lfp id body =>
     Monotonic am id body ∧
-    /- TODO: remove this size requirement -/
-    (∃ t, ∃ (h : Typ.size t < Typ.size (.lfp id body)),
-      (∀ e',
-        Typing am e' t →
-        Typing ((id,t) :: am) e' body
-      ) ∧
-      Typing ((id,t) :: am) e  body
+    (∃ t,
+      (∀ e', FinTyping e' t → Typing ((id,t) :: am) e' body) ∧
+      Typing ((id,t) :: am) e body
     )
   -----------------------
   -- TODO: remove old lfp case
@@ -74,10 +63,10 @@ mutual
   --   Typ.Monotonic id true body ∧
   --   ∃ n, FinTyping e (Typ.sub am (Typ.subfold id body n))
   | .var id => ∃ t, find id am = some t ∧ FinTyping e t
-  termination_by t => (Typ.size t)
+  termination_by t => (Typ.size t, 0)
   decreasing_by
-    all_goals simp_all [Typ.size]
-    all_goals try linarith
+    all_goals (apply Prod.Lex.left ; simp [Typ.size] ; try linarith)
+
 end
 
 example : Subtyping []
@@ -86,7 +75,7 @@ example : Subtyping []
 := by
   unfold Subtyping
   simp [Typing]
-  intro e h0 h1 h2a h3 h4
+  intro e h0 h1 h2a h3
   /-
   Need to derive an induction rule to make this easier
   -/
@@ -141,8 +130,8 @@ theorem Typing.safety :
   apply Typing.safety h3
 | lfp x body =>
   simp [Typing]
-  intro h0 h1 h2 h3 h4
-  apply Typing.safety h4
+  intro h0 t e h1
+  apply Typing.safety h1
 
 
 theorem Typing.progress :
@@ -249,10 +238,9 @@ mutual
 
   | lfp id body =>
     unfold Typing
-    intro ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩
+    intro ⟨monotonic_body,t, imp_dynamic, dynamic_body⟩
     apply And.intro monotonic_body
     exists t
-    exists lt_size
     apply And.intro imp_dynamic
     apply Typing.subject_reduction transition dynamic_body
 
@@ -357,10 +345,9 @@ mutual
 
   | lfp id body =>
     unfold Typing
-    intro ⟨monotonic_body,t, lt_size, imp_dynamic, dynamic_body⟩
+    intro ⟨monotonic_body,t, imp_dynamic, dynamic_body⟩
     apply And.intro monotonic_body
     exists t
-    exists lt_size
     apply And.intro imp_dynamic
     apply Typing.subject_expansion transition dynamic_body
 
