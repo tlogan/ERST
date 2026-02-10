@@ -875,7 +875,7 @@ def Pat.pair (left : Pat) (right : Pat) : Pat :=
 
 
 inductive Expr
-| bvar : Nat → String → Expr
+| bvar : Nat → Expr
 | fvar : String → Expr
 | iso : String → Expr → Expr
 | record : List (String × Expr) → Expr
@@ -924,6 +924,20 @@ mutual
   | record ps => Pat.record_index_vars ps
 end
 
+mutual
+  def Pat.record_clear : List (String × Pat) → List (String × Pat)
+  | [] => []
+  | (l,p) :: ps =>
+    (l, Pat.clear p) :: Pat.record_clear ps
+
+  def Pat.clear : Pat → Pat
+  | var x => .var ""
+  | iso l p => .iso l (Pat.clear p)
+  | record ps => .record (Pat.record_clear ps)
+end
+
+def Pat.bvar := Pat.var ""
+
 
 def Pat.count_vars (p : Pat) := List.length (Pat.index_vars p)
 
@@ -941,13 +955,13 @@ mutual
   | [] => []
   | (p,e)::f =>
     let names' := Pat.index_vars p
-    (p, Expr.seal (names' ++ names) e) :: (Expr.function_seal names f)
+    (Pat.clear p, Expr.seal (names' ++ names) e) :: (Expr.function_seal names f)
 
   def Expr.seal (names : List String) : Expr → Expr
-  | .bvar i x => .bvar i x
+  | .bvar i => .bvar i
   | .fvar x =>
     match List.firstIndexOf x names with
-    | .some i => .bvar i x
+    | .some i => .bvar i
     | .none => .fvar x
   | .iso l e => .iso l (Expr.seal names e)
   | .record r => .record (Expr.record_seal names r)
@@ -960,10 +974,10 @@ end
 #eval Expr.seal [] (.function [(Pat.var "z", .app (.function [(Pat.iso "uno" (Pat.var "x"), .record [("one", .fvar "x"), ("two", .fvar "z")])]) (.fvar "hello"))])
 
 def Expr.extract (e : Expr) (l : String) : Expr :=
-  .app (.function [(Pat.iso l (Pat.var "x"), .bvar 0 "x")]) e
+  .app (.function [(Pat.iso l (Pat.bvar), .bvar 0)]) e
 
 def Expr.project (e : Expr) (l : String) : Expr :=
-  .app (.function [(.record [(l, .var "x")], .bvar 0 "x")]) e
+  .app (.function [(.record [(l, Pat.bvar)], .bvar 0)]) e
 
 def Expr.def (id : String) (top : Option Typ) (target : Expr) (contin : Expr) : Expr :=
   Expr.app
@@ -1499,11 +1513,11 @@ mutual
     (p, Expr.shift_vars threshold' offset e) :: (List.function_shift_vars threshold offset f)
 
   def Expr.shift_vars (threshold : Nat) (offset : Nat) : Expr → Expr
-  | .bvar i x =>
+  | .bvar i =>
     if i >= threshold then
-      (.bvar (i + offset) x)
+      (.bvar (i + offset))
     else
-      (.bvar i x)
+      (.bvar i)
   | .fvar id => .fvar id
   | .iso l body => .iso l (Expr.shift_vars threshold offset body)
   | .record r => .record (List.record_shift_vars threshold offset r)
@@ -1543,7 +1557,7 @@ mutual
   theorem Expr.shift_vars_zero e :
     Expr.shift_vars level 0 e = e
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.shift_vars]
   | fvar x =>
     simp [Expr.shift_vars]
@@ -1588,11 +1602,11 @@ mutual
     (p, Expr.shift_back threshold' offset e) :: (List.function_shift_back threshold offset f)
 
   def Expr.shift_back (threshold : Nat) (offset : Nat) : Expr → Expr
-  | .bvar i x =>
+  | .bvar i =>
     if i >= threshold + offset then
-      (.bvar (i - offset) x)
+      (.bvar (i - offset))
     else
-      (.bvar i x)
+      (.bvar i)
   | .fvar id => .fvar id
   | .iso l body => .iso l (Expr.shift_back threshold offset body)
   | .record r => .record (List.record_shift_back threshold offset r)
@@ -1638,7 +1652,7 @@ mutual
   theorem Expr.shift_forward_then_back level offset e :
     Expr.shift_back level offset (Expr.shift_vars level offset e) = e
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.shift_vars]
     by_cases h0 : level ≤ i
     { simp [h0]
@@ -1821,13 +1835,13 @@ mutual
     (p, (Expr.instantiate depth' m e)) :: (List.function_instantiate depth m f)
 
   def Expr.instantiate (depth : Nat) (m : List Expr) : Expr → Expr
-  | .bvar i x =>
+  | .bvar i =>
     if i >= depth then
       match m[i - depth]? with
       | some e => Expr.shift_vars 0 depth e
-      | none => .bvar (i - List.length m) x
+      | none => .bvar (i - List.length m)
     else
-      .bvar i x
+      .bvar i
   | .fvar id => .fvar id
   | .iso l body => .iso l (Expr.instantiate depth m body)
   | .record r => .record (List.record_instantiate depth m r)
@@ -1915,7 +1929,7 @@ mutual
     (p, Expr.sub (remove_all m ids) e) :: (List.function_sub m f)
 
   def Expr.sub (m : List (String × Expr)): Expr → Expr
-  | .bvar i x => .bvar i x
+  | .bvar i => .bvar i
   | .fvar id => match (find id m) with
     | .none => (.fvar id)
     | .some e => e

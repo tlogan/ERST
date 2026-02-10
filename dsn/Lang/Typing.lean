@@ -638,6 +638,9 @@ mutual
       .lfp id (Typ.sub δ' body)
 end
 
+/-
+TODO: update types to use de bruijn indexing; replace sub with instantiate
+-/
 
 /- Subtyping recycling -/
 theorem Subtyping.lfp_intro {am t a body} :

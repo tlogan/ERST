@@ -21,7 +21,7 @@ mutual
     ParFunStep ((p, e) :: f) ((p, e') :: f')
 
   inductive ParStep : Expr → Expr → Prop
-  | bvar i x : ParStep (.bvar i x) (.bvar i x)
+  | bvar i : ParStep (.bvar i) (.bvar i)
   | fvar x : ParStep (.fvar x) (.fvar x)
 
   /- head normal forms -/
@@ -87,8 +87,8 @@ mutual
   theorem ParStep.refl e :
     ParStep e e
   := by cases e with
-  | bvar i x =>
-    exact ParStep.bvar i x
+  | bvar i =>
+    exact ParStep.bvar i
   | fvar x =>
     exact ParStep.fvar x
   | iso l body =>
@@ -340,24 +340,22 @@ mutual
     have (l,p) := lp
     intro h0 h1
     simp [Pattern.match_record] at h1
-    have ⟨h2,h3⟩ := h1
-    clear h1
 
     cases h4 : (Pattern.match_entry l p r) with
     | some m0 =>
-      simp [h4] at h3
+      simp [h4] at h1
       cases h5 : (Pattern.match_record r rp') with
       | some m1 =>
-        simp [h5] at h3
+        simp [h5] at h1
         have ⟨m0',h8⟩ := ParRcdStep.pattern_match_entry_reduction h0 h4
         have ⟨m1',h9⟩ := ParRcdStep.pattern_match_reduction h0 h5
         exists (m0' ++ m1')
         simp [Pattern.match_record, *]
 
       | none =>
-        simp [h5] at h3
+        simp [h5] at h1
     | none =>
-      simp [h4] at h3
+      simp [h4] at h1
 
 
   theorem ParStep.pattern_match_reduction :
@@ -366,13 +364,13 @@ mutual
     ∃ m' , Pattern.match arg' p = some m'
   := by cases p with
   | var x =>
-    intro h0 h1
-    exists [arg']
     simp [Pattern.match]
+    intro h0 h1 h2
+    simp [h1]
   | iso l p' =>
     intro h0 h1
     cases h0 with
-    | bvar i x =>
+    | bvar i =>
       exact Exists.intro m h1
     | fvar x =>
       exact Exists.intro m h1
@@ -389,7 +387,7 @@ mutual
   | record ps =>
     intro h0 h1
     cases h0 with
-    | bvar ix =>
+    | bvar i =>
       exact Exists.intro m h1
     | fvar x =>
       exact Exists.intro m h1
@@ -431,7 +429,7 @@ mutual
     (step : ParStep e e')
   : Expr.is_value e → Expr.is_value e'
   := by cases step with
-  | bvar i x =>
+  | bvar i =>
     exact fun a => a
   | fvar x =>
     exact fun a => a
@@ -487,23 +485,21 @@ mutual
     have (l,p) := lp
     intro h0
     simp [Pattern.match_record] at h0
-    have ⟨h2,h3⟩ := h0
-    clear h0
 
     cases h4 : (Pattern.match_entry l p r') with
     | some m0' =>
-      simp [h4] at h3
+      simp [h4] at h0
       cases h5 : (Pattern.match_record r' rp') with
       | some m1' =>
-        simp [h5] at h3
+        simp [h5] at h0
         have ⟨m0,h8⟩ := ParRcdStep.pattern_match_entry_expansion isval step h4
         have ⟨m1,h9⟩ := ParRcdStep.pattern_match_expansion isval step h5
         exists (m0 ++ m1)
         simp [Pattern.match_record, *]
       | none =>
-        simp [h5] at h3
+        simp [h5] at h0
     | none =>
-      simp [h4] at h3
+      simp [h4] at h0
 
   theorem ParStep.pattern_match_expansion
     (isval : Expr.is_value e)
@@ -512,9 +508,11 @@ mutual
   := by cases p with
   | var x =>
     simp [Pattern.match]
+    intro h0
+    simp [h0]
   | iso l p' =>
     cases step with
-    | bvar i x =>
+    | bvar i =>
       intro h0
       exact Exists.intro m' h0
     | fvar x =>
@@ -531,7 +529,7 @@ mutual
       simp [Pattern.match] <;> simp [Expr.is_value] at isval
   | record ps =>
     cases step with
-    | bvar i x =>
+    | bvar i =>
       intro h0
       exact Exists.intro m' h0
     | fvar x =>
@@ -560,11 +558,11 @@ theorem ParRcdStep.skip_reduction
 | cons lp ps' =>
   have (l,p) := lp
   simp [Pattern.match_record]
-  intro h0 h1 m0' h3 m1' h5
+  intro h0 m0' h3 m1' h5
 
   have ⟨m0,h6⟩ := ParRcdStep.pattern_match_entry_expansion isval step h3
   have ⟨m1,h7⟩ := ParRcdStep.pattern_match_expansion isval step h5
-  exact h0 h1 m0 h6 m1 h7
+  exact h0 m0 h6 m1 h7
 
 theorem Expr.record_shift_vars_keys_is_fresh_key_preservation :
   List.is_fresh_key l r →
@@ -811,7 +809,7 @@ mutual
     =
     Expr.shift_vars level depth (Expr.shift_vars (threshold + level) offset arg)
   := by cases arg with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.shift_vars]
     by_cases  h0 : level ≤ i
     { simp [h0]
@@ -948,7 +946,7 @@ mutual
       (Expr.shift_vars (threshold + List.length m + depth) offset e)
     )
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.instantiate]
 
     by_cases h0 : depth ≤ i
@@ -1140,7 +1138,7 @@ mutual
     Expr.shift_back (threshold + level + depth) offset (Expr.shift_vars level depth e) =
     Expr.shift_vars level depth (Expr.shift_back (threshold + level) offset e)
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.shift_back, Expr.shift_vars]
     by_cases h0 : level ≤ i
     { simp [h0]
@@ -1306,7 +1304,7 @@ mutual
       (Expr.shift_back (threshold + List.length m + depth) offset e)
     )
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.instantiate]
     by_cases h0 : depth ≤ i
     {
@@ -1540,12 +1538,12 @@ mutual
     with
     | some m0, some m1 =>
       simp
-      intro h3 h4 threshold offset
-      simp [h3]
+      intro h3 threshold offset
+      rw [←h3]
 
       have ih0 := Pattern.match_entry_shift_vars_preservation h0 threshold offset
       have ih1 := Pattern.match_record_shift_vars_preservation h1 threshold offset
-      simp [ih0,ih1,←h4]
+      simp [ih0,ih1]
       exact Expr.list_shift_vars_concat
     | none,_ =>
       simp
@@ -1559,11 +1557,11 @@ mutual
     =
     some (Expr.list_shift_vars threshold offset m)
   := by cases p with
-  | var x  =>
+  | var x =>
     simp [Pattern.match]
-    intro h0
-    simp [←h0]
-    simp [Expr.list_shift_vars]
+    intro h0 h1
+    simp [←h1]
+    simp [Expr.list_shift_vars,h0]
   | iso l pb =>
     cases arg with
     | iso l' b =>
@@ -1629,12 +1627,12 @@ mutual
     with
     | some m0, some m1 =>
       simp
-      intro h3 h4 threshold offset
-      simp [h3]
+      intro h3 threshold offset
+      rw [←h3]
 
       have ih0 := Pattern.match_entry_shift_back_preservation h0 threshold offset
       have ih1 := Pattern.match_record_shift_back_preservation h1 threshold offset
-      simp [ih0,ih1,←h4]
+      simp [ih0,ih1]
       exact Expr.list_shift_back_concat
     | none,_ =>
       simp
@@ -1650,9 +1648,9 @@ mutual
   := by cases p with
   | var x  =>
     simp [Pattern.match]
-    intro h0
-    simp [←h0]
-    simp [Expr.list_shift_back]
+    intro h0 h1
+    simp [←h1]
+    simp [Expr.list_shift_back,h0]
   | iso l pb =>
     cases arg with
     | iso l' b =>
@@ -1713,9 +1711,7 @@ mutual
     with
     | some m0', some m1' =>
       simp
-      intro isval h3 h4
-      simp [h3]
-
+      intro isval h3
       have ⟨m0,ih0⟩ := Pattern.match_entry_shift_vars_reflection isval h0
       have ⟨m1,ih1⟩ := Pattern.match_record_shift_vars_reflection isval h1
       simp [ih0,ih1]
@@ -1731,6 +1727,8 @@ mutual
   := by cases p with
   | var x  =>
     simp [Pattern.match]
+    intro h0 h1
+    simp [h1]
   | iso l pb =>
     cases arg with
     | iso l' b =>
@@ -1790,8 +1788,7 @@ mutual
     with
     | some m0', some m1' =>
       simp
-      intro isval h3 h4
-      simp [h3]
+      intro isval h3
 
       have ⟨m0,ih0⟩ := Pattern.match_entry_shift_back_reflection isval h0
       have ⟨m1,ih1⟩ := Pattern.match_record_shift_back_reflection isval h1
@@ -1808,6 +1805,8 @@ mutual
   := by cases p with
   | var x  =>
     simp [Pattern.match]
+    intro h0 h1
+    simp [h1]
   | iso l pb =>
     cases arg with
     | iso l' b =>
@@ -1854,7 +1853,7 @@ mutual
     (Expr.is_value e) →
     ∀ threshold offset, (Expr.is_value (Expr.shift_vars threshold offset e))
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.is_value]
   | fvar x =>
     simp [Expr.is_value]
@@ -1896,7 +1895,7 @@ mutual
     (Expr.is_value e) →
     ∀ threshold offset, (Expr.is_value (Expr.shift_back threshold offset e))
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.is_value]
   | fvar x =>
     simp [Expr.is_value]
@@ -1927,10 +1926,10 @@ mutual
     have (l,p) := lp
     simp [Pattern.match_record]
 
-    intro isval h0 threshold offset h1 m0' h2 m1' h3
+    intro isval h0 threshold offset m0' h2 m1' h3
     have ⟨m0,h4⟩ := Pattern.match_entry_shift_vars_reflection isval h2
     have ⟨m1,h5⟩ := Pattern.match_record_shift_vars_reflection isval h3
-    apply h0 h1 _ h4 _ h5
+    apply h0 _ h4 _ h5
 
 
   theorem Pattern.skip_shift_vars_preservation :
@@ -1974,10 +1973,10 @@ mutual
     have (l,p) := lp
     simp [Pattern.match_record]
 
-    intro isval h0 threshold offset h1 m0' h2 m1' h3
+    intro isval h0 threshold offset m0' h2 m1' h3
     have ⟨m0,h4⟩ := Pattern.match_entry_shift_back_reflection isval h2
     have ⟨m1,h5⟩ := Pattern.match_record_shift_back_reflection isval h3
-    apply h0 h1 _ h4 _ h5
+    apply h0 _ h4 _ h5
 
 
   theorem Pattern.skip_shift_back_preservation :
@@ -2052,8 +2051,8 @@ mutual
     (step : ParStep e e')
   : ParStep (Expr.shift_vars threshold offset e) (Expr.shift_vars threshold offset e')
   := by cases step with
-  | bvar i x =>
-    exact ParStep.refl (Expr.shift_vars threshold offset (Expr.bvar i x))
+  | bvar i =>
+    exact ParStep.refl (Expr.shift_vars threshold offset (Expr.bvar i))
   | fvar x =>
     exact ParStep.refl (Expr.shift_vars threshold offset (Expr.fvar x))
   | @iso body body' l step_body =>
@@ -2155,8 +2154,8 @@ mutual
     (step : ParStep e e')
   : ParStep (Expr.shift_back threshold offset e) (Expr.shift_back threshold offset e')
   := by cases step with
-  | bvar i x =>
-    exact ParStep.refl (Expr.shift_back threshold offset (Expr.bvar i x))
+  | bvar i =>
+    exact ParStep.refl (Expr.shift_back threshold offset (Expr.bvar i))
   | fvar x =>
     exact ParStep.refl (Expr.shift_back threshold offset (Expr.fvar x))
   | @iso body body' l step_body =>
@@ -2273,9 +2272,9 @@ mutual
     e
   : ParStep (Expr.sub [(x,arg)] e) (Expr.sub [(x,arg')] e)
   := by cases e with
-  | bvar i x' =>
+  | bvar i =>
     simp [Expr.sub]
-    exact bvar i x'
+    exact bvar i
   | fvar x' =>
     by_cases h0 : x' = x
     {
@@ -2362,7 +2361,7 @@ mutual
     e
   : ParStep (Expr.instantiate offset [arg] e) (Expr.instantiate offset [arg'] e)
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.instantiate]
     by_cases h0 : offset ≤ i
     { simp [*]
@@ -2370,9 +2369,9 @@ mutual
       { simp [*] ;
         exact shift_vars_preservation 0 offset step
       }
-      { simp [*] ; exact bvar (i - 1) x }
+      { simp [*] ; exact bvar (i - 1) }
     }
-    { simp [*] ; exact bvar i x }
+    { simp [*] ; exact bvar i }
   | fvar x =>
     simp [Expr.instantiate]
     apply ParStep.fvar x
@@ -2437,7 +2436,7 @@ mutual
     Expr.shift_vars threshold (o + d) e =
     Expr.shift_vars threshold d (Expr.shift_vars threshold o e)
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.shift_vars]
     by_cases h0 : threshold ≤ i
     { simp [h0]
@@ -2527,12 +2526,12 @@ mutual
     with
     | some m0, some m1 =>
       simp
-      intro h3 h4 threshold offset
-      simp [h3]
+      intro h3 threshold offset
+      rw [←h3]
 
       have ih0 := Pattern.match_entry_instantiate_preservation h0 threshold offset
       have ih1 := Pattern.match_record_instantiate_preservation h1 threshold offset
-      simp [ih0,ih1,←h4]
+      simp [ih0,ih1]
       exact Expr.list_instantiate_concat
     | none,_ =>
       simp
@@ -2548,9 +2547,9 @@ mutual
   := by cases p with
   | var x  =>
     simp [Pattern.match]
-    intro h0
-    simp [←h0]
-    simp [Expr.list_instantiate]
+    intro h0 h1
+    simp [←h1]
+    simp [Expr.list_instantiate,h0]
   | iso l pb =>
     cases arg with
     | iso l' b =>
@@ -2611,8 +2610,7 @@ mutual
     with
     | some m0', some m1' =>
       simp
-      intro isval h3 h4
-      simp [h3]
+      intro isval h3
 
       have ⟨m0,ih0⟩ := Pattern.match_entry_instantiate_reflection isval h0
       have ⟨m1,ih1⟩ := Pattern.match_record_instantiate_reflection isval h1
@@ -2629,6 +2627,8 @@ mutual
   := by cases p with
   | var x  =>
     simp [Pattern.match]
+    intro h0 h1
+    simp [h1]
   | iso l pb =>
     cases arg with
     | iso l' b =>
@@ -2665,10 +2665,10 @@ mutual
     have (l,p) := lp
     simp [Pattern.match_record]
 
-    intro isval h0 depth d h1 m0' h2 m1' h3
+    intro isval h0 depth d m0' h2 m1' h3
     have ⟨m0,h4⟩ := Pattern.match_entry_instantiate_reflection isval h2
     have ⟨m1,h5⟩ := Pattern.match_record_instantiate_reflection isval h3
-    apply h0 h1 _ h4 _ h5
+    apply h0 _ h4 _ h5
 
 
   theorem Pattern.skip_instantiate_preservation :
@@ -2723,7 +2723,7 @@ mutual
     (Expr.is_value e) →
     ∀ depth d, (Expr.is_value (Expr.instantiate depth d e))
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.is_value]
   | fvar x =>
     simp [Expr.is_value]
@@ -2779,7 +2779,7 @@ mutual
     Expr.shift_vars (level + z) depth (Expr.shift_vars z (offset + level) e) =
     Expr.shift_vars z depth (Expr.shift_vars z (offset + level) e)
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.shift_vars]
     by_cases h0 : z ≤ i
     { simp [h0]
@@ -2911,7 +2911,7 @@ mutual
     =
     Expr.shift_vars level depth (Expr.instantiate (offset + level) m e)
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.shift_vars, Expr.instantiate]
     by_cases h0 : level ≤ i
     { simp [h0]
@@ -3103,7 +3103,7 @@ mutual
     =
     (Expr.shift_vars level (offset + depth) e)
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.shift_vars]
     by_cases h0 : level ≤ i
     { simp [h0]
@@ -3293,7 +3293,7 @@ mutual
       (Expr.instantiate (offset + List.length mb + depth) ma e)
     )
   := by cases e with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.instantiate]
 
     by_cases h0 : offset + List.length mb + depth ≤ i
@@ -3547,7 +3547,7 @@ mutual
   | cons lp ps' =>
     have (l,p) := lp
     simp [Pattern.match_record]
-    intro h0 h1 h2 h3 h4
+    intro h0 h1 h2
 
     match
       h5 : (Pattern.match_entry l p r),
@@ -3556,21 +3556,21 @@ mutual
       h8 : (Pattern.match_record r' ps')
     with
     | some m0, some m1, some m2, some m3 =>
-      simp [h5,h6] at h2
-      simp [h7,h8] at h4
-      rw [←h2,←h4]
+      simp [h5,h6] at h1
+      simp [h7,h8] at h2
+      rw [←h1,←h2]
       apply ParGroupStep.concat
       { apply ParGroupStep.pattern_match_entry_preservation h0 h5 h7
       }
       { apply ParGroupStep.pattern_match_record_preservation h0 h6 h8 }
     | none,_,_,_ =>
-      simp[h5] at h2
+      simp[h5] at h1
     | _,none,_,_ =>
-      simp[h6] at h2
+      simp[h6] at h1
     | _,_,none,_ =>
-      simp[h7] at h4
+      simp[h7] at h2
     | _,_,_,none =>
-      simp[h8] at h4
+      simp[h8] at h2
 
   theorem ParGroupStep.pattern_match_preservation :
     ParStep arg arg' →
@@ -3580,8 +3580,8 @@ mutual
   := by cases p with
   | var x =>
     simp [Pattern.match]
-    intro step h1 h2
-    rw [←h1,←h2]
+    intro step h1 h2 h3 h4
+    rw [←h2,←h4]
     apply ParGroupStep.cons step
     apply ParGroupStep.nil
   | iso l bp =>
@@ -3673,7 +3673,7 @@ mutual
     offset
   : ParStep (Expr.instantiate offset m body) (Expr.instantiate offset m' body')
   := by cases step_body with
-  | bvar i x =>
+  | bvar i =>
     simp [Expr.instantiate]
     by_cases h0 : offset  ≤ i
     { simp [h0]
@@ -3828,7 +3828,7 @@ mutual
     (step_b : ParStep e eb)
   : Joinable ParStep ea eb
   := by cases step_a with
-  | bvar i x =>
+  | bvar i =>
     exact ParStep.triangle step_b
   | fvar x =>
     exact ParStep.triangle step_b
@@ -4011,7 +4011,7 @@ mutual
                 apply ParFunStep.nil
 
               apply ParStep.instantiate h3 h1
-              { apply Pattern.match_var _ x }
+              { apply Pattern.match_var}
               { apply Pattern.match_var}
             }
   | @recycle ee eea x step_eea =>
@@ -4037,7 +4037,7 @@ mutual
                 apply ParFunStep.nil
 
               apply ParStep.instantiate h3 h1
-              { apply Pattern.match_var _ x}
+              { apply Pattern.match_var }
               { apply Pattern.match_var }
             }
             { exact ParStep.recycle x h2 }
@@ -4055,7 +4055,7 @@ mutual
           apply ParFunStep.cons _ h1
           apply ParFunStep.nil
         apply ParStep.instantiate h3 h1
-        { apply Pattern.match_var _ x}
+        { apply Pattern.match_var }
         { apply Pattern.match_var }
       }
       {
@@ -4068,7 +4068,7 @@ mutual
           apply ParFunStep.cons _ h2
           apply ParFunStep.nil
         apply ParStep.instantiate h3 h2
-        { apply Pattern.match_var _ x}
+        { apply Pattern.match_var }
         { apply Pattern.match_var }
       }
 

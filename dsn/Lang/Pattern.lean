@@ -24,15 +24,16 @@ mutual
   : List (String × Pat) → Option (List Expr)
   | .nil => some []
   | (label, pat) :: pats => do
-    if Pat.index_vars pat ∩ Pat.record_index_vars pats == [] then
-      let m0 ← Pattern.match_entry label pat args
-      let m1 ← Pattern.match_record args pats
-      return (m0 ++ m1)
-    else
-      .none
+    let m0 ← Pattern.match_entry label pat args
+    let m1 ← Pattern.match_record args pats
+    return (m0 ++ m1)
 
   def Pattern.match : Expr → Pat → Option (List Expr)
-  | e, (.var id) => some [e]
+  | e, (.var x) =>
+    if x == "" then
+      some [e]
+    else
+      none
   | (.iso l e), (.iso label p) =>
     if l == label then
       Pattern.match e p
@@ -45,6 +46,7 @@ mutual
       none
   | _, _ => none
 end
+
 
 
 mutual
@@ -84,15 +86,16 @@ mutual
     with
     | some m0, some m1  =>
       simp
-      intro h2 h3
-      rw [←h3]
+      intro h2
       have ih1 := Pattern.match_entry_count_eq h0
       have ih2 := Pattern.match_record_count_eq h1
       unfold Pat.count_vars at ih1
       rw [ih1,ih2]
+      rw [←h2]
       exact Eq.symm List.length_append
     | none,_ => simp
     | _,none => simp
+
 
 
 
@@ -103,8 +106,8 @@ mutual
   := by cases p with
   | var x =>
     simp [Pattern.match, Pat.count_vars, Pat.index_vars]
-    intro h0
-    rw [←h0]
+    intro h0 h1
+    rw [←h1]
     simp [List.length]
   | iso l bp =>
     simp [Pat.count_vars, Pat.index_vars]
@@ -127,8 +130,8 @@ mutual
       simp [Pattern.match]
 end
 
-theorem Pattern.match_var e x :
-  Pattern.match e (.var x) = some [e]
+theorem Pattern.match_var e :
+  Pattern.match e (.var "") = some [e]
 := by simp [Pattern.match]
 
 

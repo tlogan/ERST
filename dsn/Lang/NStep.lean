@@ -47,11 +47,11 @@ end
 
 theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
   unfold Expr.project
-  have h1 : e = Expr.instantiate 0 [e] (.bvar 0 "x") := by
+  have h1 : e = Expr.instantiate 0 [e] (.bvar 0) := by
     simp [Expr.instantiate, Expr.shift_vars_zero]
   rw [h1]
   apply NStep.pattern_match
-  simp [Expr.instantiate, Expr.shift_vars_zero]
+  simp [Expr.instantiate, Expr.shift_vars_zero, Pat.bvar]
   simp [Pattern.match, Pattern.match_record, Pattern.match_entry,
     Inter.inter, List.inter,
     Pat.index_vars, Pat.record_index_vars,
@@ -60,11 +60,11 @@ theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
 
 theorem NStep.extract : NStep (Expr.extract (Expr.iso l e) l) e := by
   unfold Expr.extract
-  have h1 : e = Expr.instantiate 0 [e] (.bvar 0 "x") := by
+  have h1 : e = Expr.instantiate 0 [e] (.bvar 0) := by
     simp [Expr.instantiate, Expr.shift_vars_zero]
   rw [h1]
   apply NStep.pattern_match
-  simp [Expr.instantiate, Expr.shift_vars_zero]
+  simp [Expr.instantiate, Expr.shift_vars_zero, Pat.bvar]
   simp [Pattern.match]
 
 
@@ -363,8 +363,8 @@ mutual
     (step : ParStep e e')
   : ReflTrans NStep e e'
   := by cases step  with
-  | bvar i x =>
-    exact ReflTrans.refl (Expr.bvar i x)
+  | bvar i =>
+    exact ReflTrans.refl (Expr.bvar i)
   | fvar x =>
     exact ReflTrans.refl (Expr.fvar x)
   | @iso body body' l step_body =>
