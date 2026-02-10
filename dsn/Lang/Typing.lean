@@ -9,6 +9,7 @@ set_option eval.pp false
 
 namespace Lang
 
+
 mutual
   def Subtyping (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
     ∀ e, Typing am e left → Typing am e right
@@ -33,6 +34,7 @@ mutual
   termination_by (Typ.size body, 1)
 
   def Typing (am : List (String × Typ)) (e : Expr) : Typ → Prop
+  | .bvar _ => False
   | .bot => False
   | .top => Safe e
   | .iso l t => Safe e ∧ Typing am (.extract e l) t
@@ -43,20 +45,27 @@ mutual
   | .unio left right => Typing am e left ∨ Typing am e right
   | .inter left right => Typing am e left ∧ Typing am e right
   | .diff left right => Typing am e left ∧ ¬ (Typing am e right)
-  | .exi ids quals body =>
-    ∃ am' , (ListPair.dom am') ⊆ ids ∧
-    (MultiSubtyping (am' ++ am) quals) ∧
-    (Typing (am' ++ am) e body)
-  | .all ids quals body =>
+  | .exi bindings constraints body =>
+    (∀ a ∈ bindings , a = "") ∧
+    ∃ names, List.length names = List.length bindings ∧
+    ∃ am' , (ListPair.dom am') ⊆ names ∧
+    (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun name => .var name) names) constraints)) ∧
+    (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun name => .var name) names) body))
+  | .all bindings constraints body =>
     Safe e ∧
-    (∀ am' , (ListPair.dom am') ⊆ ids → (MultiSubtyping (am' ++ am) quals) →
-      (Typing (am' ++ am) e body)
-    )
-  | .lfp id body =>
-    Monotonic am id body ∧
+    (∀ a ∈ bindings , a = "") ∧
+    (∀ names, List.length names = List.length bindings →
+    (∀ am' , (ListPair.dom am') ⊆ names →
+      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun name => .var name) names) constraints)) →
+      (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun name => .var name) names) body))
+    ))
+  | .lfp a body =>
+    a = "" ∧
+    ∃ name,
+    Monotonic am name (Typ.instantiate 0 [.var name] body) ∧
     (∃ t,
-      (∀ e', FinTyping e' t → Typing ((id,t) :: am) e' body) ∧
-      Typing ((id,t) :: am) e body
+      (∀ e', FinTyping e' t → Typing ((name,t) :: am) e' (Typ.instantiate 0 [.var name] body)) ∧
+      Typing ((name,t) :: am) e (Typ.instantiate 0 [.var name] body)
     )
   -----------------------
   -- TODO: remove old lfp case
@@ -639,8 +648,14 @@ mutual
 end
 
 /-
-TODO: update types to use de bruijn indexing; replace sub with instantiate
+TODO: update types to use instantiate instead of sub with instantiate
 -/
+
+-- theorem Subtyping.lfp_intro {am t a body} :
+--   Monotonic am name (Typ.instantiate 0 [name] body) →
+--   Subtyping am t (Typ.sub [(name, (Typ.lfp "" body))] body) →
+--   Subtyping am t (Typ.lfp "" body)
+-- := by sorry
 
 /- Subtyping recycling -/
 theorem Subtyping.lfp_intro {am t a body} :

@@ -11,6 +11,7 @@ def List.exi.{u} {α : Type u} (l : List α) (p : α → Bool) : Bool := List.an
 
 
 inductive Typ
+| bvar : Nat → Typ
 | var : String → Typ
 | iso : String → Typ → Typ
 | entry : String → Typ → Typ
@@ -54,6 +55,13 @@ mutual
 
   instance Typ.decidable_eq : DecidableEq Typ :=
     fun left right => match left with
+    | .bvar idl => by cases right with
+      | bvar idr =>
+        have d : Decidable (idl = idr) := inferInstance
+        cases d with
+        | isFalse => apply isFalse ; simp [*]
+        | isTrue => apply isTrue; simp [*]
+      | _ => apply isFalse ; simp
     | .var idl => by cases right with
       | var idr =>
         have d : Decidable (idl = idr) := inferInstance
@@ -187,6 +195,7 @@ mutual
   | _, _ => .false
 
   def Typ.beq : Typ → Typ → Bool
+  | .bvar il, .bvar ir => il == ir
   | .var idl, .var idr => idl == idr
   | .iso ll bodyl, .iso lr bodyr => ll == lr && Typ.beq bodyl bodyr
   | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.beq bodyl bodyr
@@ -225,6 +234,9 @@ mutual
     apply List.pair_typ_refl_beq_true
 
   theorem Typ.refl_beq_true : ∀ t : Typ, Typ.beq t t = true
+  | .bvar i => by
+    unfold Typ.beq
+    simp
   | .var id => by
     unfold Typ.beq
     simp
@@ -307,6 +319,9 @@ mutual
   -- TODO: use mututual recursion
   theorem Typ.beq_implies_eq : ∀ l r , (Typ.beq l r) = true → l = r :=
     fun left right => match left with
+    | .bvar idl => by cases right with
+      | bvar idr => unfold Typ.beq; simp
+      | _ => unfold Typ.beq; simp
     | .var idl => by cases right with
       | var idr => unfold Typ.beq; simp
       | _ => unfold Typ.beq; simp
@@ -477,6 +492,7 @@ mutual
 
 
   partial def Typ.reprPrec : Typ → Nat → Std.Format
+  | .bvar i, _ => s!"_{i}"
   | .var id, _ => id
   | .iso l .top, _ =>
     "<" ++ l ++ "/>"
@@ -590,61 +606,6 @@ instance : BEq (Typ × Typ) where
   beq | (a,b), (c,d) => a == c && b == d
 
 
-inductive Typ.Bruijn
-| bvar : Nat → Typ.Bruijn
-| fvar : String → Typ.Bruijn
-| iso : String → Typ.Bruijn → Typ.Bruijn
-| entry : String → Typ.Bruijn → Typ.Bruijn
-| path : Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
-| bot : Typ.Bruijn
-| top : Typ.Bruijn
-| unio :  Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
-| inter :  Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
-| diff :  Typ.Bruijn → Typ.Bruijn → Typ.Bruijn
-| all :  Nat → List (Typ.Bruijn × Typ.Bruijn) → Typ.Bruijn → Typ.Bruijn
-| exi :  Nat → List (Typ.Bruijn × Typ.Bruijn) → Typ.Bruijn → Typ.Bruijn
-| lfp :  Typ.Bruijn → Typ.Bruijn
-deriving Repr
-
-mutual
-  def List.pair_typ_Bruijn.beq
-  : List (Typ.Bruijn × Typ.Bruijn) → List (Typ.Bruijn × Typ.Bruijn)
-  → Bool
-  | .nil, .nil => .true
-  | (a,b) :: l, (c,d) :: r =>
-    Typ.Bruijn.beq a c &&
-    Typ.Bruijn.beq b d &&
-    List.pair_typ_Bruijn.beq l r
-  | _, _ => .false
-
-  def Typ.Bruijn.beq : Typ.Bruijn → Typ.Bruijn → Bool
-  | .bvar il, .bvar ir => il == ir
-  | .fvar idl, .fvar idr => idl == idr
-  | .iso ll bodyl, .iso lr bodyr => ll == lr && Typ.Bruijn.beq bodyl bodyr
-  | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.Bruijn.beq bodyl bodyr
-  | .path x y, .path p q => Typ.Bruijn.beq x p && Typ.Bruijn.beq y q
-  | .top, .top => .true
-  | .bot, .bot => .true
-  | .unio a b, .unio c d => Typ.Bruijn.beq a c && Typ.Bruijn.beq b d
-  | .inter a b, .inter c d => Typ.Bruijn.beq a c && Typ.Bruijn.beq b d
-  | .diff a b, .diff c d => Typ.Bruijn.beq a c && Typ.Bruijn.beq b d
-  | .all idsl qsl bodyl, .all idsr qsr bodyr =>
-      idsl == idsr &&
-      List.pair_typ_Bruijn.beq qsl qsr &&
-      Typ.Bruijn.beq bodyl bodyr
-  | .exi idsl qsl bodyl, .exi idsr qsr bodyr =>
-      idsl == idsr &&
-      List.pair_typ_Bruijn.beq qsl qsr &&
-      Typ.Bruijn.beq bodyl bodyr
-  | .lfp bodyl, .lfp bodyr =>
-      Typ.Bruijn.beq bodyl bodyr
-  | _, _ => false
-end
-
-instance : BEq Typ.Bruijn where
-  beq := Typ.Bruijn.beq
-
-
 def List.firstIndexOf {α} [BEq α] (target : α) (l : List α) : Option Nat :=
   let ns := List.indexesOf target l
   if h : List.length ns > 0 then
@@ -675,55 +636,56 @@ def List.firstIndexOf {α} [BEq α] (target : α) (l : List α) : Option Nat :=
 
 
 
-mutual
-  def Typ.ordered_bound_vars (bounds : List String) : Typ → List String
-  | .var id =>
-    if id ∈ bounds then [id] else []
-  | .iso _ t =>
-    Typ.ordered_bound_vars bounds t
-  | .entry _ t =>
-    Typ.ordered_bound_vars bounds t
-  | .path left right =>
-    let a := Typ.ordered_bound_vars bounds left
-    let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
-    a ∪ b
-  | .bot => []
-  | .top => []
-  | .unio left right =>
-    let a := Typ.ordered_bound_vars bounds left
-    let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
-    a ∪ b
-  | .inter left right =>
-    let a := Typ.ordered_bound_vars bounds left
-    let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
-    a ∪ b
-  | .diff left right =>
-    let a := Typ.ordered_bound_vars bounds left
-    let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
-    a ∪ b
-  | .all ids subtypings body =>
-    let bounds' := List.removeAll bounds ids
-    let a := List.pair_typ_ordered_bound_vars bounds' subtypings
-    let b := List.removeAll (Typ.ordered_bound_vars bounds' body) a
-    a ∪ b
-  | .exi ids subtypings body =>
-    let bounds' := List.removeAll bounds ids
-    let a := List.pair_typ_ordered_bound_vars bounds' subtypings
-    let b := List.removeAll (Typ.ordered_bound_vars bounds' body) a
-    a ∪ b
-  | .lfp id body =>
-    let bounds' := List.removeAll bounds [id]
-    Typ.ordered_bound_vars bounds' body
+-- mutual
+--   def Typ.ordered_bound_vars (bounds : List String) : Typ → List String
+--   | .bvar _ => []
+--   | .var id =>
+--     if id ∈ bounds then [id] else []
+--   | .iso _ t =>
+--     Typ.ordered_bound_vars bounds t
+--   | .entry _ t =>
+--     Typ.ordered_bound_vars bounds t
+--   | .path left right =>
+--     let a := Typ.ordered_bound_vars bounds left
+--     let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
+--     a ∪ b
+--   | .bot => []
+--   | .top => []
+--   | .unio left right =>
+--     let a := Typ.ordered_bound_vars bounds left
+--     let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
+--     a ∪ b
+--   | .inter left right =>
+--     let a := Typ.ordered_bound_vars bounds left
+--     let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
+--     a ∪ b
+--   | .diff left right =>
+--     let a := Typ.ordered_bound_vars bounds left
+--     let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
+--     a ∪ b
+--   | .all ids subtypings body =>
+--     let bounds' := List.removeAll bounds ids
+--     let a := List.pair_typ_ordered_bound_vars bounds' subtypings
+--     let b := List.removeAll (Typ.ordered_bound_vars bounds' body) a
+--     a ∪ b
+--   | .exi ids subtypings body =>
+--     let bounds' := List.removeAll bounds ids
+--     let a := List.pair_typ_ordered_bound_vars bounds' subtypings
+--     let b := List.removeAll (Typ.ordered_bound_vars bounds' body) a
+--     a ∪ b
+--   | .lfp id body =>
+--     let bounds' := List.removeAll bounds [id]
+--     Typ.ordered_bound_vars bounds' body
 
-  def List.pair_typ_ordered_bound_vars (bounds : List String)
-  : (List (Typ × Typ)) → List String
-  | .nil => .nil
-  | .cons (l,r) remainder =>
-    let a := (Typ.ordered_bound_vars bounds l)
-    let b := List.removeAll (Typ.ordered_bound_vars bounds r) a
-    let c := List.removeAll (List.pair_typ_ordered_bound_vars bounds remainder) (a ∪ b)
-    a ∪ b ∪ c
-end
+--   def List.pair_typ_ordered_bound_vars (bounds : List String)
+--   : (List (Typ × Typ)) → List String
+--   | .nil => .nil
+--   | .cons (l,r) remainder =>
+--     let a := (Typ.ordered_bound_vars bounds l)
+--     let b := List.removeAll (Typ.ordered_bound_vars bounds r) a
+--     let c := List.removeAll (List.pair_typ_ordered_bound_vars bounds remainder) (a ∪ b)
+--     a ∪ b ∪ c
+-- end
 
 #eval List.removeAll [1,2,3] [1]
 
@@ -734,6 +696,7 @@ mutual
     Typ.free_vars l ∪ Typ.free_vars r ∪ List.pair_typ_free_vars remainder
 
   def Typ.free_vars : Typ → List String
+  | .bvar _ => []
   | .var id => [id]
   | .iso _ body => Typ.free_vars body
   | .entry _ body => Typ.free_vars body
@@ -760,71 +723,210 @@ def ListTyping.free_vars : List (String × Typ) → List String
 | [] => []
 | (_,t) :: ts => Typ.free_vars t ∪ ListTyping.free_vars ts
 
-inductive Token
-| num : Nat → Token
-| str : String → Token
-deriving BEq
+-- inductive Token
+-- | num : Nat → Token
+-- | str : String → Token
+-- deriving BEq
 
 
-def List.toBruijn (bids : List String) : List String → List Token
-| .nil => .nil
-| .cons x xs =>
-    match List.firstIndexOf x bids with
-    | .none => (Token.str x) :: List.toBruijn bids xs
-    | .some n => Token.num (bids.length + n) :: List.toBruijn bids xs
+-- def List.toBruijn (bids : List String) : List String → List Token
+-- | .nil => .nil
+-- | .cons x xs =>
+--     match List.firstIndexOf x bids with
+--     | .none => (Token.str x) :: List.toBruijn bids xs
+--     | .some n => Token.num (bids.length + n) :: List.toBruijn bids xs
 
 mutual
-  def List.pair_typ_toBruijn (bids : List String)
-  : List (Typ × Typ) → List (Typ.Bruijn × Typ.Bruijn)
+  def Typ.constraints_seal (names : List String)
+  : List (Typ × Typ) → List (Typ × Typ)
   | .nil => .nil
   | .cons (l,r) remainder =>
     .cons
-    (Typ.toBruijn bids l, Typ.toBruijn bids r)
-    (List.pair_typ_toBruijn bids remainder)
+    (Typ.seal names l, Typ.seal names r)
+    (Typ.constraints_seal names remainder)
 
-  def Typ.toBruijn (bids : List String) : Typ → Typ.Bruijn
-  | .var id =>
-    match List.firstIndexOf id bids with
-    | .none => .fvar id
-    | .some i => .bvar (bids.length + i)
-  | .iso l body => .iso l (Typ.toBruijn bids body)
-  | .entry l body => .entry l (Typ.toBruijn bids body)
+  def Typ.seal (names : List String) : Typ → Typ
+  | .bvar i => .bvar i
+  | .var x =>
+    match List.firstIndexOf x names with
+    | .some i => .bvar i
+    | .none => .var x
+  | .iso l body => .iso l (Typ.seal names body)
+  | .entry l body => .entry l (Typ.seal names body)
   | .path left right =>
     .path
-    (Typ.toBruijn bids left)
-    (Typ.toBruijn bids right)
+    (Typ.seal names left)
+    (Typ.seal names right)
   | .bot => .bot
   | .top => .top
   | .unio left right =>
     .unio
-    (Typ.toBruijn bids left)
-    (Typ.toBruijn bids right)
+    (Typ.seal names left)
+    (Typ.seal names right)
   | .inter left right =>
     .inter
-    (Typ.toBruijn bids left)
-    (Typ.toBruijn bids right)
+    (Typ.seal names left)
+    (Typ.seal names right)
   | .diff left right =>
     .diff
-    (Typ.toBruijn bids left)
-    (Typ.toBruijn bids right)
-  | .all ids subtypings body =>
-    let bids' := List.pair_typ_ordered_bound_vars ids (.cons (.bot,body) subtypings)
-    let n := (List.length bids')
-    (.all n
-      (List.pair_typ_toBruijn (bids' ++ bids) subtypings)
-      (Typ.toBruijn (bids' ++ bids) body)
+    (Typ.seal names left)
+    (Typ.seal names right)
+  | .all names' constraints body =>
+    (.all (List.map (fun _ => "") names')
+      (Typ.constraints_seal (names' ++ names) constraints)
+      (Typ.seal (names' ++ names) body)
     )
-  | .exi ids subtypings body =>
-    let bids' := List.pair_typ_ordered_bound_vars ids (.cons (.bot,body) subtypings)
-    let n := (List.length bids')
-    (.exi n
-      (List.pair_typ_toBruijn (bids' ++ bids) subtypings)
-      (Typ.toBruijn (bids' ++ bids) body)
+  | .exi names' constraints body =>
+    (.exi (List.map (fun _ => "") names')
+      (Typ.constraints_seal (names' ++ names) constraints)
+      (Typ.seal (names' ++ names) body)
     )
   | .lfp id body =>
-    .lfp
-    (Typ.toBruijn (id :: bids) body)
+    .lfp "" (Typ.seal (id :: names) body)
 end
+
+
+mutual
+  def Typ.constraints_shift_vars (threshold : Nat) (offset : Nat)
+  : List (Typ × Typ) → List (Typ × Typ)
+  | .nil => .nil
+  | .cons (l,r) remainder =>
+    .cons
+    (Typ.shift_vars threshold offset l, Typ.shift_vars threshold offset r)
+    (Typ.constraints_shift_vars threshold offset remainder)
+
+  def Typ.shift_vars (threshold : Nat) (offset : Nat) : Typ → Typ
+  | .bvar i =>
+    if i >= threshold then
+      (.bvar (i + offset))
+    else
+      (.bvar i)
+  | .var x => .var x
+  | .iso l body => .iso l (Typ.shift_vars threshold offset body)
+  | .entry l body => .entry l (Typ.shift_vars threshold offset body)
+  | .path left right =>
+    .path
+    (Typ.shift_vars threshold offset left)
+    (Typ.shift_vars threshold offset right)
+  | .bot => .bot
+  | .top => .top
+  | .unio left right =>
+    .unio
+    (Typ.shift_vars threshold offset left)
+    (Typ.shift_vars threshold offset right)
+  | .inter left right =>
+    .inter
+    (Typ.shift_vars threshold offset left)
+    (Typ.shift_vars threshold offset right)
+  | .diff left right =>
+    .diff
+    (Typ.shift_vars threshold offset left)
+    (Typ.shift_vars threshold offset right)
+  | .all bindings constraints body =>
+    let threshold' := threshold + List.length bindings
+    (.all bindings
+      (Typ.constraints_shift_vars threshold' offset constraints)
+      (Typ.shift_vars threshold' offset body)
+    )
+  | .exi bindings constraints body =>
+    let threshold' := threshold + List.length bindings
+    (.exi bindings
+      (Typ.constraints_shift_vars threshold' offset constraints)
+      (Typ.shift_vars threshold' offset body)
+    )
+  | .lfp a body =>
+    .lfp a (Typ.shift_vars (threshold + 1) offset body)
+end
+
+
+mutual
+  def Typ.constraints_instantiate (depth : Nat) (m : List Typ)
+  : List (Typ × Typ) → List (Typ × Typ)
+  | .nil => .nil
+  | .cons (l,r) remainder =>
+    .cons
+    (Typ.instantiate depth m l, Typ.instantiate depth m r)
+    (Typ.constraints_instantiate depth m remainder)
+
+  def Typ.instantiate (depth : Nat) (m : List Typ) : Typ → Typ
+  | .bvar i =>
+    if i >= depth then
+      match m[i - depth]? with
+      | some e => Typ.shift_vars 0 depth e
+      | none => .bvar (i - List.length m)
+    else
+      .bvar i
+  | .var x => .var x
+  | .iso l body => .iso l (Typ.instantiate depth m body)
+  | .entry l body => .entry l (Typ.instantiate depth m body)
+  | .path left right =>
+    .path
+    (Typ.instantiate depth m left)
+    (Typ.instantiate depth m right)
+  | .bot => .bot
+  | .top => .top
+  | .unio left right =>
+    .unio
+    (Typ.instantiate depth m left)
+    (Typ.instantiate depth m right)
+  | .inter left right =>
+    .inter
+    (Typ.instantiate depth m left)
+    (Typ.instantiate depth m right)
+  | .diff left right =>
+    .diff
+    (Typ.instantiate depth m left)
+    (Typ.instantiate depth m right)
+  | .all bindings constraints body =>
+    let depth' := depth + List.length bindings
+    (.all bindings
+      (Typ.constraints_instantiate depth' m constraints)
+      (Typ.instantiate depth' m body)
+    )
+  | .exi bindings constraints body =>
+    let depth' := depth + List.length bindings
+    (.exi bindings
+      (Typ.constraints_instantiate depth' m constraints)
+      (Typ.instantiate depth' m body)
+    )
+  | .lfp a body =>
+    .lfp a (Typ.instantiate (depth + 1) m body)
+end
+
+
+
+-- mutual
+--   def List.record_instantiate (depth : Nat) (m : List Expr): List (String × Expr) → List (String × Expr)
+--   | .nil => .nil
+--   | (l, e) :: r =>
+--     (l, Expr.instantiate depth m e) :: (List.record_instantiate depth m r)
+
+--   def List.function_instantiate (depth : Nat) (m : List Expr): List (Pat × Expr) → List (Pat × Expr)
+--   | .nil => .nil
+--   | (p, e) :: f =>
+--     let depth' := depth + (Pat.count_vars p)
+--     (p, (Expr.instantiate depth' m e)) :: (List.function_instantiate depth m f)
+
+--   def Expr.instantiate (depth : Nat) (m : List Expr) : Expr → Expr
+--   | .bvar i =>
+--     if i >= depth then
+--       match m[i - depth]? with
+--       | some e => Expr.shift_vars 0 depth e
+--       | none => .bvar (i - List.length m)
+--     else
+--       .bvar i
+--   | .fvar id => .fvar id
+--   | .iso l body => .iso l (Expr.instantiate depth m body)
+--   | .record r => .record (List.record_instantiate depth m r)
+--   | .function f => .function (List.function_instantiate depth m f)
+--   | .app ef ea => .app (Expr.instantiate depth m ef) (Expr.instantiate depth m ea)
+--   | .anno e t => .anno (Expr.instantiate depth m e) t
+--   | .loopi e => .loopi (Expr.instantiate depth m e)
+-- end
+
+
+
+
 
 mutual
 
@@ -833,6 +935,7 @@ mutual
   | .cons (l,r) rest =>  Typ.size l + Typ.size r + List.pair_typ_size rest
 
   def Typ.size : Typ → Nat
+  | .bvar i => 1
   | .var id => 1
   | .iso l body => Typ.size body + 1
   | .entry l body => Typ.size body + 1
