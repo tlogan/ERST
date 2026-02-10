@@ -947,7 +947,7 @@ mutual
   | .diff left right => Typ.size left + Typ.size right + 1
   | .all ids subtypings body => List.pair_typ_size subtypings + Typ.size body + 1
   | .exi ids subtypings body => List.pair_typ_size subtypings + Typ.size body + 1
-  | .lfp id body => (Typ.size body) * 600 + 1
+  | .lfp id body => (Typ.size body) + 1
 end
 
 def ListTyp.size : List Typ → Nat
