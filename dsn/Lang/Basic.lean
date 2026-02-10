@@ -958,11 +958,13 @@ def ListTyp.size : List Typ → Nat
 
 mutual
   theorem Typ.constraints_size_instantiate constraints :
+    /- TODO: ∀ e ∈ m, Typ.size e = 1 -/
     List.pair_typ_size (Typ.constraints_instantiate depth m constraints) =
     List.pair_typ_size constraints
   := by sorry
 
   theorem Typ.size_instantiate t :
+    /- TODO: ∀ e ∈ m, Typ.size e = 1 -/
     Typ.size (Typ.instantiate depth m t) =
     Typ.size t
   := by sorry
@@ -2121,3 +2123,32 @@ theorem remove_all_single_nomem :
   intro h0 h1
   simp [h0]
   apply ih h1
+
+
+def Typ.finite : Typ → Bool
+| .top => true
+| .iso l body => Typ.finite body
+| .entry l body => Typ.finite body
+| .path left right =>
+  Typ.finite left && Typ.finite right
+| .unio left right =>
+  Typ.finite left && Typ.finite right
+| .inter left right =>
+  Typ.finite left && Typ.finite right
+| .diff left right =>
+  Typ.finite left && Typ.finite right
+| _ => False
+
+def Typ.kleene_loop (t : Typ) : Nat → Typ
+| 0 => Typ.bot
+| n + 1 => Typ.instantiate 0 [(Typ.kleene_loop t n)] t
+
+
+def Typ.fresh_var (t : Typ) : String :=
+  String.join ("_fresh_" :: Typ.free_vars t)
+
+
+theorem Typ.fresh_var_free_vars_exclusion t :
+  (Typ.fresh_var t) ∉ Typ.free_vars t
+:= by
+  sorry

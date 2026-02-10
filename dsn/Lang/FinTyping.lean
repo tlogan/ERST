@@ -26,6 +26,10 @@ def FinTyping (e : Expr) : Typ → Prop
 def FinSubtyping (l r : Typ) : Prop :=
   ∀ e , FinTyping e l → FinTyping e r
 
+def FinTyping.finiteness :
+  FinTyping e t → Typ.finite t
+:= by sorry
+
 /- NOTE: need to prove the expression is safe so that inductive hypothesis is strong enough -/
 theorem FinTyping.safety :
   FinTyping e t → Safe e

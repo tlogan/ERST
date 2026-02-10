@@ -65,10 +65,12 @@ mutual
   | .lfp a body =>
     a = "" ∧
     Monotonic am body ∧
-    ∃ name,
+    ∃ name, name ∉ Typ.free_vars body ∧
+    /- supremum of -/
     (∃ t,
+      /- post-fixed point -/
       (∀ e', FinTyping e' t → Typing ((name,t) :: am) e' (Typ.instantiate 0 [.var name] body)) ∧
-      Typing ((name,t) :: am) e (Typ.instantiate 0 [.var name] body)
+      FinTyping e t
     )
   -----------------------
   -- TODO: remove old lfp case
@@ -82,6 +84,20 @@ mutual
 
 
 end
+
+
+theorem Subtyping.kleene_loop_post_fixed_point :
+  Monotonic am body →
+  ∀ n ,
+  Subtyping am (Typ.kleene_loop body n) (Typ.instantiate 0 [(Typ.kleene_loop body n)] body)
+:= by sorry
+
+theorem Typing.free_var_instantiation :
+  name ∉ Typ.free_vars body →
+  Typing am e (Typ.instantiate 0 [t] body) →
+  Typing ((name,t) :: am) e (Typ.instantiate 0 [.var name] body)
+:= by sorry
+
 
 theorem Typing.safety :
   Typing am e t → Safe e
@@ -134,8 +150,8 @@ theorem Typing.safety :
   apply Typing.safety h6
 | lfp x body =>
   simp [Typing]
-  intro h0 name h0 t h1 h2
-  apply Typing.safety h2
+  intro h0 name h1 h2 t h3 h4
+  apply FinTyping.safety h4
 termination_by Typ.size t
 decreasing_by
   all_goals (simp [Typ.size, Typ.size_instantiate] ; try linarith)
@@ -251,13 +267,14 @@ mutual
 
   | lfp b body =>
     simp [Typing]
-    intro nameless monotonic name t subtyping typing_body
+    intro nameless monotonic name fresh t subtyping fintyping
     apply And.intro nameless
     apply And.intro monotonic
     exists name
+    apply And.intro fresh
     exists t
     apply And.intro subtyping
-    apply Typing.subject_reduction transition typing_body
+    apply FinTyping.subject_reduction transition fintyping
 
   | var id =>
     unfold Typing
@@ -369,13 +386,14 @@ mutual
 
   | lfp b body =>
     simp [Typing]
-    intro nameless monotonic name t subtyping typing_body
+    intro nameless monotonic name fresh t subtyping fintyping
     apply And.intro nameless
     apply And.intro monotonic
     exists name
+    apply And.intro fresh
     exists t
     apply And.intro subtyping
-    apply Typing.subject_expansion transition typing_body
+    apply FinTyping.subject_expansion transition fintyping
 
   | var id =>
     unfold Typing
@@ -673,12 +691,62 @@ TODO: update types to use instantiate instead of sub with instantiate
 -/
 
 
+theorem Subtyping.transitivity :
+  Subtyping am t0 t1 →
+  Subtyping am t1 t2 →
+  Subtyping am t0 t2
+:= by
+  unfold Subtyping
+  intro h0 h1 e h3
+  apply h1
+  specialize h0 e h3
+  apply h0
+
+
+
 /- Subtyping recycling -/
 theorem Subtyping.lfp_intro :
   Monotonic am body →
   Subtyping am t (Typ.instantiate 0 [(Typ.lfp "" body)] body) →
-  Subtyping am t (Typ.lfp "" body)
-:= by sorry
+  Subtyping am  t (Typ.lfp "" body)
+:= by cases body with
+/- TODO: convert to theorem in terms of kleene_loop -/
+-- | bvar i =>
+--   by_cases h0 : i = 0
+--   { simp [h0]
+--     unfold Subtyping
+--     simp [Typ.instantiate, Typ.shift_vars]
+--   }
+--   {
+--     simp [Typ.instantiate]
+--     have h1 : i > 0 := by exact Nat.zero_lt_of_ne_zero h0
+--     have h2 : [Typ.lfp "" (Typ.bvar i)][i]? = none := by
+--       exact Iff.mpr List.getElem?_eq_none_iff h1
+--     simp [h2]
+--     unfold Subtyping
+--     intro h3 e h4
+--     simp [Typing] at h4
+--   }
+-- | var a =>
+--   simp [Typ.instantiate]
+--   unfold Subtyping
+--   simp [Typing]
+--   intro h0 e t' h2 h3
+--   apply And.intro h0
+--   exists name
+--   exists t'
+--   simp [Typ.instantiate, Typing, find]
+--   apply h3
+
+-- | iso l body =>
+--   simp [Typ.instantiate]
+--   unfold Subtyping
+--   simp [Typing]
+--   intro h0 e h1 h2
+--   simp [h0]
+--   /- TODO: use kleene_loop to prove this subtyping -/
+--   sorry
+| _ => sorry
 
 /- Subtyping Induction -/
 theorem Subtyping.lfp_elim :
@@ -935,17 +1003,6 @@ theorem Subtyping.entry_preservation :
   apply And.intro h2
   apply h0
   exact h3
-
-theorem Subtyping.transitivity :
-  Subtyping am t0 t1 →
-  Subtyping am t1 t2 →
-  Subtyping am t0 t2
-:= by
-  unfold Subtyping
-  intro h0 h1 e h3
-  apply h1
-  specialize h0 e h3
-  apply h0
 
 
 
