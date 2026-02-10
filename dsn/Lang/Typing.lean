@@ -26,10 +26,10 @@ mutual
   decreasing_by
     all_goals (apply Prod.Lex.left ; simp [List.pair_typ_size, List.pair_typ_zero_lt_size, Typ.zero_lt_size])
 
-  def Monotonic (am : List (String × Typ)) (id : String) (body : Typ) : Prop :=
+  def Monotonic (am : List (String × Typ)) (name : String) (body : Typ) : Prop :=
     (∀ t0 t1,
       FinSubtyping t0 t1 →
-      ∀ e, Typing ((id,t0):: am) e body → Typing ((id,t1):: am) e body
+      ∀ e, Typing ((name,t0):: am) e body → Typing ((name,t1):: am) e body
     )
   termination_by (Typ.size body, 1)
 
@@ -75,13 +75,16 @@ mutual
   | .var id => ∃ t, find id am = some t ∧ FinTyping e t
   termination_by t => (Typ.size t, 0)
   decreasing_by
-    all_goals (apply Prod.Lex.left ; simp [Typ.size] ; try linarith)
+    all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate, Typ.constraints_size_instantiate] ; try linarith)
+
 
 end
 
 theorem Typing.safety :
   Typing am e t → Safe e
 := by cases t with
+| bvar i =>
+  simp [Typing]
 | var t =>
   simp [Typing]
   intro x h0 h1
@@ -118,18 +121,18 @@ theorem Typing.safety :
   simp [Typing]
   intro h0 h1
   apply Typing.safety h0
-| all ids cs body =>
+| all bs cs body =>
   simp [Typing]
-  intro h0 h1
+  intro h0 h1 h2
   apply h0
-| exi ids cs body =>
+| exi bs cs body =>
   simp [Typing]
-  intro h0 h1 h2 h3
-  apply Typing.safety h3
+  intro h0 h1 h2 h3 h4 h5 h6
+  apply Typing.safety h6
 | lfp x body =>
   simp [Typing]
-  intro h0 t e h1
-  apply Typing.safety h1
+  intro h0 name h0 t h1 h2
+  apply Typing.safety h2
 
 
 theorem Typing.progress :
@@ -145,6 +148,8 @@ mutual
     (transition : NStep e e')
   : Typing am e t → Typing am e' t
   := by cases t with
+  | bvar i =>
+    simp [Typing]
   | bot =>
     unfold Typing
     simp
@@ -216,27 +221,33 @@ mutual
       apply Typing.subject_expansion transition h2
     }
 
-  | exi ids quals body =>
+  | exi bs quals body =>
     unfold Typing
-    intro ⟨am',h0,h1,h2⟩
-    exists am'
+    intro ⟨h0,names,h1,am',h2,h3,h4⟩
     apply And.intro h0
+    exists names
     apply And.intro h1
-    apply Typing.subject_reduction transition h2
+    exists am'
+    apply And.intro h2
+    apply And.intro h3
+    apply Typing.subject_reduction transition h4
 
-  | all ids quals body =>
+  | all bs quals body =>
     unfold Typing
-    intro ⟨h0,h1⟩
+    intro ⟨h0,h1,h2⟩
     apply And.intro
     { exact Safe.subject_reduction transition h0 }
-    { intro am' h2 h3
+    { apply And.intro h1
+      intro names h3 am' h4 h5
       apply Typing.subject_reduction transition
-      exact h1 am' h2 h3
+      exact h2 names h3 am' h4 h5
     }
 
-  | lfp id body =>
+  | lfp b body =>
     unfold Typing
-    intro ⟨monotonic_body,t, imp_dynamic, dynamic_body⟩
+    intro ⟨nameless, name, monotonic_body,t, imp_dynamic, dynamic_body⟩
+    apply And.intro nameless
+    exists name
     apply And.intro monotonic_body
     exists t
     apply And.intro imp_dynamic
@@ -253,6 +264,8 @@ mutual
     (transition : NStep e e')
   : Typing am e' t → Typing am e t
   := by cases t with
+  | bvar i =>
+    simp [Typing]
   | bot =>
     unfold Typing
     simp
@@ -323,31 +336,37 @@ mutual
       apply Typing.subject_reduction transition h2
     }
 
-  | exi ids quals body =>
-    unfold Typing
-    intro ⟨am',h0,h1,h2⟩
-    exists am'
+  | exi bs quals body =>
+    simp [Typing]
+    intro h0 names h1 am h2 h3 h4
     apply And.intro h0
+    exists names
     apply And.intro h1
-    apply Typing.subject_expansion transition h2
+    exists am
+    apply And.intro h2
+    apply And.intro h3
+    apply Typing.subject_expansion transition h4
 
-  | all ids quals body =>
-    unfold Typing
-    intro ⟨h0,h1⟩
+  | all bs quals body =>
+    simp [Typing]
+    intro h0 h1 h2
     apply And.intro
     { exact Safe.subject_expansion transition h0 }
-    { intro am' h2 h3
+    { apply And.intro h1
+      intro names h3 am' h4 h5
       apply Typing.subject_expansion transition
-      exact h1 am' h2 h3
+      exact h2 names h3 am' h4 h5
     }
 
-  | lfp id body =>
-    unfold Typing
-    intro ⟨monotonic_body,t, imp_dynamic, dynamic_body⟩
-    apply And.intro monotonic_body
+  | lfp b body =>
+    simp [Typing]
+    intro nameless name monotonic t subtyping typing_body
+    apply And.intro nameless
+    exists name
+    apply And.intro monotonic
     exists t
-    apply And.intro imp_dynamic
-    apply Typing.subject_expansion transition dynamic_body
+    apply And.intro subtyping
+    apply Typing.subject_expansion transition typing_body
 
   | var id =>
     unfold Typing
@@ -712,18 +731,6 @@ example : Subtyping []
 
 
 
-theorem Subtyping.rename_lower {am lower lower' upper} :
-  Typ.toBruijn [] lower = Typ.toBruijn [] lower' →
-  Subtyping am lower upper →
-  Subtyping am lower' upper
-:= by sorry
-
-theorem Subtyping.rename_upper {am lower upper upper'} :
-  Typ.toBruijn [] upper = Typ.toBruijn [] upper' →
-  Subtyping am lower upper →
-  Subtyping am lower upper'
-:= by sorry
-
 theorem Subtyping.bot_elim {am upper} :
   Subtyping am Typ.bot upper
 := by sorry
@@ -896,52 +903,6 @@ theorem fresh_ids n (ignore : List String) :
 
 theorem fresh_id (ignore : List String) :
   ∃ id ,id ∉ ignore
-:= by sorry
-
-
-theorem Typ.all_rename {ids' ids} quals body :
-  ids'.length = ids.length →
-  ∃ quals' body',
-  Typ.toBruijn [] (Typ.all ids' quals' body') = Typ.toBruijn [] (Typ.all ids quals body)
-:= by sorry
--- TODO: construct subbing map and sub in
-
-theorem Typ.exi_rename {ids' ids} quals body :
-  ids'.length = ids.length →
-  ∃ quals' body',
-  Typ.toBruijn [] (Typ.exi ids' quals' body') = Typ.toBruijn [] (Typ.exi ids quals body)
-:= by sorry
-
-theorem Typ.lfp_rename id' id body :
-  ∃ body',
-  Typ.toBruijn [] (Typ.lfp id' body') = Typ.toBruijn [] (Typ.lfp id body)
-:= by sorry
-
-  -- theorem List.pair_typ_bruijn_eq_imp_dynamic {am} :
-  --   ∀ {lower upper},
-  --   List.pair_typ_toBruijn 0 [] lower = List.pair_typ_toBruijn 0 [] upper →
-  --   MultiSubtyping am lower →
-  --   MultiSubtyping am upper
-  -- := by sorry
-
-theorem Subtyping.bruijn_eq {lower upper} am :
-  Typ.toBruijn [] lower = Typ.toBruijn [] upper →
-  Subtyping am lower upper
-:= by
-  intro p0
-  apply Subtyping.rename_upper p0
-  apply Subtyping.refl am lower
-
-
-
-theorem List.pair_typ_toBruijn_exi_injection {ids' quals' body' ids quals body} :
-  Typ.toBruijn [] (.exi ids' quals' body') = Typ.toBruijn [] (.exi ids quals body) →
-  List.pair_typ_toBruijn ids' quals' = List.pair_typ_toBruijn ids quals
-:= by sorry
-
-theorem Typ.toBruijn_exi_injection {ids' quals' body' ids quals body} :
-  Typ.toBruijn [] (.exi ids' quals' body') = Typ.toBruijn [] (.exi ids quals body) →
-  Typ.toBruijn ids' body' = Typ.toBruijn ids body
 := by sorry
 
 

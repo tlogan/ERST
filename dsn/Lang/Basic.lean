@@ -956,6 +956,21 @@ def ListTyp.size : List Typ → Nat
 
 
 
+mutual
+  theorem Typ.constraints_size_instantiate constraints :
+    List.pair_typ_size (Typ.constraints_instantiate depth m constraints) =
+    List.pair_typ_size constraints
+  := by sorry
+
+  theorem Typ.size_instantiate t :
+    Typ.size (Typ.instantiate depth m t) =
+    Typ.size t
+  := by sorry
+end
+
+
+
+
 theorem Typ.zero_lt_size {t : Typ} : 0 < Typ.size t := by
 cases t <;> simp [Typ.size]
 
