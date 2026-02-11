@@ -727,10 +727,17 @@ theorem Subtyping.transitivity :
   apply h0
 
 
-theorem Typing.free_var_instantiation :
+theorem Typing.fresh_var_instantiation :
   name ∉ Typ.free_vars body →
   Typing am e (Typ.instantiate 0 [t] body) →
   Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate 0 [.var name] body)
+:= by sorry
+
+
+theorem Typing.lfp_elim :
+  name ∉ Typ.free_vars t →
+  (Typing ((name, P) :: am) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
+  Typing am e (Typ.lfp "" t) → P e
 := by sorry
 
 
@@ -747,17 +754,17 @@ theorem Subtyping.lfp_intro_direct :
   { exact Typing.safety h2 }
   { exists name
     simp [*]
-    ------------------
     intro P h3 h4
 
-    apply h4 ; clear h4
+    apply h4
     unfold Monotonic at h1
     apply h1 (fun e => Typing am e (Typ.lfp "" t)) P
     {
-      /- TODO: how can we connect LFP to P??? -/
-      sorry
+      clear h1
+      intro e h5
+      apply Typing.lfp_elim h0 (h4 e) h5
     }
-    { apply Typing.free_var_instantiation h0 h2 }
+    { apply Typing.fresh_var_instantiation h0 h2 }
   }
 
 theorem Subtyping.lfp_intro :
