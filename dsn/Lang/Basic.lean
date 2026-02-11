@@ -958,18 +958,17 @@ def ListTyp.size : List Typ → Nat
 
 mutual
   theorem Typ.constraints_size_instantiate constraints :
-    /- TODO: ∀ e ∈ m, Typ.size e = 1 -/
+    (∀ e ∈ m, Typ.size e = 1) →
     List.pair_typ_size (Typ.constraints_instantiate depth m constraints) =
     List.pair_typ_size constraints
   := by sorry
 
   theorem Typ.size_instantiate t :
-    /- TODO: ∀ e ∈ m, Typ.size e = 1 -/
+    (∀ e ∈ m, Typ.size e = 1) →
     Typ.size (Typ.instantiate depth m t) =
     Typ.size t
   := by sorry
 end
-
 
 
 

@@ -10,15 +10,39 @@ set_option eval.pp false
 namespace Lang
 
 
+def ExprPred := Expr → Prop
+
+def Stable (P : ExprPred) : Prop :=
+  ∀ {e e'}, NStep e e' → (P e ↔ P e')
+
+theorem Stable.subject_reduction :
+  Stable P →
+  NStep e e' →
+  P e → P e'
+:= by
+  unfold Stable
+  intro h0 h1 h2
+  apply Iff.mp (h0 h1) h2
+
+
+theorem Stable.subject_expansion :
+  Stable P →
+  NStep e e' →
+  P e' → P e
+:= by
+  unfold Stable
+  intro h0 h1 h2
+  apply Iff.mpr (h0 h1) h2
+
 mutual
-  def Subtyping (am : List (String × Typ)) (left : Typ) (right : Typ) : Prop :=
+  def Subtyping (am : List (String × ExprPred)) (left : Typ) (right : Typ) : Prop :=
     ∀ e, Typing am e left → Typing am e right
   termination_by (Typ.size left + Typ.size right, 0)
   decreasing_by
     all_goals (apply Prod.Lex.left ; simp [Typ.zero_lt_size])
 
 
-  def MultiSubtyping (am : List (String × Typ)) : List (Typ × Typ) → Prop
+  def MultiSubtyping (am : List (String × ExprPred)) : List (Typ × Typ) → Prop
   | .nil => True
   | .cons (left, right) remainder =>
     Subtyping am left right ∧ MultiSubtyping am remainder
@@ -26,17 +50,15 @@ mutual
   decreasing_by
     all_goals (apply Prod.Lex.left ; simp [List.pair_typ_size, List.pair_typ_zero_lt_size, Typ.zero_lt_size])
 
-  def Monotonic (am : List (String × Typ)) (body : Typ) : Prop :=
-    (∀ t0 t1,
-      FinSubtyping t0 t1 →
-      ∀ e , Typing am e (Typ.instantiate 0 [t0] body) → Typing am e (Typ.instantiate 0 [t1] body)
+  def Monotonic (name : String) (am : List (String × ExprPred)) (t : Typ) : Prop :=
+    (∀ P0 P1 : ExprPred,
+      (∀ e, P0 e → P1 e) →
+      (∀ e , Typing ((name,P0)::am) e t → Typing ((name,P1)::am) e t)
     )
-  termination_by (Typ.size body, 1)
-  decreasing_by
-    all_goals (simp [Typ.size_instantiate] ; apply Prod.Lex.right ; linarith )
+  termination_by (Typ.size t, 1)
 
 
-  def Typing (am : List (String × Typ)) (e : Expr) : Typ → Prop
+  def Typing (am : List (String × ExprPred)) (e : Expr) : Typ → Prop
   | .bvar _ => False
   | .bot => False
   | .top => Safe e
@@ -63,40 +85,23 @@ mutual
       (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun name => .var name) names) body))
     ))
   | .lfp a body =>
+    Safe e ∧
     a = "" ∧
-    Monotonic am body ∧
     ∃ name, name ∉ Typ.free_vars body ∧
-    /- supremum of -/
-    (∃ t,
-      /- post-fixed point -/
-      (∀ e', FinTyping e' t → Typing ((name,t) :: am) e' (Typ.instantiate 0 [.var name] body)) ∧
-      FinTyping e t
+    Monotonic name am (Typ.instantiate 0 [.var name] body) ∧
+    /- infimum of -/
+    (∀ P, Stable P →
+      /- pre-fixed point -/
+      (∀ e', Typing ((name,P) :: am) e' (Typ.instantiate 0 [.var name] body) → P e') →
+      P e
     )
-  -----------------------
-  -- TODO: remove old lfp case
-  -- | .lfp id body =>
-  --   Typ.Monotonic id true body ∧
-  --   ∃ n, FinTyping e (Typ.sub am (Typ.subfold id body n))
-  | .var id => ∃ t, find id am = some t ∧ FinTyping e t
+  | .var id => Safe e ∧ ∃ P, Stable P ∧ find id am = some P ∧ P e
   termination_by t => (Typ.size t, 0)
   decreasing_by
     all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate, Typ.constraints_size_instantiate] ; try linarith)
 
 
 end
-
-
-theorem Subtyping.kleene_loop_post_fixed_point :
-  Monotonic am body →
-  ∀ n ,
-  Subtyping am (Typ.kleene_loop body n) (Typ.instantiate 0 [(Typ.kleene_loop body n)] body)
-:= by sorry
-
-theorem Typing.free_var_instantiation :
-  name ∉ Typ.free_vars body →
-  Typing am e (Typ.instantiate 0 [t] body) →
-  Typing ((name,t) :: am) e (Typ.instantiate 0 [.var name] body)
-:= by sorry
 
 
 theorem Typing.safety :
@@ -106,8 +111,8 @@ theorem Typing.safety :
   simp [Typing]
 | var t =>
   simp [Typing]
-  intro x h0 h1
-  apply FinTyping.safety h1
+  intro h0 P h1 h2 h3
+  apply h0
 | iso l t =>
   simp [Typing]
   intro h0 h1
@@ -150,8 +155,10 @@ theorem Typing.safety :
   apply Typing.safety h6
 | lfp x body =>
   simp [Typing]
-  intro h0 name h1 h2 t h3 h4
-  apply FinTyping.safety h4
+  intro h0 h1 h2 name h3 h4
+  apply h0
+
+
 termination_by Typ.size t
 decreasing_by
   all_goals (simp [Typ.size, Typ.size_instantiate] ; try linarith)
@@ -267,21 +274,30 @@ mutual
 
   | lfp b body =>
     simp [Typing]
-    intro nameless monotonic name fresh t subtyping fintyping
-    apply And.intro nameless
-    apply And.intro monotonic
-    exists name
-    apply And.intro fresh
-    exists t
-    apply And.intro subtyping
-    apply FinTyping.subject_reduction transition fintyping
+    intro safe nameless name fresh monotonic h0
+    apply And.intro
+    { exact Safe.subject_reduction transition safe }
+    {
+      apply And.intro nameless
+      exists name
+      apply And.intro fresh
+      apply And.intro monotonic
+      intro P h2 h3
+      apply Stable.subject_reduction h2 transition
+      exact h0 P h2 h3
+    }
 
   | var id =>
-    unfold Typing
-    intro ⟨t, h1, h2⟩
-    exists t
-    apply And.intro h1
-    apply FinTyping.subject_reduction transition h2
+    simp [Typing]
+    intro h0 P h1 h2 h3
+    apply And.intro
+    { exact Safe.subject_reduction transition h0 }
+    {
+      exists P
+      simp [*]
+      apply Stable.subject_reduction h1 transition
+      exact h3
+    }
   termination_by Typ.size t
   decreasing_by
     all_goals (simp [Typ.size, Typ.size_instantiate] ; try linarith)
@@ -386,21 +402,29 @@ mutual
 
   | lfp b body =>
     simp [Typing]
-    intro nameless monotonic name fresh t subtyping fintyping
-    apply And.intro nameless
-    apply And.intro monotonic
-    exists name
-    apply And.intro fresh
-    exists t
-    apply And.intro subtyping
-    apply FinTyping.subject_expansion transition fintyping
-
+    intro safe nameless name fresh monotonic h0
+    apply And.intro
+    { exact Safe.subject_expansion transition safe }
+    {
+      apply And.intro nameless
+      exists name
+      apply And.intro fresh
+      apply And.intro monotonic
+      intro P h2 h3
+      apply Stable.subject_expansion h2 transition
+      exact h0 P h2 h3
+    }
   | var id =>
-    unfold Typing
-    intro ⟨t, h1, h2⟩
-    exists t
-    apply And.intro h1
-    apply FinTyping.subject_expansion transition h2
+    simp [Typing]
+    intro h0 P h1 h2 h3
+    apply And.intro
+    { exact Safe.subject_expansion transition h0 }
+    {
+      exists P
+      simp [*]
+      apply Stable.subject_expansion h1 transition
+      exact h3
+    }
   termination_by Typ.size t
   decreasing_by
     all_goals (simp [Typ.size, Typ.size_instantiate] ; try linarith)
@@ -411,7 +435,7 @@ end
 
 
 def MultiTyping
-  (tam : List (String × Typ)) (eam : List (String × Expr)) (context : List (String × Typ)) : Prop
+  (tam : List (String × ExprPred)) (eam : List (String × Expr)) (context : List (String × Typ)) : Prop
 := ∀ {x t}, find x context = .some t → ∃ e, (find x eam) = .some e ∧ Typing tam e t
 
 
@@ -435,11 +459,11 @@ theorem Typing.dom_extension {tam1 tam0 e t} :
   Typing (tam1 ++ tam0) e t
 := by sorry
 
-theorem Typing.dom_single_extension {id am e t t'} :
-  id ∉ Typ.free_vars t →
-  Typing am e t' →
-  Typing ((id,t) :: am) e t'
-:= by sorry
+-- theorem Typing.dom_single_extension {id am e t t'} :
+--   id ∉ Typ.free_vars t →
+--   Typing am e t' →
+--   Typing ((id,t) :: am) e t'
+-- := by sorry
 
 
 theorem MultiTyping.dom_reduction {tam1 tam0 eam cs} :
@@ -703,54 +727,32 @@ theorem Subtyping.transitivity :
   apply h0
 
 
+theorem Typing.free_var_instantiation :
+  name ∉ Typ.free_vars body →
+  Typing am e (Typ.instantiate 0 [t] body) →
+  Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate 0 [.var name] body)
+:= by sorry
 
-/- Subtyping recycling -/
+
+theorem Typing.fintyping_completeness :
+  FinTyping e t → ∀ am , Typing am e t
+:= by sorry
+
+
+/- Subtyping inclusion (recycling) -/
 theorem Subtyping.lfp_intro :
-  Monotonic am body →
+  name ∉ Typ.free_vars body →
+  Monotonic name am (Typ.instantiate 0 [.var name] body) →
   Subtyping am t (Typ.instantiate 0 [(Typ.lfp "" body)] body) →
-  Subtyping am  t (Typ.lfp "" body)
-:= by cases body with
-/- TODO: convert to theorem in terms of kleene_loop -/
--- | bvar i =>
---   by_cases h0 : i = 0
---   { simp [h0]
---     unfold Subtyping
---     simp [Typ.instantiate, Typ.shift_vars]
---   }
---   {
---     simp [Typ.instantiate]
---     have h1 : i > 0 := by exact Nat.zero_lt_of_ne_zero h0
---     have h2 : [Typ.lfp "" (Typ.bvar i)][i]? = none := by
---       exact Iff.mpr List.getElem?_eq_none_iff h1
---     simp [h2]
---     unfold Subtyping
---     intro h3 e h4
---     simp [Typing] at h4
---   }
--- | var a =>
---   simp [Typ.instantiate]
---   unfold Subtyping
---   simp [Typing]
---   intro h0 e t' h2 h3
---   apply And.intro h0
---   exists name
---   exists t'
---   simp [Typ.instantiate, Typing, find]
---   apply h3
+  Subtyping am t (Typ.lfp "" body)
+:= by
+  sorry
 
--- | iso l body =>
---   simp [Typ.instantiate]
---   unfold Subtyping
---   simp [Typing]
---   intro h0 e h1 h2
---   simp [h0]
---   /- TODO: use kleene_loop to prove this subtyping -/
---   sorry
-| _ => sorry
 
 /- Subtyping Induction -/
 theorem Subtyping.lfp_elim :
-  Monotonic am body →
+  name ∉ Typ.free_vars body →
+  Monotonic name am (Typ.instantiate 0 [.var name] body) →
   Subtyping am (Typ.instantiate 0 [t] body) t →
   Subtyping am (Typ.lfp a body) t
 := by sorry
@@ -765,8 +767,10 @@ example : Subtyping []
 := by
   apply Subtyping.lfp_elim
   { sorry }
+  { sorry }
   { reduce
     apply Subtyping.lfp_intro
+    { sorry }
     { sorry }
     { reduce
       apply Subtyping.unio_elim
@@ -777,14 +781,18 @@ example : Subtyping []
         apply Subtyping.iso_pres
         apply Subtyping.lfp_intro
         { sorry }
+        { sorry }
         { reduce
           apply Subtyping.unio_intro_right
           apply Subtyping.iso_pres
           apply Subtyping.refl
         }
+        { sorry }
       }
     }
+    { sorry }
   }
+  { sorry }
 
 
 -- theorem Subtyping.lfp_induct_elim {am id body t} :
