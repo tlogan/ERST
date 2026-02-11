@@ -734,19 +734,41 @@ theorem Typing.free_var_instantiation :
 := by sorry
 
 
-theorem Typing.fintyping_completeness :
-  FinTyping e t → ∀ am , Typing am e t
-:= by sorry
+/- Subtyping recycling -/
+theorem Subtyping.lfp_intro_direct :
+  name ∉ Typ.free_vars t →
+  Monotonic name am (Typ.instantiate 0 [.var name] t) →
+  Subtyping am (Typ.instantiate 0 [(Typ.lfp "" t)] t) (Typ.lfp "" t)
+:= by
+  unfold Subtyping
+  simp [Typing]
+  intro h0 h1 e h2
+  apply And.intro
+  { exact Typing.safety h2 }
+  { exists name
+    simp [*]
+    ------------------
+    intro P h3 h4
 
+    apply h4 ; clear h4
+    unfold Monotonic at h1
+    apply h1 (fun e => Typing am e (Typ.lfp "" t)) P
+    {
+      /- TODO: how can we connect LFP to P??? -/
+      sorry
+    }
+    { apply Typing.free_var_instantiation h0 h2 }
+  }
 
-/- Subtyping inclusion (recycling) -/
 theorem Subtyping.lfp_intro :
   name ∉ Typ.free_vars body →
   Monotonic name am (Typ.instantiate 0 [.var name] body) →
   Subtyping am t (Typ.instantiate 0 [(Typ.lfp "" body)] body) →
   Subtyping am t (Typ.lfp "" body)
 := by
-  sorry
+  intro h0 h1 h2
+  apply Subtyping.transitivity h2
+  exact lfp_intro_direct h0 h1
 
 
 /- Subtyping Induction -/
