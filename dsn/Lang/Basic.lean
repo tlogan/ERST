@@ -840,6 +840,13 @@ end
 
 
 mutual
+  theorem Typ.shift_vars_zero level t :
+    Typ.shift_vars level 0 t = t
+  := by sorry
+end
+
+
+mutual
   def Typ.constraints_instantiate (depth : Nat) (m : List Typ)
   : List (Typ × Typ) → List (Typ × Typ)
   | .nil => .nil

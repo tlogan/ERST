@@ -2,7 +2,6 @@ import Lang.Util
 import Lang.Basic
 import Lang.NStep
 import Lang.Safe
-import Lang.FinTyping
 
 set_option pp.fieldNotation false
 set_option eval.pp false
@@ -710,11 +709,6 @@ mutual
       .lfp id (Typ.sub δ' body)
 end
 
-/-
-TODO: update types to use instantiate instead of sub with instantiate
--/
-
-
 theorem Subtyping.transitivity :
   Subtyping am t0 t1 →
   Subtyping am t1 t2 →
@@ -727,11 +721,46 @@ theorem Subtyping.transitivity :
   apply h0
 
 
+theorem Typing.nameless_instantiation :
+  name ∉ Typ.free_vars body →
+  Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate 0 [.var name] body) →
+  Typing am e (Typ.instantiate 0 [t] body)
+:= by sorry
+
 theorem Typing.named_instantiation :
   name ∉ Typ.free_vars body →
   Typing am e (Typ.instantiate 0 [t] body) →
   Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate 0 [.var name] body)
-:= by sorry
+:= by cases body with
+| bvar i =>
+  simp [Typ.instantiate]
+  by_cases h0 : i = 0
+  { simp [h0]
+    simp [Typ.shift_vars_zero]
+    intro h1 h2
+    simp [Typing]
+    apply And.intro
+    { exact safety h2 }
+    {
+      exists (fun e => Typing am e t)
+      apply And.intro
+      { unfold Stable
+        simp
+        intro e e' h3
+        apply Iff.intro
+        { intro h4 ; exact subject_reduction h3 h4 }
+        { intro h4 ; exact subject_expansion h3 h4 }
+      }
+      { apply And.intro
+        { simp [find] }
+        { simp [h2] }
+      }
+    }
+  }
+  { simp [h0]
+    simp [Typing]
+  }
+| _ => sorry
 
 
 theorem Typing.lfp_elim :
@@ -779,11 +808,6 @@ theorem Subtyping.lfp_intro :
   exact lfp_intro_direct h0 h1
 
 
-theorem Typing.nameless_instantiation :
-  name ∉ Typ.free_vars body →
-  Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate 0 [.var name] body) →
-  Typing am e (Typ.instantiate 0 [t] body)
-:= by sorry
 
 theorem Subtyping.lfp_elim :
   name ∉ Typ.free_vars body →
