@@ -727,7 +727,7 @@ theorem Subtyping.transitivity :
   apply h0
 
 
-theorem Typing.fresh_var_instantiation :
+theorem Typing.named_instantiation :
   name ∉ Typ.free_vars body →
   Typing am e (Typ.instantiate 0 [t] body) →
   Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate 0 [.var name] body)
@@ -736,6 +736,7 @@ theorem Typing.fresh_var_instantiation :
 
 theorem Typing.lfp_elim :
   name ∉ Typ.free_vars t →
+  Monotonic name am (Typ.instantiate 0 [.var name] t) →
   (Typing ((name, P) :: am) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
   Typing am e (Typ.lfp "" t) → P e
 := by sorry
@@ -757,14 +758,14 @@ theorem Subtyping.lfp_intro_direct :
     intro P h3 h4
 
     apply h4
-    unfold Monotonic at h1
-    apply h1 (fun e => Typing am e (Typ.lfp "" t)) P
+    have h5 := h1
+    unfold Monotonic at h5
+    apply h5 (fun e => Typing am e (Typ.lfp "" t)) P
     {
-      clear h1
-      intro e h5
-      apply Typing.lfp_elim h0 (h4 e) h5
+      intro e h6
+      apply Typing.lfp_elim h0 h1 (h4 e) h6
     }
-    { apply Typing.fresh_var_instantiation h0 h2 }
+    { apply Typing.named_instantiation h0 h2 }
   }
 
 theorem Subtyping.lfp_intro :
@@ -778,13 +779,27 @@ theorem Subtyping.lfp_intro :
   exact lfp_intro_direct h0 h1
 
 
-/- Subtyping Induction -/
+theorem Typing.nameless_instantiation :
+  name ∉ Typ.free_vars body →
+  Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate 0 [.var name] body) →
+  Typing am e (Typ.instantiate 0 [t] body)
+:= by sorry
+
 theorem Subtyping.lfp_elim :
   name ∉ Typ.free_vars body →
   Monotonic name am (Typ.instantiate 0 [.var name] body) →
   Subtyping am (Typ.instantiate 0 [t] body) t →
-  Subtyping am (Typ.lfp a body) t
-:= by sorry
+  Subtyping am (Typ.lfp "" body) t
+:= by
+  unfold Subtyping
+  intro h0 h1 h2 e
+  apply Typing.lfp_elim
+  { exact h0 }
+  { exact h1 }
+  { intro h4
+    apply h2
+    exact Typing.nameless_instantiation h0 h4
+  }
 
 set_option eval.pp false
 
