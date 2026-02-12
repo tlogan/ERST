@@ -264,25 +264,23 @@ mutual
     }
 
   | exi bs quals body =>
-    unfold Typing
-    intro ⟨h0,names,h1,am',h2,h3,h4⟩
+    simp [Typing]
+    intro h0 am' h1 h2 h3 h4
     apply And.intro h0
-    exists names
-    apply And.intro h1
     exists am'
-    apply And.intro h2
-    apply And.intro h3
+    simp [*]
     apply Typing.subject_reduction transition h4
 
   | all bs quals body =>
-    unfold Typing
-    intro ⟨h0,h1,h2⟩
+    simp [Typing]
+    intro h0 h1 h2
     apply And.intro
-    { exact Safe.subject_reduction transition h0 }
+    { apply Safe.subject_reduction transition h0 }
     { apply And.intro h1
-      intro names h3 am' h4 h5
+      intro am' h3 h4 h5
       apply Typing.subject_reduction transition
-      exact h2 names h3 am' h4 h5
+      exact h2 am' h3 h4 h5
+
     }
 
   | lfp b body =>
@@ -313,7 +311,13 @@ mutual
     }
   termination_by Typ.size t
   decreasing_by
-    all_goals (simp [Typ.size, Typ.size_instantiate] ; try linarith)
+    all_goals (simp [Typ.size] ; try linarith)
+    all_goals (
+      try rw [Typ.constraints_size_instantiate] <;> (try linarith)
+      try rw [Typ.size_instantiate] <;> (try linarith)
+      intro e
+      apply Typ.mem_map_var_size
+    )
 
   theorem Typing.subject_expansion
     (transition : NStep e e')
@@ -393,24 +397,22 @@ mutual
 
   | exi bs quals body =>
     simp [Typing]
-    intro h0 names h1 am h2 h3 h4
+    intro h0 am' h1 h2 h3 h4
     apply And.intro h0
-    exists names
-    apply And.intro h1
-    exists am
-    apply And.intro h2
-    apply And.intro h3
+    exists am'
+    simp [*]
     apply Typing.subject_expansion transition h4
 
   | all bs quals body =>
     simp [Typing]
     intro h0 h1 h2
     apply And.intro
-    { exact Safe.subject_expansion transition h0 }
+    { apply Safe.subject_expansion transition h0 }
     { apply And.intro h1
-      intro names h3 am' h4 h5
+      intro am' h3 h4 h5
       apply Typing.subject_expansion transition
-      exact h2 names h3 am' h4 h5
+      exact h2 am' h3 h4 h5
+
     }
 
   | lfp b body =>
@@ -440,7 +442,13 @@ mutual
     }
   termination_by Typ.size t
   decreasing_by
-    all_goals (simp [Typ.size, Typ.size_instantiate] ; try linarith)
+    all_goals (simp [Typ.size] ; try linarith)
+    all_goals (
+      try rw [Typ.constraints_size_instantiate] <;> (try linarith)
+      try rw [Typ.size_instantiate] <;> (try linarith)
+      intro e
+      apply Typ.mem_map_var_size
+    )
 end
 
 
