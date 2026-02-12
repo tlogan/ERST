@@ -838,6 +838,14 @@ mutual
 end
 
 
+
+def Typ.list_shift_vars (threshold : Nat) (offset : Nat) : List Typ → List Typ
+| .nil => .nil
+| e :: es =>
+  Typ.shift_vars threshold offset e :: (Typ.list_shift_vars threshold offset es)
+
+
+
 mutual
   theorem Typ.shift_vars_zero level t :
     Typ.shift_vars level 0 t = t
@@ -2185,3 +2193,15 @@ theorem Typ.fresh_var_free_vars_exclusion t :
   (Typ.fresh_var t) ∉ Typ.free_vars t
 := by
   sorry
+
+
+
+
+theorem Typ.shift_vars_instantiate_zero_inside_out threshold offset m e :
+  (Typ.shift_vars threshold offset (Typ.instantiate 0 m e))
+  =
+  (Typ.instantiate 0
+    (Typ.list_shift_vars threshold offset m)
+    (Typ.shift_vars (threshold + List.length m) offset e)
+  )
+:= by sorry

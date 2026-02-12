@@ -33,8 +33,22 @@ theorem Stable.subject_expansion :
   intro h0 h1 h2
   apply Iff.mpr (h0 h1) h2
 
+theorem Typ.list_shift_vars_not_effect :
+  (∀ t ∈ m, Typ.shift_vars threshold offset t = t) →
+  Typ.list_shift_vars threshold offset m = m
+:= by sorry
+
+def Typ.num_bound_vars: Typ → Nat
+| .bvar i => i + 1
+/- TODO: get the max bound_var -/
+| _ => 0
+
+
+def Typ.instantiated (t: Typ) := Typ.num_bound_vars t == 0
+
 mutual
   def Subtyping (am : List (String × ExprPred)) (left : Typ) (right : Typ) : Prop :=
+    Typ.instantiated left ∧
     ∀ e, Typing am e left → Typing am e right
   termination_by (Typ.size left + Typ.size right, 0)
   decreasing_by
@@ -72,7 +86,7 @@ mutual
   | .exi bindings constraints body =>
     (∀ a ∈ bindings , a = "") ∧
     ∃ am' ,
-    (List.length am') ≤ List.length bindings ∧
+    List.length am' = List.length bindings ∧
     ListPair.dom am' ∩ ListPair.dom am = [] ∧
     (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name,_) => .var name) am') constraints)) ∧
     (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name,_) => .var name) am') body))
@@ -80,7 +94,7 @@ mutual
     Safe e ∧
     (∀ a ∈ bindings , a = "") ∧
     (∀ am' ,
-      (List.length am') ≤ List.length bindings →
+      List.length am' = List.length bindings →
       ListPair.dom am' ∩ ListPair.dom am = [] →
       (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name, _) => .var name) am') constraints)) →
       (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name, _) => .var name) am') body))
@@ -736,11 +750,13 @@ theorem Subtyping.transitivity :
   Subtyping am t1 t2 →
   Subtyping am t0 t2
 := by
-  unfold Subtyping
-  intro h0 h1 e h3
-  apply h1
-  specialize h0 e h3
-  apply h0
+  simp [Subtyping]
+  intro h0 h1 h2 h3
+  apply And.intro h0
+  intro e h4
+  apply h3 e
+  apply h1 e
+  apply h4
 
 mutual
   theorem Typing.shift_vars_preservation :
@@ -808,8 +824,31 @@ mutual
       apply Typing.shift_vars_preservation h2
     }
   | all bs cs body =>
-    sorry
+    simp [Typ.shift_vars, Typing]
+    intro h0 h1 h2
+    apply And.intro h0
+    apply And.intro h1
+    intro am' h3 h4 h5
+    apply Typing.shift_vars_reflection
+
+    rw [Typ.shift_vars_instantiate_zero_inside_out]
+    rw [List.length_map]
+    rw [h3]
+    rw [Typ.list_shift_vars_not_effect]
+    { apply h2 am' h3 h4
+      /- TODO: need MultiSubtyping.shift_vars_preservation -/
+      sorry
+    }
+    { intro t h6
+      apply List.mem_map_app at h6
+      have ⟨name, h7⟩ := h6
+      rw [h7]
+      simp [Typ.shift_vars]
+    }
   | _ => sorry
+  termination_by (Typ.size t, 0)
+  decreasing_by
+    all_goals sorry
 end
 
 
@@ -956,6 +995,7 @@ end
 
 theorem Typing.lfp_elim :
   name ∉ Typ.free_vars t →
+  Typ.num_bound_vars t ≤ 1 →
   Monotonic name am (Typ.instantiate 0 [.var name] t) →
   (Typing ((name, P) :: am) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
   Typing am e (Typ.lfp "" t) → P e
@@ -965,38 +1005,44 @@ theorem Typing.lfp_elim :
 /- Subtyping recycling -/
 theorem Subtyping.lfp_intro_direct :
   name ∉ Typ.free_vars t →
+  Typ.num_bound_vars t ≤ 1 →
   Monotonic name am (Typ.instantiate 0 [.var name] t) →
   Subtyping am (Typ.instantiate 0 [(Typ.lfp "" t)] t) (Typ.lfp "" t)
 := by
-  unfold Subtyping
+  simp [Subtyping]
   simp [Typing]
-  intro h0 h1 e h2
+  intro h0 h1 h2
+  apply And.intro sorry
+  intro e h3
   apply And.intro
-  { exact Typing.safety h2 }
+  { exact Typing.safety h3 }
   { exists name
     simp [*]
-    intro P h3 h4
+    intro P h4 h5
 
-    apply h4
-    have h5 := h1
-    unfold Monotonic at h5
-    apply h5 (fun e => Typing am e (Typ.lfp "" t)) P
+    apply h5
+    have h6 := h2
+    unfold Monotonic at h6
+    apply h6 (fun e => Typing am e (Typ.lfp "" t)) P
     {
-      intro e h6
-      apply Typing.lfp_elim h0 h1 (h4 e) h6
+      intro e h7
+      apply Typing.lfp_elim  h0 h1 h2 (h5 e)
+      exact h7
     }
-    { apply Typing.named_instantiation h0 h2 }
+    { apply Typing.named_instantiation h0 h3 }
   }
 
 theorem Subtyping.lfp_intro :
   name ∉ Typ.free_vars body →
+  Typ.num_bound_vars body ≤ 1 →
   Monotonic name am (Typ.instantiate 0 [.var name] body) →
   Subtyping am t (Typ.instantiate 0 [(Typ.lfp "" body)] body) →
   Subtyping am t (Typ.lfp "" body)
 := by
-  intro h0 h1 h2
-  apply Subtyping.transitivity h2
-  exact lfp_intro_direct h0 h1
+  sorry
+  -- intro h0 h1 h2
+  -- apply Subtyping.transitivity h2
+  -- exact lfp_intro_direct h0 h1
 
 
 
@@ -1006,15 +1052,16 @@ theorem Subtyping.lfp_elim :
   Subtyping am (Typ.instantiate 0 [t] body) t →
   Subtyping am (Typ.lfp "" body) t
 := by
-  unfold Subtyping
-  intro h0 h1 h2 e
-  apply Typing.lfp_elim
-  { exact h0 }
-  { exact h1 }
-  { intro h4
-    apply h2
-    exact Typing.nameless_instantiation h0 h4
-  }
+  sorry
+  -- simp [Subtyping]
+  -- intro h0 h1 h2 e
+  -- apply Typing.lfp_elim
+  -- { exact h0 }
+  -- { exact h1 }
+  -- { intro h4
+  --   apply h2
+  --   exact Typing.nameless_instantiation h0 h4
+  -- }
 
 set_option eval.pp false
 
@@ -1024,34 +1071,35 @@ example : Subtyping []
   (Typ.seal [] [typ| LFP [N] <zero/> | <succ> <succ> N ])
   (Typ.seal [] [typ| LFP [N] <zero/> | <succ> N ])
 := by
-  apply Subtyping.lfp_elim
-  { sorry }
-  { sorry }
-  { reduce
-    apply Subtyping.lfp_intro
-    { sorry }
-    { sorry }
-    { reduce
-      apply Subtyping.unio_elim
-      { apply Subtyping.unio_intro_left
-        apply Subtyping.refl
-      }
-      { apply Subtyping.unio_intro_right
-        apply Subtyping.iso_pres
-        apply Subtyping.lfp_intro
-        { sorry }
-        { sorry }
-        { reduce
-          apply Subtyping.unio_intro_right
-          apply Subtyping.iso_pres
-          apply Subtyping.refl
-        }
-        { sorry }
-      }
-    }
-    { sorry }
-  }
-  { sorry }
+  sorry
+  -- apply Subtyping.lfp_elim
+  -- { sorry }
+  -- { sorry }
+  -- { reduce
+  --   apply Subtyping.lfp_intro
+  --   { sorry }
+  --   { sorry }
+  --   { reduce
+  --     apply Subtyping.unio_elim
+  --     { apply Subtyping.unio_intro_left
+  --       apply Subtyping.refl
+  --     }
+  --     { apply Subtyping.unio_intro_right
+  --       apply Subtyping.iso_pres
+  --       apply Subtyping.lfp_intro
+  --       { sorry }
+  --       { sorry }
+  --       { reduce
+  --         apply Subtyping.unio_intro_right
+  --         apply Subtyping.iso_pres
+  --         apply Subtyping.refl
+  --       }
+  --       { sorry }
+  --     }
+  --   }
+  --   { sorry }
+  -- }
+  -- { sorry }
 
 
 -- theorem Subtyping.lfp_induct_elim {am id body t} :
@@ -1171,9 +1219,9 @@ theorem Subtyping.elimination :
   Typing am e t0 →
   Typing am e t1
 := by
-  unfold Subtyping
-  intro h0 h1
-  exact h0 e h1
+  simp [Subtyping]
+  intro h0 h1 h2
+  exact h1 e h2
 
 theorem Subtyping.list_typ_diff_elim :
   Subtyping am (List.typ_diff tp subtras) tp
@@ -1262,14 +1310,13 @@ theorem Subtyping.entry_preservation :
   Subtyping am t t' →
   Subtyping am (.entry l t) (.entry l t')
 := by
-  unfold Subtyping
-  intro h0 e h1
-  unfold Typing
-  unfold Typing at h1
-  have ⟨h2,h3⟩ := h1
+  simp [Subtyping]
+  simp [Typing]
+  intro h0 h1
+  apply And.intro rfl
+  intro e h2 h3
   apply And.intro h2
-  apply h0
-  exact h3
+  exact h1 (Expr.project e l) h3
 
 
 
