@@ -71,18 +71,20 @@ mutual
   | .diff left right => Typing am e left ∧ ¬ (Typing am e right)
   | .exi bindings constraints body =>
     (∀ a ∈ bindings , a = "") ∧
-    ∃ names, List.length names = List.length bindings ∧
-    ∃ am' , (ListPair.dom am') ⊆ names ∧
-    (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun name => .var name) names) constraints)) ∧
-    (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun name => .var name) names) body))
+    ∃ am' ,
+    (List.length am') ≤ List.length bindings ∧
+    ListPair.dom am' ∩ ListPair.dom am = [] ∧
+    (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name,_) => .var name) am') constraints)) ∧
+    (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name,_) => .var name) am') body))
   | .all bindings constraints body =>
     Safe e ∧
     (∀ a ∈ bindings , a = "") ∧
-    (∀ names, List.length names = List.length bindings →
-    (∀ am' , (ListPair.dom am') ⊆ names →
-      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun name => .var name) names) constraints)) →
-      (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun name => .var name) names) body))
-    ))
+    (∀ am' ,
+      (List.length am') ≤ List.length bindings →
+      ListPair.dom am' ∩ ListPair.dom am = [] →
+      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name, _) => .var name) am') constraints)) →
+      (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name, _) => .var name) am') body))
+    )
   | .lfp a body =>
     Safe e ∧
     a = "" ∧
@@ -97,8 +99,13 @@ mutual
   | .var id => Safe e ∧ ∃ P, Stable P ∧ find id am = some P ∧ P e
   termination_by t => (Typ.size t, 0)
   decreasing_by
-    all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate, Typ.constraints_size_instantiate] ; try linarith)
-
+    all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate] ; try linarith)
+    all_goals (
+      try rw [Typ.constraints_size_instantiate] <;> (try linarith)
+      try rw [Typ.size_instantiate] <;> (try linarith)
+      intro e
+      apply Typ.mem_map_var_size
+    )
 
 end
 
@@ -150,17 +157,24 @@ theorem Typing.safety :
   apply h0
 | exi bs cs body =>
   simp [Typing]
-  intro h0 h1 h2 h3 h4 h5 h6
-  apply Typing.safety h6
+  intro h0 am h1 h2 h3 h4 e' h5
+  apply Typing.safety h4
+  apply h5
 | lfp x body =>
   simp [Typing]
   intro h0 h1 h2 name h3 h4
   apply h0
 
-
 termination_by Typ.size t
 decreasing_by
-  all_goals (simp [Typ.size, Typ.size_instantiate] ; try linarith)
+  all_goals (simp [Typ.size] ; try linarith)
+  rw [Typ.size_instantiate]
+  { linarith }
+  {
+    intro e
+    apply Typ.mem_map_var_size
+  }
+
 
 
 theorem Typing.progress :
@@ -720,47 +734,216 @@ theorem Subtyping.transitivity :
   specialize h0 e h3
   apply h0
 
+mutual
+  theorem Typing.shift_vars_preservation :
+    Typing am e t →
+    ∀ threshold offset, Typing am e (Typ.shift_vars threshold offset t)
+  := by cases t with
+  | _ => sorry
 
-theorem Typing.nameless_instantiation :
-  name ∉ Typ.free_vars body →
-  Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate 0 [.var name] body) →
-  Typing am e (Typ.instantiate 0 [t] body)
-:= by sorry
-
-theorem Typing.named_instantiation :
-  name ∉ Typ.free_vars body →
-  Typing am e (Typ.instantiate 0 [t] body) →
-  Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate 0 [.var name] body)
-:= by cases body with
-| bvar i =>
-  simp [Typ.instantiate]
-  by_cases h0 : i = 0
-  { simp [h0]
-    simp [Typ.shift_vars_zero]
-    intro h1 h2
-    simp [Typing]
+  theorem Typing.shift_vars_reflection :
+    Typing am e (Typ.shift_vars threshold offset t) →
+    Typing am e t
+  := by cases t with
+  | bvar i =>
+    simp [Typ.shift_vars]
+    by_cases h0 : threshold ≤ i
+    { simp [h0] ; simp [Typing]}
+    { simp [h0]}
+  | var name =>
+    simp [Typ.shift_vars]
+  | iso l body =>
+    simp [Typ.shift_vars, Typing]
+    intro h0 h1
+    simp [h0]
+    apply Typing.shift_vars_reflection h1
+  | entry l body =>
+    simp [Typ.shift_vars, Typing]
+    intro h0 h1
+    simp [h0]
+    apply Typing.shift_vars_reflection h1
+  | path left right =>
+    simp [Typ.shift_vars, Typing]
+    intro h0 h1
+    simp [*]
+    intro arg h4
+    apply Typing.shift_vars_reflection
+    apply h1
+    apply Typing.shift_vars_preservation h4
+  | bot =>
+    simp [Typ.shift_vars, Typing]
+  | top =>
+    simp [Typ.shift_vars, Typing]
+  | unio left right =>
+    simp [Typ.shift_vars, Typing]
+    intro h0
+    cases h0 with
+    | inl h2 =>
+      apply Or.inl
+      apply Typing.shift_vars_reflection h2
+    | inr h2 =>
+      apply Or.inr
+      apply Typing.shift_vars_reflection h2
+  | inter left right =>
+    simp [Typ.shift_vars, Typing]
+    intro h0 h1
     apply And.intro
-    { exact safety h2 }
-    {
-      exists (fun e => Typing am e t)
-      apply And.intro
-      { unfold Stable
+    { apply Typing.shift_vars_reflection h0 }
+    { apply Typing.shift_vars_reflection h1 }
+  | diff left right =>
+    simp [Typ.shift_vars, Typing]
+    intro h0 h1
+    apply And.intro
+    { apply Typing.shift_vars_reflection h0 }
+    { intro h2
+      apply h1
+      apply Typing.shift_vars_preservation h2
+    }
+  | all bs cs body =>
+    sorry
+  | _ => sorry
+end
+
+
+mutual
+  theorem Typing.nameless_instantiation :
+    name ∉ Typ.free_vars body →
+    Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [.var name] body) →
+    Typing am e (Typ.instantiate depth [t] body)
+  := by sorry
+
+  theorem Typing.named_instantiation :
+    name ∉ Typ.free_vars body →
+    Typing am e (Typ.instantiate depth [t] body) →
+    Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [.var name] body)
+  := by cases body with
+  | bvar i =>
+    simp [Typ.instantiate]
+    by_cases h0 : depth ≤ i
+    { simp [h0]
+      by_cases h1 : i - depth = 0
+      { simp [h1]
+        intro h2 h3
+        apply Typing.shift_vars_reflection at h3
+        simp [Typ.shift_vars]
+        simp [Typing]
+        apply And.intro (safety h3)
+        exists (fun e => Typing am e t)
+        simp [find,h3]
+        unfold Stable
         simp
-        intro e e' h3
+        intro e e' h4
         apply Iff.intro
-        { intro h4 ; exact subject_reduction h3 h4 }
-        { intro h4 ; exact subject_expansion h3 h4 }
+        { intro h5 ; exact subject_reduction h4 h5 }
+        { intro h5 ; exact subject_expansion h4 h5 }
       }
-      { apply And.intro
-        { simp [find] }
-        { simp [h2] }
+      { simp [h1]
+        simp [Typing]
       }
     }
-  }
-  { simp [h0]
+    { simp [h0]
+      simp [Typing]
+    }
+    -- by_cases h0 : i - depth = 0
+    -- { simp [h0]
+    --   simp [Typ.shift_vars_zero]
+    --   intro h1 h2
+    --   simp [Typing]
+    --   apply And.intro
+    --   { exact safety h2 }
+    --   {
+    --     exists (fun e => Typing am e t)
+    --     apply And.intro
+    --     { unfold Stable
+    --       simp
+    --       intro e e' h3
+    --       apply Iff.intro
+    --       { intro h4 ; exact subject_reduction h3 h4 }
+    --       { intro h4 ; exact subject_expansion h3 h4 }
+    --     }
+    --     { apply And.intro
+    --       { simp [find] }
+    --       { simp [h2] }
+    --     }
+    --   }
+    -- }
+    -- { simp [h0]
+    --   simp [Typing]
+    -- }
+  | var name' =>
+    simp [Typ.instantiate, Typ.free_vars, Typing]
+    intro h0 h1 P h2 h3 h4
+    apply And.intro h1
+    exists P
+    simp [h0,h2,h3,h4,find]
+  | iso l body =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2
+    simp [h1]
+    apply Typing.named_instantiation h0 h2
+  | entry l body =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2
+    simp [h1]
+    apply Typing.named_instantiation h0 h2
+  | path left right =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2 h3
+    simp [*]
+    intro arg h4
+    apply Typing.named_instantiation h1
+    apply h3
+    apply Typing.nameless_instantiation h0 h4
+  | bot =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+  | top =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+  | unio left right =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2
+    cases h2 with
+    | inl h3 =>
+      apply Or.inl
+      apply Typing.named_instantiation h0 h3
+    | inr h3 =>
+      apply Or.inr
+      apply Typing.named_instantiation h1 h3
+  | inter left right =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2 h3
+    apply And.intro
+    { apply Typing.named_instantiation h0 h2 }
+    { apply Typing.named_instantiation h1 h3 }
+  | diff left right =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2 h3
+    apply And.intro
+    { apply Typing.named_instantiation h0 h2 }
+    { intro h4
+      apply h3
+      apply Typing.nameless_instantiation h1 h4
+    }
+  | all bs cs body =>
+    simp [Typ.free_vars, Typ.instantiate]
+    intro h0 h1
     simp [Typing]
-  }
-| _ => sorry
+    intro h2 h3 h4
+    simp [*]
+    apply And.intro h3
+    intro names h5 am' h7
+
+    sorry
+    -- apply Typing.named_instantiation
+
+    -- simp [*]
+    -- apply And.intro h2
+    -- intro names h4 am' h6 h7
+
+  | exi bs cs body =>
+    sorry
+  | lfp b body =>
+    sorry
+end
 
 
 theorem Typing.lfp_elim :
