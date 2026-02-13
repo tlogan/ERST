@@ -33,15 +33,49 @@ theorem Stable.subject_expansion :
   intro h0 h1 h2
   apply Iff.mpr (h0 h1) h2
 
-theorem Typ.list_shift_vars_not_effect :
+theorem Typ.list_shift_vars_no_effect :
   (∀ t ∈ m, Typ.shift_vars threshold offset t = t) →
   Typ.list_shift_vars threshold offset m = m
-:= by sorry
+:= by induction m with
+| nil =>
+  simp [Typ.list_shift_vars]
+| cons t ts ih =>
+  simp [Typ.list_shift_vars]
+  intro h0 h1
+  simp [*]
+  apply ih
+  apply h1
+mutual
+  def Typ.constraints_num_bound_vars : List (Typ × Typ) → Nat
+  | [] => 0
+  | (left,right) :: cs =>
+    Nat.max (Nat.max (Typ.num_bound_vars left) (Typ.num_bound_vars right))
+    (Typ.constraints_num_bound_vars cs)
 
-def Typ.num_bound_vars: Typ → Nat
-| .bvar i => i + 1
-/- TODO: get the max bound_var -/
-| _ => 0
+  def Typ.num_bound_vars: Typ → Nat
+  | .bvar i => i + 1
+  | .var name => 0
+  | .entry l body => Typ.num_bound_vars body
+  | .iso l body => Typ.num_bound_vars body
+  | .path left right =>
+    Nat.max (Typ.num_bound_vars left) (Typ.num_bound_vars right)
+  | .top => 0
+  | .bot => 0
+  | .unio left right =>
+    Nat.max (Typ.num_bound_vars left) (Typ.num_bound_vars right)
+  | .inter left right =>
+    Nat.max (Typ.num_bound_vars left) (Typ.num_bound_vars right)
+  | .diff left right =>
+    Nat.max (Typ.num_bound_vars left) (Typ.num_bound_vars right)
+  | .all bs cs body =>
+    Nat.max (Typ.constraints_num_bound_vars cs) (Typ.num_bound_vars body)
+    - List.length bs
+  | .exi bs cs body =>
+    Nat.max (Typ.constraints_num_bound_vars cs) (Typ.num_bound_vars body)
+    - List.length bs
+  | .lfp b body =>
+    (Typ.num_bound_vars body) - 1
+end
 
 
 def Typ.instantiated (t: Typ) := Typ.num_bound_vars t == 0
@@ -759,6 +793,17 @@ theorem Subtyping.transitivity :
   apply h4
 
 mutual
+
+  theorem MultiSubtyping.shift_vars_preservation :
+    MultiSubtyping am cs →
+    ∀ threshold offset, MultiSubtyping am (Typ.constraints_shift_vars threshold offset cs)
+  := by sorry
+
+  theorem MultiSubtyping.shift_vars_reflection :
+    ∀ threshold offset, MultiSubtyping am (Typ.constraints_shift_vars threshold offset cs) →
+    MultiSubtyping am cs
+  := by sorry
+
   theorem Typing.shift_vars_preservation :
     Typing am e t →
     ∀ threshold offset, Typing am e (Typ.shift_vars threshold offset t)
@@ -830,21 +875,28 @@ mutual
     apply And.intro h1
     intro am' h3 h4 h5
     apply Typing.shift_vars_reflection
-
     rw [Typ.shift_vars_instantiate_zero_inside_out]
     rw [List.length_map]
     rw [h3]
-    rw [Typ.list_shift_vars_not_effect]
-    { apply h2 am' h3 h4
-      /- TODO: need MultiSubtyping.shift_vars_preservation -/
-      sorry
-    }
-    { intro t h6
+    have h6 :
+      ∀ t ∈ List.map (fun x => Typ.var (Prod.fst x)) am',
+        Typ.shift_vars threshold offset t = t
+    := by
+      intro t h6
       apply List.mem_map_app at h6
       have ⟨name, h7⟩ := h6
       rw [h7]
       simp [Typ.shift_vars]
-    }
+
+    rw [Typ.list_shift_vars_no_effect h6]
+    apply h2 am' h3 h4
+
+    rw [← Typ.list_shift_vars_no_effect h6]
+    rw [← h3]
+    rw [←List.length_map]
+    rw [←Typ.constraints_shift_vars_instantiate_zero_inside_out]
+    apply MultiSubtyping.shift_vars_preservation
+    exact h5
   | _ => sorry
   termination_by (Typ.size t, 0)
   decreasing_by
@@ -1311,9 +1363,10 @@ theorem Subtyping.entry_preservation :
   Subtyping am (.entry l t) (.entry l t')
 := by
   simp [Subtyping]
+  simp [Typ.instantiated, Typ.num_bound_vars]
   simp [Typing]
   intro h0 h1
-  apply And.intro rfl
+  apply And.intro h0
   intro e h2 h3
   apply And.intro h2
   exact h1 (Expr.project e l) h3

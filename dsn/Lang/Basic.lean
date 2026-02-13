@@ -2196,12 +2196,22 @@ theorem Typ.fresh_var_free_vars_exclusion t :
 
 
 
+mutual
+  theorem Typ.constraints_shift_vars_instantiate_zero_inside_out threshold offset m e :
+    (Typ.constraints_shift_vars threshold offset (Typ.constraints_instantiate 0 m e))
+    =
+    (Typ.constraints_instantiate 0
+      (Typ.list_shift_vars threshold offset m)
+      (Typ.constraints_shift_vars (threshold + List.length m) offset e)
+    )
+  := by sorry
 
-theorem Typ.shift_vars_instantiate_zero_inside_out threshold offset m e :
-  (Typ.shift_vars threshold offset (Typ.instantiate 0 m e))
-  =
-  (Typ.instantiate 0
-    (Typ.list_shift_vars threshold offset m)
-    (Typ.shift_vars (threshold + List.length m) offset e)
-  )
-:= by sorry
+  theorem Typ.shift_vars_instantiate_zero_inside_out threshold offset m e :
+    (Typ.shift_vars threshold offset (Typ.instantiate 0 m e))
+    =
+    (Typ.instantiate 0
+      (Typ.list_shift_vars threshold offset m)
+      (Typ.shift_vars (threshold + List.length m) offset e)
+    )
+  := by sorry
+end
