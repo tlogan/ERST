@@ -8,26 +8,6 @@ set_option eval.pp false
 
 namespace Lang
 
-theorem ListPair.dom_append :
-  ListPair.dom (m0 ++ m1) =
-  ListPair.dom m0 ++ ListPair.dom m1
-:= by sorry
-
-theorem ListPair.mem_dom :
-  (name, o) ∈ m →
-  name ∈ ListPair.dom m
-:= by induction m with
-| nil => simp [ListPair.dom]
-| cons p m' ih =>
-  have (name',o') := p
-  simp [ListPair.dom]
-  intro h0
-  cases h0 with
-  | inl h1 =>
-    simp [*]
-  | inr h1 =>
-    apply Or.inr
-    apply ih h1
 
 
 def Stable (P : Expr → Prop) : Prop :=
@@ -196,7 +176,7 @@ mutual
     (∀ a ∈ bindings , a = "") ∧
     ∃ am' ,
     List.length am' = List.length bindings ∧
-    ListPair.dom am' ∩ ListPair.dom am = [] ∧
+    List.map Prod.fst am' ∩ List.map Prod.fst am = [] ∧
     (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name,_) => .var name) am') constraints)) ∧
     (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name,_) => .var name) am') body))
   | .all bindings constraints body =>
@@ -204,7 +184,7 @@ mutual
     (∀ a ∈ bindings , a = "") ∧
     (∀ am' ,
       List.length am' = List.length bindings →
-      ListPair.dom am' ∩ ListPair.dom am = [] →
+      List.map Prod.fst am' ∩ List.map Prod.fst am = [] →
       (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name, _) => .var name) am') constraints)) →
       (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name, _) => .var name) am') body))
     )
@@ -236,7 +216,7 @@ end
 
 mutual
   theorem Typing.prepend_reflection :
-    ListPair.dom m0 ∩ Typ.free_vars t = [] →
+    List.map Prod.fst m0 ∩ Typ.free_vars t = [] →
     Typing (m0 ++ m1) e t →
     Typing m1 e t
   := by sorry
@@ -650,19 +630,19 @@ theorem Subtyping.dom_extension {am1 am0 lower upper} :
 := by sorry
 
 theorem MultiSubtyping.dom_single_extension {id tam0 t cs} :
-  id ∉ List.pair_typ_free_vars cs →
+  id ∉ List.flatMap Typ.prod_free_vars cs →
   MultiSubtyping tam0 cs →
   MultiSubtyping ((id,t) :: tam0) cs
 := by sorry
 
 theorem MultiSubtyping.dom_extension {am1 am0 cs} :
-  (ListPair.dom am1) ∩ List.pair_typ_free_vars cs = [] →
+  (ListPair.dom am1) ∩ List.flatMap Typ.prod_free_vars cs = [] →
   MultiSubtyping am0 cs →
   MultiSubtyping (am1 ++ am0) cs
 := by sorry
 
 theorem MultiSubtyping.dom_reduction {am1 am0 cs} :
-  (ListPair.dom am1) ∩ List.pair_typ_free_vars cs = [] →
+  (ListPair.dom am1) ∩ List.flatMap Typ.prod_free_vars cs = [] →
   MultiSubtyping (am1 ++ am0) cs →
   MultiSubtyping am0 cs
 := by sorry
@@ -1103,7 +1083,7 @@ theorem Typing.disjoint_assignment_map_rotate_preservation :
 := by sorry
 
 theorem find_prune o m1 :
-  name ∉ ListPair.dom m0 →
+  name ∉ List.map Prod.fst m0 →
   find name (m0 ++ (name,o) :: m1)
   =
   find name ((name,o) :: m1)
@@ -1114,10 +1094,10 @@ mutual
 
 
   theorem MultiSubtyping.generalized_nameless_instantiation :
-    name ∉ List.flatMap (fun (left,right) => Typ.free_vars left ++ Typ.free_vars right) cs →
-    name ∉ ListPair.dom am' →
-    ListPair.dom am' ∩ Typ.free_vars t = [] →
-    Typ.free_vars t ⊆ ListPair.dom am →
+    name ∉ List.flatMap Typ.prod_free_vars cs →
+    name ∉ List.map Prod.fst am' →
+    List.map Prod.fst am' ∩ Typ.free_vars t = [] →
+    Typ.free_vars t ⊆ List.map Prod.fst am →
     MultiSubtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.constraints_instantiate depth [.var name] cs) →
     MultiSubtyping (am' ++ am) (Typ.constraints_instantiate depth [t] cs)
   := by sorry
@@ -1128,19 +1108,19 @@ mutual
 
   theorem Typing.generalized_nameless_instantiation :
     name ∉ Typ.free_vars body →
-    name ∉ ListPair.dom am' →
-    ListPair.dom am' ∩ Typ.free_vars t = [] →
-    Typ.free_vars t ⊆ ListPair.dom am →
+    name ∉ List.map Prod.fst am' →
+    List.map Prod.fst am' ∩ Typ.free_vars t = [] →
+    Typ.free_vars t ⊆ List.map Prod.fst am →
     Typing (am' ++ (name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [.var name] body) →
     Typing (am' ++ am) e (Typ.instantiate depth [t] body)
   := by sorry
 
   theorem Typing.generalized_named_instantiation :
-
+    /- TODO: rewrite fresh variable requirements to avoid ListPair.dom -/
     name ∉ Typ.free_vars body →
-    name ∉ ListPair.dom am' →
-    ListPair.dom am' ∩ Typ.free_vars t = [] →
-    Typ.free_vars t ⊆ ListPair.dom am →
+    name ∉ List.map Prod.fst am' →
+    List.map Prod.fst am' ∩ Typ.free_vars t = [] →
+    Typ.free_vars t ⊆ List.map Prod.fst am →
     Typing (am' ++ am) e (Typ.instantiate depth [t] body) →
     Typing (am' ++ (name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [.var name] body)
   := by cases body with
@@ -1165,12 +1145,17 @@ mutual
           { intro h5 ; exact Typing.subject_expansion h4 h5 }
         }
         {
-          rw [find_prune _ _ h3]
-          simp [find]
-          have h7 := Typing.instantiated h6
-          apply Typing.prepend_reflection h4
-          rw [← Typ.instantiated_shift_vars_reflection h7]
-          apply h6
+
+          rw [find_prune _ _ ]
+          {
+            simp [find]
+            have h7 := Typing.instantiated h6
+            apply Typing.prepend_reflection h4
+            rw [← Typ.instantiated_shift_vars_reflection h7]
+            apply h6
+          }
+          { simp ; exact h3 }
+
         }
       }
       { simp [h1]
@@ -1268,8 +1253,8 @@ mutual
     := by exact Eq.symm (List.append_assoc am'' am' ((name, fun e => Typing am e t) :: am))
     rw [h12]
 
-    rw [ListPair.dom_append] at h9
-    simp [ListPair.dom] at h9
+    -- rw [ListPair.dom_append] at h9
+    -- simp [ListPair.dom] at h9
     simp [Inter.inter, List.inter] at h9
     have h13 := h9 name
     simp [*] at h13
@@ -1286,21 +1271,23 @@ mutual
       | inr h15 =>
         simp [Typ.free_vars] at h15
         have ⟨P,h16⟩ := h15
-        apply h13
-        apply ListPair.mem_dom h16
+        apply h13 _ h16
     }
-    { simp [ListPair.dom_append]
+    { simp
       apply And.intro h13 h2
     }
-    { simp [ListPair.dom_append]
+    {
       simp [Inter.inter, List.inter]
       simp [Inter.inter, List.inter] at h3
       apply And.intro
       {
-        intro name' h14 h15
-        have ⟨h16,h17,h18⟩ := h9 name' h14
-        have h19 := h4 h15
-        apply h18 h19
+        intro name' h14 h15 h16
+        have ⟨h17,h18,h19⟩ := h9 name' h14 h15
+        have h20 := h4 h16
+        simp at h20
+        have ⟨P,h21⟩ := h20
+        specialize h19 P
+        apply h19 h21
       }
       { exact h3 }
 
@@ -1323,9 +1310,9 @@ mutual
 
       rw [Typ.list_instantiate_no_effect h14]
       apply h7 _ h8
-      { simp [Inter.inter, List.inter, ListPair.dom_append]
-        intro name' h15
-        have ⟨h17,⟨h18,h19⟩⟩ := h9 name' h15
+      { simp [Inter.inter, List.inter]
+        intro name' P h15
+        have ⟨h17,⟨h18,h19⟩⟩ := h9 name' P h15
         apply And.intro h17 h19
       }
       {
@@ -1363,7 +1350,7 @@ end
 
   theorem Typing.nameless_instantiation :
     name ∉ Typ.free_vars body →
-    Typ.free_vars t ⊆ ListPair.dom am →
+    Typ.free_vars t ⊆ List.map Prod.fst am →
     Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [.var name] body) →
     Typing am e (Typ.instantiate depth [t] body)
   := by
@@ -1376,7 +1363,7 @@ end
 
   theorem Typing.named_instantiation :
     name ∉ Typ.free_vars body →
-    Typ.free_vars t ⊆ ListPair.dom am →
+    Typ.free_vars t ⊆ List.map Prod.fst am →
     Typing am e (Typ.instantiate depth [t] body) →
     Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [.var name] body)
   := by

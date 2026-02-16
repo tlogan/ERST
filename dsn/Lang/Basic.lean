@@ -690,10 +690,8 @@ def List.firstIndexOf {α} [BEq α] (target : α) (l : List α) : Option Nat :=
 #eval List.removeAll [1,2,3] [1]
 
 mutual
-  def List.pair_typ_free_vars : List (Typ × Typ) → List String
-  | .nil => []
-  | .cons (l,r) remainder =>
-    Typ.free_vars l ∪ Typ.free_vars r ∪ List.pair_typ_free_vars remainder
+  def Typ.prod_free_vars : Typ × Typ → List String
+  | (left,right) => Typ.free_vars left ∪ Typ.free_vars right
 
   def Typ.free_vars : Typ → List String
   | .bvar _ => []
@@ -708,10 +706,10 @@ mutual
   | .diff l r => Typ.free_vars l ∪ Typ.free_vars r
   | .all bs subtypings body =>
     /- NOTE: ignore content of bs; bound variable names have no semantics after seal -/
-    List.pair_typ_free_vars subtypings ∪ Typ.free_vars body
+    List.flatMap Typ.prod_free_vars subtypings ∪ Typ.free_vars body
   | .exi bs subtypings body =>
     /- NOTE: ignore content of bs; bound variable names have no semantics after seal -/
-    List.pair_typ_free_vars subtypings ∪ Typ.free_vars body
+    List.flatMap Typ.prod_free_vars subtypings ∪ Typ.free_vars body
   | .lfp b body =>
     /- NOTE: ignore content of bs; bound variable names have no semantics after seal -/
     Typ.free_vars body
@@ -1580,65 +1578,50 @@ example (id : String) (xs ys : List String):
   exact Iff.mp List.mem_union_iff h0
 
 theorem Typ.free_vars_containment_left :
-  (l,r) ∈ ys → Typ.free_vars l ⊆ List.pair_typ_free_vars ys
+  (l,r) ∈ ys → Typ.free_vars l ⊆ List.flatMap Typ.prod_free_vars ys
 := by induction ys with
 | nil =>
-  simp [List.pair_typ_free_vars]
+  simp [List.flatMap]
 | cons y ys' ih =>
-  simp [List.pair_typ_free_vars]
+  simp [List.flatMap]
   intro h0 id h1
-  apply Iff.mpr List.mem_union_iff
+  simp
   cases h0 with
   | inl h2 =>
     apply Or.inl
-    apply Iff.mpr List.mem_union_iff
-    apply Or.inl
-    simp [←h2]
-    apply h1
+    rw [←h2]
+    simp [Typ.prod_free_vars]
+    apply Or.inl h1
   | inr h2 =>
     apply Or.inr
-    apply ih h2 h1
+    simp [Typ.prod_free_vars]
+    exists (Typ.free_vars l ∪  Typ.free_vars r)
+    simp [*]
+    exists l
+    exists r
 
 theorem Typ.free_vars_containment_right :
-  (l,r) ∈ ys → Typ.free_vars r ⊆ List.pair_typ_free_vars ys
+  (l,r) ∈ ys → Typ.free_vars r ⊆ List.flatMap Typ.prod_free_vars ys
 := by induction ys with
 | nil =>
-  simp [List.pair_typ_free_vars]
+  simp [List.flatMap]
 | cons y ys' ih =>
-  simp [List.pair_typ_free_vars]
+  simp [List.flatMap]
   intro h0 id h1
-  apply Iff.mpr List.mem_union_iff
+  simp
   cases h0 with
   | inl h2 =>
     apply Or.inl
-    apply Iff.mpr List.mem_union_iff
-    apply Or.inr
-    simp [←h2]
-    apply h1
+    rw [←h2]
+    simp [Typ.prod_free_vars]
+    apply Or.inr h1
   | inr h2 =>
     apply Or.inr
-    apply ih h2 h1
-
-theorem List.pair_typ_free_vars_containment {xs ys : List (Typ × Typ)} :
-  xs ⊆ ys → List.pair_typ_free_vars xs ⊆ List.pair_typ_free_vars ys
-:= by induction xs with
-| nil =>
-  simp [List.pair_typ_free_vars]
-| cons x xs' ih =>
-  simp [List.pair_typ_free_vars]
-  intro h0 h1 id h3
-
-  apply Iff.mp List.mem_union_iff at h3
-  cases h3 with
-  | inl h4 =>
-    apply Iff.mp List.mem_union_iff at h4
-    cases h4 with
-    | inl h5 =>
-      apply Typ.free_vars_containment_left h0 h5
-    | inr h5 =>
-      apply Typ.free_vars_containment_right h0 h5
-  | inr h4 =>
-    apply ih h1 h4
+    simp [Typ.prod_free_vars]
+    exists (Typ.free_vars l ∪  Typ.free_vars r)
+    simp [*]
+    exists l
+    exists r
 
 
 def Expr.free_vars : Expr → List String
