@@ -630,19 +630,19 @@ theorem Subtyping.dom_extension {am1 am0 lower upper} :
 := by sorry
 
 theorem MultiSubtyping.dom_single_extension {id tam0 t cs} :
-  id ∉ List.flatMap Typ.prod_free_vars cs →
+  id ∉ Typ.list_prod_free_vars cs →
   MultiSubtyping tam0 cs →
   MultiSubtyping ((id,t) :: tam0) cs
 := by sorry
 
 theorem MultiSubtyping.dom_extension {am1 am0 cs} :
-  (ListPair.dom am1) ∩ List.flatMap Typ.prod_free_vars cs = [] →
+  (ListPair.dom am1) ∩ Typ.list_prod_free_vars cs = [] →
   MultiSubtyping am0 cs →
   MultiSubtyping (am1 ++ am0) cs
 := by sorry
 
 theorem MultiSubtyping.dom_reduction {am1 am0 cs} :
-  (ListPair.dom am1) ∩ List.flatMap Typ.prod_free_vars cs = [] →
+  (ListPair.dom am1) ∩ Typ.list_prod_free_vars cs = [] →
   MultiSubtyping (am1 ++ am0) cs →
   MultiSubtyping am0 cs
 := by sorry
@@ -1094,7 +1094,7 @@ mutual
 
 
   theorem MultiSubtyping.generalized_nameless_instantiation :
-    name ∉ List.flatMap Typ.prod_free_vars cs →
+    name ∉ Typ.list_prod_free_vars cs →
     name ∉ List.map Prod.fst am' →
     List.map Prod.fst am' ∩ Typ.free_vars t = [] →
     Typ.free_vars t ⊆ List.map Prod.fst am →

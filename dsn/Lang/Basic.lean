@@ -690,8 +690,10 @@ def List.firstIndexOf {α} [BEq α] (target : α) (l : List α) : Option Nat :=
 #eval List.removeAll [1,2,3] [1]
 
 mutual
-  def Typ.prod_free_vars : Typ × Typ → List String
-  | (left,right) => Typ.free_vars left ∪ Typ.free_vars right
+  def Typ.list_prod_free_vars : List (Typ × Typ) → List String
+  | [] => []
+  | (left,right) :: ps =>
+    Typ.free_vars left ∪ Typ.free_vars right ∪ Typ.list_prod_free_vars ps
 
   def Typ.free_vars : Typ → List String
   | .bvar _ => []
@@ -706,10 +708,10 @@ mutual
   | .diff l r => Typ.free_vars l ∪ Typ.free_vars r
   | .all bs subtypings body =>
     /- NOTE: ignore content of bs; bound variable names have no semantics after seal -/
-    List.flatMap Typ.prod_free_vars subtypings ∪ Typ.free_vars body
+    Typ.list_prod_free_vars subtypings ∪ Typ.free_vars body
   | .exi bs subtypings body =>
     /- NOTE: ignore content of bs; bound variable names have no semantics after seal -/
-    List.flatMap Typ.prod_free_vars subtypings ∪ Typ.free_vars body
+    Typ.list_prod_free_vars subtypings ∪ Typ.free_vars body
   | .lfp b body =>
     /- NOTE: ignore content of bs; bound variable names have no semantics after seal -/
     Typ.free_vars body
@@ -1578,50 +1580,40 @@ example (id : String) (xs ys : List String):
   exact Iff.mp List.mem_union_iff h0
 
 theorem Typ.free_vars_containment_left :
-  (l,r) ∈ ys → Typ.free_vars l ⊆ List.flatMap Typ.prod_free_vars ys
+  (l,r) ∈ ys → Typ.free_vars l ⊆ Typ.list_prod_free_vars ys
 := by induction ys with
 | nil =>
-  simp [List.flatMap]
+  simp
 | cons y ys' ih =>
-  simp [List.flatMap]
+  simp [Typ.list_prod_free_vars]
   intro h0 id h1
   simp
   cases h0 with
   | inl h2 =>
     apply Or.inl
     rw [←h2]
-    simp [Typ.prod_free_vars]
     apply Or.inl h1
   | inr h2 =>
     apply Or.inr
-    simp [Typ.prod_free_vars]
-    exists (Typ.free_vars l ∪  Typ.free_vars r)
-    simp [*]
-    exists l
-    exists r
+    apply ih h2 h1
 
 theorem Typ.free_vars_containment_right :
-  (l,r) ∈ ys → Typ.free_vars r ⊆ List.flatMap Typ.prod_free_vars ys
+  (l,r) ∈ ys → Typ.free_vars r ⊆ Typ.list_prod_free_vars ys
 := by induction ys with
 | nil =>
-  simp [List.flatMap]
+  simp
 | cons y ys' ih =>
-  simp [List.flatMap]
+  simp [Typ.list_prod_free_vars]
   intro h0 id h1
   simp
   cases h0 with
   | inl h2 =>
     apply Or.inl
     rw [←h2]
-    simp [Typ.prod_free_vars]
     apply Or.inr h1
   | inr h2 =>
     apply Or.inr
-    simp [Typ.prod_free_vars]
-    exists (Typ.free_vars l ∪  Typ.free_vars r)
-    simp [*]
-    exists l
-    exists r
+    apply ih h2 h1
 
 
 def Expr.free_vars : Expr → List String
