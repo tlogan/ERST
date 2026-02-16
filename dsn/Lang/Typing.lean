@@ -1079,15 +1079,21 @@ mutual
   := by sorry
 end
 
-mutual
-  theorem Typ.instantiate_zero_inside_out offset ma mb e:
-    (Typ.instantiate (offset) ma (Typ.instantiate 0 mb e)) =
-    (Typ.instantiate 0
-      (Typ.list_instantiate offset ma mb)
-      (Typ.instantiate (offset + List.length mb) ma e)
-    )
-  := by sorry
-end
+theorem Typ.constraints_instantiate_zero_inside_out offset ma mb cs:
+  (Typ.constraints_instantiate (offset) ma (Typ.constraints_instantiate 0 mb cs)) =
+  (Typ.constraints_instantiate 0
+    (Typ.list_instantiate offset ma mb)
+    (Typ.constraints_instantiate (offset + List.length mb) ma cs)
+  )
+:= by sorry
+
+theorem Typ.instantiate_zero_inside_out offset ma mb e:
+  (Typ.instantiate (offset) ma (Typ.instantiate 0 mb e)) =
+  (Typ.instantiate 0
+    (Typ.list_instantiate offset ma mb)
+    (Typ.instantiate (offset + List.length mb) ma e)
+  )
+:= by sorry
 
 
 theorem Typing.disjoint_assignment_map_rotate_preservation :
@@ -1105,6 +1111,21 @@ theorem find_prune o m1 :
 
 
 mutual
+
+
+  theorem MultiSubtyping.generalized_nameless_instantiation :
+    name ∉ List.flatMap (fun (left,right) => Typ.free_vars left ++ Typ.free_vars right) cs →
+    name ∉ ListPair.dom am' →
+    ListPair.dom am' ∩ Typ.free_vars t = [] →
+    Typ.free_vars t ⊆ ListPair.dom am →
+    MultiSubtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.constraints_instantiate depth [.var name] cs) →
+    MultiSubtyping (am' ++ am) (Typ.constraints_instantiate depth [t] cs)
+  := by sorry
+
+
+
+
+
   theorem Typing.generalized_nameless_instantiation :
     name ∉ Typ.free_vars body →
     name ∉ ListPair.dom am' →
@@ -1132,7 +1153,7 @@ mutual
         intro h2 h3 h4 h5 h6
         simp [Typ.shift_vars]
         simp [Typing]
-        apply And.intro (safety h6)
+        apply And.intro (Typing.safety h6)
         exists (fun e => Typing am e t)
         apply And.intro
         {
@@ -1140,8 +1161,8 @@ mutual
           simp
           intro e e' h4
           apply Iff.intro
-          { intro h5 ; exact subject_reduction h4 h5 }
-          { intro h5 ; exact subject_expansion h4 h5 }
+          { intro h5 ; exact Typing.subject_reduction h4 h5 }
+          { intro h5 ; exact Typing.subject_expansion h4 h5 }
         }
         {
           rw [find_prune _ _ h3]
@@ -1285,7 +1306,43 @@ mutual
 
     }
     { exact h4 }
-    { sorry }
+    {
+      rw [List.append_assoc]
+      rw [Typ.instantiate_zero_inside_out]
+      rw [List.length_map (fun x => Typ.var (Prod.fst x))]
+      rw [h8]
+
+      have h14 :
+        ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
+          Typ.instantiate depth [t] t' = t'
+      := by
+        intro t h14
+        have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
+        rw [←h16]
+        simp [Typ.instantiate]
+
+      rw [Typ.list_instantiate_no_effect h14]
+      apply h7 _ h8
+      { simp [Inter.inter, List.inter, ListPair.dom_append]
+        intro name' h15
+        have ⟨h17,⟨h18,h19⟩⟩ := h9 name' h15
+        apply And.intro h17 h19
+      }
+      {
+        rw [←List.append_assoc]
+        rw [←Typ.list_instantiate_no_effect h14]
+        rw [←h8]
+        rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
+        rw [←Typ.constraints_instantiate_zero_inside_out]
+        apply MultiSubtyping.generalized_nameless_instantiation
+        { sorry }
+        { sorry }
+        { sorry }
+        { sorry }
+        { sorry }
+        { sorry }
+      }
+    }
 
   -- | exi bs cs body =>
   --   sorry
