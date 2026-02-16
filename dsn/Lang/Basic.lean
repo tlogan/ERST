@@ -907,6 +907,12 @@ mutual
     .lfp a (Typ.instantiate (depth + 1) m body)
 end
 
+def Typ.list_instantiate (depth : Nat) (m : List Typ) : List Typ → List Typ
+| .nil => .nil
+| t :: ts =>
+  Typ.instantiate depth (m : List Typ) t :: (Typ.list_instantiate depth (m : List Typ) ts)
+
+
 
 
 -- mutual
@@ -985,31 +991,13 @@ mutual
 end
 
 
-theorem List.mem_map_app (f : α → β) (xs : List α) :
-  y ∈ List.map f xs →
-  ∃ x, y = f x
-:= by
-  cases xs with
-  | nil => simp
-  | cons x xs' =>
-    simp
-    intro h0
-    cases h0 with
-    | inl h1 =>
-      exact Exists.intro x h1
-    | inr h2 =>
-      have ⟨x',h3,h4⟩ := h2
-      exists x'
-      exact id (Eq.symm h4)
-
 theorem Typ.mem_map_var_size (f : α → String) :
   e ∈ List.map (fun x => Typ.var (f x)) am →
   Typ.size e = 1
 := by
   intro h0
-  apply List.mem_map_app at h0
-  have ⟨x,h1⟩ := h0
-  rw [h1]
+  have ⟨x,h1,h2⟩ := Iff.mp List.mem_map h0
+  rw [←h2]
   simp [Typ.size]
 
 
