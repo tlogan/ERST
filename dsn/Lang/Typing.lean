@@ -1094,6 +1094,13 @@ theorem find_prune o m1 :
   find name ((name,o) :: m1)
 := by sorry
 
+theorem find_drop o m1 :
+  name ≠ name' →
+  find name' (m0 ++ (name,o) :: m1)
+  =
+  find name' (m0 ++ m1)
+:= by sorry
+
 
 mutual
 
@@ -1170,65 +1177,112 @@ mutual
     { simp [h0]
       simp [Typing]
     }
-  -- | var name' =>
-  --   simp [Typ.instantiate, Typ.free_vars, Typing]
-  --   intro h0 h1 P h2 h3 h4
-  --   apply And.intro h1
-  --   exists P
-  --   simp [h0,h2,h3,h4,find]
-  -- | iso l body =>
-  --   simp [Typ.free_vars, Typ.instantiate, Typing]
-  --   intro h0 h1 h2
-  --   simp [h1]
-  --   apply Typing.named_instantiation h0 h2
-  -- | entry l body =>
-  --   simp [Typ.free_vars, Typ.instantiate, Typing]
-  --   intro h0 h1 h2
-  --   simp [h1]
-  --   apply Typing.named_instantiation h0 h2
-  -- | path left right =>
-  --   simp [Typ.free_vars, Typ.instantiate, Typing]
-  --   intro h0 h1 h2 h3 h4
-  --   simp [*]
-  --   apply And.intro
-  --   { apply Typ.wellformed_instantiate_var_preserved h3 }
-  --   { intro arg h5
-  --     apply Typing.named_instantiation h1
-  --     apply h4
-  --     apply Typing.nameless_instantiation h0 h5
-  --   }
-  -- | bot =>
-  --   simp [Typ.free_vars, Typ.instantiate, Typing]
-  -- | top =>
-  --   simp [Typ.free_vars, Typ.instantiate, Typing]
-  -- | unio left right =>
-  --   simp [Typ.free_vars, Typ.instantiate, Typing]
-  --   intro h0 h1 h2
-  --   cases h2 with
-  --   | inl h3 =>
-  --     apply Or.inl
-  --     apply Typing.named_instantiation h0 h3
-  --   | inr h3 =>
-  --     apply Or.inr
-  --     apply Typing.named_instantiation h1 h3
-  -- | inter left right =>
-  --   simp [Typ.free_vars, Typ.instantiate, Typing]
-  --   intro h0 h1 h2 h3
-  --   apply And.intro
-  --   { apply Typing.named_instantiation h0 h2 }
-  --   { apply Typing.named_instantiation h1 h3 }
-  -- | diff left right =>
-  --   simp [Typ.free_vars, Typ.instantiate, Typing]
-  --   intro h0 h1 h2 h3 h4
-  --   apply And.intro
-  --   { exact Typ.wellformed_instantiate_var_preserved h2 name }
-  --   { apply And.intro
-  --     { apply Typing.named_instantiation h0 h3}
-  --     { intro h5
-  --       apply h4
-  --       apply Typing.nameless_instantiation h1 h5
-  --     }
-  --   }
+  | var name' =>
+    simp [Typ.instantiate, Typ.free_vars, Typing]
+    intro h0 h1 h2 h3 h4 P h5 h6 h7
+    simp [*]
+    exists P
+    simp [*]
+    rw [find_drop _ _ h0]
+    apply h6
+  | iso l body =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2 h3 h4 h5
+    simp [*]
+    apply Typing.generalized_named_instantiation h0
+    { simp; exact h1}
+    { exact h2 }
+    { exact h3 }
+    { exact h5 }
+  | entry l body =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2 h3 h4 h5
+    simp [*]
+    apply Typing.generalized_named_instantiation h0
+    { simp; exact h1}
+    { exact h2 }
+    { exact h3 }
+    { exact h5 }
+  | path left right =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2 h3 h4 h5 h6 h7
+    simp [*]
+    apply And.intro
+    { apply Typ.wellformed_instantiate_var_preserved h6 }
+    { intro arg h8
+      apply Typing.generalized_named_instantiation h1
+      { simp ; exact h2 }
+      { exact h3 }
+      { exact h4 }
+      {
+        apply h7
+        apply Typing.generalized_nameless_instantiation
+        { exact h0 }
+        { simp ; exact h2}
+        { exact h3 }
+        { exact h4 }
+        { exact h8 }
+      }
+    }
+  | bot =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+  | top =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+  | unio left right =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2 h3 h4 h5
+    cases h5 with
+    | inl h6 =>
+      apply Or.inl
+      apply Typing.generalized_named_instantiation h0
+      { simp ; exact h2 }
+      { exact h3 }
+      { exact h4 }
+      { exact h6 }
+    | inr h6 =>
+      apply Or.inr
+      apply Typing.generalized_named_instantiation h1
+      { simp ; exact h2 }
+      { exact h3 }
+      { exact h4 }
+      { exact h6 }
+  | inter left right =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2 h3 h4 h5 h6
+    apply And.intro
+    { apply Typing.generalized_named_instantiation h0
+      { simp ; exact h2 }
+      { exact h3 }
+      { exact h4 }
+      { exact h5 }
+    }
+    { apply Typing.generalized_named_instantiation h1
+      { simp ; exact h2 }
+      { exact h3 }
+      { exact h4 }
+      { exact h6 }
+    }
+  | diff left right =>
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2 h3 h4 h5 h6 h7
+    apply And.intro
+    { apply Typ.wellformed_instantiate_var_preserved h5 }
+    { apply And.intro
+      { apply Typing.generalized_named_instantiation h0
+        { simp ; exact h2 }
+        { exact h3 }
+        { exact h4 }
+        { exact h6 }
+      }
+      { intro h8
+        apply h7
+        apply Typing.generalized_nameless_instantiation h1
+        { simp ; exact h2 }
+        { exact h3 }
+        { exact h4 }
+        { exact h8 }
+      }
+    }
   | all bs cs body =>
     simp [Typ.free_vars, Typ.instantiate]
     intro h0 h1 h2
@@ -1258,9 +1312,6 @@ mutual
     := by exact Eq.symm (List.append_assoc am'' am' ((name, fun e => Typing am e t) :: am))
     rw [h12]
 
-    -- rw [ListPair.dom_append] at h9
-    -- simp [ListPair.dom] at h9
-    -- simp [Inter.inter, List.inter] at h9
     have h13 := h9 name
     simp [*] at h13
 
@@ -1283,7 +1334,6 @@ mutual
     }
     {
       simp [Inter.inter, List.inter]
-      -- simp [Inter.inter, List.inter] at h3
       apply And.intro
       {
         intro name' h14 h15 h16
@@ -1315,7 +1365,7 @@ mutual
 
       rw [Typ.list_instantiate_no_effect h14]
       apply h7 _ h8
-      { --simp --[Inter.inter, List.inter]
+      {
         intro name' P h15
         have ⟨h17,⟨h18,h19⟩⟩ := h9 name' P h15
         apply And.intro h17 h19
