@@ -42,6 +42,11 @@ theorem Typ.free_vars_instantiate_upper_bound :
 := by sorry
 
 
+theorem Typ.list_prod_free_vars_instantiate_upper_bound :
+  Typ.list_prod_free_vars (Typ.constraints_instantiate depth m cs) ⊆ (Typ.list_prod_free_vars cs) ++ List.flatMap Typ.free_vars m
+:= by sorry
+
+
 
 theorem Typ.list_shift_vars_no_effect :
   (∀ t ∈ m, Typ.shift_vars threshold offset t = t) →
@@ -1093,7 +1098,7 @@ theorem find_prune o m1 :
 mutual
 
 
-  theorem MultiSubtyping.generalized_nameless_instantiation :
+  theorem MultiSubtyping.generalized_nameless_instantiation name :
     name ∉ Typ.list_prod_free_vars cs →
     name ∉ List.map Prod.fst am' →
     List.map Prod.fst am' ∩ Typ.free_vars t = [] →
@@ -1227,7 +1232,7 @@ mutual
   | all bs cs body =>
     simp [Typ.free_vars, Typ.instantiate]
     intro h0 h1 h2
-    simp [Typing]
+    simp [Typing, Inter.inter, List.inter]
     intro h3 h4 h5 h6 h7
     simp [*]
     apply And.intro h6
@@ -1255,7 +1260,7 @@ mutual
 
     -- rw [ListPair.dom_append] at h9
     -- simp [ListPair.dom] at h9
-    simp [Inter.inter, List.inter] at h9
+    -- simp [Inter.inter, List.inter] at h9
     have h13 := h9 name
     simp [*] at h13
 
@@ -1278,7 +1283,7 @@ mutual
     }
     {
       simp [Inter.inter, List.inter]
-      simp [Inter.inter, List.inter] at h3
+      -- simp [Inter.inter, List.inter] at h3
       apply And.intro
       {
         intro name' h14 h15 h16
@@ -1310,7 +1315,7 @@ mutual
 
       rw [Typ.list_instantiate_no_effect h14]
       apply h7 _ h8
-      { simp [Inter.inter, List.inter]
+      { --simp --[Inter.inter, List.inter]
         intro name' P h15
         have ⟨h17,⟨h18,h19⟩⟩ := h9 name' P h15
         apply And.intro h17 h19
@@ -1321,13 +1326,42 @@ mutual
         rw [←h8]
         rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
         rw [←Typ.constraints_instantiate_zero_inside_out]
-        apply MultiSubtyping.generalized_nameless_instantiation
-        { sorry }
-        { sorry }
-        { sorry }
-        { sorry }
-        { sorry }
-        { sorry }
+        apply MultiSubtyping.generalized_nameless_instantiation name
+        {
+          intro h15
+          have h16 := Typ.list_prod_free_vars_instantiate_upper_bound h15
+          simp [Typ.free_vars] at h16
+          cases h16 with
+          | inl h17 =>
+            exact h0 h17
+          | inr h17 =>
+            have ⟨P,h18⟩ := h17
+            exact h13 P h18
+        }
+        { simp
+          exact ⟨h13, h2⟩
+        }
+        { simp [Inter.inter, List.inter]
+          apply And.intro
+          {
+            intro name' P h16 h17
+            have ⟨h18,h19,h20⟩ := h9 name' P h16
+            have h21 := h4 h17
+            simp at h21
+            have ⟨P',h22⟩ := h21
+            exact h20 P' h22
+          }
+          { exact h3 }
+
+        }
+        { exact h4 }
+        { rw [←h12]
+          rw [Typ.constraints_instantiate_zero_inside_out]
+          rw [List.length_map]
+          rw [h8]
+          rw [Typ.list_instantiate_no_effect h11]
+          apply h10
+        }
       }
     }
 
