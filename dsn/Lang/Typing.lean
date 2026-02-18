@@ -41,6 +41,10 @@ theorem Typ.free_vars_instantiate_upper_bound :
   Typ.free_vars (Typ.instantiate depth m e) ⊆ (Typ.free_vars e) ++ List.flatMap Typ.free_vars m
 := by sorry
 
+theorem Typ.free_vars_instantiate_lower_bound :
+  (Typ.free_vars e) ⊆ Typ.free_vars (Typ.instantiate depth m e)
+:= by sorry
+
 
 theorem Typ.list_prod_free_vars_instantiate_upper_bound :
   Typ.list_prod_free_vars (Typ.constraints_instantiate depth m cs) ⊆ (Typ.list_prod_free_vars cs) ++ List.flatMap Typ.free_vars m
@@ -196,7 +200,7 @@ mutual
   | .lfp a body =>
     Safe e ∧
     a = "" ∧
-    ∃ name, name ∉ Typ.free_vars body ∧
+    ∃ name, name ∉ (List.map Prod.fst am) ∧
     Monotonic name am (Typ.instantiate 0 [.var name] body) ∧
     /- infimum of -/
     (∀ P, Stable P →
@@ -1090,11 +1094,11 @@ theorem Typ.instantiate_zero_inside_out offset ma mb e:
 := by sorry
 
 
-theorem Typing.disjoint_assignment_map_rotate_preservation :
-  name ∉ ListPair.dom m0 →
-  Typing ((name,item) :: (m0 ++ m1)) e t →
-  Typing (m0 ++ (name,item) :: m1) e t
-:= by sorry
+-- theorem Typing.disjoint_assignment_map_rotate_preservation :
+--   name ∉ ListPair.dom m0 →
+--   Typing ((name,item) :: (m0 ++ m1)) e t →
+--   Typing (m0 ++ (name,item) :: m1) e t
+-- := by sorry
 
 theorem find_prune o m1 :
   name ∉ List.map Prod.fst m0 →
@@ -1112,6 +1116,16 @@ theorem find_drop o m1 :
 
 
 mutual
+
+  theorem Monotonic.generalized_named_instantiation :
+    name ∉ Typ.free_vars body →
+    Typ.free_vars t ⊆ List.map Prod.fst am →
+    List.Disjoint (List.map Prod.fst am') (List.map Prod.fst am) →
+    name ∉ List.map Prod.fst am' →
+    name ∉ List.map Prod.fst am →
+    Monotonic point (am' ++ (name,fun e => False) :: am) (Typ.instantiate depth [t] body) →
+    Monotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] body)
+  := by sorry
 
 
   theorem MultiSubtyping.generalized_nameless_instantiation :
@@ -1330,9 +1344,6 @@ mutual
     := by exact Eq.symm (List.append_assoc am'' am' ((name, fun e => Typing am e t) :: am))
     rw [h15]
 
-    -- simp [List.Disjoint] at h10
-    -- have h16 := @h10 name
-
     apply Typing.generalized_named_instantiation
     {
       intro h16
@@ -1433,14 +1444,44 @@ mutual
       rw [←Typ.list_instantiate_no_effect h14]
       rw [←h7]
       rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
-      rw [←Typ.instantiate_zero_inside_out]
 
       apply And.intro
       {
-        sorry
-        -- apply MultiSubtyping.generalized_named_instantiation
+        rw [←Typ.constraints_instantiate_zero_inside_out]
+        apply MultiSubtyping.generalized_named_instantiation
+        {
+          intro h16
+          apply Typ.list_prod_free_vars_instantiate_upper_bound at h16
+          rw [List.mem_append] at h16
+          cases h16 with
+          | inl h17 =>
+            exact h0 h17
+          | inr h17 =>
+            simp [Typ.free_vars] at h17
+            have ⟨P,h18⟩ := h17
+            exact h9 P h18
+        }
+        { exact h2 }
+        { simp ; exact ⟨h10, h3⟩ }
+        { simp ; exact ⟨h9, h4⟩ }
+        { simp ; exact h5 }
+        {
+          rw [List.append_assoc]
+          rw [Typ.constraints_instantiate_zero_inside_out]
+          rw [List.length_map (fun x => Typ.var (Prod.fst x))]
+          rw [h7]
+          rw [Typ.list_instantiate_no_effect]
+          { exact h11 }
+          {
+            intro t h16
+            have ⟨p,h17,h18⟩ := Iff.mp List.mem_map h16
+            rw [←h18]
+            simp [Typ.instantiate]
+          }
+        }
       }
-      { apply Typing.generalized_named_instantiation
+      { rw [←Typ.instantiate_zero_inside_out]
+        apply Typing.generalized_named_instantiation
         {
           intro h16
           apply Typ.free_vars_instantiate_upper_bound at h16
@@ -1449,10 +1490,10 @@ mutual
           | inl h17 =>
             apply h1
             exact h17
-          | inr h16 =>
-            simp [Typ.free_vars] at h16
-            have ⟨P,h17⟩ := h16
-            exact h9 P h17
+          | inr h17 =>
+            simp [Typ.free_vars] at h17
+            have ⟨P,h18⟩ := h17
+            exact h9 P h18
         }
         { exact h2 }
         { simp ; exact ⟨h10, h3⟩ }
@@ -1477,7 +1518,40 @@ mutual
     }
 
   | lfp b body =>
-    sorry
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2 h3 h4 h5 h6 name' h7 h8 h9 h10 h11
+    simp [*]
+    exists name'
+    simp [*]
+    apply And.intro
+    {
+      have h12 :
+        ∀ t ∈ [Typ.var name'], Typ.instantiate depth [Typ.var name] t = t
+      := by
+        simp [Typ.instantiate]
+
+      rw [←Typ.list_instantiate_no_effect h12]
+      have h13 : List.length [Typ.var name'] = 1 := by exact rfl
+      rw [←h13]
+      rw [←Typ.instantiate_zero_inside_out]
+      apply Monotonic.generalized_named_instantiation
+      { sorry }
+      { exact h1 }
+      { exact h2 }
+      { simp ; exact h3 }
+      { simp ; exact h4 }
+      {
+        rw [Typ.instantiate_zero_inside_out]
+        rw [h13]
+        have h14 :
+          ∀ t' ∈ [Typ.var name'], Typ.instantiate depth [t] t' = t'
+        := by
+          simp [Typ.instantiate]
+        rw [Typ.list_instantiate_no_effect h14]
+        apply h10
+      }
+    }
+    { sorry }
   termination_by (Typ.size t, 0)
   decreasing_by
     all_goals sorry
@@ -1546,24 +1620,25 @@ theorem Subtyping.lfp_intro_direct :
   { exact Typing.safety h3 }
   { exists name
     simp [*]
-    intro P h4 h5
+    sorry
+    -- intro P h4 h5
 
-    apply h5
-    have h6 := h2
-    unfold Monotonic at h6
-    apply h6 (fun e => Typing am e (Typ.lfp "" t)) P
-    {
-      intro e h7
-      apply Typing.lfp_elim  h0 h1 h2 (h5 e)
-      exact h7
-    }
-    { apply Typing.named_instantiation h0
-      { simp [Typ.free_vars]
-        /- TODO -/
-        sorry
-      }
-      { exact h3 }
-    }
+    -- apply h5
+    -- have h6 := h2
+    -- unfold Monotonic at h6
+    -- apply h6 (fun e => Typing am e (Typ.lfp "" t)) P
+    -- {
+    --   intro e h7
+    --   apply Typing.lfp_elim  h0 h1 h2 (h5 e)
+    --   exact h7
+    -- }
+    -- { apply Typing.named_instantiation h0
+    --   { simp [Typ.free_vars]
+    --     /- TODO -/
+    --     sorry
+    --   }
+    --   { exact h3 }
+    -- }
   }
 
 theorem Subtyping.lfp_intro :
