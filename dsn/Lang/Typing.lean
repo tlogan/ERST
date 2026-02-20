@@ -242,6 +242,12 @@ mutual
     Typing ((name,P) :: m) e t →
     Typing m e t
   := by sorry
+
+  theorem Typing.cons_preservation :
+    name ∉ Typ.free_vars t →
+    Typing m e t →
+    ∀ P, Typing ((name,P) :: m) e t
+  := by sorry
 end
 
 
@@ -250,6 +256,13 @@ mutual
     List.Disjoint (List.map Prod.fst m0) (Typ.free_vars t) →
     Typing (m0 ++ m1) e t →
     Typing m1 e t
+  := by
+    sorry
+
+  theorem Typing.prepend_preservation :
+    List.Disjoint (List.map Prod.fst m0) (Typ.free_vars t) →
+    Typing m1 e t →
+    Typing (m0 ++ m1) e t
   := by
     sorry
 end
@@ -1194,58 +1207,35 @@ mutual
       by_cases h1 : i - depth = 0
       { simp [h1]
         simp [Typ.shift_vars]
-        intro h2 h3 h4 h5 h6
+        intro h2 h3 h4 h5 h6 wf
         simp [Typing]
         intro h7 P h8 h9 h10
-        sorry
+        rw [find_prune _ _] at h9
+        {
+          simp [find] at h9
+          simp [←h9] at h10
+          have h11 := Typing.instantiated h10
+          rw [←Typ.instantiated_shift_vars_preservation h11]
+          apply Typing.prepend_preservation (List.disjoint_of_subset_right h3 h4)
+          apply Typing.cons_preservation
+          {
+            intro h12
+            specialize h3 h12
+            simp at h3
+            have ⟨P',h13⟩ := h3
+            apply h6 P' h13
+          }
+          { exact h10 }
+        }
+        { simp ; exact h5 }
       }
-      { sorry }
+      { simp [h1]
+        simp [Typing]
+      }
     }
-    { sorry }
-    --     apply And.intro (Typing.safety h7)
-    --     exists (fun e => Typing am e t)
-    --     apply And.intro
-    --     {
-    --       unfold Stable
-    --       simp
-    --       intro e e' h8
-    --       apply Iff.intro
-    --       { intro h9 ; exact Typing.subject_reduction h8 h9 }
-    --       { intro h9 ; exact Typing.subject_expansion h8 h9 }
-    --     }
-    --     {
-    --       apply And.intro
-    --       { rw [find_prune _ _ ]
-    --         { simp [find] }
-    --         { simp ;
-    --           intro P
-    --           exact h5 P
-    --         }
-    --       }
-    --       { simp
-    --         have h8 := Typing.instantiated h7
-    --         have h9 : name ∉ Typ.free_vars t := by
-    --           intro h10
-    --           specialize h3 h10
-    --           simp at h3
-    --           have ⟨P,h11⟩ := h3
-    --           apply h6 P h11
-    --         apply Typing.cons_reflection h9
-
-    --         apply Typing.prepend_reflection (List.disjoint_of_subset_right h3 h4)
-    --         rw [← Typ.instantiated_shift_vars_reflection h8]
-    --         exact h7
-
-    --       }
-    --     }
-    --   }
-    --   { simp [h1]
-    --     simp [Typing]
-    --   }
-    -- }
-    -- { simp [h0]
-    --   simp [Typing]
-    -- }
+    { simp [h0]
+      simp [Typing]
+    }
   | var name' =>
     simp [Typ.instantiate, Typ.free_vars, Typing]
     intro h0 h1 h2 h3 h4 wf h5 P h6 h7 h8
