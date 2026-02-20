@@ -1414,8 +1414,6 @@ mutual
   | exi bs cs body =>
     simp [Typ.free_vars, Typ.instantiate, Typing]
 
-
-
     intro h0 h1 h2 h3 h4 h5 h6 am'' h7 h8 h9 h10 h11 h12
     apply And.intro h6
     exists am''
@@ -1535,7 +1533,15 @@ mutual
       rw [←h13]
       rw [←Typ.instantiate_zero_inside_out]
       apply Monotonic.generalized_named_instantiation
-      { sorry }
+      { intro h14
+        apply Typ.free_vars_instantiate_upper_bound at h14
+        simp [Typ.free_vars] at h14
+        cases h14 with
+        | inl h15 =>
+          exact h0 h15
+        | inr h15 =>
+          exact h8 (Eq.symm h15)
+      }
       { exact h1 }
       { exact h2 }
       { simp ; exact h3 }
@@ -1551,7 +1557,63 @@ mutual
         apply h10
       }
     }
-    { sorry }
+    { intro P stable h12
+      apply h11 P stable
+      intro e' h13
+      apply h12
+
+
+      have h14 :
+        ∀ t ∈ [Typ.var name'],
+          Typ.instantiate depth [Typ.var name] t = t
+      := by
+        simp [Typ.instantiate]
+
+      rw [←Typ.list_instantiate_no_effect h14 ]
+      have h16 : List.length [Typ.var name'] = 1 := by exact rfl
+      rw [←h16]
+
+      have h17 :
+        (name', P) :: (am' ++ (name, fun e => Typing am e t) :: am) =
+        ((name', P) :: am') ++ (name, fun e => Typing am e t) :: am
+      := by exact rfl
+      rw [h17]
+
+      rw [←Typ.instantiate_zero_inside_out]
+      apply Typing.generalized_named_instantiation
+      {
+        intro h18
+        apply Typ.free_vars_instantiate_upper_bound at h18
+        simp [Typ.free_vars] at h18
+        cases h18 with
+        | inl h19 =>
+          exact h0 h19
+        | inr h19 =>
+          exact h8 (Eq.symm h19)
+      }
+      { exact h1 }
+      { simp; exact ⟨h9, h2⟩ }
+      { simp [*]; intro h18 ; exact h8 (Eq.symm h18) }
+      { simp [*] }
+      {
+
+        rw [Typ.instantiate_zero_inside_out]
+        have h18 :
+          (name', P) :: (am' ++ (name, fun e => False) :: am) =
+          ((name', P) :: am') ++ (name, fun e => False) :: am
+        := by exact rfl
+        rw [←h18]
+        rw [h16]
+        have h19 :
+          ∀ t' ∈ [Typ.var name'],
+            Typ.instantiate depth [t] t' = t'
+        := by
+          simp [Typ.instantiate]
+
+        rw [Typ.list_instantiate_no_effect h19 ]
+        exact h13
+      }
+    }
   termination_by (Typ.size t, 0)
   decreasing_by
     all_goals sorry
