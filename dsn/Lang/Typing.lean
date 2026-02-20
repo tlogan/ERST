@@ -52,18 +52,18 @@ theorem Typ.list_prod_free_vars_instantiate_upper_bound :
 
 
 
-theorem Typ.list_shift_vars_no_effect :
-  (∀ t ∈ m, Typ.shift_vars threshold offset t = t) →
-  Typ.list_shift_vars threshold offset m = m
-:= by induction m with
-| nil =>
-  simp [Typ.list_shift_vars]
-| cons t ts ih =>
-  simp [Typ.list_shift_vars]
-  intro h0 h1
-  simp [*]
-  apply ih
-  apply h1
+-- theorem Typ.list_shift_vars_no_effect :
+--   (∀ t ∈ m, Typ.shift_vars threshold offset t = t) →
+--   Typ.list_shift_vars threshold offset m = m
+-- := by induction m with
+-- | nil =>
+--   simp [Typ.list_shift_vars]
+-- | cons t ts ih =>
+--   simp [Typ.list_shift_vars]
+--   intro h0 h1
+--   simp [*]
+--   apply ih
+--   apply h1
 
 
 
@@ -104,14 +104,9 @@ end
 def Typ.instantiated (t: Typ) := Typ.num_bound_vars t == 0
 
 
-theorem Typ.instantiate_no_effect :
-  Typ.instantiated t →
-  Typ.instantiate depth m t = t
-:= by sorry
-
-theorem Typ.list_instantiate_no_effect :
-  (∀ t ∈ ts, Typ.instantiate depth m t = t) →
-  Typ.list_instantiate depth m ts = ts
+theorem Typ.list_all_mem_instantiate_preservation :
+  (∀ t ∈ ts, t = Typ.instantiate depth m t) →
+  ts = Typ.list_instantiate depth m ts
 := by sorry
 
 mutual
@@ -1355,14 +1350,14 @@ mutual
 
     have h14 :
       ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
-        Typ.instantiate depth [t] t' = t'
+        t' = Typ.instantiate depth [t] t'
     := by
       intro t h14
       have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
       rw [←h16]
       simp [Typ.instantiate]
 
-    rw [←Typ.list_instantiate_no_effect h14]
+    rw [Typ.list_all_mem_instantiate_preservation h14]
     rw [←h9]
     rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
     rw [←Typ.instantiate_zero_inside_out]
@@ -1396,18 +1391,19 @@ mutual
 
       have h16 :
         ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
-          Typ.instantiate depth [.var name] t' = t'
+          t' = Typ.instantiate depth [.var name] t'
       := by
         intro t h16
         have ⟨p,h17,h18⟩ := Iff.mp List.mem_map h16
         rw [←h18]
         simp [Typ.instantiate]
 
-      rw [Typ.list_instantiate_no_effect h16]
+
+      rw [←Typ.list_all_mem_instantiate_preservation h16]
       apply h8 _ h9 h10 h11 h12
       {
         rw [←List.append_assoc]
-        rw [←Typ.list_instantiate_no_effect h16]
+        rw [Typ.list_all_mem_instantiate_preservation h16]
         rw [←h9]
         rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
         rw [←Typ.constraints_instantiate_zero_inside_out]
@@ -1432,7 +1428,7 @@ mutual
           rw [Typ.constraints_instantiate_zero_inside_out]
           rw [List.length_map]
           rw [h9]
-          rw [Typ.list_instantiate_no_effect h14]
+          rw [←Typ.list_all_mem_instantiate_preservation h14]
           exact h13
         }
       }
@@ -1455,14 +1451,14 @@ mutual
 
       have h14 :
         ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
-          Typ.instantiate depth [t] t' = t'
+          t' = Typ.instantiate depth [t] t'
       := by
         intro t h14
         have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
         rw [←h16]
         simp [Typ.instantiate]
 
-      rw [←Typ.list_instantiate_no_effect h14]
+      rw [Typ.list_all_mem_instantiate_preservation h14]
       rw [←h7]
       rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
 
@@ -1492,7 +1488,7 @@ mutual
           rw [Typ.constraints_instantiate_zero_inside_out]
           rw [List.length_map (fun x => Typ.var (Prod.fst x))]
           rw [h7]
-          rw [Typ.list_instantiate_no_effect]
+          rw [←Typ.list_all_mem_instantiate_preservation]
           { exact h11 }
           {
             intro t h16
@@ -1528,7 +1524,7 @@ mutual
           rw [List.length_map (fun x => Typ.var (Prod.fst x))]
           rw [h7]
 
-          rw [Typ.list_instantiate_no_effect]
+          rw [←Typ.list_all_mem_instantiate_preservation]
           { exact h12 }
           {
             intro t h16
@@ -1549,11 +1545,12 @@ mutual
     apply And.intro
     {
       have h12 :
-        ∀ t' ∈ [Typ.var name'], Typ.instantiate depth [t] t' = t'
+        ∀ t' ∈ [Typ.var name'], t' = Typ.instantiate depth [t] t'
       := by
         simp [Typ.instantiate]
 
-      rw [←Typ.list_instantiate_no_effect h12]
+
+      rw [Typ.list_all_mem_instantiate_preservation h12]
       have h13 : List.length [Typ.var name'] = 1 := by exact rfl
       rw [←h13]
       rw [←Typ.instantiate_zero_inside_out]
@@ -1575,10 +1572,11 @@ mutual
         rw [Typ.instantiate_zero_inside_out]
         rw [h13]
         have h14 :
-          ∀ t' ∈ [Typ.var name'], Typ.instantiate depth [.var name] t' = t'
+          ∀ t' ∈ [Typ.var name'], t' = Typ.instantiate depth [.var name] t'
         := by
           simp [Typ.instantiate]
-        rw [Typ.list_instantiate_no_effect h14]
+
+        rw [←Typ.list_all_mem_instantiate_preservation h14]
         apply h10
       }
     }
@@ -1589,11 +1587,11 @@ mutual
 
 
       have h14 :
-        ∀ t' ∈ [Typ.var name'], Typ.instantiate depth [t] t' = t'
+        ∀ t' ∈ [Typ.var name'], t' = Typ.instantiate depth [t] t'
       := by
         simp [Typ.instantiate]
 
-      rw [←Typ.list_instantiate_no_effect h14 ]
+      rw [Typ.list_all_mem_instantiate_preservation h14]
       have h16 : List.length [Typ.var name'] = 1 := by exact rfl
       rw [←h16]
 
@@ -1630,12 +1628,10 @@ mutual
         rw [Typ.instantiate_zero_inside_out]
         rw [h16]
         have h19 :
-          ∀ t' ∈ [Typ.var name'],
-            Typ.instantiate depth [Typ.var name] t' = t'
+          ∀ t' ∈ [Typ.var name'], t' = Typ.instantiate depth [Typ.var name] t'
         := by
           simp [Typ.instantiate]
-
-        rw [Typ.list_instantiate_no_effect h19 ]
+        rw [←Typ.list_all_mem_instantiate_preservation h19]
         exact h13
       }
     }
@@ -1827,15 +1823,16 @@ mutual
     intro am'' h9 h10 h11 h12 h13
 
     have h14 :
-      ∀ t ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
-        Typ.instantiate depth [Typ.var name] t = t
+      ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
+        t' = Typ.instantiate depth [Typ.var name] t'
     := by
       intro t h14
       have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
       rw [←h16]
       simp [Typ.instantiate]
 
-    rw [←Typ.list_instantiate_no_effect h14]
+
+    rw [Typ.list_all_mem_instantiate_preservation h14]
     rw [←h9]
     rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
     rw [←Typ.instantiate_zero_inside_out]
@@ -1873,18 +1870,19 @@ mutual
 
       have h16 :
         ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
-          Typ.instantiate depth [t] t' = t'
+          t' = Typ.instantiate depth [t] t'
       := by
         intro t h16
         have ⟨p,h17,h18⟩ := Iff.mp List.mem_map h16
         rw [←h18]
         simp [Typ.instantiate]
 
-      rw [Typ.list_instantiate_no_effect h16]
+
+      rw [←Typ.list_all_mem_instantiate_preservation h16]
       apply h8 _ h9 h10 h11 h12
       {
         rw [←List.append_assoc]
-        rw [←Typ.list_instantiate_no_effect h16]
+        rw [Typ.list_all_mem_instantiate_preservation h16]
         rw [←h9]
         rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
         rw [←Typ.constraints_instantiate_zero_inside_out]
@@ -1909,7 +1907,7 @@ mutual
           rw [Typ.constraints_instantiate_zero_inside_out]
           rw [List.length_map]
           rw [h9]
-          rw [Typ.list_instantiate_no_effect h14]
+          rw [←Typ.list_all_mem_instantiate_preservation h14]
           exact h13
         }
       }
@@ -1935,15 +1933,15 @@ mutual
       rw [h13]
 
       have h14 :
-        ∀ t ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
-          Typ.instantiate depth [Typ.var name] t = t
+        ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
+          t' = Typ.instantiate depth [Typ.var name] t'
       := by
         intro t h14
         have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
         rw [←h16]
         simp [Typ.instantiate]
 
-      rw [←Typ.list_instantiate_no_effect h14]
+      rw [Typ.list_all_mem_instantiate_preservation h14]
       rw [←h7]
       rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
 
@@ -1973,7 +1971,8 @@ mutual
           rw [Typ.constraints_instantiate_zero_inside_out]
           rw [List.length_map (fun x => Typ.var (Prod.fst x))]
           rw [h7]
-          rw [Typ.list_instantiate_no_effect]
+
+          rw [←Typ.list_all_mem_instantiate_preservation]
           { exact h11 }
           {
             intro t h16
@@ -2009,7 +2008,7 @@ mutual
           rw [List.length_map (fun x => Typ.var (Prod.fst x))]
           rw [h7]
 
-          rw [Typ.list_instantiate_no_effect]
+          rw [←Typ.list_all_mem_instantiate_preservation]
           { exact h12 }
           {
             intro t h16
@@ -2030,11 +2029,11 @@ mutual
     apply And.intro
     {
       have h12 :
-        ∀ t ∈ [Typ.var name'], Typ.instantiate depth [Typ.var name] t = t
+        ∀ t' ∈ [Typ.var name'], t' = Typ.instantiate depth [Typ.var name] t'
       := by
         simp [Typ.instantiate]
 
-      rw [←Typ.list_instantiate_no_effect h12]
+      rw [Typ.list_all_mem_instantiate_preservation h12]
       have h13 : List.length [Typ.var name'] = 1 := by exact rfl
       rw [←h13]
       rw [←Typ.instantiate_zero_inside_out]
@@ -2056,10 +2055,11 @@ mutual
         rw [Typ.instantiate_zero_inside_out]
         rw [h13]
         have h14 :
-          ∀ t' ∈ [Typ.var name'], Typ.instantiate depth [t] t' = t'
+          ∀ t' ∈ [Typ.var name'], t' = Typ.instantiate depth [t] t'
         := by
           simp [Typ.instantiate]
-        rw [Typ.list_instantiate_no_effect h14]
+
+        rw [←Typ.list_all_mem_instantiate_preservation h14]
         apply h10
       }
     }
@@ -2070,12 +2070,11 @@ mutual
 
 
       have h14 :
-        ∀ t ∈ [Typ.var name'],
-          Typ.instantiate depth [Typ.var name] t = t
+        ∀ t' ∈ [Typ.var name'], t' = Typ.instantiate depth [Typ.var name] t'
       := by
         simp [Typ.instantiate]
 
-      rw [←Typ.list_instantiate_no_effect h14 ]
+      rw [Typ.list_all_mem_instantiate_preservation h14]
       have h16 : List.length [Typ.var name'] = 1 := by exact rfl
       rw [←h16]
 
@@ -2112,12 +2111,11 @@ mutual
         rw [←h18]
         rw [h16]
         have h19 :
-          ∀ t' ∈ [Typ.var name'],
-            Typ.instantiate depth [t] t' = t'
+          ∀ t' ∈ [Typ.var name'], t' = Typ.instantiate depth [t] t'
         := by
           simp [Typ.instantiate]
 
-        rw [Typ.list_instantiate_no_effect h19 ]
+        rw [←Typ.list_all_mem_instantiate_preservation h19]
         exact h13
       }
     }
