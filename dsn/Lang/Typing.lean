@@ -1173,7 +1173,7 @@ mutual
     }
   termination_by (Typ.size lower + Typ.size upper, 0)
   decreasing_by
-    all_goals (apply prod.lex.left ; simp [typ.zero_lt_size])
+    all_goals (apply Prod.Lex.left ; simp [Typ.zero_lt_size])
 
   theorem Subtyping.generalized_named_instantiation :
     name ∉ Typ.free_vars lower →
