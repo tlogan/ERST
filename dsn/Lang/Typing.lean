@@ -1138,7 +1138,7 @@ theorem find_drop o m1 :
 
 
 
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 500000 in
 mutual
 
 
@@ -1173,7 +1173,7 @@ mutual
     }
   termination_by (Typ.size lower + Typ.size upper, 0)
   decreasing_by
-    all_goals sorry
+    all_goals (apply prod.lex.left ; simp [typ.zero_lt_size])
 
   theorem Subtyping.generalized_named_instantiation :
     name ∉ Typ.free_vars lower →
@@ -1206,7 +1206,8 @@ mutual
     }
   termination_by (Typ.size lower + Typ.size upper, 0)
   decreasing_by
-    all_goals sorry
+    all_goals (apply prod.lex.left ; simp [typ.zero_lt_size])
+
 
 
 
@@ -1263,7 +1264,7 @@ mutual
         simp [List.Disjoint] at h2
         exact h2
       }
-      { simp [Prod.fst]
+      { simp
         apply And.intro
         { intro h12 ; exact h6 (Eq.symm h12) }
         { exact h3 }
@@ -1273,8 +1274,6 @@ mutual
       { exact h10 }
     }
   termination_by (Typ.size body, 1)
-  decreasing_by
-    all_goals sorry
 
   theorem Monotonic.generalized_named_instantiation :
     name ∉ Typ.free_vars body →
@@ -1339,9 +1338,6 @@ mutual
       { exact h10 }
     }
   termination_by (Typ.size body, 1)
-  decreasing_by
-    all_goals sorry
-
 
   theorem MultiSubtyping.generalized_nameless_instantiation :
     name ∉ Typ.list_prod_free_vars cs →
@@ -1374,7 +1370,7 @@ mutual
     }
   termination_by (List.pair_typ_size cs, 0)
   decreasing_by
-    all_goals sorry
+    all_goals (apply Prod.Lex.left ; simp [List.pair_typ_size, List.pair_typ_zero_lt_size, Typ.zero_lt_size])
 
 
   theorem MultiSubtyping.generalized_named_instantiation :
@@ -1408,7 +1404,7 @@ mutual
     }
   termination_by (List.pair_typ_size cs, 0)
   decreasing_by
-    all_goals sorry
+    all_goals (apply Prod.Lex.left ; simp [List.pair_typ_size, List.pair_typ_zero_lt_size, Typ.zero_lt_size])
 
 
   theorem Typing.generalized_nameless_instantiation :
@@ -1864,9 +1860,15 @@ mutual
         exact h13
       }
     }
-  termination_by (Typ.size t, 0)
+  termination_by (Typ.size body, 0)
   decreasing_by
-    all_goals sorry
+    all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate] ; try linarith)
+    all_goals (
+      try rw [Typ.constraints_size_instantiate] <;> (try linarith)
+      try rw [Typ.size_instantiate] <;> (try linarith)
+      intro e
+      apply Typ.mem_map_var_size
+    )
 
   theorem Typing.generalized_named_instantiation :
     name ∉ Typ.free_vars body →
@@ -2345,16 +2347,15 @@ mutual
         exact h13
       }
     }
-  termination_by (Typ.size t, 0)
+  termination_by (Typ.size body, 0)
   decreasing_by
-    all_goals sorry
-    -- all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate] ; try linarith)
-    -- all_goals (
-    --   try rw [Typ.constraints_size_instantiate] <;> (try linarith)
-    --   try rw [Typ.size_instantiate] <;> (try linarith)
-    --   intro e
-    --   apply Typ.mem_map_var_size
-    -- )
+    all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate] ; try linarith)
+    all_goals (
+      try rw [Typ.constraints_size_instantiate] <;> (try linarith)
+      try rw [Typ.size_instantiate] <;> (try linarith)
+      intro e
+      apply Typ.mem_map_var_size
+    )
 end
 
   theorem Typing.nameless_instantiation :
