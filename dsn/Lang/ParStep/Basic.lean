@@ -1,6 +1,8 @@
 import Lang.Util
-import Lang.Basic
-import Lang.Pattern
+import Lang.List.Basic
+import Lang.String.Basic
+import Lang.Typ.Basic
+import Lang.Expr.Basic
 
 set_option pp.fieldNotation false
 

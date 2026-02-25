@@ -1,7 +1,10 @@
 import Lang.Util
-import Lang.Basic
-import Lang.NStep
-import Lang.Safe
+import Lang.List.Basic
+import Lang.String.Basic
+import Lang.Typ.Basic
+import Lang.Expr.Basic
+import Lang.NStep.Basic
+import Lang.Safe.Basic
 
 set_option pp.fieldNotation false
 set_option eval.pp false
