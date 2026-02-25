@@ -131,8 +131,8 @@
 --     else
 --       List.pair_typ_bounds id b sts
 
--- #eval [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
--- #eval (List.pair_typ_bounds "R" .true [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ])
+-- #eval [constraints| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
+-- #eval (List.pair_typ_bounds "R" .true [constraints| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ])
 
 
 -- -- def List.pair_typ_complex_vars : List (Typ × Typ) → List String
@@ -272,25 +272,25 @@
 --     Polarity id (not b) right →
 --     Polarity id b (.diff left right)
 
---   | all id b ids subtypings body :
+--   | all id b ids constraints body :
 --     id ∉ ids →
---     EitherMultiPolarity subtypings body ids →
+--     EitherMultiPolarity constraints body ids →
 --     Polarity id b body →
---     Polarity id b (.all ids subtypings body)
+--     Polarity id b (.all ids constraints body)
 
---   | allskip id b ids subtypings body :
+--   | allskip id b ids constraints body :
 --     id ∈ ids →
---     Polarity id b (.all ids subtypings body)
+--     Polarity id b (.all ids constraints body)
 
---   | exi id b ids subtypings body :
+--   | exi id b ids constraints body :
 --     id ∉ ids →
---     EitherMultiPolarity subtypings (.diff .top body) ids →
+--     EitherMultiPolarity constraints (.diff .top body) ids →
 --     Polarity id b body →
---     Polarity id b (.exi ids subtypings body)
+--     Polarity id b (.exi ids constraints body)
 
---   | exiskip id b ids subtypings body :
+--   | exiskip id b ids constraints body :
 --     id ∈ ids →
---     Polarity id b (.exi ids subtypings body)
+--     Polarity id b (.exi ids constraints body)
 
 
 --   | lfp id b id' body : id ≠ id' → Polarity id b body → Polarity id b (.lfp id' body)

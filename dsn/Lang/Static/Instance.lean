@@ -199,15 +199,15 @@
 --     Polarity.decide id b left &&
 --     Polarity.decide id (not b) right
 
---   | .all ids subtypings body =>
+--   | .all ids constraints body =>
 --     ids.contains id || (
---       EitherMultiPolarity.decide subtypings body ids &&
+--       EitherMultiPolarity.decide constraints body ids &&
 --       Polarity.decide id b body
 --     )
 
---   | .exi ids subtypings body =>
+--   | .exi ids constraints body =>
 --     ids.contains id || (
---       EitherMultiPolarity.decide subtypings (.diff .top body) ids &&
+--       EitherMultiPolarity.decide constraints (.diff .top body) ids &&
 --       Polarity.decide id b body
 --     )
 
@@ -1202,7 +1202,7 @@
 
 -- #eval [typ| <uno/> & <dos/>]
 
--- #eval [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R) ]
+-- #eval [constraints| (<succ> G010 <: R)  (<succ> <succ> G010 <: R) ]
 
 
 -- example : Polarity "a" .true (.entry "uno" (.entry "dos" (.var "a"))) := by
@@ -1234,13 +1234,13 @@
 
 
 -- example : List.pair_typ_bounds "R" .true
---   [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
+--   [constraints| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
 --   =
 --   [typs| (<succ> G010) (<succ> <succ> G010)]
 -- := by rfl
 
 -- example : ∃ ts , List.pair_typ_bounds "R" .true
---   [subtypings| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
+--   [constraints| (<succ> G010 <: R)  (<succ> <succ> G010 <: R)  ]
 --   = ts
 -- := by exists [typs| (<succ> G010) (<succ> <succ> G010) ]
 
@@ -1299,7 +1299,7 @@
 -- example :  ∃ t Δ' Γ', PatLifting.Static [] []
 --   [pattern| uno := x ; dos := y] t Δ' Γ' := by
 --   exists [typ| uno : T669 & dos : T670 ]
---   exists [subtypings| (T670 <: TOP) (T669 <: TOP) ]
+--   exists [constraints| (T670 <: TOP) (T669 <: TOP) ]
 --   exists [typings| (y : T670) (x : T669) ]
 --   PatLifting_Static_prove
 
@@ -1309,15 +1309,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <uno/>]
 --   [typ| <uno/>]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <uno/>]
 --   [typ| <uno/>]
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 -- := by Subtyping_Static_prove
 
 
@@ -1326,15 +1326,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| <label> <uno/> ]
 --   [typ| <label> (<uno/> | <dos/>) ]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| <label> <uno/> ]
 --   [typ| <label> (<uno/> | <dos/>) ]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1342,15 +1342,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| label : <uno/> ]
 --   [typ| label : (<uno/> | <dos/>) ]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| label : <uno/> ]
 --   [typ| label : (<uno/> | <dos/>) ]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1358,15 +1358,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| (<uno/> | <dos/>) -> <tres/> ]
 --   [typ| <uno/>  -> (<dos/> | <tres/>)]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| (<uno/> | <dos/>) -> <tres/> ]
 --   [typ| <uno/>  -> (<dos/> | <tres/>)]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1374,15 +1374,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| <uno/> -> (<dos/> & <tres/>)]
 --   [typ| (<uno/> & <dos/>) -> <tres/>]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| <uno/> -> (<dos/> & <tres/>)]
 --   [typ| (<uno/> & <dos/>) -> <tres/>]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1390,15 +1390,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| (<uno/> & <dos/>) | (<uno/> & <tres/>)]
 --   [typ| <uno/> ]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| (<uno/> & <dos/>) | (<uno/> & <tres/>)]
 --   [typ| <uno/> ]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1406,17 +1406,17 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| EXI[T] [(T <: <uno/>)] T]
 --   [typ| <uno/> | <dos/>]
 
 -- #eval Typ.combine_bounds "T" .true []
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| EXI[T] [(T <: <uno/>)] T]
 --   [typ| <uno/> | <dos/>]
---   [ids| T] [subtypings| (T <: <uno/>)]
+--   [ids| T] [constraints| (T <: <uno/>)]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1428,7 +1428,7 @@
 -- example : GuardedSubtyping [] []
 --   [typ| EXI[N] [ (N <: R) ] N ]
 --   [typ| <whatev/> ]
---   [ids| N] [subtypings| (N <: <whatev/>) (N <: R)]
+--   [ids| N] [constraints| (N <: <whatev/>) (N <: R)]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1438,15 +1438,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| <uno/> ]
 --   [typ| (<uno/> | <dos/>) & (<uno/> | <tres/>)]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| <uno/> ]
 --   [typ| (<uno/> | <dos/>) & (<uno/> | <tres/>)]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1456,15 +1456,15 @@
 -- #eval Subtyping.restricted [] [] [typ| <uno/>] [typ| T]
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| <uno/> & <dos/>]
 --   [typ| ALL[T] [(<uno/> <: T)] T]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 --   [typ| <uno/> & <dos/>]
 --   [typ| ALL[T] [(<uno/> <: T)] T]
---   [ids| T] [subtypings| (<uno/> <: T)]
+--   [ids| T] [constraints| (<uno/> <: T)]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1474,15 +1474,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| (<uno/> & <dos/> <: T) (T <: <uno/>)]
+--   [ids| ] [constraints| (<uno/> & <dos/> <: T) (T <: <uno/>)]
 --   [typ| T]
 --   [typ| <dos/>]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| (<uno/> & <dos/> <: T) (T <: <uno/>)]
+--   [ids| ] [constraints| (<uno/> & <dos/> <: T) (T <: <uno/>)]
 --   [typ| T]
 --   [typ| <dos/>]
---   [ids| ] [subtypings| (T <: <dos/>) (<uno/> & <dos/> <: T) (T <: <uno/>)]
+--   [ids| ] [constraints| (T <: <dos/>) (<uno/> & <dos/> <: T) (T <: <uno/>)]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1492,15 +1492,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| (<uno/> <: T) (T <: <uno/> | <dos/>)]
+--   [ids| ] [constraints| (<uno/> <: T) (T <: <uno/> | <dos/>)]
 --   [typ| <dos/>]
 --   [typ| T]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| (<uno/> <: T) (T <: <uno/> | <dos/>)]
+--   [ids| ] [constraints| (<uno/> <: T) (T <: <uno/> | <dos/>)]
 --   [typ| <dos/>]
 --   [typ| T]
---   [ids| ] [subtypings| (<dos/> <: T) (<uno/> <: T) (T <: <uno/> | <dos/>)]
+--   [ids| ] [constraints| (<dos/> <: T) (<uno/> <: T) (T <: <uno/> | <dos/>)]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1510,16 +1510,16 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| T] [subtypings| (X <: T)]
+--   [ids| T] [constraints| (X <: T)]
 --   [typ| <uno/>]
 --   [typ| T]
 
 
 -- example : GuardedSubtyping
---   [ids| T] [subtypings| (X <: T)]
+--   [ids| T] [constraints| (X <: T)]
 --   [typ| <uno/>]
 --   [typ| T]
---   [ids| T] [subtypings| (<uno/> <: T) (X <: T)]
+--   [ids| T] [constraints| (<uno/> <: T) (X <: T)]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1529,15 +1529,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| T] [subtypings| (T <: X)]
+--   [ids| T] [constraints| (T <: X)]
 --   [typ| T]
 --   [typ| <uno/>]
 
 -- example : GuardedSubtyping
---   [ids| T] [subtypings| (T <: X)]
+--   [ids| T] [constraints| (T <: X)]
 --   [typ| T]
 --   [typ| <uno/>]
---   [ids| T] [subtypings| (T <: <uno/>) (T <: X)]
+--   [ids| T] [constraints| (T <: <uno/>) (T <: X)]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1547,15 +1547,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| T] [subtypings| (T <: <uno/>) ]
+--   [ids| T] [constraints| (T <: <uno/>) ]
 --   [typ| T]
 --   [typ| <uno/> | <dos/>]
 
 -- example : GuardedSubtyping
---   [ids| T] [subtypings| (T <: <uno/>) ]
+--   [ids| T] [constraints| (T <: <uno/>) ]
 --   [typ| T]
 --   [typ| <uno/> | <dos/>]
---   [ids| T ] [subtypings| (T <: <uno/>) ]
+--   [ids| T ] [constraints| (T <: <uno/>) ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1563,15 +1563,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| T] [subtypings| ( <uno/> <: T) ]
+--   [ids| T] [constraints| ( <uno/> <: T) ]
 --   [typ| <uno/> & <dos/>]
 --   [typ| T]
 
 -- example : GuardedSubtyping
---   [ids| T] [subtypings| (<uno/> <: T) ]
+--   [ids| T] [constraints| (<uno/> <: T) ]
 --   [typ| <uno/> & <dos/>]
 --   [typ| T]
---   [ids| T] [subtypings| (<uno/> <: T) ]
+--   [ids| T] [constraints| (<uno/> <: T) ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1579,15 +1579,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| T] [subtypings| ]
+--   [ids| T] [constraints| ]
 --   [typ| (<uno/> -> <tres/>) & (<dos/> -> <tres/>)]
 --   [typ| <uno/> | <dos/> -> <tres/>]
 
 -- example : GuardedSubtyping
---   [ids| T] [subtypings| ]
+--   [ids| T] [constraints| ]
 --   [typ| (<uno/> -> <tres/>) & (<dos/> -> <tres/>)]
 --   [typ| <uno/> | <dos/> -> <tres/>]
---   [ids| T] [subtypings| ]
+--   [ids| T] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1595,15 +1595,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| T] [subtypings| ]
+--   [ids| T] [constraints| ]
 --   [typ| (<uno/> -> <dos/>) & (<uno/> -> <tres/>)]
 --   [typ| <uno/> -> <dos/> & <tres/>]
 
 -- example : GuardedSubtyping
---   [ids| T] [subtypings| ]
+--   [ids| T] [constraints| ]
 --   [typ| (<uno/> -> <dos/>) & (<uno/> -> <tres/>)]
 --   [typ| <uno/> -> <dos/> & <tres/>]
---   [ids| T] [subtypings| ]
+--   [ids| T] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1611,15 +1611,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| T] [subtypings| ]
+--   [ids| T] [constraints| ]
 --   [typ| label : <uno/> & label : <dos/>]
 --   [typ| label : (<uno/> & <dos/>)]
 
 -- example : GuardedSubtyping
---   [ids| T] [subtypings| ]
+--   [ids| T] [constraints| ]
 --   [typ| label : <uno/> & label : <dos/>]
 --   [typ| label : (<uno/> & <dos/>)]
---   [ids| T] [subtypings| ]
+--   [ids| T] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1635,8 +1635,8 @@
 -- --   [] []
 -- --   [typ| LFP[R] <zero/> | EXI[N] [ (N <: R) ] <succ> N ]
 -- --   [typ| LFP[R] (<zero/> | <succ> R) ]
--- --   [ids| N ] [subtypings| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
--- -- -- [subtypings| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
+-- --   [ids| N ] [constraints| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
+-- -- -- [constraints| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
 -- -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1659,7 +1659,7 @@
 --       (EXI [N L][(N*L <: R)] (<succ> N) * (<cons> L))
 --   )]
 --   [typ| left : LFP[R] (<zero/> | <succ> R) ]
---   [ids| N ] [subtypings| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
+--   [ids| N ] [constraints| (N <: LFP[R] <zero/> | <succ> R) (N <: R) ]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1677,7 +1677,7 @@
 --   [] []
 --   [typ| LFP[R] <uno/> | <dos/>]
 --   [typ| <uno/> | <dos/> | <tres/>]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Subtyping_Static_prove
 -- -- := by
 -- --   apply GuardedSubtyping.lfp_skip_elim
@@ -1697,7 +1697,7 @@
 --   [] []
 --   [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
 --   [typ| LFP[R] ((<zero/>) | (<succ> R))]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1720,7 +1720,7 @@
 --   [] []
 --   [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
 --   [typ| TOP \ <succ> <zero/>]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1735,7 +1735,7 @@
 --   [] []
 --   [typ| LFP[R] ((<zero/>) | (<succ> <succ> R))]
 --   [typ| TOP \ <succ> <succ> <succ> <zero/>]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1761,7 +1761,7 @@
 --   [] []
 --   [typ|(<zero/>) | (<succ> <succ> (TOP \ <succ> <zero/>))]
 --   [typ| TOP \ <succ> <zero/>]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by
 --   sorry
 
@@ -1770,15 +1770,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <succ> <succ> <zero/>]
 --   [typ| LFP[R] <zero/> | <succ> R ]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <succ> <succ> <zero/>]
 --   [typ| LFP[R] <zero/> | <succ> R ]
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1786,30 +1786,30 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <zero/>]
 --   [typ| LFP[R] <zero/> | (R -> <uno/>) ]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <zero/>]
 --   [typ| LFP[R] <zero/> | (R -> <uno/>) ]
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
 -- ----- diff elim
 -- ---------------------------------------
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| (<uno/> | <dos/>) \ <dos/>]
 --   [typ| <uno/> ]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| (<uno/> | <dos/>) \ <dos/>]
 --   [typ| <uno/> ]
---   [ids| ] [subtypings|  ]
+--   [ids| ] [constraints|  ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1817,15 +1817,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <uno/> ]
 --   [typ| <uno/> | <dos/>]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <uno/> ]
 --   [typ| <uno/> | <dos/>]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1833,15 +1833,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <dos/> ]
 --   [typ| <uno/> | <dos/>]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <dos/> ]
 --   [typ| <uno/> | <dos/>]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1849,15 +1849,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <uno/>]
 --   [typ| EXI[T] [(T <: <uno/>)] T ]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <uno/>]
 --   [typ| EXI[T] [(T33 <: <uno/>)] T33]
---   [ids| ] [subtypings| (T33 <: <uno/>) (<uno/> <: T33) ]
+--   [ids| ] [constraints| (T33 <: <uno/>) (<uno/> <: T33) ]
 -- := by
 --   sorry
 
@@ -1866,15 +1866,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <uno/> & <dos/>]
 --   [typ| <uno/> ]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <uno/> & <dos/>]
 --   [typ| <uno/> ]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1882,15 +1882,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <uno/> & <dos/>]
 --   [typ| <dos/> ]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| <uno/> & <dos/>]
 --   [typ| <dos/> ]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Subtyping_Static_prove
 
 -- ---------------------------------------
@@ -1898,15 +1898,15 @@
 -- ---------------------------------------
 
 -- #eval GuardedSubtyping.solve
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| ALL[T] [(<uno/> <: T)] T ]
 --   [typ| <uno/>]
 
 -- example : GuardedSubtyping
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 --   [typ| ALL[T33] [(<uno/> <: T33)] T33 ]
 --   [typ| <uno/>]
---   [ids| ] [subtypings| (<uno/> <: T33) (T33 <: <uno/>) ]
+--   [ids| ] [constraints| (<uno/> <: T33) (T33 <: <uno/>) ]
 -- := by
 --   sorry
 --   -- Subtyping_Static_prove
@@ -1924,14 +1924,14 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] [typings| (x : <uno/>)]
+--   [ids| ] [constraints| ] [typings| (x : <uno/>)]
 --   [expr| x ]
 
 -- example : GuardedTyping
---   [ids| ] [subtypings| ] [typings| (x : <uno/>)]
+--   [ids| ] [constraints| ] [typings| (x : <uno/>)]
 --   [expr| x ]
 --   [typ| <uno/> ]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by Expr_Typing_Static_prove
 
 -- ---------------------------------------
@@ -1939,14 +1939,14 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr| <elem/> ]
 
 -- example : GuardedTyping
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr| <elem/> ]
 --   [typ| TOP ]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by
 --   sorry
 
@@ -1955,14 +1955,14 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr| <uno/> , <dos/>]
 
 -- example : GuardedTyping
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr| <uno/> , <dos/>]
 --   [typ| <uno/> * <dos/> ]
---   [ids| ] [subtypings| ]
+--   [ids| ] [constraints| ]
 -- := by
 --   sorry
 
@@ -1974,14 +1974,14 @@
 -- #eval Function.Typing.Static.compute [] [] [] [] [(Pat.var "x", Expr.var "x")]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr| [x => x]]
 
 -- -- example : ∃ T , GuardedTyping
--- --   [ids| ] [subtypings| ] []
+-- --   [ids| ] [constraints| ] []
 -- --   [expr| [x => x]]
 -- --   [typ| ALL [{[T]}] [({.var T} <: TOP)] ({.var T}) -> {.var T}]
--- --   [ids| ] [subtypings| ]
+-- --   [ids| ] [constraints| ]
 -- -- := by
 -- --   use ?_
 -- --   apply GuardedTyping.function
@@ -1997,7 +1997,7 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [<uno/> => <dos/>]
 --     [<thank/> => <you/>]
@@ -2005,18 +2005,18 @@
 --   ]
 
 -- -- example : GuardedTyping
--- --   [ids| ] [subtypings| ] []
+-- --   [ids| ] [constraints| ] []
 -- --   [expr|
 -- --     [<uno/> => <dos/>]
 -- --   ]
 -- --   [typ|
 -- --     (<uno/> -> <dos/>)
 -- --   ]
--- --   [ids| ] [subtypings| ]
+-- --   [ids| ] [constraints| ]
 -- -- := by Expr.Typing_Static_prove
 
 -- -- example : GuardedTyping
--- --   [ids| ] [subtypings| ] []
+-- --   [ids| ] [constraints| ] []
 -- --   [expr|
 -- --     [<uno/> => <dos/>]
 -- --     [<thank/> => <you/>]
@@ -2025,11 +2025,11 @@
 -- --     (<uno/> -> <dos/>) &
 -- --     (<thank/> -> <you/>)
 -- --   ]
--- --   [ids| ] [subtypings| ]
+-- --   [ids| ] [constraints| ]
 -- -- := by Expr.Typing_Static_prove
 
 -- -- example : GuardedTyping
--- --   [ids| ] [subtypings| ] []
+-- --   [ids| ] [constraints| ] []
 -- --   [expr|
 -- --     [<uno/> => <dos/>]
 -- --     [<thank/> => <you/>]
@@ -2040,7 +2040,7 @@
 -- --     (<thank/> -> <you/>) &
 -- --     (<hello/> -> <goodbye/>)
 -- --   ]
--- --   [ids| ] [subtypings| ]
+-- --   [ids| ] [constraints| ]
 -- -- := by Expr.Typing_Static_prove
 
 
@@ -2051,7 +2051,7 @@
 -- #eval [expr| x as <uno/>]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr| [ x => x as <uno/> ] ]
 
 -- ---------------------------------------
@@ -2059,7 +2059,7 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     def talky =
 --       [<uno/> => <dos/>]
@@ -2099,7 +2099,7 @@
 -- ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     def talky =
 --       [<uno/> => <dos/>]
@@ -2118,7 +2118,7 @@
 -- #eval [expr| [f => f(<uno/>), f(<dos/>) ] ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [f => f(<uno/>), f(<dos/>) ]
 --   ]
@@ -2128,7 +2128,7 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     loop([self =>
 --       [<zero/> => <nil/>]
@@ -2145,7 +2145,7 @@
 -- ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   repeat_expr
 
 
@@ -2158,7 +2158,7 @@
 -- ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     <succ> <succ> <zero/> as LFP[R] <zero/> | <succ> R
 --   ]
@@ -2169,19 +2169,19 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     <uno/>
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [x => x](<uno/>)
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [u =>
 --       [x => u]
@@ -2191,7 +2191,7 @@
 -- ----------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [ x =>
 --       [<zero/> => <uno/>]
@@ -2199,13 +2199,13 @@
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [g => g]([<zero/> => <uno/>])
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [ x =>
 --       [g => g]([<zero/> => <uno/>])
@@ -2213,7 +2213,7 @@
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [g =>
 --       [x => g]
@@ -2226,13 +2226,13 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [<one/> => <zero/>]
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [x =>
 --       [<zero/> => <uno/>]([<one/> => <zero/>](x))
@@ -2240,7 +2240,7 @@
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [ x =>
 --       [<zero/> => <uno/>](x)
@@ -2252,7 +2252,7 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [ x =>
 --       def g = [<zero/> => <uno/>] in
@@ -2261,7 +2261,7 @@
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [ x =>
 --       [g => g(x)]([<zero/> => <uno/>])
@@ -2269,7 +2269,7 @@
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [ x =>
 --       def g = [<zero/> => <uno/>] in
@@ -2279,7 +2279,7 @@
 
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     def g = [<zero/> => <uno/>] in
 --     [ x => g(x) ]
@@ -2287,7 +2287,7 @@
 
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     def f = [<one/> => <zero/>] in
 --     def g = [<zero/> => <uno/>] in
@@ -2303,7 +2303,7 @@
 
 -- -- RESULT: Even -> Nat
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr| [x =>
 --     x as (
 --       LFP[R] <zero/> | <succ> <succ> R
@@ -2314,7 +2314,7 @@
 
 -- -- RESULT: Even -> Even
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     def f = [x => x as LFP[R] <zero/> | <succ> <succ> R ] in
 --     def g = [x => x as LFP[R] <zero/> | <succ> R ] in
@@ -2322,7 +2322,7 @@
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     def g = loop ([self =>
 --       [<zero/> => <uno/>]
@@ -2333,7 +2333,7 @@
 
 -- -- RESULT: Even -> Uno
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     -- Even -> Even
 --     def f = loop ([self =>
@@ -2359,7 +2359,7 @@
 -- ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] [typings| (x : uno : <elem/> & dos : <elem/>)]
+--   [ids| ] [constraints| ] [typings| (x : uno : <elem/> & dos : <elem/>)]
 --   [expr|
 --     (
 --     [uno := <elem/> => one := <elem/>]
@@ -2369,7 +2369,7 @@
 
 -- -- NOTE: this passes because the typing assumption is absurd (<uno/> & <dos/>) <: BOT
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] [typings| (x : <uno/> & <dos/>)]
+--   [ids| ] [constraints| ] [typings| (x : <uno/> & <dos/>)]
 --   [expr|
 --     (
 --     [<uno/> => <one/>(<elem/>)]
@@ -2383,7 +2383,7 @@
 
 -- -- TODO: interpret further to simplify type
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     loop ([self =>
 --       [<nil/> => <zero/>]
@@ -2393,7 +2393,7 @@
 
 -- -- -- SHOULD FAIL
 -- -- #eval GuardedTyping.compute
--- --   [ids| ] [subtypings| ] []
+-- --   [ids| ] [constraints| ] []
 -- --   [expr|
 -- --     loop ([<guard> self =>
 -- --       [<nil/> => <zero/>]
@@ -2403,7 +2403,7 @@
 
 -- -- -- SHOULD FAIL
 -- -- #eval GuardedTyping.compute
--- --   [ids| ] [subtypings| ] []
+-- --   [ids| ] [constraints| ] []
 -- --   [expr|
 -- --     loop ([<guard> self => <guard> (
 -- --       [<nil/> => <zero/>]
@@ -2417,7 +2417,7 @@
 
 -- -- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [ x =>
 --       (
@@ -2435,7 +2435,7 @@
 
 -- -- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [f => f ](
 --       [<nil/> => <zero/>]
@@ -2444,7 +2444,7 @@
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [<nil/> => <zero/>]
 --     [<cons/> => <succ/>]
@@ -2452,7 +2452,7 @@
 
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     def f = (
 --       [<nil/> => <zero/>]
@@ -2464,7 +2464,7 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [z =>
 --       (
@@ -2477,13 +2477,13 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     (uno := <hello/> ; dos := <bye/>)
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     (
 --       [uno := x ; dos := y => (x,y)]
@@ -2492,7 +2492,7 @@
 
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     loop([self =>
 --       [<zero/> => <nil/>]
@@ -2502,7 +2502,7 @@
 
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [ x =>
 --       def g = [<zero/> => <uno/>] in
@@ -2511,13 +2511,13 @@
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [x => x](<uno/>)
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [u =>
 --       [x => x](<uno/>)
@@ -2525,7 +2525,7 @@
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [u =>
 --       [x => u]
@@ -2534,7 +2534,7 @@
 
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [ x =>
 --       [g => g(x)]([<zero/> => <uno/>])
@@ -2543,13 +2543,13 @@
 
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [g => g(<zero/>)]([<zero/> => <uno/>])
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [ x =>
 --       [g => g(x)]
@@ -2562,7 +2562,7 @@
 -- ---------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     loop([self =>
 --       [<zero/> => <nil/>]
@@ -2574,13 +2574,13 @@
 -- -------------------------------------------------
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [x => [<nil/> => <zero/>](x)]
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     def f = (
 --       [<nil/> => <zero/>]
@@ -2589,7 +2589,7 @@
 --   ]
 
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     def f = (
 --       [<nil/> => <zero/>]
@@ -2602,7 +2602,7 @@
 -- -- TODO: construct a reachable procedure that filters constraints
 -- -- to only those that are reachable from payload
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [<start/> =>
 --       def g = (
@@ -2615,7 +2615,7 @@
 
 -- -- RESULT: (<nil/> -> <uno/>)
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     def f = (
 --       [<nil/> => <zero/>]
@@ -2628,7 +2628,7 @@
 
 -- -- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --     [ <start/> =>
 --       def f = (
@@ -2646,7 +2646,7 @@
 
 -- -- RESULT: (<nil/> -> <uno/>) & (<cons/> -> <dos/>)
 -- #eval GuardedTyping.compute
---   [ids| ] [subtypings| ] []
+--   [ids| ] [constraints| ] []
 --   [expr|
 --       def f = (
 --         [<nil/>  => <zero/>]
@@ -2665,7 +2665,7 @@
 
 -- -- -- RESULT: Even -> Uno | Dos
 -- -- #eval GuardedTyping.compute
--- --   [ids| ] [subtypings| ] []
+-- --   [ids| ] [constraints| ] []
 -- --   [expr|
 -- --     -- Even -> Even
 -- --     def f = loop ([self =>

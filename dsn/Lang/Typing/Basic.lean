@@ -121,7 +121,7 @@ mutual
     List.all bs (fun b => b == "") &&
     Typ.constraints_nameless cs && Typ.nameless body
   | .lfp b body =>
-    b = "" && Typ.nameless body
+    b == "" && Typ.nameless body
 end
 
 def Typ.wellformed (t : Typ) := Typ.instantiated t && Typ.nameless t
@@ -865,12 +865,12 @@ mutual
   | .unio left right => .unio (Typ.sub δ left) (Typ.sub δ right)
   | .inter left right => .inter (Typ.sub δ left) (Typ.sub δ right)
   | .diff left right => .diff (Typ.sub δ left) (Typ.sub δ right)
-  | .all ids subtypings body =>
+  | .all ids constraints body =>
       let δ' := remove_all δ ids
-      .all ids (List.pair_typ_sub δ' subtypings) (Typ.sub δ' body)
-  | .exi ids subtypings body =>
+      .all ids (List.pair_typ_sub δ' constraints) (Typ.sub δ' body)
+  | .exi ids constraints body =>
       let δ' := remove_all δ ids
-      .exi ids (List.pair_typ_sub δ' subtypings) (Typ.sub δ' body)
+      .exi ids (List.pair_typ_sub δ' constraints) (Typ.sub δ' body)
   | .lfp id body =>
       let δ' := remove id δ
       .lfp id (Typ.sub δ' body)

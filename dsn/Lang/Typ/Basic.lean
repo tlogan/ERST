@@ -485,30 +485,30 @@ mutual
   | .diff left right, _ =>
     let content := Typ.reprPrec left 0 ++ " \\" ++ line ++ Typ.reprPrec right 0
     group content
-  | .all ids subtypings body, p =>
+  | .all ids constraints body, p =>
     let content := (
-      if subtypings.isEmpty then
+      if constraints.isEmpty then
         group (
           "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
         )
       else
         group (
           "ALL[" ++ String.intercalate " " ids ++ "]" ++ line ++
-            "[" ++ line ++ nest 2 (List.pair_typ_repr subtypings) ++ line ++ "]" ++ line ++
+            "[" ++ line ++ nest 2 (List.pair_typ_repr constraints) ++ line ++ "]" ++ line ++
             nest 2 (Typ.reprPrec body 0)
         )
     )
     group (wrap content p 40)
-  | .exi ids subtypings body, p =>
+  | .exi ids constraints body, p =>
     let content := (
-      if subtypings.isEmpty then
+      if constraints.isEmpty then
         group (
           "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++ nest 2 (Typ.reprPrec body 0)
         )
       else
         group (
           "EXI[" ++ String.intercalate " " ids ++ "]" ++ line ++
-            "[" ++ line ++ nest 2 (List.pair_typ_repr subtypings) ++ line ++ "]" ++ line ++
+            "[" ++ line ++ nest 2 (List.pair_typ_repr constraints) ++ line ++ "]" ++ line ++
             nest 2 (Typ.reprPrec body 0)
         )
     )
@@ -523,7 +523,7 @@ mutual
 end
 
 instance : Repr (List (Typ × Typ)) where
-  reprPrec cs _ := group ("[subtypings|" ++ line ++ nest 2 (List.pair_typ_repr cs) ++ " ]")
+  reprPrec cs _ := group ("[constraints|" ++ line ++ nest 2 (List.pair_typ_repr cs) ++ " ]")
 
 instance : Repr Typ where
   reprPrec t n := group ("[typ|" ++ line ++ nest 2 (Typ.reprPrec t n) ++ " ]")
@@ -614,14 +614,14 @@ instance : BEq (Typ × Typ) where
 --     let a := Typ.ordered_bound_vars bounds left
 --     let b := List.removeAll (Typ.ordered_bound_vars bounds right) a
 --     a ∪ b
---   | .all ids subtypings body =>
+--   | .all ids constraints body =>
 --     let bounds' := List.removeAll bounds ids
---     let a := List.pair_typ_ordered_bound_vars bounds' subtypings
+--     let a := List.pair_typ_ordered_bound_vars bounds' constraints
 --     let b := List.removeAll (Typ.ordered_bound_vars bounds' body) a
 --     a ∪ b
---   | .exi ids subtypings body =>
+--   | .exi ids constraints body =>
 --     let bounds' := List.removeAll bounds ids
---     let a := List.pair_typ_ordered_bound_vars bounds' subtypings
+--     let a := List.pair_typ_ordered_bound_vars bounds' constraints
 --     let b := List.removeAll (Typ.ordered_bound_vars bounds' body) a
 --     a ∪ b
 --   | .lfp id body =>
@@ -657,12 +657,12 @@ mutual
   | .unio l r => Typ.free_vars l ∪ Typ.free_vars r
   | .inter l r => Typ.free_vars l ∪ Typ.free_vars r
   | .diff l r => Typ.free_vars l ∪ Typ.free_vars r
-  | .all bs subtypings body =>
+  | .all bs constraints body =>
     /- NOTE: ignore content of bs; bound variable names have no semantics after seal -/
-    Typ.list_prod_free_vars subtypings ∪ Typ.free_vars body
-  | .exi bs subtypings body =>
+    Typ.list_prod_free_vars constraints ∪ Typ.free_vars body
+  | .exi bs constraints body =>
     /- NOTE: ignore content of bs; bound variable names have no semantics after seal -/
-    Typ.list_prod_free_vars subtypings ∪ Typ.free_vars body
+    Typ.list_prod_free_vars constraints ∪ Typ.free_vars body
   | .lfp b body =>
     /- NOTE: ignore content of bs; bound variable names have no semantics after seal -/
     Typ.free_vars body
@@ -916,8 +916,8 @@ mutual
   | .unio left right => Typ.size left + Typ.size right + 1
   | .inter left right => Typ.size left + Typ.size right + 1
   | .diff left right => Typ.size left + Typ.size right + 1
-  | .all ids subtypings body => List.pair_typ_size subtypings + Typ.size body + 1
-  | .exi ids subtypings body => List.pair_typ_size subtypings + Typ.size body + 1
+  | .all ids constraints body => List.pair_typ_size constraints + Typ.size body + 1
+  | .exi ids constraints body => List.pair_typ_size constraints + Typ.size body + 1
   | .lfp id body => (Typ.size body) + 1
 end
 
@@ -963,8 +963,8 @@ theorem ListTyp.zero_lt_size {ts : List Typ} : 0 < ListTyp.size ts := by
 cases ts <;> simp [ListTyp.size, Typ.zero_lt_size]
 
 
-declare_syntax_cat subtypings
--- declare_syntax_cat box_subtypings
+declare_syntax_cat constraints
+-- declare_syntax_cat box_constraints
 declare_syntax_cat typings
 -- declare_syntax_cat box_typings
 declare_syntax_cat typ
@@ -980,11 +980,11 @@ declare_syntax_cat function
 declare_syntax_cat expr
 
 
-syntax "(" typ "<:" typ ")" : subtypings
-syntax "(" typ "<:" typ ")" subtypings : subtypings
+syntax "(" typ "<:" typ ")" : constraints
+syntax "(" typ "<:" typ ")" constraints : constraints
 
--- syntax "[" "]" : box_subtypings
--- syntax "[" subtypings "]" : box_subtypings
+-- syntax "[" "]" : box_constraints
+-- syntax "[" constraints "]" : box_constraints
 
 syntax "(" ident ":" typ ")" : typings
 syntax "(" ident ":" typ ")" typings : typings
@@ -1009,12 +1009,12 @@ syntax "<" ident "/>" : typ
 syntax "<" ident ">" typ:100 : typ
 syntax ident ":" typ:100 : typ
 syntax typ "\\" typ : typ
-syntax:40 "ALL" "[" ids "]" "[" subtypings "]" typ : typ
-syntax:40 "EXI" "[" ids "]" "[" subtypings "]" typ : typ
+syntax:40 "ALL" "[" ids "]" "[" constraints "]" typ : typ
+syntax:40 "EXI" "[" ids "]" "[" constraints "]" typ : typ
 syntax:40 "ALL" "[" ids "]" typ : typ
 syntax:40 "EXI" "[" ids "]" typ : typ
-syntax:40 "ALL" "[" "]" "[" subtypings "]" typ : typ
-syntax:40 "EXI" "[" "]" "[" subtypings "]" typ : typ
+syntax:40 "ALL" "[" "]" "[" constraints "]" typ : typ
+syntax:40 "EXI" "[" "]" "[" constraints "]" typ : typ
 syntax "LFP" "[" ident "]" typ : typ
 syntax "BOT" : typ
 syntax "TOP" : typ
@@ -1092,9 +1092,9 @@ syntax  expr "as" typ : expr
 
 -- syntax "[subtyping|" typ "<:" typ "]" : term
 
-syntax "[subtypings|" "]" : term
-syntax "[subtypings|" subtypings "]" : term
--- syntax "[box_subtypings|" box_subtypings "]" : term
+syntax "[constraints|" "]" : term
+syntax "[constraints|" constraints "]" : term
+-- syntax "[box_constraints|" box_constraints "]" : term
 
 syntax "[typings|" "]" : term
 syntax "[typings|" typings "]": term
@@ -1120,13 +1120,13 @@ syntax "[typs|" typs "]" : term
 --   `(([typ| $x],[typ| $y]))
 
 macro_rules
-| `([subtypings| ]) => `([])
-| `([subtypings| ( $x:typ <: $y:typ ) ]) =>
+| `([constraints| ]) => `([])
+| `([constraints| ( $x:typ <: $y:typ ) ]) =>
   `(([typ| $x],[typ| $y]) :: [])
-| `([subtypings| ( $x:typ <: $y:typ ) $qs:subtypings ]) =>
-  `(([typ| $x],[typ| $y]) :: [subtypings| $qs])
--- | `([box_subtypings| [] ]) => `([])
--- | `([box_subtypings| [ $qs:subtypings ] ]) => `([subtypings| $qs])
+| `([constraints| ( $x:typ <: $y:typ ) $qs:constraints ]) =>
+  `(([typ| $x],[typ| $y]) :: [constraints| $qs])
+-- | `([box_constraints| [] ]) => `([])
+-- | `([box_constraints| [ $qs:constraints ] ]) => `([constraints| $qs])
 
 
 
@@ -1155,17 +1155,17 @@ macro_rules
 | `([typ| $x:typ & $y:typ ]) => `(Typ.inter [typ| $x] [typ| $y])
 | `([typ| $x:typ * $y:typ ]) => `(Typ.pair [typ| $x] [typ| $y])
 | `([typ| $x:typ \ $y:typ ]) => `(Typ.diff [typ| $x] [typ| $y])
-| `([typ| ALL [ $ps:ids ] [ $qs:subtypings ] $t:typ ]) =>
-  `(Typ.all [ids| $ps] [subtypings| $qs] [typ| $t])
-| `([typ| EXI [ $ps:ids ] [ $qs:subtypings ] $t:typ ]) =>
-  `(Typ.exi [ids| $ps] [subtypings| $qs] [typ| $t])
+| `([typ| ALL [ $ps:ids ] [ $qs:constraints ] $t:typ ]) =>
+  `(Typ.all [ids| $ps] [constraints| $qs] [typ| $t])
+| `([typ| EXI [ $ps:ids ] [ $qs:constraints ] $t:typ ]) =>
+  `(Typ.exi [ids| $ps] [constraints| $qs] [typ| $t])
 | `([typ| ALL [ $ps:ids ] $t:typ ]) => `(Typ.all [ids| $ps] [] [typ| $t])
 | `([typ| EXI [ $ps:ids ] $t:typ ]) => `(Typ.exi [ids| $ps] [] [typ| $t])
 
-| `([typ| ALL [ ] [ $qs:subtypings ] $t:typ ]) =>
-  `(Typ.all [] [subtypings| $qs] [typ| $t])
-| `([typ| EXI [  ] [ $qs:subtypings ] $t:typ ]) =>
-  `(Typ.exi [] [subtypings| $qs] [typ| $t])
+| `([typ| ALL [ ] [ $qs:constraints ] $t:typ ]) =>
+  `(Typ.all [] [constraints| $qs] [typ| $t])
+| `([typ| EXI [  ] [ $qs:constraints ] $t:typ ]) =>
+  `(Typ.exi [] [constraints| $qs] [typ| $t])
 
 | `([typ| LFP [ $i:ident ] $t:typ ]) => `(Typ.lfp [id| $i] [typ| $t])
 | `([typ| BOT ]) => `(Typ.bot)
