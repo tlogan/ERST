@@ -1,7 +1,17 @@
-import Lang.Util
+import Lean
+
 import Lang.List.Basic
 
 set_option pp.fieldNotation false
+
+namespace Lang
+
+#check Lean.mkFreshId
+def fresh_typ_id {m : Type → Type} [Monad m] [Lean.MonadNameGenerator m] : m String :=
+  do
+  let raw := (← Lean.mkFreshId).toString
+  let content :=  "T" ++ raw.drop ("_uniq.".length + 3)
+  return content
 
 declare_syntax_cat ids
 -- declare_syntax_cat box_ids
@@ -25,8 +35,6 @@ macro_rules
 | `([ids| $i:ident ]) => `([id| $i] :: [])
 | `([ids| $i:ident $ps:ids ]) => `([id| $i] :: [ids| $ps])
 
-
-namespace Lang
 
 
 open Std.Format

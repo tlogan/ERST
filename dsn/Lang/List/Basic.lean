@@ -1,8 +1,116 @@
-import Lang.Util
+import Mathlib.Tactic.Linarith
 
 set_option pp.fieldNotation false
 
 namespace Lang
+
+
+--------------------------
+
+
+
+theorem List.cons_containment {α} [BEq α] {x : α} {xs ys : List α} :
+  x :: xs  ⊆ ys → x ∈ ys ∧ xs ⊆ ys
+:= by
+  intro p0
+  apply And.intro
+  {
+    apply p0
+    simp [*]
+  }
+  {
+    intro y p1
+    apply p0
+    simp [*]
+  }
+
+-- #print List.inter
+
+#print decide
+
+example {α} [DecidableEq α] (x : α) (xs : List α) :
+  List.contains xs x =  decide (x ∈ xs)
+:= by exact List.contains_eq_mem x xs
+
+
+theorem List.not_mem_cons {α} [BEq α] {x x': α} {xs : List α} :
+  x ∉ (x' :: xs) →
+  x ≠ x' ∧ x ∉ xs
+:= by intro p ; exact List.ne_and_not_mem_of_not_mem_cons p
+
+-- set_option pp.notation false in
+theorem List.nonmem_to_disjoint_right {α} [DecidableEq α] (x : α) (xs : List α) :
+  x ∉ xs → xs ∩ [x] = []
+:= by
+  intro h
+  induction xs with
+  | nil => exact rfl
+  | cons y ys ih =>
+    simp [Inter.inter, List.inter]
+
+    have ⟨l,r⟩ := List.ne_and_not_mem_of_not_mem_cons h
+    apply And.intro
+    { exact id (Ne.symm l) }
+    { intros x'' p ; exact (ne_of_mem_of_not_mem p r) }
+
+
+theorem List.disjoint_preservation_left {α} [BEq α] {xs ys zs : List α} :
+  xs ⊆ ys → ys ∩ zs = [] → xs ∩ zs = []
+:= by
+  simp [Inter.inter, List.inter]
+  intro p0
+  induction xs with
+  | nil =>
+    intro p1; intro a;
+    intro p2
+    cases p2
+  | cons x xs' ih =>
+    intro p1
+    have ⟨p2, p3⟩ := List.cons_containment p0
+    intro a
+    intro p4
+    cases p4 with
+    | head =>
+      exact p1 x p2
+    | tail _ p5 =>
+      apply ih p3 p1
+      exact p5
+
+theorem List.disjoint_preservation_right {α} [BEq α] {xs ys zs : List α} :
+  ys ⊆ zs → xs ∩ zs = [] → xs ∩ ys = []
+:= by
+  simp [Inter.inter, List.inter]
+  intro p0
+  induction xs with
+  | nil =>
+    intro p1; intro a;
+    intro p2
+    cases p2
+  | cons x xs' ih =>
+    intro p1
+    sorry
+
+theorem List.disjoint_concat_right {α} [BEq α] {xs ys zs : List α} :
+  xs ∩ (ys ++ zs) = [] → xs ∩ ys = [] ∧ xs ∩ zs = []
+:= by sorry
+
+
+theorem List.inter_empty_eq_empty {α} [BEq α] {ys : List α} :
+  ys ∩ [] = []
+:= by
+  cases ys with
+  | nil => exact rfl
+  | cons x xs =>
+    simp [Inter.inter, List.inter]
+
+
+theorem List.disjoint_swap {α} [BEq α] {xs ys : List α} :
+  xs ∩ ys = [] → ys ∩ xs = []
+:= by
+  intros
+  induction xs with
+  | nil => exact inter_empty_eq_empty
+  | cons => sorry
 
 #check List.any
 -- The English word "any" does not hold quantification meaning; it is simply a predication of a collection.
@@ -41,47 +149,6 @@ theorem List.get_none_add_preservation {α} (m : List α) (i : Nat) (i' : Nat):
   intro h0
   exact Nat.le_add_right_of_le h0
 
-
-theorem remove_all_empty α ids:
-  @remove_all α [] ids = []
-:= by induction ids with
-| nil =>
-  simp [remove_all]
-| cons id ids' ih =>
-  simp [remove_all, remove]
-  exact ih
-
-theorem remove_all_single_membership :
-  x ∈ ids →
-  remove_all [(x,c)] ids = []
-:= by induction ids with
-| nil =>
-  simp [remove_all]
-| cons id ids' ih =>
-  simp [remove_all]
-  intro h0
-  cases h0 with
-  | inl h1 =>
-    simp [*, remove]
-    simp [remove_all_empty]
-  | inr h1 =>
-    specialize ih h1
-    simp [remove]
-    by_cases h2 : x = id
-    { simp [h2,remove_all_empty] }
-    { simp [h2,ih] }
-
-theorem remove_all_single_nomem :
-  x ∉ ids →
-  remove_all [(x,c)] ids = [(x,c)]
-:= by induction ids with
-| nil =>
-  simp [remove_all]
-| cons id ids ih =>
-  simp [remove_all,remove]
-  intro h0 h1
-  simp [h0]
-  apply ih h1
 
 
 end Lang

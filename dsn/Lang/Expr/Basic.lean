@@ -1,5 +1,7 @@
-import Lang.Util
+import Lean
+
 import Lang.List.Basic
+import Lang.Prod.Basic
 import Lang.String.Basic
 import Lang.Typ.Basic
 

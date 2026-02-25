@@ -1,6 +1,9 @@
-import Lang.Util
+import Lean
+
 import Lang.List.Basic
 import Lang.String.Basic
+import Lang.ReflTrans.Basic
+import Lang.Joinable.Basic
 import Lang.Typ.Basic
 import Lang.Expr.Basic
 import Lang.ParStep.Basic
