@@ -566,8 +566,7 @@ instance : Repr ListTyping where
 
 
 instance : BEq (Typ × Typ) where
-  -- beq a b := a.fst == b.fst && a.snd == b.snd
-  beq | (a,b), (c,d) => a == c && b == d
+  beq | (a,b),(c,d) => a == c && b == d
 
 -- def List.merase {α} [BEq α] (x : α) : List α → List α
 -- | .nil => .nil

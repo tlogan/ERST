@@ -2230,98 +2230,98 @@ mutual
 end
 
 
-mutual
+-- mutual
 
-  theorem ParStep.sub_record_preservation
-    x
-    (step : ParStep arg arg')
-    r
-  : ParRcdStep (List.record_sub [(x,arg)] r) (List.record_sub [(x,arg')] r)
-  := by cases r with
-  | nil =>
-    simp [List.record_sub]
-    exact ParRcdStep.refl []
-  | cons le r' =>
-    have (l,e) := le
-    simp [List.record_sub]
-    apply ParRcdStep.cons
-    { apply ParStep.sub_preservation _ step }
-    { apply ParStep.sub_record_preservation _ step}
+--   theorem ParStep.sub_record_preservation
+--     x
+--     (step : ParStep arg arg')
+--     r
+--   : ParRcdStep (List.record_sub [(x,arg)] r) (List.record_sub [(x,arg')] r)
+--   := by cases r with
+--   | nil =>
+--     simp [List.record_sub]
+--     exact ParRcdStep.refl []
+--   | cons le r' =>
+--     have (l,e) := le
+--     simp [List.record_sub]
+--     apply ParRcdStep.cons
+--     { apply ParStep.sub_preservation _ step }
+--     { apply ParStep.sub_record_preservation _ step}
 
-  theorem ParStep.sub_function_preservation
-    x
-    (step : ParStep arg arg')
-    f
-  : ParFunStep (List.function_sub [(x,arg)] f) (List.function_sub [(x,arg')] f)
-  := by cases f with
-  | nil =>
-    simp [List.function_sub]
-    exact ParFunStep.refl []
-  | cons pe f' =>
-    have (p,e) := pe
-    simp [List.function_sub]
-    apply ParFunStep.cons
-    { by_cases h : x ∈ Pat.index_vars p
-      { simp [remove_all_single_membership h]
-        exact refl (Expr.sub [] e)
-      }
-      { simp [remove_all_single_nomem h]
-        apply ParStep.sub_preservation x step e
-      }
-    }
-    { apply ParStep.sub_function_preservation _ step }
+--   theorem ParStep.sub_function_preservation
+--     x
+--     (step : ParStep arg arg')
+--     f
+--   : ParFunStep (List.function_sub [(x,arg)] f) (List.function_sub [(x,arg')] f)
+--   := by cases f with
+--   | nil =>
+--     simp [List.function_sub]
+--     exact ParFunStep.refl []
+--   | cons pe f' =>
+--     have (p,e) := pe
+--     simp [List.function_sub]
+--     apply ParFunStep.cons
+--     { by_cases h : x ∈ Pat.index_vars p
+--       { simp [Prod.remove_all_single_membership h]
+--         exact refl (Expr.sub [] e)
+--       }
+--       { simp [Prod.remove_all_single_nomem h]
+--         apply ParStep.sub_preservation x step e
+--       }
+--     }
+--     { apply ParStep.sub_function_preservation _ step }
 
-  theorem ParStep.sub_preservation
-    x
-    (step : ParStep arg arg')
-    e
-  : ParStep (Expr.sub [(x,arg)] e) (Expr.sub [(x,arg')] e)
-  := by cases e with
-  | bvar i =>
-    simp [Expr.sub]
-    exact bvar i
-  | fvar x' =>
-    by_cases h0 : x' = x
-    {
-      simp [Expr.sub,find,h0]
-      exact step
-    }
-    {
-      have h1 : x' ∉ ListPair.dom [(x,arg)] := by
-        simp [ListPair.dom] ; exact h0
-      have h2 : x' ∉ ListPair.dom [(x,arg')] := by
-        simp [ListPair.dom] ; exact h0
-      have h3 := Expr.sub_refl h1
-      have h4 := Expr.sub_refl h2
-      rw [h3,h4]
-      exact ParStep.refl (Expr.fvar x')
-    }
-  | iso l body =>
-    simp [Expr.sub]
-    have ih := ParStep.sub_preservation x step body
-    exact ParStep.iso ih
-  | record r =>
-    simp [Expr.sub]
-    have ih := ParStep.sub_record_preservation x step r
-    exact ParStep.record ih
-  | function f =>
-    simp [Expr.sub]
-    have ih := ParStep.sub_function_preservation x step f
-    exact function ih
-  | app ef ea =>
-    simp [Expr.sub]
-    have ih0 := ParStep.sub_preservation x step ef
-    have ih1 := ParStep.sub_preservation x step ea
-    exact app ih0 ih1
-  | anno e t =>
-    simp [Expr.sub]
-    have ih := ParStep.sub_preservation x step e
-    exact anno ih
-  | loopi e =>
-    simp [Expr.sub]
-    have ih := ParStep.sub_preservation x step e
-    exact loopi ih
-end
+--   theorem ParStep.sub_preservation
+--     x
+--     (step : ParStep arg arg')
+--     e
+--   : ParStep (Expr.sub [(x,arg)] e) (Expr.sub [(x,arg')] e)
+--   := by cases e with
+--   | bvar i =>
+--     simp [Expr.sub]
+--     exact bvar i
+--   | fvar x' =>
+--     by_cases h0 : x' = x
+--     {
+--       simp [Expr.sub,find,h0]
+--       exact step
+--     }
+--     {
+--       have h1 : x' ∉ ListPair.dom [(x,arg)] := by
+--         simp [ListPair.dom] ; exact h0
+--       have h2 : x' ∉ ListPair.dom [(x,arg')] := by
+--         simp [ListPair.dom] ; exact h0
+--       have h3 := Expr.sub_refl h1
+--       have h4 := Expr.sub_refl h2
+--       rw [h3,h4]
+--       exact ParStep.refl (Expr.fvar x')
+--     }
+--   | iso l body =>
+--     simp [Expr.sub]
+--     have ih := ParStep.sub_preservation x step body
+--     exact ParStep.iso ih
+--   | record r =>
+--     simp [Expr.sub]
+--     have ih := ParStep.sub_record_preservation x step r
+--     exact ParStep.record ih
+--   | function f =>
+--     simp [Expr.sub]
+--     have ih := ParStep.sub_function_preservation x step f
+--     exact function ih
+--   | app ef ea =>
+--     simp [Expr.sub]
+--     have ih0 := ParStep.sub_preservation x step ef
+--     have ih1 := ParStep.sub_preservation x step ea
+--     exact app ih0 ih1
+--   | anno e t =>
+--     simp [Expr.sub]
+--     have ih := ParStep.sub_preservation x step e
+--     exact anno ih
+--   | loopi e =>
+--     simp [Expr.sub]
+--     have ih := ParStep.sub_preservation x step e
+--     exact loopi ih
+-- end
 
 mutual
   theorem ParStep.instantiate_record_preservation

@@ -644,11 +644,11 @@ mutual
   | .nil => .nil
   | (p, e) :: f =>
     let ids := Pat.index_vars p
-    (p, Expr.sub (remove_all m ids) e) :: (List.function_sub m f)
+    (p, Expr.sub (Prod.remove_all m ids) e) :: (List.function_sub m f)
 
   def Expr.sub (m : List (String × Expr)): Expr → Expr
   | .bvar i => .bvar i
-  | .fvar id => match (find id m) with
+  | .fvar id => match (Prod.find id m) with
     | .none => (.fvar id)
     | .some e => e
   | .iso l body => .iso l (Expr.sub m body)
@@ -659,25 +659,25 @@ mutual
   | .loopi e => .loopi (Expr.sub m e)
 end
 
-theorem Expr.sub_refl :
-  x ∉ ListPair.dom m →
-  (Expr.sub m (.fvar x)) = (.fvar x)
-:= by
-  intro h0
-  induction m with
-  | nil =>
-    simp [Expr.sub, find]
-  | cons pair m' ih =>
-    have ⟨x',target⟩ := pair
-    simp [ListPair.dom] at h0
-    have ⟨h1,h2⟩ := h0
-    clear h0
-    specialize ih h2
-    simp [Expr.sub, find]
-    have h3 : x' ≠ x := by exact fun h => h1 (Eq.symm h)
-    simp [h3]
-    unfold Expr.sub at ih
-    exact ih
+-- theorem Expr.sub_refl :
+--   x ∉ ListPair.dom m →
+--   (Expr.sub m (.fvar x)) = (.fvar x)
+-- := by
+--   intro h0
+--   induction m with
+--   | nil =>
+--     simp [Expr.sub, find]
+--   | cons pair m' ih =>
+--     have ⟨x',target⟩ := pair
+--     simp [ListPair.dom] at h0
+--     have ⟨h1,h2⟩ := h0
+--     clear h0
+--     specialize ih h2
+--     simp [Expr.sub, find]
+--     have h3 : x' ≠ x := by exact fun h => h1 (Eq.symm h)
+--     simp [h3]
+--     unfold Expr.sub at ih
+--     exact ih
 
 
 def List.keys_unique {α} : List (String × α) → Bool
