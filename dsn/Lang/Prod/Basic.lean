@@ -19,17 +19,40 @@ def Prod.remove_all [BEq α] (xs : List (α × β)) : List α → List (α × β
 | [] => xs
 | target :: targets => remove_all (Prod.remove target xs) targets
 
-def Prod.find [BEq α] (target : α) (xs : List (α × β)) : Option β :=
-  Option.map Prod.snd (List.find? (fun (key,_) => key == target) xs)
+def Prod.find [DecidableEq α] (target : α) : List (α × β) → Option β
+| [] => .none
+| (a,b) :: xs =>
+  if a == target then
+    .some b
+  else
+    Prod.find target xs
 
-theorem Prod.find_prune [BEq α] o (m1 : List (α × Β)) :
+theorem Prod.find_prune [DecidableEq α] o (m1 : List (α × β)) :
   name ∉ Prod.dom m0 →
   Prod.find name (m0 ++ (name,o) :: m1)
   =
   Prod.find name ((name,o) :: m1)
-:= by sorry
+:= by induction m0 with
+| nil =>
+  simp
+| cons x xs ih =>
+  have (a,b) := x
+  simp [*, Prod.find, Prod.dom]
+  intro h0
+  by_cases h1 : a = name
+  { simp [h1]
+    apply False.elim
+    apply h0 (Eq.symm h1)
+  }
+  { simp [h1]
+    intro h2
+    simp [Prod.dom, Prod.find] at ih
+    apply ih h2
+  }
 
-theorem find_drop [BEq α] o (m1 : List (α × Β)) :
+
+
+theorem find_drop [DecidableEq α] o (m1 : List (α × Β)) :
   name ≠ name' →
   Prod.find name' (m0 ++ (name,o) :: m1)
   =
@@ -38,14 +61,14 @@ theorem find_drop [BEq α] o (m1 : List (α × Β)) :
 
 
 
-def Prod.key_fresh [BEq α] (target : α) : List (α × β) → Bool
+def Prod.key_fresh [DecidableEq α] (target : α) : List (α × β) → Bool
 | [] => .true
 | (key,_) :: xs =>
   key != target && Prod.key_fresh target xs
 
 
 
-def Prod.keys_unique [BEq α]: List (α × β) → Bool
+def Prod.keys_unique [DecidableEq α]: List (α × β) → Bool
 | .nil =>
   true
 | .cons (k,o) kos =>

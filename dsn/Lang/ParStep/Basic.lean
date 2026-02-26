@@ -291,7 +291,7 @@ theorem ParFunStep.joinable_cons :
   exists ((l,ec)::rc)
   apply And.intro (cons l h4 h6) (cons l h5 h7)
 
-theorem Joinable.app :
+theorem ParStep.joinable_app :
   Joinable ParStep fa fb →
   Joinable ParStep arg_a arg_b →
   Joinable ParStep (Expr.app fa arg_a) (Expr.app fb arg_b)
@@ -703,214 +703,6 @@ mutual
     apply ParStep.shift_vars_preservation _ _ step_e
 end
 
-
--- mutual
-
---   theorem ParRcdStep.shift_back_preservation
---     threshold
---     offset
---     (step : ParRcdStep r r')
---   : ParRcdStep
---     (List.record_shift_back threshold offset r)
---     (List.record_shift_back threshold offset r')
---   := by cases step with
---   | nil =>
---     simp [List.record_shift_back]
---     exact ParRcdStep.nil
---   | @cons e e' rr rr' l step_e step_rr =>
---     simp [List.record_shift_back]
---     apply ParRcdStep.cons
---     { apply ParStep.shift_back_preservation _ _ step_e}
---     { apply ParRcdStep.shift_back_preservation _ _ step_rr }
-
---   theorem ParFunStep.shift_back_preservation
---     threshold
---     offset
---     (step : ParFunStep f f')
---   : ParFunStep
---     (List.function_shift_back threshold offset f)
---     (List.function_shift_back threshold offset f')
---   := by cases step with
---   | nil =>
---     simp [List.function_shift_back]
---     exact ParFunStep.nil
---   | @cons e e' ff ff' p step_e step_ff =>
---     simp [List.function_shift_back]
---     apply ParFunStep.cons
---     { apply ParStep.shift_back_preservation _ _ step_e }
---     { apply ParFunStep.shift_back_preservation _ _ step_ff}
-
-
-
---   theorem ParStep.shift_back_preservation
---     threshold
---     offset
---     (step : ParStep e e')
---   : ParStep (Expr.shift_back threshold offset e) (Expr.shift_back threshold offset e')
---   := by cases step with
---   | bvar i =>
---     exact ParStep.refl (Expr.shift_back threshold offset (Expr.bvar i))
---   | fvar x =>
---     exact ParStep.refl (Expr.shift_back threshold offset (Expr.fvar x))
---   | @iso body body' l step_body =>
---     simp [Expr.shift_back]
---     apply ParStep.iso
---     apply ParStep.shift_back_preservation _ _ step_body
---   | @record r r' step_r =>
---     simp [Expr.shift_back]
---     apply ParStep.record
---     apply ParRcdStep.shift_back_preservation _ _ step_r
---   | @function f f' step_f =>
---     simp [Expr.shift_back]
---     apply ParStep.function
---     apply ParFunStep.shift_back_preservation _ _ step_f
---   | @app cator cator' arg arg' step_cator step_arg =>
---     simp [Expr.shift_back]
---     apply ParStep.app
---     { apply ParStep.shift_back_preservation _ _ step_cator }
---     { apply ParStep.shift_back_preservation _ _ step_arg }
---   | @pattern_match body body' arg arg' p m' f step_body step_arg matching' =>
---     simp [Expr.shift_back, List.function_shift_back]
-
---     rw [Expr.shift_back_instantiate_zero_inside_out]
---     apply ParStep.pattern_match
---     { rw [←Pattern.match_count_eq matching']
---       apply ParStep.shift_back_preservation _ _ step_body
---     }
---     { apply ParStep.shift_back_preservation _ _ step_arg }
---     { exact Pattern.match_shift_back_preservation matching' threshold offset }
---   | @skip f f' arg arg' p body step_f step_arg isval nomatching' =>
---     simp [Expr.shift_back]
---     apply ParStep.skip
---     { apply ParFunStep.shift_back_preservation _ _ step_f }
---     { apply ParStep.shift_back_preservation _ _  step_arg }
---     { exact Expr.valued_shift_back_preservation isval threshold offset }
---     { exact Pattern.skip_shift_back_preservation isval nomatching' threshold offset }
---   | @anno e e' t step_e =>
---     simp [Expr.shift_back]
---     apply ParStep.anno
---     apply ParStep.shift_back_preservation _ _ step_e
---   | @erase e e' t step_e =>
---     simp [Expr.shift_back]
---     apply ParStep.erase
---     apply ParStep.shift_back_preservation _ _ step_e
---   | @loopi body body' step_body =>
---     simp [Expr.shift_back]
---     apply ParStep.loopi
---     apply ParStep.shift_back_preservation _ _ step_body
---   | @recycle e e' x step_e =>
---     simp [Expr.shift_back]
-
---     rw [Expr.shift_back_instantiate_zero_inside_out]
---     apply ParStep.recycle
---     apply ParStep.shift_back_preservation _ _ step_e
--- end
-
-
-
--- mutual
---   theorem ParStep.shift_vars_reflection
---   (step : ParStep (Expr.shift_vars threshold offset e) (Expr.shift_vars threshold offset e'))
---   : ParStep e e'
---   := by
---     rw [←Expr.shift_forward_then_back threshold offset e]
---     rw [←Expr.shift_forward_then_back threshold offset e']
---     exact shift_back_preservation threshold offset step
--- end
-
-
--- mutual
-
---   theorem ParStep.sub_record_preservation
---     x
---     (step : ParStep arg arg')
---     r
---   : ParRcdStep (List.record_sub [(x,arg)] r) (List.record_sub [(x,arg')] r)
---   := by cases r with
---   | nil =>
---     simp [List.record_sub]
---     exact ParRcdStep.refl []
---   | cons le r' =>
---     have (l,e) := le
---     simp [List.record_sub]
---     apply ParRcdStep.cons
---     { apply ParStep.sub_preservation _ step }
---     { apply ParStep.sub_record_preservation _ step}
-
---   theorem ParStep.sub_function_preservation
---     x
---     (step : ParStep arg arg')
---     f
---   : ParFunStep (List.function_sub [(x,arg)] f) (List.function_sub [(x,arg')] f)
---   := by cases f with
---   | nil =>
---     simp [List.function_sub]
---     exact ParFunStep.refl []
---   | cons pe f' =>
---     have (p,e) := pe
---     simp [List.function_sub]
---     apply ParFunStep.cons
---     { by_cases h : x ∈ Pattern.index_vars p
---       { simp [Prod.remove_all_single_membership h]
---         exact refl (Expr.sub [] e)
---       }
---       { simp [Prod.remove_all_single_nomem h]
---         apply ParStep.sub_preservation x step e
---       }
---     }
---     { apply ParStep.sub_function_preservation _ step }
-
---   theorem ParStep.sub_preservation
---     x
---     (step : ParStep arg arg')
---     e
---   : ParStep (Expr.sub [(x,arg)] e) (Expr.sub [(x,arg')] e)
---   := by cases e with
---   | bvar i =>
---     simp [Expr.sub]
---     exact bvar i
---   | fvar x' =>
---     by_cases h0 : x' = x
---     {
---       simp [Expr.sub,find,h0]
---       exact step
---     }
---     {
---       have h1 : x' ∉ ListPair.dom [(x,arg)] := by
---         simp [ListPair.dom] ; exact h0
---       have h2 : x' ∉ ListPair.dom [(x,arg')] := by
---         simp [ListPair.dom] ; exact h0
---       have h3 := Expr.sub_refl h1
---       have h4 := Expr.sub_refl h2
---       rw [h3,h4]
---       exact ParStep.refl (Expr.fvar x')
---     }
---   | iso l body =>
---     simp [Expr.sub]
---     have ih := ParStep.sub_preservation x step body
---     exact ParStep.iso ih
---   | record r =>
---     simp [Expr.sub]
---     have ih := ParStep.sub_record_preservation x step r
---     exact ParStep.record ih
---   | function f =>
---     simp [Expr.sub]
---     have ih := ParStep.sub_function_preservation x step f
---     exact function ih
---   | app ef ea =>
---     simp [Expr.sub]
---     have ih0 := ParStep.sub_preservation x step ef
---     have ih1 := ParStep.sub_preservation x step ea
---     exact app ih0 ih1
---   | anno e t =>
---     simp [Expr.sub]
---     have ih := ParStep.sub_preservation x step e
---     exact anno ih
---   | loopi e =>
---     simp [Expr.sub]
---     have ih := ParStep.sub_preservation x step e
---     exact loopi ih
--- end
 
 mutual
   theorem ParStep.instantiate_record_preservation
@@ -1353,7 +1145,7 @@ mutual
     | @app _ cator_b _ arg_b step_cator_b step_arg_b =>
       have ih0 := ParStep.diamond step_cator_a step_cator_b
       have ih1 := ParStep.diamond step_arg_a step_arg_b
-      exact Joinable.app ih0 ih1
+      exact ParStep.joinable_app ih0 ih1
     | @pattern_match body body_a _ arg_b p mb f  step_body_a step_arg_b matching =>
       cases step_cator_a with
       | @function _ ff step_ff =>
@@ -1620,6 +1412,214 @@ theorem ParStep.confluence
     apply And.intro
     { exact h7 }
     { exact ReflTrans.transitivity h5 h6 }
+
+-- mutual
+
+--   theorem ParRcdStep.shift_back_preservation
+--     threshold
+--     offset
+--     (step : ParRcdStep r r')
+--   : ParRcdStep
+--     (List.record_shift_back threshold offset r)
+--     (List.record_shift_back threshold offset r')
+--   := by cases step with
+--   | nil =>
+--     simp [List.record_shift_back]
+--     exact ParRcdStep.nil
+--   | @cons e e' rr rr' l step_e step_rr =>
+--     simp [List.record_shift_back]
+--     apply ParRcdStep.cons
+--     { apply ParStep.shift_back_preservation _ _ step_e}
+--     { apply ParRcdStep.shift_back_preservation _ _ step_rr }
+
+--   theorem ParFunStep.shift_back_preservation
+--     threshold
+--     offset
+--     (step : ParFunStep f f')
+--   : ParFunStep
+--     (List.function_shift_back threshold offset f)
+--     (List.function_shift_back threshold offset f')
+--   := by cases step with
+--   | nil =>
+--     simp [List.function_shift_back]
+--     exact ParFunStep.nil
+--   | @cons e e' ff ff' p step_e step_ff =>
+--     simp [List.function_shift_back]
+--     apply ParFunStep.cons
+--     { apply ParStep.shift_back_preservation _ _ step_e }
+--     { apply ParFunStep.shift_back_preservation _ _ step_ff}
+
+
+
+--   theorem ParStep.shift_back_preservation
+--     threshold
+--     offset
+--     (step : ParStep e e')
+--   : ParStep (Expr.shift_back threshold offset e) (Expr.shift_back threshold offset e')
+--   := by cases step with
+--   | bvar i =>
+--     exact ParStep.refl (Expr.shift_back threshold offset (Expr.bvar i))
+--   | fvar x =>
+--     exact ParStep.refl (Expr.shift_back threshold offset (Expr.fvar x))
+--   | @iso body body' l step_body =>
+--     simp [Expr.shift_back]
+--     apply ParStep.iso
+--     apply ParStep.shift_back_preservation _ _ step_body
+--   | @record r r' step_r =>
+--     simp [Expr.shift_back]
+--     apply ParStep.record
+--     apply ParRcdStep.shift_back_preservation _ _ step_r
+--   | @function f f' step_f =>
+--     simp [Expr.shift_back]
+--     apply ParStep.function
+--     apply ParFunStep.shift_back_preservation _ _ step_f
+--   | @app cator cator' arg arg' step_cator step_arg =>
+--     simp [Expr.shift_back]
+--     apply ParStep.app
+--     { apply ParStep.shift_back_preservation _ _ step_cator }
+--     { apply ParStep.shift_back_preservation _ _ step_arg }
+--   | @pattern_match body body' arg arg' p m' f step_body step_arg matching' =>
+--     simp [Expr.shift_back, List.function_shift_back]
+
+--     rw [Expr.shift_back_instantiate_zero_inside_out]
+--     apply ParStep.pattern_match
+--     { rw [←Pattern.match_count_eq matching']
+--       apply ParStep.shift_back_preservation _ _ step_body
+--     }
+--     { apply ParStep.shift_back_preservation _ _ step_arg }
+--     { exact Pattern.match_shift_back_preservation matching' threshold offset }
+--   | @skip f f' arg arg' p body step_f step_arg isval nomatching' =>
+--     simp [Expr.shift_back]
+--     apply ParStep.skip
+--     { apply ParFunStep.shift_back_preservation _ _ step_f }
+--     { apply ParStep.shift_back_preservation _ _  step_arg }
+--     { exact Expr.valued_shift_back_preservation isval threshold offset }
+--     { exact Pattern.skip_shift_back_preservation isval nomatching' threshold offset }
+--   | @anno e e' t step_e =>
+--     simp [Expr.shift_back]
+--     apply ParStep.anno
+--     apply ParStep.shift_back_preservation _ _ step_e
+--   | @erase e e' t step_e =>
+--     simp [Expr.shift_back]
+--     apply ParStep.erase
+--     apply ParStep.shift_back_preservation _ _ step_e
+--   | @loopi body body' step_body =>
+--     simp [Expr.shift_back]
+--     apply ParStep.loopi
+--     apply ParStep.shift_back_preservation _ _ step_body
+--   | @recycle e e' x step_e =>
+--     simp [Expr.shift_back]
+
+--     rw [Expr.shift_back_instantiate_zero_inside_out]
+--     apply ParStep.recycle
+--     apply ParStep.shift_back_preservation _ _ step_e
+-- end
+
+
+
+-- mutual
+--   theorem ParStep.shift_vars_reflection
+--   (step : ParStep (Expr.shift_vars threshold offset e) (Expr.shift_vars threshold offset e'))
+--   : ParStep e e'
+--   := by
+--     rw [←Expr.shift_forward_then_back threshold offset e]
+--     rw [←Expr.shift_forward_then_back threshold offset e']
+--     exact shift_back_preservation threshold offset step
+-- end
+
+
+-- mutual
+
+--   theorem ParStep.sub_record_preservation
+--     x
+--     (step : ParStep arg arg')
+--     r
+--   : ParRcdStep (List.record_sub [(x,arg)] r) (List.record_sub [(x,arg')] r)
+--   := by cases r with
+--   | nil =>
+--     simp [List.record_sub]
+--     exact ParRcdStep.refl []
+--   | cons le r' =>
+--     have (l,e) := le
+--     simp [List.record_sub]
+--     apply ParRcdStep.cons
+--     { apply ParStep.sub_preservation _ step }
+--     { apply ParStep.sub_record_preservation _ step}
+
+--   theorem ParStep.sub_function_preservation
+--     x
+--     (step : ParStep arg arg')
+--     f
+--   : ParFunStep (List.function_sub [(x,arg)] f) (List.function_sub [(x,arg')] f)
+--   := by cases f with
+--   | nil =>
+--     simp [List.function_sub]
+--     exact ParFunStep.refl []
+--   | cons pe f' =>
+--     have (p,e) := pe
+--     simp [List.function_sub]
+--     apply ParFunStep.cons
+--     { by_cases h : x ∈ Pattern.index_vars p
+--       { simp [Prod.remove_all_single_membership h]
+--         exact refl (Expr.sub [] e)
+--       }
+--       { simp [Prod.remove_all_single_nomem h]
+--         apply ParStep.sub_preservation x step e
+--       }
+--     }
+--     { apply ParStep.sub_function_preservation _ step }
+
+--   theorem ParStep.sub_preservation
+--     x
+--     (step : ParStep arg arg')
+--     e
+--   : ParStep (Expr.sub [(x,arg)] e) (Expr.sub [(x,arg')] e)
+--   := by cases e with
+--   | bvar i =>
+--     simp [Expr.sub]
+--     exact bvar i
+--   | fvar x' =>
+--     by_cases h0 : x' = x
+--     {
+--       simp [Expr.sub,find,h0]
+--       exact step
+--     }
+--     {
+--       have h1 : x' ∉ ListPair.dom [(x,arg)] := by
+--         simp [ListPair.dom] ; exact h0
+--       have h2 : x' ∉ ListPair.dom [(x,arg')] := by
+--         simp [ListPair.dom] ; exact h0
+--       have h3 := Expr.sub_refl h1
+--       have h4 := Expr.sub_refl h2
+--       rw [h3,h4]
+--       exact ParStep.refl (Expr.fvar x')
+--     }
+--   | iso l body =>
+--     simp [Expr.sub]
+--     have ih := ParStep.sub_preservation x step body
+--     exact ParStep.iso ih
+--   | record r =>
+--     simp [Expr.sub]
+--     have ih := ParStep.sub_record_preservation x step r
+--     exact ParStep.record ih
+--   | function f =>
+--     simp [Expr.sub]
+--     have ih := ParStep.sub_function_preservation x step f
+--     exact function ih
+--   | app ef ea =>
+--     simp [Expr.sub]
+--     have ih0 := ParStep.sub_preservation x step ef
+--     have ih1 := ParStep.sub_preservation x step ea
+--     exact app ih0 ih1
+--   | anno e t =>
+--     simp [Expr.sub]
+--     have ih := ParStep.sub_preservation x step e
+--     exact anno ih
+--   | loopi e =>
+--     simp [Expr.sub]
+--     have ih := ParStep.sub_preservation x step e
+--     exact loopi ih
+-- end
 
 
 

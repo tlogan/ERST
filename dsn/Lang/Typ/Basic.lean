@@ -182,253 +182,252 @@ mutual
       | _ => apply isFalse ; simp
 end
 
+-- mutual
+--   def List.pair_typ_beq : List (Typ × Typ) → List (Typ × Typ) → Bool
+--   | .nil, .nil => .true
+--   | (a,b) :: l, (c,d) :: r =>
+--     Typ.beq a c &&
+--     Typ.beq b d &&
+--     List.pair_typ_beq l r
+--   | _, _ => .false
 
-mutual
-  def List.pair_typ_beq : List (Typ × Typ) → List (Typ × Typ) → Bool
-  | .nil, .nil => .true
-  | (a,b) :: l, (c,d) :: r =>
-    Typ.beq a c &&
-    Typ.beq b d &&
-    List.pair_typ_beq l r
-  | _, _ => .false
+--   def Typ.beq : Typ → Typ → Bool
+--   | .bvar il, .bvar ir => il == ir
+--   | .var idl, .var idr => idl == idr
+--   | .iso ll bodyl, .iso lr bodyr => ll == lr && Typ.beq bodyl bodyr
+--   | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.beq bodyl bodyr
+--   | .path x y, .path p q => Typ.beq x p && Typ.beq y q
+--   | .bot, .bot => .true
+--   | .top, .top => .true
+--   | .unio a b, .unio c d => Typ.beq a c && Typ.beq b d
+--   | .inter a b, .inter c d => Typ.beq a c && Typ.beq b d
+--   | .diff a b, .diff c d => Typ.beq a c && Typ.beq b d
+--   | .all idsl qsl bodyl, .all idsr qsr bodyr =>
+--     idsl == idsr &&
+--     List.pair_typ_beq qsl qsr &&
+--     Typ.beq bodyl bodyr
+--   | .exi idsl qsl bodyl, .exi idsr qsr bodyr =>
+--     idsl == idsr &&
+--     List.pair_typ_beq qsl qsr &&
+--     Typ.beq bodyl bodyr
+--   | .lfp idl bodyl, .lfp idr bodyr =>
+--     idl == idr && Typ.beq bodyl bodyr
+--   | _, _ => false
+-- end
 
-  def Typ.beq : Typ → Typ → Bool
-  | .bvar il, .bvar ir => il == ir
-  | .var idl, .var idr => idl == idr
-  | .iso ll bodyl, .iso lr bodyr => ll == lr && Typ.beq bodyl bodyr
-  | .entry ll bodyl, .entry lr bodyr => ll == lr && Typ.beq bodyl bodyr
-  | .path x y, .path p q => Typ.beq x p && Typ.beq y q
-  | .bot, .bot => .true
-  | .top, .top => .true
-  | .unio a b, .unio c d => Typ.beq a c && Typ.beq b d
-  | .inter a b, .inter c d => Typ.beq a c && Typ.beq b d
-  | .diff a b, .diff c d => Typ.beq a c && Typ.beq b d
-  | .all idsl qsl bodyl, .all idsr qsr bodyr =>
-    idsl == idsr &&
-    List.pair_typ_beq qsl qsr &&
-    Typ.beq bodyl bodyr
-  | .exi idsl qsl bodyl, .exi idsr qsr bodyr =>
-    idsl == idsr &&
-    List.pair_typ_beq qsl qsr &&
-    Typ.beq bodyl bodyr
-  | .lfp idl bodyl, .lfp idr bodyr =>
-    idl == idr && Typ.beq bodyl bodyr
-  | _, _ => false
-end
+-- instance : BEq (List (Typ × Typ)) where
+--   beq := List.pair_typ_beq
 
-instance : BEq (List (Typ × Typ)) where
-  beq := List.pair_typ_beq
-
-instance Typ.instanceBEq : BEq Typ where
-  beq := Typ.beq
-
-
-mutual
-  theorem List.pair_typ_refl_beq_true : ∀ cs : List (Typ × Typ), List.pair_typ_beq cs cs = true
-  | .nil => rfl
-  | (lower,upper) :: cs' => by
-    simp [List.pair_typ_beq]
-    simp [Typ.refl_beq_true]
-    apply List.pair_typ_refl_beq_true
-
-  theorem Typ.refl_beq_true : ∀ t : Typ, Typ.beq t t = true
-  | .bvar i => by
-    unfold Typ.beq
-    simp
-  | .var id => by
-    unfold Typ.beq
-    simp
-  | .iso l body => by
-    unfold Typ.beq
-    simp
-    apply Typ.refl_beq_true
-  | .entry l body => by
-    unfold Typ.beq
-    simp
-    apply Typ.refl_beq_true
-  | .path x y => by
-    unfold Typ.beq
-    simp
-    apply And.intro
-    ·  apply Typ.refl_beq_true
-    ·  apply Typ.refl_beq_true
-  | .bot => by
-    unfold Typ.beq
-    simp
-  | .top => by
-    unfold Typ.beq
-    simp
-  | .unio a b => by
-    unfold Typ.beq
-    simp
-    apply And.intro
-    · apply Typ.refl_beq_true
-    · apply Typ.refl_beq_true
-  | .inter a b => by
-    unfold Typ.beq
-    simp
-    apply And.intro
-    · apply Typ.refl_beq_true
-    · apply Typ.refl_beq_true
-  | .diff a b => by
-    unfold Typ.beq
-    simp
-    apply And.intro
-    · apply Typ.refl_beq_true
-    · apply Typ.refl_beq_true
-
-  | .all ids qs body => by
-    unfold Typ.beq
-    simp
-    apply And.intro
-    · apply List.pair_typ_refl_beq_true
-    · apply Typ.refl_beq_true
-
-  | .exi ids qs body => by
-    unfold Typ.beq
-    simp
-    apply And.intro
-    · apply List.pair_typ_refl_beq_true
-    · apply Typ.refl_beq_true
-
-  | .lfp id body => by
-    unfold Typ.beq
-    simp
-    apply Typ.refl_beq_true
-end
+-- instance Typ.instanceBEq : BEq Typ where
+--   beq := Typ.beq
 
 
-mutual
+-- mutual
+--   theorem List.pair_typ_refl_beq_true : ∀ cs : List (Typ × Typ), List.pair_typ_beq cs cs = true
+--   | .nil => rfl
+--   | (lower,upper) :: cs' => by
+--     simp [List.pair_typ_beq]
+--     simp [Typ.refl_beq_true]
+--     apply List.pair_typ_refl_beq_true
 
-  theorem List.pair_typ_beq_implies_eq : ∀ ls rs, List.pair_typ_beq ls rs = true → ls = rs
-  | [], [] => by simp
-  | l :: ls, [] => by
-    simp [List.pair_typ_beq]
-  | [], r :: rs => by
-    simp [List.pair_typ_beq]
-  | (al,bl) :: ls, (ar,br) :: rs => by
-    simp [List.pair_typ_beq]
-    intros uno dos tres
-    apply Typ.beq_implies_eq at uno
-    apply Typ.beq_implies_eq at dos
-    apply List.pair_typ_beq_implies_eq at tres
-    simp [*]
+--   theorem Typ.refl_beq_true : ∀ t : Typ, Typ.beq t t = true
+--   | .bvar i => by
+--     unfold Typ.beq
+--     simp
+--   | .var id => by
+--     unfold Typ.beq
+--     simp
+--   | .iso l body => by
+--     unfold Typ.beq
+--     simp
+--     apply Typ.refl_beq_true
+--   | .entry l body => by
+--     unfold Typ.beq
+--     simp
+--     apply Typ.refl_beq_true
+--   | .path x y => by
+--     unfold Typ.beq
+--     simp
+--     apply And.intro
+--     ·  apply Typ.refl_beq_true
+--     ·  apply Typ.refl_beq_true
+--   | .bot => by
+--     unfold Typ.beq
+--     simp
+--   | .top => by
+--     unfold Typ.beq
+--     simp
+--   | .unio a b => by
+--     unfold Typ.beq
+--     simp
+--     apply And.intro
+--     · apply Typ.refl_beq_true
+--     · apply Typ.refl_beq_true
+--   | .inter a b => by
+--     unfold Typ.beq
+--     simp
+--     apply And.intro
+--     · apply Typ.refl_beq_true
+--     · apply Typ.refl_beq_true
+--   | .diff a b => by
+--     unfold Typ.beq
+--     simp
+--     apply And.intro
+--     · apply Typ.refl_beq_true
+--     · apply Typ.refl_beq_true
 
-  -- TODO: use mututual recursion
-  theorem Typ.beq_implies_eq : ∀ l r , (Typ.beq l r) = true → l = r :=
-    fun left right => match left with
-    | .bvar idl => by cases right with
-      | bvar idr => unfold Typ.beq; simp
-      | _ => unfold Typ.beq; simp
-    | .var idl => by cases right with
-      | var idr => unfold Typ.beq; simp
-      | _ => unfold Typ.beq; simp
-    | .iso ll bodyl => by cases right with
-      | iso lr bodyr =>
-        unfold Typ.beq; simp
-        intro uno
-        intro dos
-        apply Typ.beq_implies_eq at dos
-        simp [*]
-      | _ => unfold Typ.beq; simp
-    | .entry ll bodyl => by cases right with
-      | entry lr bodyr =>
-        unfold Typ.beq; simp
-        intro uno
-        intro dos
-        apply Typ.beq_implies_eq at dos
-        simp [*]
-      | _ => unfold Typ.beq; simp
-    | .path al bl => by cases right with
-      | path ar br =>
-        unfold Typ.beq; simp
-        intro uno
-        intro dos
-        apply Typ.beq_implies_eq at uno
-        apply Typ.beq_implies_eq at dos
-        simp [*]
-      | _ => unfold Typ.beq; simp
-    | .bot => by cases right with
-      | bot => unfold Typ.beq; simp
-      | _ => unfold Typ.beq; simp
-    | .top => by cases right with
-      | bot => unfold Typ.beq; simp
-      | _ => unfold Typ.beq; simp
-    | .unio al bl => by cases right with
-      | unio ar br =>
-        unfold Typ.beq; simp
-        intro uno
-        intro dos
-        apply Typ.beq_implies_eq at uno
-        apply Typ.beq_implies_eq at dos
-        simp [*]
-      | _ => unfold Typ.beq; simp
-    | .inter al bl => by cases right with
-      | inter ar br =>
-        unfold Typ.beq; simp
-        intro uno
-        intro dos
-        apply Typ.beq_implies_eq at uno
-        apply Typ.beq_implies_eq at dos
-        simp [*]
-      | _ => unfold Typ.beq; simp
-    | .diff al bl => by cases right with
-      | diff ar br =>
-        unfold Typ.beq; simp
-        intro uno
-        intro dos
-        apply Typ.beq_implies_eq at uno
-        apply Typ.beq_implies_eq at dos
-        simp [*]
-      | _ => unfold Typ.beq; simp
-    | .all idsl qsl bodyl => by cases right with
-      | all idsr qsr bodyr =>
-        unfold Typ.beq; simp
-        intro uno
-        intro dos
-        intro tres
-        apply List.pair_typ_beq_implies_eq at dos
-        apply Typ.beq_implies_eq at tres
-        simp [*]
-      | _ => unfold Typ.beq; simp
-    | .exi idsl qsl bodyl => by cases right with
-      | exi idsr qsr bodyr =>
-        unfold Typ.beq; simp
-        intro uno
-        intro dos
-        intro tres
-        apply List.pair_typ_beq_implies_eq at dos
-        apply Typ.beq_implies_eq at tres
-        simp [*]
-      | _ => unfold Typ.beq; simp
-    | .lfp idl bodyl => by cases right with
-      | lfp idr bodyr =>
-        unfold Typ.beq; simp
-        intro uno
-        intro dos
-        apply Typ.beq_implies_eq at dos
-        simp [*]
-      | _ => unfold Typ.beq; simp
-end
+--   | .all ids qs body => by
+--     unfold Typ.beq
+--     simp
+--     apply And.intro
+--     · apply List.pair_typ_refl_beq_true
+--     · apply Typ.refl_beq_true
+
+--   | .exi ids qs body => by
+--     unfold Typ.beq
+--     simp
+--     apply And.intro
+--     · apply List.pair_typ_refl_beq_true
+--     · apply Typ.refl_beq_true
+
+--   | .lfp id body => by
+--     unfold Typ.beq
+--     simp
+--     apply Typ.refl_beq_true
+-- end
 
 
+-- mutual
 
-theorem Typ.refl_BEq_true : ∀ t : Typ, (t == t) = true := by
-  apply Typ.refl_beq_true
+--   theorem List.pair_typ_beq_implies_eq : ∀ ls rs, List.pair_typ_beq ls rs = true → ls = rs
+--   | [], [] => by simp
+--   | l :: ls, [] => by
+--     simp [List.pair_typ_beq]
+--   | [], r :: rs => by
+--     simp [List.pair_typ_beq]
+--   | (al,bl) :: ls, (ar,br) :: rs => by
+--     simp [List.pair_typ_beq]
+--     intros uno dos tres
+--     apply Typ.beq_implies_eq at uno
+--     apply Typ.beq_implies_eq at dos
+--     apply List.pair_typ_beq_implies_eq at tres
+--     simp [*]
 
-theorem Typ.eq_implies_BEq_true : ∀  l r : Typ, (l = r) → (l == r) = true := by
-  simp [Typ.refl_BEq_true]
+--   -- TODO: use mututual recursion
+--   theorem Typ.beq_implies_eq : ∀ l r , (Typ.beq l r) = true → l = r :=
+--     fun left right => match left with
+--     | .bvar idl => by cases right with
+--       | bvar idr => unfold Typ.beq; simp
+--       | _ => unfold Typ.beq; simp
+--     | .var idl => by cases right with
+--       | var idr => unfold Typ.beq; simp
+--       | _ => unfold Typ.beq; simp
+--     | .iso ll bodyl => by cases right with
+--       | iso lr bodyr =>
+--         unfold Typ.beq; simp
+--         intro uno
+--         intro dos
+--         apply Typ.beq_implies_eq at dos
+--         simp [*]
+--       | _ => unfold Typ.beq; simp
+--     | .entry ll bodyl => by cases right with
+--       | entry lr bodyr =>
+--         unfold Typ.beq; simp
+--         intro uno
+--         intro dos
+--         apply Typ.beq_implies_eq at dos
+--         simp [*]
+--       | _ => unfold Typ.beq; simp
+--     | .path al bl => by cases right with
+--       | path ar br =>
+--         unfold Typ.beq; simp
+--         intro uno
+--         intro dos
+--         apply Typ.beq_implies_eq at uno
+--         apply Typ.beq_implies_eq at dos
+--         simp [*]
+--       | _ => unfold Typ.beq; simp
+--     | .bot => by cases right with
+--       | bot => unfold Typ.beq; simp
+--       | _ => unfold Typ.beq; simp
+--     | .top => by cases right with
+--       | bot => unfold Typ.beq; simp
+--       | _ => unfold Typ.beq; simp
+--     | .unio al bl => by cases right with
+--       | unio ar br =>
+--         unfold Typ.beq; simp
+--         intro uno
+--         intro dos
+--         apply Typ.beq_implies_eq at uno
+--         apply Typ.beq_implies_eq at dos
+--         simp [*]
+--       | _ => unfold Typ.beq; simp
+--     | .inter al bl => by cases right with
+--       | inter ar br =>
+--         unfold Typ.beq; simp
+--         intro uno
+--         intro dos
+--         apply Typ.beq_implies_eq at uno
+--         apply Typ.beq_implies_eq at dos
+--         simp [*]
+--       | _ => unfold Typ.beq; simp
+--     | .diff al bl => by cases right with
+--       | diff ar br =>
+--         unfold Typ.beq; simp
+--         intro uno
+--         intro dos
+--         apply Typ.beq_implies_eq at uno
+--         apply Typ.beq_implies_eq at dos
+--         simp [*]
+--       | _ => unfold Typ.beq; simp
+--     | .all idsl qsl bodyl => by cases right with
+--       | all idsr qsr bodyr =>
+--         unfold Typ.beq; simp
+--         intro uno
+--         intro dos
+--         intro tres
+--         apply List.pair_typ_beq_implies_eq at dos
+--         apply Typ.beq_implies_eq at tres
+--         simp [*]
+--       | _ => unfold Typ.beq; simp
+--     | .exi idsl qsl bodyl => by cases right with
+--       | exi idsr qsr bodyr =>
+--         unfold Typ.beq; simp
+--         intro uno
+--         intro dos
+--         intro tres
+--         apply List.pair_typ_beq_implies_eq at dos
+--         apply Typ.beq_implies_eq at tres
+--         simp [*]
+--       | _ => unfold Typ.beq; simp
+--     | .lfp idl bodyl => by cases right with
+--       | lfp idr bodyr =>
+--         unfold Typ.beq; simp
+--         intro uno
+--         intro dos
+--         apply Typ.beq_implies_eq at dos
+--         simp [*]
+--       | _ => unfold Typ.beq; simp
+-- end
 
 
-theorem Typ.BEq_true_implies_eq : ∀  l r : Typ, (l == r) = true → l = r := by
-  apply Typ.beq_implies_eq
 
-theorem Typ.neq_implies_BEq_false : ∀ l r : Typ, l ≠ r → (l == r) = false := by
-  intros l r h
-  contrapose h
-  simp_all
-  apply Typ.BEq_true_implies_eq
-  assumption
+-- theorem Typ.refl_BEq_true : ∀ t : Typ, (t == t) = true := by
+--   apply Typ.refl_beq_true
+
+-- theorem Typ.eq_implies_BEq_true : ∀  l r : Typ, (l = r) → (l == r) = true := by
+--   simp [Typ.refl_BEq_true]
+
+
+-- theorem Typ.BEq_true_implies_eq : ∀  l r : Typ, (l == r) = true → l = r := by
+--   apply Typ.beq_implies_eq
+
+-- theorem Typ.neq_implies_BEq_false : ∀ l r : Typ, l ≠ r → (l == r) = false := by
+--   intros l r h
+--   contrapose h
+--   simp_all
+--   apply Typ.BEq_true_implies_eq
+--   assumption
 
 
 def Typ.is_pair : Typ → Bool
