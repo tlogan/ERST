@@ -17,7 +17,7 @@ mutual
   | head l r: NStep e e' →  NRcdStep ((l, e) :: r) ((l, e') :: r)
   | tail l e : NRcdStep r r' → NRcdStep ((l,e) :: r) ((l,e) :: r')
 
-  inductive NFunStep : List (Pat × Expr) → List (Pat × Expr) → Prop
+  inductive NFunStep : List (Pattern × Expr) → List (Pattern × Expr) → Prop
   | head p f : NStep e e' →  NFunStep ((p, e) :: f) ((p, e') :: f)
   | tail p e : NFunStep f f' → NFunStep ((p,e) :: f) ((p,e) :: f')
 
@@ -34,7 +34,7 @@ mutual
     Pattern.match arg p = some m →
     NStep (.app (.function ((p,body) :: f)) arg) (Expr.instantiate 0 m body)
   | skip body f:
-    arg.is_value →
+    Expr.valued arg →
     Pattern.match arg p = none →
     NStep (.app (.function ((p,body) :: f)) arg) (.app (.function f) arg)
   | anno : NStep body body' → NStep (.anno body t) (.anno body' t)
@@ -56,11 +56,11 @@ theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
     simp [Expr.instantiate, Expr.shift_vars_zero]
   rw [h1]
   apply NStep.pattern_match
-  simp [Expr.instantiate, Expr.shift_vars_zero, Pat.bvar]
+  simp [Expr.instantiate, Expr.shift_vars_zero, Pattern.bvar]
   simp [Pattern.match, Pattern.match_record, Pattern.match_entry,
     Inter.inter, List.inter,
-    Pat.index_vars, Pat.record_index_vars,
-    List.keys_unique, List.is_fresh_key
+    Pattern.index_vars, Pattern.record_index_vars,
+    Prod.keys_unique, Prod.key_fresh
   ]
 
 theorem NStep.extract : NStep (Expr.extract (Expr.iso l e) l) e := by
@@ -69,7 +69,7 @@ theorem NStep.extract : NStep (Expr.extract (Expr.iso l e) l) e := by
     simp [Expr.instantiate, Expr.shift_vars_zero]
   rw [h1]
   apply NStep.pattern_match
-  simp [Expr.instantiate, Expr.shift_vars_zero, Pat.bvar]
+  simp [Expr.instantiate, Expr.shift_vars_zero, Pattern.bvar]
   simp [Pattern.match]
 
 
@@ -141,11 +141,11 @@ theorem NRcdStep.refl_trans_head :
     { apply NRcdStep.head _ _ h1 }
     { exact ih }
 
--- theorem List.is_fresh_key_n_rcd_step_reduction :
+-- theorem Prod.key_fresh_n_rcd_step_reduction :
 --   NRcdStep r r' →
 --   ∀ {l},
---   List.is_fresh_key l r →
---   List.is_fresh_key l r'
+--   Prod.key_fresh l r →
+--   Prod.key_fresh l r'
 -- := by
 --   intro h0
 --   cases h0 with
@@ -154,11 +154,11 @@ theorem NRcdStep.refl_trans_head :
 --     exact fresh
 --   | tail fresh' step' =>
 --     intro l fresh
---     have ih := @List.is_fresh_key_n_rcd_step_reduction _ _ step'
---     simp [List.is_fresh_key] at fresh
+--     have ih := @Prod.key_fresh_n_rcd_step_reduction _ _ step'
+--     simp [Prod.key_fresh] at fresh
 --     have ⟨h1,h2⟩ := fresh
 --     clear fresh
---     simp [List.is_fresh_key]
+--     simp [Prod.key_fresh]
 --     apply And.intro h1
 --     exact ih h2
 
@@ -276,7 +276,7 @@ theorem NStep.refl_trans_pattern_match
 theorem NStep.refl_trans_skipper
   (step_arg : ReflTrans NStep arg arg')
   (nomatching : Pattern.match arg' p = none)
-  (isval : Expr.is_value arg')
+  (isval : Expr.valued arg')
 : ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (.app (.function f) arg')
 := by induction step_arg with
 | refl arg =>
@@ -292,7 +292,7 @@ theorem NStep.refl_trans_skip
   (step_f : ReflTrans NFunStep f f')
   (step_arg : ReflTrans NStep arg arg')
   (nomatching : Pattern.match arg' p = none)
-  (isval : Expr.is_value arg')
+  (isval : Expr.valued arg')
 : ReflTrans NStep (.app (.function ((p,body) :: f)) arg) (.app (.function f') arg')
 := by induction step_f with
 | refl f =>

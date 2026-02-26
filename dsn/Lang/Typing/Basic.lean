@@ -38,112 +38,6 @@ theorem Stable.subject_expansion :
   intro h0 h1 h2
   apply Iff.mpr (h0 h1) h2
 
-theorem Typ.free_vars_shift_vars_reflection :
-  Typ.free_vars (Typ.shift_vars threshold offset t) =
-  Typ.free_vars t
-:= by sorry
-
-theorem Typ.free_vars_instantiate_upper_bound :
-  Typ.free_vars (Typ.instantiate depth m e) ⊆ (Typ.free_vars e) ++ List.flatMap Typ.free_vars m
-:= by sorry
-
-theorem Typ.free_vars_instantiate_lower_bound :
-  (Typ.free_vars e) ⊆ Typ.free_vars (Typ.instantiate depth m e)
-:= by sorry
-
-
-theorem Typ.list_prod_free_vars_instantiate_upper_bound :
-  Typ.list_prod_free_vars (Typ.constraints_instantiate depth m cs) ⊆ (Typ.list_prod_free_vars cs) ++ List.flatMap Typ.free_vars m
-:= by sorry
-
-
-
-
-
-mutual
-  def Typ.constraints_num_bound_vars : List (Typ × Typ) → Nat
-  | [] => 0
-  | (left,right) :: cs =>
-    Nat.max (Nat.max (Typ.num_bound_vars left) (Typ.num_bound_vars right))
-    (Typ.constraints_num_bound_vars cs)
-
-  def Typ.num_bound_vars: Typ → Nat
-  | .bvar i => i + 1
-  | .var name => 0
-  | .entry l body => Typ.num_bound_vars body
-  | .iso l body => Typ.num_bound_vars body
-  | .path left right =>
-    Nat.max (Typ.num_bound_vars left) (Typ.num_bound_vars right)
-  | .top => 0
-  | .bot => 0
-  | .unio left right =>
-    Nat.max (Typ.num_bound_vars left) (Typ.num_bound_vars right)
-  | .inter left right =>
-    Nat.max (Typ.num_bound_vars left) (Typ.num_bound_vars right)
-  | .diff left right =>
-    Nat.max (Typ.num_bound_vars left) (Typ.num_bound_vars right)
-  | .all bs cs body =>
-    Nat.max (Typ.constraints_num_bound_vars cs) (Typ.num_bound_vars body)
-    - List.length bs
-  | .exi bs cs body =>
-    Nat.max (Typ.constraints_num_bound_vars cs) (Typ.num_bound_vars body)
-    - List.length bs
-  | .lfp b body =>
-    (Typ.num_bound_vars body) - 1
-end
-
-
-def Typ.instantiated (t: Typ) := Typ.num_bound_vars t == 0
-
-
-theorem Typ.list_all_mem_instantiate_preservation :
-  (∀ t ∈ ts, t = Typ.instantiate depth m t) →
-  ts = Typ.list_instantiate depth m ts
-:= by sorry
-
-mutual
-  def Typ.constraints_nameless : List (Typ × Typ) → Bool
-  | [] => .true
-  | (left,right) :: cs => Typ.nameless left && Typ.nameless right && Typ.constraints_nameless cs
-
-  def Typ.nameless : Typ → Bool
-  | .bvar _ => .true
-  | .var _ => .true
-  | .entry l body => Typ.nameless body
-  | .iso l body => Typ.nameless body
-  | .path left right =>  Typ.nameless left && Typ.nameless right
-  | .top => .true
-  | .bot => .true
-  | .unio left right =>  Typ.nameless left && Typ.nameless right
-  | .inter left right =>  Typ.nameless left && Typ.nameless right
-  | .diff left right =>  Typ.nameless left && Typ.nameless right
-  | .all bs cs body =>
-    List.all bs (fun b => b == "") &&
-    Typ.constraints_nameless cs && Typ.nameless body
-  | .exi bs cs body =>
-    List.all bs (fun b => b == "") &&
-    Typ.constraints_nameless cs && Typ.nameless body
-  | .lfp b body =>
-    b == "" && Typ.nameless body
-end
-
-def Typ.wellformed (t : Typ) := Typ.instantiated t && Typ.nameless t
-def Typ.list_wellformed : List Typ → Bool
-| [] => true
-| t :: ts => Typ.wellformed t && Typ.list_wellformed ts
-
-
-mutual
-  theorem Typ.wellformed_nameless_instantiation :
-    Typ.wellformed (Typ.instantiate depth [.var name] t') →
-    Typ.wellformed t → Typ.wellformed (Typ.instantiate depth [t] t')
-  := by sorry
-
-  theorem Typ.wellformed_named_instantiation :
-    Typ.wellformed (Typ.instantiate depth [t] t') →
-    ∀ name , Typ.wellformed (Typ.instantiate depth [.var name] t')
-  := by sorry
-end
 
 mutual
   def Subtyping (am : List (String × (Expr → Prop))) (left : Typ) (right : Typ) : Prop :=
@@ -329,7 +223,7 @@ theorem Typing.wellformed :
 
 
 theorem Typing.progress :
-  Typing am e t → Expr.is_value e ∨ ∃ e', NStep e e'
+  Typing am e t → Expr.valued e ∨ ∃ e', NStep e e'
 := by
   intro h0
   apply Safe.progress
@@ -899,45 +793,6 @@ mutual
   := by sorry
 end
 
-mutual
-  theorem Typ.instantiated_shift_vars_preservation :
-    Typ.instantiated t →
-    t = Typ.shift_vars threshold offset t
-  := by sorry
-
-  theorem Typ.instantiated_shift_vars_reflection :
-    Typ.instantiated (Typ.shift_vars threshold offset t) →
-    Typ.shift_vars threshold offset t = t
-  := by sorry
-end
-
-
-
-mutual
-  theorem Typ.instantiate_inside_out offset depth ma mb e:
-    (Typ.instantiate (offset + depth) ma (Typ.instantiate depth mb e)) =
-    (Typ.instantiate depth
-      (Typ.list_instantiate offset ma mb)
-      (Typ.instantiate (offset + List.length mb + depth) ma e)
-    )
-  := by sorry
-end
-
-theorem Typ.constraints_instantiate_zero_inside_out offset ma mb cs:
-  (Typ.constraints_instantiate (offset) ma (Typ.constraints_instantiate 0 mb cs)) =
-  (Typ.constraints_instantiate 0
-    (Typ.list_instantiate offset ma mb)
-    (Typ.constraints_instantiate (offset + List.length mb) ma cs)
-  )
-:= by sorry
-
-theorem Typ.instantiate_zero_inside_out offset ma mb e:
-  (Typ.instantiate (offset) ma (Typ.instantiate 0 mb e)) =
-  (Typ.instantiate 0
-    (Typ.list_instantiate offset ma mb)
-    (Typ.instantiate (offset + List.length mb) ma e)
-  )
-:= by sorry
 
 
 -- theorem Typing.disjoint_assignment_map_rotate_preservation :
@@ -945,20 +800,6 @@ theorem Typ.instantiate_zero_inside_out offset ma mb e:
 --   Typing ((name,item) :: (m0 ++ m1)) e t →
 --   Typing (m0 ++ (name,item) :: m1) e t
 -- := by sorry
-
-theorem Prod.find_prune [BEq α] o (m1 : List (α × Β)) :
-  name ∉ Prod.dom m0 →
-  Prod.find name (m0 ++ (name,o) :: m1)
-  =
-  Prod.find name ((name,o) :: m1)
-:= by sorry
-
-theorem find_drop [BEq α] o (m1 : List (α × Β)) :
-  name ≠ name' →
-  Prod.find name' (m0 ++ (name,o) :: m1)
-  =
-  Prod.find name' (m0 ++ m1)
-:= by sorry
 
 
 
@@ -2430,11 +2271,11 @@ theorem Typing.path_determines_function
 
 
 
-theorem Expr.sub_sub_removal :
-  ids ⊆ Prod.dom eam0 →
-  (Expr.sub eam0 (Expr.sub (Prod.remove_all eam1 ids) e)) =
-  (Expr.sub (eam0 ++ eam1) e)
-:= by sorry
+-- theorem Expr.sub_sub_removal :
+--   ids ⊆ Prod.dom eam0 →
+--   (Expr.sub eam0 (Expr.sub (Prod.remove_all eam1 ids) e)) =
+--   (Expr.sub (eam0 ++ eam1) e)
+-- := by sorry
 
 
 
@@ -2474,7 +2315,7 @@ theorem Expr.sub_sub_removal :
 
 theorem Typing.exists_value :
   Typing am e t →
-  ∃ v , Expr.is_value v ∧ Typing am v t
+  ∃ v , Expr.valued v ∧ Typing am v t
 := by sorry
 
 

@@ -22,6 +22,36 @@ def Prod.remove_all [BEq α] (xs : List (α × β)) : List α → List (α × β
 def Prod.find [BEq α] (target : α) (xs : List (α × β)) : Option β :=
   Option.map Prod.snd (List.find? (fun (key,_) => key == target) xs)
 
+theorem Prod.find_prune [BEq α] o (m1 : List (α × Β)) :
+  name ∉ Prod.dom m0 →
+  Prod.find name (m0 ++ (name,o) :: m1)
+  =
+  Prod.find name ((name,o) :: m1)
+:= by sorry
+
+theorem find_drop [BEq α] o (m1 : List (α × Β)) :
+  name ≠ name' →
+  Prod.find name' (m0 ++ (name,o) :: m1)
+  =
+  Prod.find name' (m0 ++ m1)
+:= by sorry
+
+
+
+def Prod.key_fresh [BEq α] (target : α) : List (α × β) → Bool
+| [] => .true
+| (key,_) :: xs =>
+  key != target && Prod.key_fresh target xs
+
+
+
+def Prod.keys_unique [BEq α]: List (α × β) → Bool
+| .nil =>
+  true
+| .cons (k,o) kos =>
+  Prod.key_fresh k kos && Prod.keys_unique kos
+
+
 
 -- def find (target : String) : List (String × α) → Option α
 -- | .nil => none

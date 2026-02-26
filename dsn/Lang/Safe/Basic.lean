@@ -15,11 +15,11 @@ namespace Lang
 
 
 def Safe (e : Expr) : Prop :=
-  (∀ e', ReflTrans NStep e e' → Expr.is_value e' ∨ (∃ e'' , NStep e' e''))
+  (∀ e', ReflTrans NStep e e' → Expr.valued e' ∨ (∃ e'' , NStep e' e''))
 
 
 theorem Safe.progress :
-  Safe e → Expr.is_value e ∨ ∃ e', NStep e e'
+  Safe e → Expr.valued e ∨ ∃ e', NStep e e'
 := by
   unfold Safe
   intro h0
@@ -81,7 +81,7 @@ theorem Safe.function f :
   apply Or.inl
   have ⟨f',h1⟩ := NStep.refl_trans_function_inversion f h0
   rw [h1]
-  simp [Expr.is_value]
+  simp [Expr.valued]
 
 
 
