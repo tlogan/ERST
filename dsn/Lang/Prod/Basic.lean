@@ -12,10 +12,10 @@ def Prod.dom (xs : List (α × β)) :=
   List.map Prod.fst xs
 
 
-def Prod.remove [BEq α] (target : α) (xs : List (α × β)) : List (α × β)
+def Prod.remove [DecidableEq α] (target : α) (xs : List (α × β)) : List (α × β)
 := List.filter (fun (key,_) => key != target) xs
 
-def Prod.remove_all [BEq α] (xs : List (α × β)) : List α → List (α × β)
+def Prod.remove_all [DecidableEq α] (xs : List (α × β)) : List α → List (α × β)
 | [] => xs
 | target :: targets => remove_all (Prod.remove target xs) targets
 
@@ -27,11 +27,10 @@ def Prod.find [DecidableEq α] (target : α) : List (α × β) → Option β
   else
     Prod.find target xs
 
-theorem Prod.find_prune [DecidableEq α] o (m1 : List (α × β)) :
-  name ∉ Prod.dom m0 →
-  Prod.find name (m0 ++ (name,o) :: m1)
-  =
-  Prod.find name ((name,o) :: m1)
+
+theorem Prod.find_append_suffix [DecidableEq α] (m1 : List (α × β)) :
+  target ∉ Prod.dom m0 →
+  Prod.find target (m0 ++ m1) = Prod.find target m1
 := by induction m0 with
 | nil =>
   simp
@@ -39,25 +38,57 @@ theorem Prod.find_prune [DecidableEq α] o (m1 : List (α × β)) :
   have (a,b) := x
   simp [*, Prod.find, Prod.dom]
   intro h0
-  by_cases h1 : a = name
+  by_cases h1 : a = target
   { simp [h1]
     apply False.elim
     apply h0 (Eq.symm h1)
   }
   { simp [h1]
     intro h2
-    simp [Prod.dom, Prod.find] at ih
+    simp [Prod.dom] at ih
     apply ih h2
   }
 
+theorem Prod.find_append_prefix [DecidableEq α] (m1 : List (α × β)) :
+  target ∈ Prod.dom m0 →
+  Prod.find target (m0 ++ m1) = Prod.find target m0
+:= by induction m0 with
+| nil =>
+  simp [Prod.dom]
+| cons x xs ih =>
+  have (a,b) := x
+  simp [*, Prod.find, Prod.dom]
+  intro h0
+  cases h0 with
+  | inl h1 =>
+    simp [h1]
+  | inr h1 =>
+    have ⟨o,h2⟩ := h1
+    by_cases h1 : a = target
+    { simp [h1] }
+    { simp [h1]
+      simp [Prod.dom] at ih
+      apply ih o h2
+    }
 
 
-theorem find_drop [DecidableEq α] o (m1 : List (α × Β)) :
-  name ≠ name' →
-  Prod.find name' (m0 ++ (name,o) :: m1)
-  =
-  Prod.find name' (m0 ++ m1)
-:= by sorry
+theorem Prod.find_append_mid [DecidableEq α] o (m1 : List (α × β)) :
+  target ≠ key →
+  Prod.find target (m0 ++ (key,o) :: m1) = Prod.find target (m0 ++ m1)
+:= by
+  intro h0
+  by_cases h1 : target ∈ Prod.dom m0
+  {
+    rw [Prod.find_append_prefix _ h1]
+    rw [Prod.find_append_prefix _ h1]
+  }
+  {
+    rw [Prod.find_append_suffix _ h1]
+    rw [Prod.find_append_suffix _ h1]
+    simp [Prod.find]
+    intro h2
+    exact False.elim (h0 (Eq.symm h2))
+  }
 
 
 

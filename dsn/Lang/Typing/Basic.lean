@@ -1,4 +1,5 @@
 import Lean
+import Mathlib.Tactic.Linarith
 
 import Lang.List.Basic
 import Lang.String.Basic
@@ -1092,7 +1093,7 @@ mutual
         intro h2 h3 h4 h5 h6 wf
         simp [Typing]
         intro h7 P h8 h9 h10
-        rw [Prod.find_prune _ _] at h9
+        rw [Prod.find_append_suffix _ _] at h9
         {
           simp [Prod.find] at h9
           simp [←h9] at h10
@@ -1124,8 +1125,8 @@ mutual
     simp [*]
     exists P
     simp [*]
-    rw [find_drop _ _ h0]
-    rw [find_drop _ _ h0] at h7
+    rw [Prod.find_append_mid _ _ (Ne.symm h0)]
+    rw [Prod.find_append_mid _ _ (Ne.symm h0)] at h7
     apply h7
   | iso l body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
@@ -1567,7 +1568,7 @@ mutual
         }
         {
           apply And.intro
-          { rw [Prod.find_prune _ _ ]
+          { rw [Prod.find_append_suffix _ _ ]
             { simp [Prod.find] }
             { simp [Prod.dom];
               intro P
@@ -1604,8 +1605,8 @@ mutual
     simp [*]
     exists P
     simp [*]
-    rw [find_drop _ _ h0]
-    rw [find_drop _ _ h0] at h7
+    rw [Prod.find_append_mid _ _ (Ne.symm h0)]
+    rw [Prod.find_append_mid _ _ (Ne.symm h0)] at h7
     apply h7
   | iso l body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
