@@ -188,12 +188,6 @@ decreasing_by
 
 
 
--- theorem Typing.wellformedness :
---   Typing am e t → Typ.wellformed t
--- := by sorry
-
-
-
 theorem Typing.progress :
   Typing am e t → Expr.valued e ∨ ∃ e', NStep e e'
 := by

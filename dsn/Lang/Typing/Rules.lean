@@ -17,6 +17,83 @@ set_option eval.pp false
 
 namespace Lang
 
+
+/- TODO: use polarity definition as guide to derive monotonic rules -/
+-- mutual
+
+--   inductive EitherMultiPolarity : List (Typ × Typ) → Typ → List String → Prop
+--   | nil cs t : EitherMultiPolarity cs t []
+--   | cons cs t b id ids :
+--     MultiPolarity id b cs →
+--     Polarity id b t →
+--     EitherMultiPolarity cs t ids →
+--     EitherMultiPolarity cs t (id :: ids)
+
+--   inductive MultiPolarity : String → Bool → List (Typ × Typ) → Prop
+--   | nil id b : MultiPolarity id b .nil
+--   | cons id b l r remainder :
+--     Polarity id (not b) l →
+--     Polarity id b r →
+--     MultiPolarity id b remainder →
+--     MultiPolarity id b (.cons (l,r) remainder)
+
+--   inductive Polarity : String → Bool → Typ → Prop
+--   | var id : Polarity id true (.var id)
+--   | varskip id b id' : id ≠ id' → Polarity id b (.var id')
+--   | entry id b l body : Polarity id b body →  Polarity id b (.entry l body)
+--   | path id b left right :
+--     Polarity id (not b) left →
+--     Polarity id b right →
+--     Polarity id b (.path left right)
+
+--   | bot id b:
+--     Polarity id b .bot
+
+--   | top id b :
+--     Polarity id b .top
+
+--   | unio id b left right :
+--     Polarity id b left →
+--     Polarity id b right →
+--     Polarity id b (.unio left right)
+--   | inter id b left right :
+--     Polarity id b left →
+--     Polarity id b right →
+--     Polarity id b (.inter left right)
+--   | diff id b left right :
+--     Polarity id b left →
+--     Polarity id (not b) right →
+--     Polarity id b (.diff left right)
+
+--   | all id b ids constraints body :
+--     id ∉ ids →
+--     EitherMultiPolarity constraints body ids →
+--     Polarity id b body →
+--     Polarity id b (.all ids constraints body)
+
+--   | allskip id b ids constraints body :
+--     id ∈ ids →
+--     Polarity id b (.all ids constraints body)
+
+--   | exi id b ids constraints body :
+--     id ∉ ids →
+--     EitherMultiPolarity constraints (.diff .top body) ids →
+--     Polarity id b body →
+--     Polarity id b (.exi ids constraints body)
+
+--   | exiskip id b ids constraints body :
+--     id ∈ ids →
+--     Polarity id b (.exi ids constraints body)
+
+
+--   | lfp id b id' body : id ≠ id' → Polarity id b body → Polarity id b (.lfp id' body)
+--   | lfpskip id b body : Polarity id b (.lfp id body)
+
+-- end
+
+
+
+
 theorem Subtyping.refl am t :
   Subtyping am t t
 := by sorry
@@ -34,28 +111,156 @@ theorem Subtyping.transitivity :
   apply h1 e
   apply h4
 
+theorem Typing.lfp_elim :
+  Typ.wellformed (Typ.lfp "" t) →
+  name ∉ Typ.free_vars t →
+  Monotonic name am (Typ.instantiate 0 [.var name] t) →
+  (Typing ((name, P) :: am) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
+  Typing am e (Typ.lfp "" t) → P e
+:= by sorry
+
+/- Subtyping induction -/
+theorem Subtyping.lfp_elim :
+  Typ.wellformed (Typ.lfp "" body) →
+  name ∉ Typ.free_vars body →
+  Monotonic name am (Typ.instantiate 0 [.var name] body) →
+  Subtyping am (Typ.instantiate 0 [t] body) t →
+  Subtyping am (Typ.lfp "" body) t
+:= by
+  sorry
+
+theorem Typing.lfp_intro :
+  Typ.wellformed (Typ.lfp "" t) →
+  name ∉ Typ.free_vars t →
+  Monotonic name m (Typ.instantiate 0 [.var name] t) →
+  Typing m e (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
+  Typing m e (Typ.lfp "" t)
+:= by
+  simp [Typing]
+  intro h0 h1 h2 h3
+  apply And.intro
+  { exact Typing.safety h3 }
+  { exists name
+    simp [*]
+    sorry
+    -- intro P h4 h5
+
+    -- apply h5
+    -- have h6 := h2
+    -- unfold Monotonic at h6
+    -- apply h6 (fun e => Typing am e (Typ.lfp "" t)) P
+    -- {
+    --   intro e h7
+    --   apply Typing.lfp_elim  h0 h1 h2 (h5 e)
+    --   exact h7
+    -- }
+    -- { apply Typing.named_instantiation h0
+    --   { simp [Typ.free_vars]
+    --     /- TODO -/
+    --     sorry
+    --   }
+    --   { exact h3 }
+    -- }
+  }
+
+/- Subtyping recycling -/
+theorem Subtyping.lfp_intro :
+  Typ.wellformed (Typ.lfp "" t) →
+  name ∉ Typ.free_vars t →
+  Monotonic name am (Typ.instantiate 0 [.var name] t) →
+  Subtyping am (Typ.instantiate 0 [(Typ.lfp "" t)] t) (Typ.lfp "" t)
+:= by
+  simp [Subtyping]
+  simp [Typing]
+  intro h0 h1 h2
+  sorry
 
 
-theorem Subtyping.unio_left_intro {am t l r} :
-  Subtyping am t l →
-  Subtyping am t (Typ.unio l r)
+theorem Typing.unio_elim :
+  Typing m e (Typ.unio tl tr) →
+  Typing m e tl ∨ Typing m e tr
+:= by simp [Typing]
+
+theorem Subtyping.unio_elim  :
+  Subtyping m tl t →
+  Subtyping m tr t →
+  Subtyping m (Typ.unio tl tr) t
+:= by sorry
+
+theorem Typing.unio_left_intro tr :
+  Typing am e tl →
+  Typing am e (Typ.unio tl tr)
 := by sorry
 
 
-theorem Subtyping.unio_right_intro {am t l r} :
-  Subtyping am t r →
-  Subtyping am t (Typ.unio l r)
+theorem Subtyping.unio_left_intro m tl tr :
+  Subtyping m tl (Typ.unio tl tr)
 := by sorry
 
-theorem Subtyping.inter_left_elim {am l r t} :
-  Subtyping am l t →
-  Subtyping am (Typ.inter l r) t
+
+theorem Typing.unio_right_intro tl :
+  Typing am e tr →
+  Typing am e (Typ.unio tl tr)
 := by sorry
 
-theorem Subtyping.inter_right_elim {am l r t} :
-  Subtyping am r t →
-  Subtyping am (Typ.inter l r) t
+
+theorem Subtyping.unio_right_intro m tr tl :
+  Subtyping m tr (Typ.unio tl tr)
 := by sorry
+
+
+theorem Subtyping.inter_left_elim m tl tr :
+  Subtyping m (Typ.inter tl tr) tl
+:= by sorry
+
+
+theorem Subtyping.inter_right_elim m tl tr :
+  Subtyping m (Typ.inter tl tr) tr
+:= by sorry
+
+
+
+
+theorem Typing.iso_elim :
+  Typing am e (Typ.iso l t) →
+  Safe e ∧ Typing am (Expr.extract e l) t
+:= by simp [Typing]
+
+theorem Typing.iso_intro :
+  Safe e →
+  Typing m (Expr.extract e l) t →
+  Typing m e (Typ.iso l t)
+:= by
+  simp [Typing]
+  intro h0 h1
+  simp [*]
+
+theorem Typing.top_elim :
+  Typing m e Typ.top →
+  Safe e
+:= by
+  simp [Typing]
+
+theorem Typing.top_intro :
+  Safe e →
+  Typing m e Typ.top
+:= by
+  simp [Typing]
+
+theorem Typing.var_elim :
+  Typing m e (Typ.var name) →
+  Safe e ∧ ∃ P, Stable P ∧ Prod.find name m = some P ∧ P e
+:= by
+  simp [Typing]
+
+theorem Typing.var_intro :
+  Safe e → Stable P →
+  Prod.find name m = some P → P e →
+  Typing m e (Typ.var name)
+:= by
+  simp [Typing]
+  intro h0 h1 h2 h3
+  simp [*]
 
 
 theorem Subtyping.iso_pres {am bodyl bodyu} l :
@@ -74,22 +279,6 @@ theorem Subtyping.path_pres {am p q x y} :
   Subtyping am (Typ.path p q) (Typ.path x y)
 := by sorry
 
-
-theorem Subtyping.unio_elim {am left right t} :
-  Subtyping am left t →
-  Subtyping am right t →
-  Subtyping am (Typ.unio left right) t
-:= by sorry
-
-theorem Subtyping.unio_intro_left right :
-  Subtyping am t left →
-  Subtyping am t (Typ.unio left right)
-:= by sorry
-
-theorem Subtyping.unio_intro_right left :
-  Subtyping am t right →
-  Subtyping am t (Typ.unio left right)
-:= by sorry
 
 
 theorem Subtyping.inter_intro {am t left right} :
@@ -198,141 +387,6 @@ theorem Subtyping.all_intro {am t ids quals body} :
 := by sorry
 
 
-
-theorem Typing.lfp_elim :
-  Typ.wellformed (Typ.lfp "" t) →
-  name ∉ Typ.free_vars t →
-  Monotonic name am (Typ.instantiate 0 [.var name] t) →
-  (Typing ((name, P) :: am) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
-  Typing am e (Typ.lfp "" t) → P e
-:= by sorry
-
-
-/- Subtyping recycling -/
-theorem Subtyping.lfp_intro_direct :
-  Typ.wellformed (Typ.lfp "" t) →
-  name ∉ Typ.free_vars t →
-  Monotonic name am (Typ.instantiate 0 [.var name] t) →
-  Subtyping am (Typ.instantiate 0 [(Typ.lfp "" t)] t) (Typ.lfp "" t)
-:= by
-  simp [Subtyping]
-  simp [Typing]
-  intro h0 h1 h2
-  apply And.intro sorry
-  intro e h3
-  apply And.intro
-  { exact Typing.safety h3 }
-  { exists name
-    simp [*]
-    sorry
-    -- intro P h4 h5
-
-    -- apply h5
-    -- have h6 := h2
-    -- unfold Monotonic at h6
-    -- apply h6 (fun e => Typing am e (Typ.lfp "" t)) P
-    -- {
-    --   intro e h7
-    --   apply Typing.lfp_elim  h0 h1 h2 (h5 e)
-    --   exact h7
-    -- }
-    -- { apply Typing.named_instantiation h0
-    --   { simp [Typ.free_vars]
-    --     /- TODO -/
-    --     sorry
-    --   }
-    --   { exact h3 }
-    -- }
-  }
-
-theorem Subtyping.lfp_intro :
-  Typ.wellformed (Typ.lfp "" body) →
-  name ∉ Typ.free_vars body →
-  Monotonic name am (Typ.instantiate 0 [.var name] body) →
-  Subtyping am t (Typ.instantiate 0 [(Typ.lfp "" body)] body) →
-  Subtyping am t (Typ.lfp "" body)
-:= by
-  sorry
-  -- intro h0 h1 h2
-  -- apply Subtyping.transitivity h2
-  -- exact lfp_intro_direct h0 h1
-
-
-
-theorem Subtyping.lfp_elim :
-  name ∉ Typ.free_vars body →
-  Monotonic name am (Typ.instantiate 0 [.var name] body) →
-  Subtyping am (Typ.instantiate 0 [t] body) t →
-  Subtyping am (Typ.lfp "" body) t
-:= by
-  sorry
-  -- simp [Subtyping]
-  -- intro h0 h1 h2 e
-  -- apply Typing.lfp_elim
-  -- { exact h0 }
-  -- { exact h1 }
-  -- { intro h4
-  --   apply h2
-  --   exact Typing.nameless_instantiation h0 h4
-  -- }
-
-set_option eval.pp false
-
-#eval Typ.seal [] [typ| LFP [N] <zero/> | <succ> <succ> N ]
-
-example : Subtyping []
-  (Typ.seal [] [typ| LFP [N] <zero/> | <succ> <succ> N ])
-  (Typ.seal [] [typ| LFP [N] <zero/> | <succ> N ])
-:= by
-  sorry
-  -- apply Subtyping.lfp_elim
-  -- { sorry }
-  -- { sorry }
-  -- { reduce
-  --   apply Subtyping.lfp_intro
-  --   { sorry }
-  --   { sorry }
-  --   { reduce
-  --     apply Subtyping.unio_elim
-  --     { apply Subtyping.unio_intro_left
-  --       apply Subtyping.refl
-  --     }
-  --     { apply Subtyping.unio_intro_right
-  --       apply Subtyping.iso_pres
-  --       apply Subtyping.lfp_intro
-  --       { sorry }
-  --       { sorry }
-  --       { reduce
-  --         apply Subtyping.unio_intro_right
-  --         apply Subtyping.iso_pres
-  --         apply Subtyping.refl
-  --       }
-  --       { sorry }
-  --     }
-  --   }
-  --   { sorry }
-  -- }
-  -- { sorry }
-
-
--- theorem Subtyping.lfp_induct_elim {am id body t} :
---   Monotonic am id body →
---   (∀ e, Typing ((id, t) :: am) e body → Typing am e t) →
---   Subtyping am (Typ.lfp id body) t
--- := by sorry
-
-
--- theorem Typing.lfp_elim_top {am e id t} :
---   Monotonic am id t →
---   Typing am e (.lfp id t) →
---   Typing ((id, .top) :: am) e t
--- := by sorry
-
--- theorem Typing.lfp_intro_bot {am e id t} :
---   Monotonic am id t →
---   Typing ((id, .bot) :: am) e t →
---   Typing am e (.lfp id t)
--- := by sorry
 
 
 
