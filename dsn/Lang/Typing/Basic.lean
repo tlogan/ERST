@@ -117,6 +117,23 @@ mutual
 
 end
 
+
+def NegMonotonic (name : String) (am : List (String × (Expr → Prop))) (t : Typ) : Prop :=
+  (∀ P0 P1 : Expr → Prop,
+    (∀ e, P0 e → P1 e) →
+    (∀ e , Typing ((name,P1)::am) e t → Typing ((name,P0)::am) e t)
+  )
+
+def MultiMonotonic (name : String) (am : List (String × (Expr → Prop))) (cs : List (Typ × Typ)) : Prop :=
+  ∀ lower upper, (lower,upper) ∈ cs → NegMonotonic name am lower ∧ Monotonic name am upper
+
+def NegMultiMonotonic (name : String) (am : List (String × (Expr → Prop))) (cs : List (Typ × Typ)) : Prop :=
+  ∀ lower upper, (lower,upper) ∈ cs → Monotonic name am lower ∧ NegMonotonic name am upper
+
+def EitherMultiMonotonic (name : String) (am : List (String × (Expr → Prop))) (cs : List (Typ × Typ)) : Prop :=
+  MultiMonotonic name am cs ∨ NegMultiMonotonic name am cs
+
+
 def MultiTyping
   (tam : List (String × (Expr → Prop))) (eam : List (String × Expr)) (context : List (String × Typ)) : Prop
 := ∀ {x t}, Prod.find x context = .some t → ∃ e, (Prod.find x eam) = .some e ∧ Typing tam e t

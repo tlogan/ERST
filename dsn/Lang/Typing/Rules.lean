@@ -17,79 +17,87 @@ set_option eval.pp false
 
 namespace Lang
 
+theorem Monotonic.bvar_intro :
+  Monotonic name m (Typ.bvar i)
+:= by sorry
 
-/- TODO: use polarity definition as guide to derive monotonic rules -/
--- mutual
+theorem Monotonic.var_intro :
+  Monotonic name m (Typ.var name')
+:= by sorry
 
---   inductive EitherMultiPolarity : List (Typ × Typ) → Typ → List String → Prop
---   | nil cs t : EitherMultiPolarity cs t []
---   | cons cs t b id ids :
---     MultiPolarity id b cs →
---     Polarity id b t →
---     EitherMultiPolarity cs t ids →
---     EitherMultiPolarity cs t (id :: ids)
+theorem Monotonic.iso_intro :
+  Monotonic name m t →
+  Monotonic name m (Typ.iso l t)
+:= by sorry
 
---   inductive MultiPolarity : String → Bool → List (Typ × Typ) → Prop
---   | nil id b : MultiPolarity id b .nil
---   | cons id b l r remainder :
---     Polarity id (not b) l →
---     Polarity id b r →
---     MultiPolarity id b remainder →
---     MultiPolarity id b (.cons (l,r) remainder)
+theorem Monotonic.entry_intro :
+  Monotonic name m t →
+  Monotonic name m (Typ.entry l t)
+:= by sorry
 
---   inductive Polarity : String → Bool → Typ → Prop
---   | var id : Polarity id true (.var id)
---   | varskip id b id' : id ≠ id' → Polarity id b (.var id')
---   | entry id b l body : Polarity id b body →  Polarity id b (.entry l body)
---   | path id b left right :
---     Polarity id (not b) left →
---     Polarity id b right →
---     Polarity id b (.path left right)
+theorem Monotonic.path_intro :
+  NegMonotonic name m tl →
+  NegMonotonic name m tr →
+  Monotonic name m (Typ.path tl tr)
+:= by sorry
 
---   | bot id b:
---     Polarity id b .bot
+theorem Monotonic.bot_intro :
+  Monotonic name m (Typ.bot)
+:= by sorry
 
---   | top id b :
---     Polarity id b .top
+theorem Monotonic.top_intro :
+  Monotonic name m (Typ.bot)
+:= by sorry
 
---   | unio id b left right :
---     Polarity id b left →
---     Polarity id b right →
---     Polarity id b (.unio left right)
---   | inter id b left right :
---     Polarity id b left →
---     Polarity id b right →
---     Polarity id b (.inter left right)
---   | diff id b left right :
---     Polarity id b left →
---     Polarity id (not b) right →
---     Polarity id b (.diff left right)
+theorem Monotonic.unio_intro :
+  Monotonic name m tl →
+  Monotonic name m tr →
+  Monotonic name m (Typ.unio tl tr)
+:= by sorry
 
---   | all id b ids constraints body :
---     id ∉ ids →
---     EitherMultiPolarity constraints body ids →
---     Polarity id b body →
---     Polarity id b (.all ids constraints body)
+theorem Monotonic.inter_intro :
+  Monotonic name m tl →
+  Monotonic name m tr →
+  Monotonic name m (Typ.unio tl tr)
+:= by sorry
 
---   | allskip id b ids constraints body :
---     id ∈ ids →
---     Polarity id b (.all ids constraints body)
-
---   | exi id b ids constraints body :
---     id ∉ ids →
---     EitherMultiPolarity constraints (.diff .top body) ids →
---     Polarity id b body →
---     Polarity id b (.exi ids constraints body)
-
---   | exiskip id b ids constraints body :
---     id ∈ ids →
---     Polarity id b (.exi ids constraints body)
+theorem Monotonic.diff_intro :
+  Monotonic name m tl →
+  NegMonotonic name m tr →
+  Monotonic name m (Typ.diff tl tr)
+:= by sorry
 
 
---   | lfp id b id' body : id ≠ id' → Polarity id b body → Polarity id b (.lfp id' body)
---   | lfpskip id b body : Polarity id b (.lfp id body)
+theorem Monotonic.all_intro :
+  (∀ b ∈ bs , b = "") →
+  List.length m' = List.length bs →
+  List.Disjoint (Prod.dom m') (Prod.dom m) →
+  (∀ name' ∈ Prod.dom m',
+    EitherMultiMonotonic name' (m' ++ m)
+      (Typ.constraints_instantiate 0 (List.map (fun (name', P) => .var name') m') ((.bot,t) :: cs))
+  ) →
+  Monotonic name (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
+  Monotonic name m (Typ.all bs cs t)
+:= by sorry
 
--- end
+
+theorem Monotonic.exi_intro :
+  (∀ b ∈ bs , b = "") →
+  List.length m' = List.length bs →
+  List.Disjoint (Prod.dom m') (Prod.dom m) →
+  (∀ name' ∈ Prod.dom m',
+    EitherMultiMonotonic name' (m' ++ m)
+      (Typ.constraints_instantiate 0 (List.map (fun (name', P) => .var name') m') ((t,.top) :: cs))
+  ) →
+  Monotonic name (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
+  Monotonic name m (Typ.all bs cs t)
+:= by sorry
+
+
+theorem Monotonic.lfp_intro :
+  Monotonic name m body →
+  Monotonic name m (Typ.lfp "" body)
+:= by sorry
 
 
 
