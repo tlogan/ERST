@@ -17,54 +17,71 @@ set_option eval.pp false
 
 namespace Lang
 
+theorem PosMonotonic.intro :
+  Monotonic true name m t →
+  PosMonotonic name m t
+:= by
+  simp [Monotonic]
+
+theorem NegMonotonic.intro :
+  Monotonic false name m t →
+  NegMonotonic name m t
+:= by
+  simp [Monotonic]
+
 theorem Monotonic.bvar_intro :
-  Monotonic name m (Typ.bvar i)
+  Monotonic polarity name m (Typ.bvar i)
 := by sorry
 
-theorem Monotonic.var_intro :
-  Monotonic name m (Typ.var name')
+theorem Monotonic.positive_var_intro :
+  Monotonic true name m (Typ.var name')
+:= by sorry
+
+theorem Monotonic.negative_var_intro :
+  name ≠ name' →
+  Monotonic false name m (Typ.var name')
 := by sorry
 
 theorem Monotonic.iso_intro :
-  Monotonic name m t →
-  Monotonic name m (Typ.iso l t)
+  Monotonic polarity name m t →
+  Monotonic polarity name m (Typ.iso l t)
 := by sorry
 
 theorem Monotonic.entry_intro :
-  Monotonic name m t →
-  Monotonic name m (Typ.entry l t)
+  Monotonic polarity name m t →
+  Monotonic polarity name m (Typ.entry l t)
 := by sorry
 
 theorem Monotonic.path_intro :
-  NegMonotonic name m tl →
-  NegMonotonic name m tr →
-  Monotonic name m (Typ.path tl tr)
+  Monotonic (not polarity) name m tl →
+  Monotonic polarity name m tr →
+  Monotonic polarity name m (Typ.path tl tr)
 := by sorry
 
 theorem Monotonic.bot_intro :
-  Monotonic name m (Typ.bot)
+  Monotonic polarity name m (Typ.bot)
 := by sorry
 
 theorem Monotonic.top_intro :
-  Monotonic name m (Typ.bot)
+  Monotonic polarity name m (Typ.top)
 := by sorry
 
 theorem Monotonic.unio_intro :
-  Monotonic name m tl →
-  Monotonic name m tr →
-  Monotonic name m (Typ.unio tl tr)
+  Monotonic polarity name m tl →
+  Monotonic polarity name m tr →
+  Monotonic polarity name m (Typ.unio tl tr)
 := by sorry
 
 theorem Monotonic.inter_intro :
-  Monotonic name m tl →
-  Monotonic name m tr →
-  Monotonic name m (Typ.unio tl tr)
+  Monotonic polarity name m tl →
+  Monotonic polarity name m tr →
+  Monotonic polarity name m (Typ.unio tl tr)
 := by sorry
 
 theorem Monotonic.diff_intro :
-  Monotonic name m tl →
-  NegMonotonic name m tr →
-  Monotonic name m (Typ.diff tl tr)
+  Monotonic polarity name m tl →
+  Monotonic (not polarity) name m tr →
+  Monotonic polarity name m (Typ.diff tl tr)
 := by sorry
 
 
@@ -73,30 +90,29 @@ theorem Monotonic.all_intro :
   List.length m' = List.length bs →
   List.Disjoint (Prod.dom m') (Prod.dom m) →
   (∀ name' ∈ Prod.dom m',
-    EitherMultiMonotonic name' (m' ++ m)
+    EitherMultiMonotonic polarity name' (m' ++ m)
       (Typ.constraints_instantiate 0 (List.map (fun (name', P) => .var name') m') ((.bot,t) :: cs))
   ) →
-  Monotonic name (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
-  Monotonic name m (Typ.all bs cs t)
+  Monotonic polarity name (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
+  Monotonic polarity name m (Typ.all bs cs t)
 := by sorry
-
 
 theorem Monotonic.exi_intro :
   (∀ b ∈ bs , b = "") →
   List.length m' = List.length bs →
   List.Disjoint (Prod.dom m') (Prod.dom m) →
   (∀ name' ∈ Prod.dom m',
-    EitherMultiMonotonic name' (m' ++ m)
+    EitherMultiMonotonic polarity name' (m' ++ m)
       (Typ.constraints_instantiate 0 (List.map (fun (name', P) => .var name') m') ((t,.top) :: cs))
   ) →
-  Monotonic name (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
-  Monotonic name m (Typ.all bs cs t)
+  Monotonic polarity name (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
+  Monotonic polarity name m (Typ.all bs cs t)
 := by sorry
 
 
 theorem Monotonic.lfp_intro :
-  Monotonic name m body →
-  Monotonic name m (Typ.lfp "" body)
+  Monotonic polarity name m body →
+  Monotonic polarity name m (Typ.lfp "" body)
 := by sorry
 
 
@@ -122,7 +138,7 @@ theorem Subtyping.transitivity :
 theorem Typing.lfp_elim :
   Typ.wellformed (Typ.lfp "" t) →
   name ∉ Typ.free_vars t →
-  Monotonic name am (Typ.instantiate 0 [.var name] t) →
+  PosMonotonic name am (Typ.instantiate 0 [.var name] t) →
   (Typing ((name, P) :: am) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
   Typing am e (Typ.lfp "" t) → P e
 := by sorry
@@ -131,7 +147,7 @@ theorem Typing.lfp_elim :
 theorem Subtyping.lfp_elim :
   Typ.wellformed (Typ.lfp "" body) →
   name ∉ Typ.free_vars body →
-  Monotonic name am (Typ.instantiate 0 [.var name] body) →
+  PosMonotonic name am (Typ.instantiate 0 [.var name] body) →
   Subtyping am (Typ.instantiate 0 [t] body) t →
   Subtyping am (Typ.lfp "" body) t
 := by
@@ -140,7 +156,7 @@ theorem Subtyping.lfp_elim :
 theorem Typing.lfp_intro :
   Typ.wellformed (Typ.lfp "" t) →
   name ∉ Typ.free_vars t →
-  Monotonic name m (Typ.instantiate 0 [.var name] t) →
+  PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
   Typing m e (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
   Typing m e (Typ.lfp "" t)
 := by
@@ -175,7 +191,7 @@ theorem Typing.lfp_intro :
 theorem Subtyping.lfp_intro :
   Typ.wellformed (Typ.lfp "" t) →
   name ∉ Typ.free_vars t →
-  Monotonic name am (Typ.instantiate 0 [.var name] t) →
+  PosMonotonic name am (Typ.instantiate 0 [.var name] t) →
   Subtyping am (Typ.instantiate 0 [(Typ.lfp "" t)] t) (Typ.lfp "" t)
 := by
   simp [Subtyping]

@@ -57,7 +57,7 @@ mutual
   decreasing_by
     all_goals (apply Prod.Lex.left ; simp [List.pair_typ_size, List.pair_typ_zero_lt_size, Typ.zero_lt_size])
 
-  def Monotonic (name : String) (am : List (String × (Expr → Prop))) (t : Typ) : Prop :=
+  def PosMonotonic (name : String) (am : List (String × (Expr → Prop))) (t : Typ) : Prop :=
     (∀ P0 P1 : Expr → Prop,
       (∀ e, P0 e → P1 e) →
       (∀ e , Typing ((name,P0)::am) e t → Typing ((name,P1)::am) e t)
@@ -97,7 +97,7 @@ mutual
     Safe e ∧
     a = "" ∧
     ∃ name, name ∉ (Prod.dom am) ∧
-    Monotonic name am (Typ.instantiate 0 [.var name] body) ∧
+    PosMonotonic name am (Typ.instantiate 0 [.var name] body) ∧
     /- infimum of -/
     (∀ P, Stable P →
       /- pre-fixed point -/
@@ -124,14 +124,15 @@ def NegMonotonic (name : String) (am : List (String × (Expr → Prop))) (t : Ty
     (∀ e , Typing ((name,P1)::am) e t → Typing ((name,P0)::am) e t)
   )
 
-def MultiMonotonic (name : String) (am : List (String × (Expr → Prop))) (cs : List (Typ × Typ)) : Prop :=
-  ∀ lower upper, (lower,upper) ∈ cs → NegMonotonic name am lower ∧ Monotonic name am upper
+def Monotonic (polarity : Bool) (name : String) (am : List (String × (Expr → Prop))) (t : Typ) : Prop :=
+  (polarity = true ∧ PosMonotonic name am t) ∨
+  (polarity = false ∧ NegMonotonic name am t)
 
-def NegMultiMonotonic (name : String) (am : List (String × (Expr → Prop))) (cs : List (Typ × Typ)) : Prop :=
-  ∀ lower upper, (lower,upper) ∈ cs → Monotonic name am lower ∧ NegMonotonic name am upper
+def MultiMonotonic (polarity : Bool) (name : String) (am : List (String × (Expr → Prop))) (cs : List (Typ × Typ)) : Prop :=
+  ∀ lower upper, (lower,upper) ∈ cs → Monotonic (not polarity) name am lower ∧ Monotonic polarity name am upper
 
-def EitherMultiMonotonic (name : String) (am : List (String × (Expr → Prop))) (cs : List (Typ × Typ)) : Prop :=
-  MultiMonotonic name am cs ∨ NegMultiMonotonic name am cs
+def EitherMultiMonotonic (polarity : Bool) (name : String) (am : List (String × (Expr → Prop))) (cs : List (Typ × Typ)) : Prop :=
+  MultiMonotonic polarity name am cs
 
 
 def MultiTyping

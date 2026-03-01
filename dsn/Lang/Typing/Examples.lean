@@ -14,12 +14,19 @@ import Lang.Typing.Basic
 import Lang.Typing.Instantiation
 import Lang.Typing.Rules
 
--- set_option pp.fieldNotation false
+set_option pp.fieldNotation false
 set_option eval.pp false
 
 namespace Lang
 
+
 #eval Typ.seal [] [typ| LFP [N] <zero/> | <succ> <succ> N ]
+
+example : NegMonotonic "SELF" [] (.path (.var SELF) .top) := by
+  apply NegMonotonic.intro
+  apply Monotonic.path_intro
+  { simp ; apply Monotonic.positive_var_intro}
+  { apply Monotonic.top_intro }
 
 example : Subtyping []
   (Typ.seal [] [typ| LFP [N] <zero/> | <succ> <succ> N ])
@@ -30,8 +37,16 @@ example : Subtyping []
   { simp [Typ.wellformed, Typ.instantiated, Typ.num_bound_vars, Typ.nameless] }
   { simp [Typ.free_vars] }
   { simp [Typ.instantiate, Typ.shift_vars]
-    /- TODO: need monotonic rule theorems -/
-    sorry
+    apply PosMonotonic.intro
+    apply Monotonic.unio_intro
+    { apply Monotonic.iso_intro
+      apply Monotonic.top_intro
+    }
+    {
+      apply Monotonic.iso_intro
+      apply Monotonic.iso_intro
+      apply Monotonic.positive_var_intro
+    }
   }
   { simp [Typ.instantiate, Typ.shift_vars_zero]
     apply Subtyping.unio_elim

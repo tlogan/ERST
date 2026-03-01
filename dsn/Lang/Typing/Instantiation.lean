@@ -89,7 +89,7 @@ mutual
 
 
 
-  theorem Monotonic.generalized_nameless_instantiation :
+  theorem PosMonotonic.generalized_nameless_instantiation :
     name ∉ Typ.free_vars body →
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
@@ -99,10 +99,10 @@ mutual
     point ∉ Prod.dom am' →
     point ≠ name →
     point ∉ Prod.dom am →
-    Monotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] body) →
-    Monotonic point (am' ++ (name,fun e => False) :: am) (Typ.instantiate depth [t] body)
+    PosMonotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] body) →
+    PosMonotonic point (am' ++ (name,fun e => False) :: am) (Typ.instantiate depth [t] body)
   := by
-    simp [Monotonic, Prod.dom]
+    simp [PosMonotonic, Prod.dom]
     intro h0 h1 h2 h3 h4 wf h5 h6 h7 h8 P0 P1 h9 e h10
 
     have h11 :
@@ -153,7 +153,7 @@ mutual
     }
   termination_by (Typ.size body, 1)
 
-  theorem Monotonic.generalized_named_instantiation :
+  theorem PosMonotonic.generalized_named_instantiation :
     name ∉ Typ.free_vars body →
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
@@ -163,10 +163,10 @@ mutual
     point ∉ Prod.dom am' →
     point ≠ name →
     point ∉ Prod.dom am →
-    Monotonic point (am' ++ (name,fun e => False) :: am) (Typ.instantiate depth [t] body) →
-    Monotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] body)
+    PosMonotonic point (am' ++ (name,fun e => False) :: am) (Typ.instantiate depth [t] body) →
+    PosMonotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] body)
   := by
-    simp [Monotonic, Prod.dom]
+    simp [PosMonotonic, Prod.dom]
     intro h0 h1 h2 h3 h4 wf h5 h6 h7 h8 P0 P1 h9 e h10
 
     have h11 :
@@ -653,7 +653,7 @@ mutual
       rw [←h13]
       rw [←Typ.instantiate_zero_inside_out]
 
-      apply Monotonic.generalized_nameless_instantiation
+      apply PosMonotonic.generalized_nameless_instantiation
       { intro h14
         apply Typ.free_vars_instantiate_upper_bound at h14
         simp [Typ.free_vars] at h14
@@ -1139,7 +1139,7 @@ mutual
       have h13 : List.length [Typ.var name'] = 1 := by exact rfl
       rw [←h13]
       rw [←Typ.instantiate_zero_inside_out]
-      apply Monotonic.generalized_named_instantiation
+      apply PosMonotonic.generalized_named_instantiation
       { intro h14
         apply Typ.free_vars_instantiate_upper_bound at h14
         simp [Typ.free_vars] at h14
