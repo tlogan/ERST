@@ -116,6 +116,24 @@ theorem Monotonic.lfp_intro :
 := by sorry
 
 
+/-
+
+Example of potential for generating procedures from derived rules
+
+-- theorem Monotonic.iso_intro :
+--   Monotonic polarity name m t →
+--   Monotonic polarity name m (Typ.iso l t)
+-- := by sorry
+
+
+def Typ.compute_polarity (name : String) (m : List (String → (Expr → Prop))) : Typ → Option Bool
+| .iso l t => Typ.compute_polarity name m t
+| _ => none
+
+-/
+
+
+
 
 
 theorem Subtyping.refl am t :
