@@ -150,6 +150,22 @@ def Typ.compute_polarity (name : String) (m : List (String → (Expr → Prop)))
 
 -/
 
+
+theorem Typing.var_elim :
+  Typing m e (Typ.var name) →
+  Safe e ∧ ∃ P, Stable P ∧ Prod.find name m = some P ∧ P e
+:= by
+  simp [Typing]
+
+theorem Typing.var_intro :
+  Safe e → Stable P →
+  Prod.find name m = some P → P e →
+  Typing m e (Typ.var name)
+:= by
+  simp [Typing]
+  intro h0 h1 h2 h3
+  simp [*]
+
 theorem Typing.iso_elim :
   Typing am e (Typ.iso l t) →
   Safe e ∧ Typing am (Expr.extract e l) t
@@ -183,47 +199,6 @@ theorem Typing.inter_entry_intro {am l e r body t} :
 := by sorry
 
 
-theorem Typing.list_diff_elim :
-  Subtyping am tp t →
-  Typing am e (List.typ_diff tp subtras) →
-  Typing am e t
-:= by
-  sorry
-
-theorem Subtyping.list_diff_elim :
-  Subtyping am tp upper →
-  Subtyping am (List.typ_diff tp subtras) upper
-:= by
-  sorry
-
-
-theorem Typing.path_intro :
-  Typ.wellformed tp →
-  Typ.list_wellformed subtras →
-  (∀ e' ,
-    Typing am e' tp →
-    ∃ eam , Pattern.match e' p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) tr
-  ) →
-  Typing am (Expr.function ((p, e) :: f)) (Typ.path (List.typ_diff tp subtras) tr)
-:= by
-  intro h0 h1 h2
-  simp [Typing]
-  apply And.intro
-  { apply Safe.function }
-  {
-    apply And.intro sorry
-
-    intro arg h3
-    apply Typing.list_diff_elim (Subtyping.refl am tp) at h3
-
-    have ⟨eam,h5,h6⟩ := h2 arg h3
-
-    have h1 : NStep (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.instantiate 0 eam e) := by
-      exact NStep.pattern_match e f h5
-    exact subject_expansion h1 h6
-  }
-
-
 theorem Typing.path_elim
   (typing_cator : Typing am ef (.path t t'))
   (typing_arg : Typing am ea t)
@@ -232,20 +207,6 @@ theorem Typing.path_elim
   simp [Typing] at typing_cator
   have ⟨h0,h1,h2⟩ := typing_cator
   exact h2 ea typing_arg
-
-theorem Typing.loop_path_elim {am e t} id :
-  Typing am e (.path (.var id) t) →
-  Typing am (.loopi e) t
-:= by
-  sorry
-
-theorem Typing.anno_intro {am e t ta} :
-  Subtyping am t ta →
-  Typing am e t →
-  Typing am (.anno e ta) ta
-:= by sorry
-
-
 
 
 
@@ -279,20 +240,45 @@ theorem Typing.top_intro :
 := by
   simp [Typing]
 
-theorem Typing.var_elim :
-  Typing m e (Typ.var name) →
-  Safe e ∧ ∃ P, Stable P ∧ Prod.find name m = some P ∧ P e
-:= by
-  simp [Typing]
 
-theorem Typing.var_intro :
-  Safe e → Stable P →
-  Prod.find name m = some P → P e →
-  Typing m e (Typ.var name)
+theorem Typing.list_diff_elim :
+  Typing am e (List.typ_diff tp subtras) →
+  Typing am e tp
 := by
+  sorry
+
+theorem Typing.path_diff_intro :
+  Typ.wellformed tp →
+  Typ.list_wellformed subtras →
+  (∀ e' ,
+    Typing am e' tp →
+    ∃ eam , Pattern.match e' p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) tr
+  ) →
+  Typing am (Expr.function ((p, e) :: f)) (Typ.path (List.typ_diff tp subtras) tr)
+:= by
+  intro h0 h1 h2
   simp [Typing]
-  intro h0 h1 h2 h3
-  simp [*]
+  apply And.intro
+  { apply Safe.function }
+  {
+    apply And.intro sorry
+
+    intro arg h3
+    apply Typing.list_diff_elim at h3
+
+    have ⟨eam,h5,h6⟩ := h2 arg h3
+
+    have h1 : NStep (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.instantiate 0 eam e) := by
+      exact NStep.pattern_match e f h5
+    exact subject_expansion h1 h6
+  }
+
+
+theorem Typing.anno_intro {am e t ta} :
+  Subtyping am t ta →
+  Typing am e t →
+  Typing am (.anno e ta) ta
+:= by sorry
 
 theorem Typing.lfp_elim :
   Typ.wellformed (Typ.lfp "" t) →
@@ -335,7 +321,6 @@ theorem Typing.lfp_intro :
     --   { exact h3 }
     -- }
   }
-
 
 
 
@@ -459,6 +444,12 @@ theorem Subtyping.diff_intro {am t left right} :
   Subtyping am t (Typ.diff left right)
 := by sorry
 
+theorem Subtyping.list_diff_elim :
+  Subtyping am tp upper →
+  Subtyping am (List.typ_diff tp subtras) upper
+:= by
+  sorry
+
 
 -- theorem Subtyping.exi_intro {am am' t ids quals body} :
 --   Prod.dom am' ⊆ ids →
@@ -528,41 +519,6 @@ theorem Subtyping.lfp_intro :
   Subtyping am lower (Typ.lfp "" t)
 := by
   sorry
-
-
-
--- theorem Typing.empty_record_top am :
---   Typing am (Expr.record []) Typ.top
--- := by
---   unfold Typing
---   sorry
---   -- apply Safe.record
---   -- apply RecSafe.nil
-
-
-
--- theorem fresh_ids n (ignore : List String) :
---   ∃ ids , ids.length = n ∧ ids ∩ ignore = []
--- := by sorry
--- -- TODO: concat all the existing strings together and add numbers
-
--- theorem fresh_id (ignore : List String) :
---   ∃ id ,id ∉ ignore
--- := by sorry
-
-
--- theorem MultiSubtyping.removeAll_removal {tam assums assums'} :
---   MultiSubtyping tam assums →
---   MultiSubtyping tam (List.removeAll assums' assums) →
---   MultiSubtyping tam assums'
--- := by sorry
-
--- theorem Typing.function_pres {am p tp e f t } :
---   (∀ {v} , Typing am v tp → ∃ eam , Pattern.match v p = .some eam) →
---   ¬ Subtyping am t (.path tp .top) →
---   Typing am (.function f) t →
---   Typing am (.function ((p,e) :: f)) t
--- := by sorry
 
 
 
