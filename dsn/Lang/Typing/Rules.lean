@@ -181,15 +181,24 @@ theorem Typing.iso_intro :
   simp [*]
 
 theorem Typing.entry_intro l :
+  Prod.key_fresh l r →
+  Safe (.record r) →
   Typing am e t →
-  Typing am (Expr.record ((l, e) :: [])) (Typ.entry l t)
+  Typing am (Expr.record ((l, e) :: r)) (Typ.entry l t)
 := by
-  intro h0
+  intro h0 h1 h2
   unfold Typing
   apply And.intro
-  { apply Safe.entry_intro _ (Typing.safety h0) }
-  { exact subject_expansion NStep.project h0 }
-
+  { apply Safe.record_cons_intro
+    { exact h1 }
+    { exact safety h2 }
+  }
+  { apply Typing.subject_expansion
+    { apply NStep.project _ h0
+      apply Safe.record_keys_uniqueness h1
+    }
+    { exact h2 }
+  }
 
 
 theorem Typing.inter_entry_intro {am l e r body t} :
@@ -197,6 +206,27 @@ theorem Typing.inter_entry_intro {am l e r body t} :
   Typing am (.record r) t  →
   Typing am (Expr.record ((l, e) :: r)) (Typ.inter (Typ.entry l body) t)
 := by sorry
+
+
+theorem Typing.path_intro :
+  Typ.wellformed tp →
+  (∀ e' ,
+    Typing am e' tp →
+    ∃ eam , Pattern.match e' p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) tr
+  ) →
+  Typing am (Expr.function ((p, e) :: f)) (Typ.path tp tr)
+:= by
+  intro h0 h1
+  simp [Typing]
+  apply And.intro
+  { apply Safe.function }
+  { apply And.intro h0
+    intro arg h3
+    have ⟨eam,h5,h6⟩ := h1 arg h3
+    apply subject_expansion
+    { exact NStep.pattern_match e f h5 }
+    { exact h6 }
+  }
 
 
 theorem Typing.path_elim
@@ -242,36 +272,11 @@ theorem Typing.top_intro :
 
 
 theorem Typing.list_diff_elim :
-  Typing am e (List.typ_diff tp subtras) →
+  Typing am e (Typ.list_diff tp subtras) →
   Typing am e tp
 := by
   sorry
 
-theorem Typing.path_diff_intro :
-  Typ.wellformed tp →
-  Typ.list_wellformed subtras →
-  (∀ e' ,
-    Typing am e' tp →
-    ∃ eam , Pattern.match e' p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) tr
-  ) →
-  Typing am (Expr.function ((p, e) :: f)) (Typ.path (List.typ_diff tp subtras) tr)
-:= by
-  intro h0 h1 h2
-  simp [Typing]
-  apply And.intro
-  { apply Safe.function }
-  {
-    apply And.intro sorry
-
-    intro arg h3
-    apply Typing.list_diff_elim at h3
-
-    have ⟨eam,h5,h6⟩ := h2 arg h3
-
-    have h1 : NStep (Expr.app (Expr.function ((p, e) :: f)) arg) (Expr.instantiate 0 eam e) := by
-      exact NStep.pattern_match e f h5
-    exact subject_expansion h1 h6
-  }
 
 
 theorem Typing.anno_intro {am e t ta} :
@@ -446,7 +451,7 @@ theorem Subtyping.diff_intro {am t left right} :
 
 theorem Subtyping.list_diff_elim :
   Subtyping am tp upper →
-  Subtyping am (List.typ_diff tp subtras) upper
+  Subtyping am (Typ.list_diff tp subtras) upper
 := by
   sorry
 

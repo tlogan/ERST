@@ -1189,7 +1189,7 @@ def Typ.capture (t : Typ) : Typ :=
     if List.isEmpty ids then
       t
     else
-      .exi ids .nil t
+      .exi (List.map (fun _ => "") ids) [] (Typ.seal ids t)
 
 def Typ.do_diff : Typ → Typ → Typ
 | (.iso l body), (.iso l_subtra body_subtra) =>
@@ -1222,16 +1222,17 @@ theorem Typ.diff_drop {l body t l_sub body_sub} :
     apply h0 h3
   }
   {
-    simp [h2]
+    simp [h2, Typ.seal]
     simp [Typ.do_diff]
     intro h3
     apply False.elim
     apply h0 h3
   }
 
-def List.typ_diff (t : Typ) : List Typ → Typ
+def Typ.list_diff (t : Typ) : List Typ → Typ
 | .nil => t
-| .cons x xs => List.typ_diff (Typ.do_diff t (Typ.capture x)) xs
+| .cons x xs => Typ.list_diff (Typ.do_diff t (Typ.capture x)) xs
+
 
 
 #eval (Typ.free_vars [typ| X * <uno/>]).map (fun typ => (typ, Typ.top)) -- .map(fun typ => (typ, .top))
@@ -1433,6 +1434,27 @@ def Typ.wellformed (t : Typ) := Typ.instantiated t && Typ.nameless t
 def Typ.list_wellformed : List Typ → Bool
 | [] => true
 | t :: ts => Typ.wellformed t && Typ.list_wellformed ts
+
+
+theorem Typ.wellformed_capture t:
+  Typ.wellformed (Typ.capture t) = (Typ.wellformed t)
+:= by sorry
+
+theorem Typ.wellformed_do_diff tl tr :
+  Typ.wellformed (Typ.do_diff tl tr) = (Typ.wellformed tl && Typ.wellformed tr)
+:= by sorry
+
+theorem Typ.wellformed_list_diff t subtras :
+  Typ.wellformed (Typ.list_diff t subtras) = (Typ.wellformed t && Typ.list_wellformed subtras)
+:= by cases subtras with
+| nil =>
+  simp [Typ.list_diff, Typ.list_wellformed]
+| cons subt subtras' =>
+  simp [Typ.list_diff, Typ.list_wellformed]
+  rw [Typ.wellformed_list_diff (Typ.do_diff t (Typ.capture subt)) subtras']
+  rw [Typ.wellformed_do_diff]
+  rw [Typ.wellformed_capture]
+  apply Bool.and_assoc
 
 
 mutual

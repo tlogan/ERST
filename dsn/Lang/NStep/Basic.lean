@@ -50,11 +50,16 @@ end
 
 
 
-theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
+theorem NStep.project e :
+  Prod.key_fresh l r →
+  Prod.keys_unique r →
+  NStep (Expr.project (Expr.record ((l, e) :: r)) l) e
+:= by
+  intro h0 h1
   unfold Expr.project
-  have h1 : e = Expr.instantiate 0 [e] (.bvar 0) := by
+  have h2 : e = Expr.instantiate 0 [e] (.bvar 0) := by
     simp [Expr.instantiate, Expr.shift_vars_zero]
-  rw [h1]
+  rw [h2]
   apply NStep.pattern_match
   simp [Expr.instantiate, Expr.shift_vars_zero, Pattern.bvar]
   simp [Pattern.match, Pattern.match_record, Pattern.match_entry,
@@ -62,6 +67,7 @@ theorem NStep.project : NStep (Expr.project (Expr.record [(l, e)]) l) e := by
     Pattern.index_vars, Pattern.record_index_vars,
     Prod.keys_unique, Prod.key_fresh
   ]
+  exact ⟨h0, h1⟩
 
 theorem NStep.extract : NStep (Expr.extract (Expr.iso l e) l) e := by
   unfold Expr.extract

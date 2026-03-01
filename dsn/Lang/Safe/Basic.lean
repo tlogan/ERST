@@ -67,11 +67,21 @@ theorem Safe.subject_expansion
   exact step
   exact ReflTrans.refl e'
 
-
-theorem Safe.entry_intro l :
-  Safe e →
-  Safe (Expr.record [(l, e)])
+theorem Safe.record_nil_intro :
+  Safe (.record [])
 := by sorry
+
+theorem Safe.record_cons_intro :
+  Safe (.record r) →
+  Safe e →
+  Safe (.record ((l,e) :: r))
+:= by sorry
+
+theorem Safe.record_keys_uniqueness :
+  Safe (.record r) →
+  Prod.keys_unique r
+:= by sorry
+
 
 theorem Safe.function f :
   Safe (.function f)
@@ -82,6 +92,8 @@ theorem Safe.function f :
   have ⟨f',h1⟩ := NStep.refl_trans_function_inversion f h0
   rw [h1]
   simp [Expr.valued]
+
+
 
 
 
