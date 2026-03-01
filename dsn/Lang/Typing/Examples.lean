@@ -22,7 +22,7 @@ namespace Lang
 
 #eval Typ.seal [] [typ| LFP [N] <zero/> | <succ> <succ> N ]
 
-example : NegMonotonic "SELF" [] (.path (.var SELF) .top) := by
+example : NegMonotonic "SELF" [] (.path (.var "SELF") .top) := by
   apply NegMonotonic.intro
   apply Monotonic.path_intro
   { simp ; apply Monotonic.positive_var_intro}
@@ -34,7 +34,7 @@ example : Subtyping []
 := by
   simp [Typ.seal, List.firstIndexOf, List.indexesOf, List.findIdxs]
   apply @Subtyping.lfp_elim _ "SELF"
-  { simp [Typ.wellformed, Typ.instantiated, Typ.num_bound_vars, Typ.nameless] }
+  { reduce ; rfl }
   { simp [Typ.free_vars] }
   { simp [Typ.instantiate, Typ.shift_vars]
     apply PosMonotonic.intro
@@ -49,9 +49,46 @@ example : Subtyping []
     }
   }
   { simp [Typ.instantiate, Typ.shift_vars_zero]
-    apply Subtyping.unio_elim
-    { sorry }
-    { sorry }
+    apply @Subtyping.lfp_intro _ "SELF"
+    { reduce ; rfl }
+    { simp [Typ.free_vars] }
+    { simp [Typ.instantiate, Typ.shift_vars]
+      apply PosMonotonic.intro
+      apply Monotonic.unio_intro
+      { apply Monotonic.iso_intro
+        apply Monotonic.top_intro
+      }
+      { apply Monotonic.iso_intro
+        apply Monotonic.positive_var_intro
+      }
+    }
+    { simp [Typ.instantiate, Typ.shift_vars]
+      apply Subtyping.unio_elim
+      { apply Subtyping.unio_left_intro
+        apply Subtyping.refl
+      }
+      { apply Subtyping.unio_right_intro
+        apply Subtyping.iso_pres
+        apply @Subtyping.lfp_intro _ "SELF"
+        { reduce ; rfl }
+        { simp [Typ.free_vars] }
+        { simp [Typ.instantiate, Typ.shift_vars]
+          apply PosMonotonic.intro
+          apply Monotonic.unio_intro
+          { apply Monotonic.iso_intro
+            apply Monotonic.top_intro
+          }
+          { apply Monotonic.iso_intro
+            apply Monotonic.positive_var_intro
+          }
+        }
+        { simp [Typ.instantiate, Typ.shift_vars]
+          apply Subtyping.unio_right_intro
+          apply Subtyping.iso_pres
+          apply Subtyping.refl
+        }
+      }
+    }
   }
 
 end Lang

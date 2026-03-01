@@ -571,4 +571,23 @@ theorem MultiTyping.expr_env_append_prefix_preservation :
 
 
 
+theorem Typing.joinable_preservation {a b am t} :
+  Joinable (ReflTrans NStep) a b →
+  Typing am a t →
+  Typing am b t
+:= by sorry
+
+theorem Typing.joinable_reflection {a b am t} :
+  Joinable (ReflTrans NStep) a b →
+  Typing am b t →
+  Typing am a t
+:= by
+  intro h0 h1
+  apply Typing.joinable_preservation
+  { apply Joinable.symm h0 }
+  { exact h1 }
+
+
+
+
 end Lang
