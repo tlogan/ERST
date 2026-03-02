@@ -200,23 +200,23 @@ theorem Typing.entry_intro l :
     { exact h2 }
   }
 
-theorem Typing.record_cons_head_elim :
-  Safe (.record r) →
-  Prod.key_fresh l r →
-  Typing am (.record [(l,e)]) upper  →
-  Typing am (.record ((l, e) :: r)) upper
-:= by
-  sorry
-
 theorem Typing.record_cons_tail_elim :
-  Safe e →
+  Safe e  →
   Prod.key_fresh l r →
-  Typing am (.record r) upper  →
-  Typing am (.record ((l, e) :: r)) upper
-:= by
-  intro h0 h1 h2
+  ¬ Subtyping am tr (.inter (.entry l .top) tr)  →
+  Typing am (.record r) tr  →
+  Typing am (.record ((l, e) :: r)) tr
+:= by cases tr with
+| bvar i =>
+  simp [Typing]
+| var name =>
+  simp [Typing]
+  intro h0 h1 h2 h3 P h4 h5 h6
+  simp [*]
+  apply And.intro (Safe.record_cons_intro h3 h0)
   sorry
-
+| _ =>
+  sorry
 
 
 
@@ -247,20 +247,12 @@ theorem Typing.function_cons_elim :
 := by
   sorry
 
-theorem Typing.function_cons_head_elim :
-  Typing am (.function [(p,e)]) upper  →
-  Typing am (.function ((p, e) :: f)) upper
-:= by
-  sorry
-
 theorem Typing.function_cons_tail_elim :
   (∀ {p' e'}, (p',e') ∈ f → Pattern.Disjoint p p') →
-  Typing am (.function f) upper  →
-  Typing am (.function ((p, e) :: f)) upper
+  Typing am (.function f) tf  →
+  Typing am (.function ((p, e) :: f)) tf
 := by
   sorry
-
-
 
 
 theorem Typing.path_elim
@@ -279,15 +271,6 @@ theorem Typing.inter_intro :
 := by sorry
 
 
-  -- Typ.wellformed tp →
-  -- (∀ e' ,
-  --   Typing am e' tp →
-  --   ∃ eam , Pattern.match e' p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) tr
-  -- ) →
-
-
-
-
 theorem Typing.unio_elim :
   Typing m e (Typ.unio tl tr) →
   Typing m e tl ∨ Typing m e tr
@@ -297,8 +280,6 @@ theorem Typing.unio_left_intro tr :
   Typing am e tl →
   Typing am e (Typ.unio tl tr)
 := by sorry
-
-
 
 
 theorem Typing.unio_right_intro tl :

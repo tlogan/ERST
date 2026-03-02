@@ -11,11 +11,11 @@ open Std.Format
 inductive Typ
 | bvar : Nat → Typ
 | var : String → Typ
+| bot :  Typ
+| top :  Typ
 | iso : String → Typ → Typ
 | entry : String → Typ → Typ
 | path : Typ → Typ → Typ
-| bot :  Typ
-| top :  Typ
 | unio :  Typ → Typ → Typ
 | inter :  Typ → Typ → Typ
 | diff :  Typ → Typ → Typ

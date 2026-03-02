@@ -66,6 +66,7 @@ mutual
 
 
   def Typing (am : List (String × (Expr → Prop))) (e : Expr) : Typ → Prop
+  | .var id => Safe e ∧ ∃ P, Stable P ∧ Prod.find id am = some P ∧ P e
   | .bvar _ => False
   | .bot => False
   | .top => Safe e
@@ -104,7 +105,6 @@ mutual
       (∀ e', Typing ((name,P) :: am) e' (Typ.instantiate 0 [.var name] body) → P e') →
       P e
     )
-  | .var id => Safe e ∧ ∃ P, Stable P ∧ Prod.find id am = some P ∧ P e
   termination_by t => (Typ.size t, 0)
   decreasing_by
     all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate] ; try linarith)
