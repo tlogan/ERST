@@ -200,21 +200,33 @@ theorem Typing.entry_intro l :
     { exact h2 }
   }
 
+theorem Typing.record_cons_head_elim :
+  Safe (.record r) →
+  Prod.key_fresh l r →
+  Typing am (.record [(l,e)]) upper  →
+  Typing am (.record ((l, e) :: r)) upper
+:= by
+  sorry
 
-theorem Typing.inter_entry_intro {am l e r body t} :
-  Typing am e body →
-  Typing am (.record r) t  →
-  Typing am (Expr.record ((l, e) :: r)) (Typ.inter (Typ.entry l body) t)
-:= by sorry
+theorem Typing.record_cons_tail_elim :
+  Safe e →
+  Prod.key_fresh l r →
+  Typing am (.record r) upper  →
+  Typing am (.record ((l, e) :: r)) upper
+:= by
+  intro h0 h1 h2
+  sorry
+
+
 
 
 theorem Typing.path_intro :
   Typ.wellformed tp →
-  (∀ e' ,
-    Typing am e' tp →
-    ∃ eam , Pattern.match e' p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) tr
+  (∀ ep ,
+    Typing am ep tp →
+    ∃ eam , Pattern.match ep p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) te
   ) →
-  Typing am (Expr.function ((p, e) :: f)) (Typ.path tp tr)
+  Typing am (Expr.function ((p, e) :: f)) (Typ.path tp te)
 := by
   intro h0 h1
   simp [Typing]
@@ -228,6 +240,28 @@ theorem Typing.path_intro :
     { exact h6 }
   }
 
+theorem Typing.function_cons_elim :
+  Typing am (.function [(p,e)]) upper →
+  Typing am (.function f) upper  →
+  Typing am (.function ((p, e) :: f)) upper
+:= by
+  sorry
+
+theorem Typing.function_cons_head_elim :
+  Typing am (.function [(p,e)]) upper  →
+  Typing am (.function ((p, e) :: f)) upper
+:= by
+  sorry
+
+theorem Typing.function_cons_tail_elim :
+  (∀ {p' e'}, (p',e') ∈ f → Pattern.Disjoint p p') →
+  Typing am (.function f) upper  →
+  Typing am (.function ((p, e) :: f)) upper
+:= by
+  sorry
+
+
+
 
 theorem Typing.path_elim
   (typing_cator : Typing am ef (.path t t'))
@@ -237,6 +271,20 @@ theorem Typing.path_elim
   simp [Typing] at typing_cator
   have ⟨h0,h1,h2⟩ := typing_cator
   exact h2 ea typing_arg
+
+theorem Typing.inter_intro :
+  Typing am e tl →
+  Typing am e tr →
+  Typing am e (Typ.inter tl tr)
+:= by sorry
+
+
+  -- Typ.wellformed tp →
+  -- (∀ e' ,
+  --   Typing am e' tp →
+  --   ∃ eam , Pattern.match e' p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) tr
+  -- ) →
+
 
 
 

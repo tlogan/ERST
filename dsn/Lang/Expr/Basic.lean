@@ -712,6 +712,17 @@ mutual
   | _, _ => none
 end
 
+def Pattern.matches (e : Expr) (p : Pattern) : Bool :=
+  match Pattern.match e p with
+  | some _ => true
+  | none => false
+
+mutual
+  def Pattern.Disjoint (p0 p1 : Pattern): Prop :=
+    ∀ e, Pattern.matches e p0 → Pattern.matches e p1 → False
+end
+
+
 
 
 mutual
