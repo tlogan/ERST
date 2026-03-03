@@ -201,17 +201,21 @@ theorem Typing.entry_intro l :
   }
 
 theorem Typing.record_cons_tail_elim :
-  Safe e  →
+  Safe e →
   Prod.key_fresh l r →
-  ¬ Subtyping am tr (.inter (.entry l .top) tr)  →
+  (∀ te , Typing am e te  →
+    /- require that type (.entry l te) has not been negated in type tr -/
+    ∃ e' , Typing am e' (.inter (.entry l te) tr)
+   ) →
   Typing am (.record r) tr  →
   Typing am (.record ((l, e) :: r)) tr
 := by cases tr with
 | bvar i =>
   simp [Typing]
 | var name =>
+  intro h0 h1 h2
   simp [Typing]
-  intro h0 h1 h2 h3 P h4 h5 h6
+  intro h3 P h4 h5 h6
   simp [*]
   apply And.intro (Safe.record_cons_intro h3 h0)
   sorry
@@ -249,10 +253,15 @@ theorem Typing.function_cons_elim :
 
 theorem Typing.function_cons_tail_elim :
   (∀ {p' e'}, (p',e') ∈ f → Pattern.Disjoint p p') →
+  (∀ th , Typing am (.function [(p,e)]) th →
+    /- require that type tf has not been negated in type tf -/
+    ∃ e' , Typing am e' (.inter th tf)
+  ) →
   Typing am (.function f) tf  →
   Typing am (.function ((p, e) :: f)) tf
 := by
   sorry
+
 
 
 theorem Typing.path_elim
