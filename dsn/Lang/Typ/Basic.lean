@@ -24,6 +24,14 @@ inductive Typ
 | lfp :  String → Typ → Typ
 deriving Lean.ToExpr
 
+def Typ.inter_entries : List (String × Typ) → Typ
+| [] => Typ.top
+| (l,t) :: entries => Typ.inter (Typ.entry l t) (Typ.inter_entries entries)
+
+def Typ.inter_paths : List (Typ × Typ) → Typ
+| [] => Typ.top
+| (tp,te) :: paths => Typ.inter (Typ.path tp te) (Typ.inter_paths paths)
+
 
 
 -- , Ord

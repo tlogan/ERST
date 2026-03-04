@@ -180,47 +180,87 @@ theorem Typing.iso_intro :
   intro h0 h1
   simp [*]
 
+theorem Typing.inter_intro :
+  Typing am e tl →
+  Typing am e tr →
+  Typing am e (Typ.inter tl tr)
+:= by sorry
+
+
+
 theorem Typing.entry_intro l :
   Prod.key_fresh l r →
-  Safe (.record r) →
   Typing am e t →
+  Prod.keys_unique r →
+  RcdSafe r →
   Typing am (Expr.record ((l, e) :: r)) (Typ.entry l t)
 := by
-  intro h0 h1 h2
-  unfold Typing
+  intro h0 h1 h2 h3
+  simp [Typing]
   apply And.intro
-  { apply Safe.record_cons_intro
-    { exact h1 }
-    { exact safety h2 }
+  { apply Safe.record
+    simp [RcdSafe]
+    intro l' e' h4
+    cases h4 with
+    | inl h5 =>
+      have ⟨h6,h7⟩ := h5
+      rw [h7]
+      exact safety h1
+    | inr h5 =>
+      simp [RcdSafe] at h3
+      apply h3 h5
   }
   { apply Typing.subject_expansion
-    { apply NStep.project _ h0
-      apply Safe.record_keys_uniqueness h1
-    }
-    { exact h2 }
+    { exact NStep.project e h0 h2 }
+    { exact h1 }
   }
 
-theorem Typing.record_cons_tail_elim :
-  Safe e →
-  Prod.key_fresh l r →
-  (∀ te , Typing am e te  →
-    /- require that type (.entry l te) has not been negated in type tr -/
-    ∃ e' , Typing am e' (.inter (.entry l te) tr)
-   ) →
-  Typing am (.record r) tr  →
-  Typing am (.record ((l, e) :: r)) tr
-:= by cases tr with
-| bvar i =>
-  simp [Typing]
-| var name =>
-  intro h0 h1 h2
-  simp [Typing]
-  intro h3 P h4 h5 h6
-  simp [*]
-  apply And.intro (Safe.record_cons_intro h3 h0)
-  sorry
-| _ =>
-  sorry
+theorem Typing.inter_entries_intro
+  lts
+  (ku : Prod.keys_unique r)
+  (rcd_typing : RcdTyping am r lts)
+: Typing am (Expr.record r) (Typ.inter_entries lts)
+:= by cases rcd_typing with
+| nil =>
+  simp [Typ.inter_entries, Typing]
+  exact Safe.record_nil_intro
+| @cons e t r' lts' l h0 h1 =>
+  simp [Typ.inter_entries]
+  apply Typing.inter_intro
+  { simp [Prod.keys_unique] at ku
+    have ⟨h2,h3⟩ := ku
+    apply Typing.entry_intro _ h2 h0 h3
+    exact @RcdTyping.safety am r' lts' h1
+  }
+  { sorry }
+/-
+TODO: update to
+theorem Typing.inter_entries_intro :
+
+restrict type to intersection of entries
+-/
+
+-- theorem Typing.record_cons_tail_elim :
+--   Safe e →
+--   Prod.key_fresh l r →
+--   (∀ te , Typing am e te  →
+--     /- require that type (.entry l te) has not been negated in type tr -/
+--     ∃ e' , Typing am e' (.inter (.entry l te) tr)
+--    ) →
+--   Typing am (.record r) tr  →
+--   Typing am (.record ((l, e) :: r)) tr
+-- := by cases tr with
+-- | bvar i =>
+--   simp [Typing]
+-- | var name =>
+--   intro h0 h1 h2
+--   simp [Typing]
+--   intro h3 P h4 h5 h6
+--   simp [*]
+--   apply And.intro (Safe.record_cons_intro h3 h0)
+--   sorry
+-- | _ =>
+--   sorry
 
 
 
@@ -244,23 +284,31 @@ theorem Typing.path_intro :
     { exact h6 }
   }
 
-theorem Typing.function_cons_elim :
-  Typing am (.function [(p,e)]) upper →
-  Typing am (.function f) upper  →
-  Typing am (.function ((p, e) :: f)) upper
-:= by
-  sorry
 
-theorem Typing.function_cons_tail_elim :
-  (∀ {p' e'}, (p',e') ∈ f → Pattern.Disjoint p p') →
-  (∀ th , Typing am (.function [(p,e)]) th →
-    /- require that type tf has not been negated in type tf -/
-    ∃ e' , Typing am e' (.inter th tf)
-  ) →
-  Typing am (.function f) tf  →
-  Typing am (.function ((p, e) :: f)) tf
-:= by
-  sorry
+/-
+TODO: update to
+theorem Typing.inter_paths_intro :
+
+restrict type to intersection of paths
+-/
+
+-- theorem Typing.function_cons_elim :
+--   Typing am (.function [(p,e)]) upper →
+--   Typing am (.function f) upper  →
+--   Typing am (.function ((p, e) :: f)) upper
+-- := by
+--   sorry
+
+-- theorem Typing.function_cons_tail_elim :
+--   (∀ {p' e'}, (p',e') ∈ f → Pattern.Disjoint p p') →
+--   (∀ th , Typing am (.function [(p,e)]) th →
+--     /- require that type tf has not been negated in type tf -/
+--     ∃ e' , Typing am e' (.inter th tf)
+--   ) →
+--   Typing am (.function f) tf  →
+--   Typing am (.function ((p, e) :: f)) tf
+-- := by
+--   sorry
 
 
 
@@ -273,11 +321,18 @@ theorem Typing.path_elim
   have ⟨h0,h1,h2⟩ := typing_cator
   exact h2 ea typing_arg
 
-theorem Typing.inter_intro :
-  Typing am e tl →
-  Typing am e tr →
-  Typing am e (Typ.inter tl tr)
+theorem Typing.inter_left_elim tr :
+  Subtyping m tl upper →
+  Subtyping m (Typ.inter tl tr) upper
 := by sorry
+
+
+theorem Typing.inter_right_elim tl  :
+  Subtyping m tr upper →
+  Typing m e (Typ.inter tl tr) → Typing m e upper
+:= by sorry
+
+
 
 
 theorem Typing.unio_elim :

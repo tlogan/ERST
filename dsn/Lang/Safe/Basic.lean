@@ -17,6 +17,9 @@ namespace Lang
 def Safe (e : Expr) : Prop :=
   (∀ e', ReflTrans NStep e e' → Expr.valued e' ∨ (∃ e'' , NStep e' e''))
 
+def RcdSafe (r : List (String × Expr)) :=
+  ∀ {l e}, (l,e) ∈ r → Safe e
+
 
 theorem Safe.progress :
   Safe e → Expr.valued e ∨ ∃ e', NStep e e'
@@ -77,9 +80,10 @@ theorem Safe.record_cons_intro :
   Safe (.record ((l,e) :: r))
 := by sorry
 
-theorem Safe.record_keys_uniqueness :
-  Safe (.record r) →
-  Prod.keys_unique r
+
+theorem Safe.record :
+  RcdSafe r →
+  Safe (.record r)
 := by sorry
 
 
