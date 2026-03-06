@@ -723,6 +723,35 @@ mutual
 end
 
 
+theorem Pattern.match_entry_bvar :
+  Prod.keys_unique r →
+  (l, e) ∈ r →
+  Pattern.match_entry l Pattern.bvar r = Option.some [e]
+:= by cases r with
+| nil =>
+  simp [Pattern.match_entry]
+| cons entry r' =>
+  have (l',e') := entry
+  simp [Prod.keys_unique, Pattern.match_entry]
+  intro h0 h1 h2
+  cases h2 with
+  | inl h2 =>
+    have ⟨h3,h4⟩ := h2
+    simp [*, Pattern.bvar, Pattern.match]
+  | inr h3 =>
+    by_cases h4 : l' = l
+    { simp [h4]
+      apply False.elim
+      apply Prod.key_fresh_no_mem at h0
+      apply h0
+      rw [h4]
+      apply h3
+    }
+    { simp [h4]
+      apply Pattern.match_entry_bvar h1 h3
+    }
+
+
 
 
 mutual

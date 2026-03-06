@@ -81,12 +81,6 @@ theorem Safe.record_cons_intro :
 := by sorry
 
 
-theorem Safe.record :
-  RcdSafe r →
-  Safe (.record r)
-:= by sorry
-
-
 theorem Safe.function f :
   Safe (.function f)
 := by

@@ -98,6 +98,23 @@ def Prod.key_fresh [DecidableEq α] (target : α) : List (α × β) → Bool
   key != target && Prod.key_fresh target xs
 
 
+theorem Prod.key_fresh_no_mem [DecidableEq α] {k : α} :
+  Prod.key_fresh k ps →
+  (k,v) ∉ ps
+:= by cases ps with
+| nil =>
+  simp [Prod.key_fresh]
+| cons p ps' =>
+  have (k',v') := p
+  simp [Prod.key_fresh]
+  intro h0 h1
+  apply And.intro
+  { intro h2 h3
+    exact h0 (Eq.symm h2)
+  }
+  { apply Prod.key_fresh_no_mem h1 }
+
+
 
 def Prod.keys_unique [DecidableEq α]: List (α × β) → Bool
 | .nil =>

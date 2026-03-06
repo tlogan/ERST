@@ -180,6 +180,28 @@ theorem Typing.iso_intro :
   intro h0 h1
   simp [*]
 
+
+
+
+theorem Typing.entry_intro l :
+  Prod.keys_unique r →
+  Safe (.record r) →
+  (l,e) ∈ r →
+  Typing am e t →
+  Typing am (Expr.record r) (Typ.entry l t)
+:= by
+  simp [Typing, Expr.project]
+  intro h0 h1 h2 h3
+  simp [*]
+  apply subject_expansion
+  { apply NStep.pattern_match
+    simp [*,Pattern.match, Pattern.match_record]
+    apply Pattern.match_entry_bvar h0 h2
+  }
+  { simp [Expr.instantiate, Expr.shift_vars_zero]
+    exact h3
+  }
+
 theorem Typing.inter_intro :
   Typing am e tl →
   Typing am e tr →
@@ -187,52 +209,46 @@ theorem Typing.inter_intro :
 := by sorry
 
 
+theorem Typing.inter_left_elim  :
+  Subtyping m tl upper →
+  Typing m e (Typ.inter tl tr) →
+  Typing m e upper
+:= by sorry
 
-theorem Typing.entry_intro l :
-  Prod.key_fresh l r →
-  Typing am e t →
+
+theorem Typing.inter_right_elim :
+  Subtyping m tr upper →
+  Typing m e (Typ.inter tl tr) → Typing m e upper
+:= by sorry
+
+
+
+theorem Typing.inter_entries_intro entries :
   Prod.keys_unique r →
-  RcdSafe r →
-  Typing am (Expr.record ((l, e) :: r)) (Typ.entry l t)
-:= by
-  intro h0 h1 h2 h3
-  simp [Typing]
-  apply And.intro
-  { apply Safe.record
-    simp [RcdSafe]
-    intro l' e' h4
-    cases h4 with
-    | inl h5 =>
-      have ⟨h6,h7⟩ := h5
-      rw [h7]
-      exact safety h1
-    | inr h5 =>
-      simp [RcdSafe] at h3
-      apply h3 h5
-  }
-  { apply Typing.subject_expansion
-    { exact NStep.project e h0 h2 }
-    { exact h1 }
-  }
-
-theorem Typing.inter_entries_intro
-  lts
-  (ku : Prod.keys_unique r)
-  (rcd_typing : RcdTyping am r lts)
-: Typing am (Expr.record r) (Typ.inter_entries lts)
-:= by cases rcd_typing with
+  Safe (.record r) →
+  (∀ l t, (l,t) ∈ entries → ∃ e, (l,e) ∈ r ∧ Typing am e t) →
+  Typing am (Expr.record r) (Typ.inter_entries entries)
+:= by cases entries with
 | nil =>
   simp [Typ.inter_entries, Typing]
-  exact Safe.record_nil_intro
-| @cons e t r' lts' l h0 h1 =>
+| cons entry entries' =>
+  have (l,t) := entry
   simp [Typ.inter_entries]
+  intro h0 h1 h2
   apply Typing.inter_intro
-  { simp [Prod.keys_unique] at ku
-    have ⟨h2,h3⟩ := ku
-    apply Typing.entry_intro _ h2 h0 h3
-    exact @RcdTyping.safety am r' lts' h1
+  { specialize h2 l t
+    simp [*] at h2
+    have ⟨e,h3,h4⟩ := h2
+    exact entry_intro l h0 h1 h3 h4
   }
-  { sorry }
+  { apply Typing.inter_entries_intro _ h0 h1
+    intro l' t' h3
+    apply h2
+    apply Or.inr h3
+  }
+
+
+
 /-
 TODO: update to
 theorem Typing.inter_entries_intro :
@@ -321,16 +337,6 @@ theorem Typing.path_elim
   have ⟨h0,h1,h2⟩ := typing_cator
   exact h2 ea typing_arg
 
-theorem Typing.inter_left_elim tr :
-  Subtyping m tl upper →
-  Subtyping m (Typ.inter tl tr) upper
-:= by sorry
-
-
-theorem Typing.inter_right_elim tl  :
-  Subtyping m tr upper →
-  Typing m e (Typ.inter tl tr) → Typing m e upper
-:= by sorry
 
 
 

@@ -140,12 +140,6 @@ def MultiTyping
 := ∀ {x t}, Prod.find x context = .some t → ∃ e, (Prod.find x eam) = .some e ∧ Typing tam e t
 
 
-inductive RcdTyping (m : List (String × (Expr → Prop)))
-: List (String × Expr) → List (String × Typ) → Prop
-| nil : RcdTyping m [] []
-| cons  l :
-  Typing m e t → RcdTyping m r entries →
-  RcdTyping m ((l,e) :: r) ((l,t) :: entries)
 
 theorem Typing.safety :
   Typing am e t → Safe e
@@ -211,10 +205,6 @@ decreasing_by
     intro e
     apply Typ.mem_map_var_size
   }
-
-theorem RcdTyping.safety :
-  RcdTyping am r lts → RcdSafe r
-:= by sorry
 
 
 
