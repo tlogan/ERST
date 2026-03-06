@@ -303,26 +303,20 @@ theorem Typing.path_intro :
   }
 
 
-inductive FunPreTyping (am : List (String × (Expr → Prop))) : List (Pattern × Expr) → Typ → Typ → Prop
-| nil : FunPreTyping  am  [] .bot .top
-| cons :
-  /- Prefix pattern matching is optional -/
-  (∀ p' e', (p', e') ∈ fp →
+def FunMatchedTyping (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp te : Typ): Prop :=
+  (∀ p e, (p, e) ∈ f →
     (∀ ep , Typing am ep tp →
-      ∀ eam , Pattern.match ep p' = .some eam → Typing am (Expr.instantiate 0 eam e') te
+      ∀ eam , Pattern.match ep p = .some eam → Typing am (Expr.instantiate 0 eam e) te
     )
-  ) →
-  /- Last pattern match is mandatory -/
-  (∀ ep , Typing am ep tp →
-    ∃ eam , Pattern.match ep p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) te
-  ) →
-  FunPreTyping  am  ((p,e) :: fp) te tp
+  )
 
-#check ([0] <+: [0,1])
+def FunMatching (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp :Typ) : Prop :=
+  ∃ p e , (p,e) ∈ f ∧ (∀ ep , Typing am ep tp → Pattern.matches ep p)
+
 
 theorem Typing.inter_paths_intro :
   (∀ tp te, (tp,te) ∈ paths →
-    Typ.wellformed tp ∧ ∃ fp , fp <+: f ∧ FunPreTyping am (List.reverse fp) tp te
+    Typ.wellformed tp ∧ ∃ fp , fp <+: f ∧ FunMatchedTyping am fp tp te ∧ FunMatching am fp tp
   ) →
   Typing am (Expr.function f) (Typ.inter_paths paths)
 := by sorry
