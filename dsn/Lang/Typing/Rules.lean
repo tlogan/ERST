@@ -280,6 +280,8 @@ restrict type to intersection of entries
 
 
 
+
+
 theorem Typing.path_intro :
   Typ.wellformed tp →
   (∀ ep ,
@@ -299,6 +301,31 @@ theorem Typing.path_intro :
     { exact NStep.pattern_match e f h5 }
     { exact h6 }
   }
+
+
+inductive FunPreTyping (am : List (String × (Expr → Prop))) : List (Pattern × Expr) → Typ → Typ → Prop
+| nil : FunPreTyping  am  [] .bot .top
+| cons :
+  /- Prefix pattern matching is optional -/
+  (∀ p' e', (p', e') ∈ fp →
+    (∀ ep , Typing am ep tp →
+      ∀ eam , Pattern.match ep p' = .some eam → Typing am (Expr.instantiate 0 eam e') te
+    )
+  ) →
+  /- Last pattern match is mandatory -/
+  (∀ ep , Typing am ep tp →
+    ∃ eam , Pattern.match ep p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) te
+  ) →
+  FunPreTyping  am  ((p,e) :: fp) te tp
+
+#check ([0] <+: [0,1])
+
+theorem Typing.inter_paths_intro :
+  (∀ tp te, (tp,te) ∈ paths →
+    Typ.wellformed tp ∧ ∃ fp , fp <+: f ∧ FunPreTyping am (List.reverse fp) tp te
+  ) →
+  Typing am (Expr.function f) (Typ.inter_paths paths)
+:= by sorry
 
 
 /-
