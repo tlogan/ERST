@@ -347,32 +347,30 @@ theorem Typing.path_intro :
     have ⟨p',⟨e',h4⟩,h5⟩ := h3
     clear h3
     specialize h2 p' e' h4
-    cases h4 with
-    | inl h6 =>
-      have ⟨h7,h8⟩ := h6
-      rw [h7,h8] at h2
-      rw [h7] at h5
-      clear h7 h8
-      have h9 :
-        (p,e) :: fp' ++ fs  = (p,e) :: (fp' ++ fs)
-      := by exact rfl
-      rw [h9]
-      simp [Typing]
-      simp [*]
-      apply And.intro
-      { exact Safe.function ((p, e) :: (fp' ++ fs)) }
-      {
-        intro arg h10
-        specialize h2 arg h10
-        specialize h5 arg h10
-        have ⟨m,h11⟩ := Pattern.matches_some h5
-        specialize h2 m h11
+
+    simp [Typing]
+    simp [*]
+    apply And.intro
+    { exact Safe.function ((p, e) :: (fp' ++ fs)) }
+    { intro arg h6
+      specialize h2 arg h6
+      specialize h5 arg h6
+      have ⟨m,h7⟩ := Pattern.matches_some h5
+      clear h5
+      specialize h2 m h7
+      cases h4 with
+      | inl h8 =>
+        have ⟨h9,h10⟩ := h8
+        clear h8
+        rw [h9] at h7
+        rw [h10] at h2
+        clear h9 h10
         apply subject_expansion
-        { apply NStep.pattern_match _ _ h11 }
+        { apply NStep.pattern_match _ _ h7 }
         { exact h2 }
-      }
-    | inr h6 =>
-      sorry
+      | inr h7 =>
+        sorry
+    }
 
 
 theorem Typing.inter_paths_intro :
@@ -396,7 +394,11 @@ theorem Typing.inter_paths_intro :
     have ⟨h1,fp,h3,h4,h5⟩ := h0
     apply Typing.path_intro h1 h3 h4 h5
   }
-  { sorry }
+  { apply Typing.inter_paths_intro
+    intro tp' te' h1
+    specialize h0 tp' te'
+    simp [*]
+  }
 
 
 
