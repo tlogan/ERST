@@ -282,26 +282,40 @@ restrict type to intersection of entries
 
 
 
-theorem Typing.path_intro :
-  Typ.wellformed tp →
-  (∀ ep ,
-    Typing am ep tp →
-    ∃ eam , Pattern.match ep p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) te
-  ) →
-  Typing am (Expr.function ((p, e) :: f)) (Typ.path tp te)
-:= by
-  intro h0 h1
-  simp [Typing]
-  apply And.intro
-  { apply Safe.function }
-  { apply And.intro h0
-    intro arg h3
-    have ⟨eam,h5,h6⟩ := h1 arg h3
-    apply subject_expansion
-    { exact NStep.pattern_match e f h5 }
-    { exact h6 }
-  }
 
+theorem Typing.top_elim :
+  Typing m e Typ.top →
+  Safe e
+:= by
+  simp [Typing]
+
+theorem Typing.top_intro :
+  Safe e →
+  Typing m e Typ.top
+:= by
+  simp [Typing]
+
+
+
+-- theorem Typing.path_intro :
+--   Typ.wellformed tp →
+--   (∀ ep ,
+--     Typing am ep tp →
+--     ∃ eam , Pattern.match ep p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) te
+--   ) →
+--   Typing am (Expr.function ((p, e) :: f)) (Typ.path tp te)
+-- := by
+--   intro h0 h1
+--   simp [Typing]
+--   apply And.intro
+--   { apply Safe.function }
+--   { apply And.intro h0
+--     intro arg h3
+--     have ⟨eam,h5,h6⟩ := h1 arg h3
+--     apply subject_expansion
+--     { exact NStep.pattern_match e f h5 }
+--     { exact h6 }
+--   }
 
 def FunMatchedTyping (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp te : Typ): Prop :=
   (∀ p e, (p, e) ∈ f →
@@ -313,13 +327,77 @@ def FunMatchedTyping (am : List (String × (Expr → Prop))) (f : List (Pattern 
 def FunMatching (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp :Typ) : Prop :=
   ∃ p e , (p,e) ∈ f ∧ (∀ ep , Typing am ep tp → Pattern.matches ep p)
 
+theorem Typing.path_intro :
+  Typ.wellformed tp →
+  fp <+: f →
+  FunMatchedTyping am fp tp te →
+  FunMatching am fp tp →
+  Typing am (Expr.function f) (Typ.path tp te)
+:= by
+  simp [List.IsPrefix]
+  intro h0 fs h1 h2 h3
+  rw [←h1]
+  cases fp with
+  | nil =>
+    simp [FunMatching] at h3
+  | cons pe fp' =>
+    have (p,e) := pe
+    simp [FunMatchedTyping] at h2
+    simp [FunMatching] at h3
+    have ⟨p',⟨e',h4⟩,h5⟩ := h3
+    clear h3
+    specialize h2 p' e' h4
+    cases h4 with
+    | inl h6 =>
+      have ⟨h7,h8⟩ := h6
+      rw [h7,h8] at h2
+      rw [h7] at h5
+      clear h7 h8
+      have h9 :
+        (p,e) :: fp' ++ fs  = (p,e) :: (fp' ++ fs)
+      := by exact rfl
+      rw [h9]
+      simp [Typing]
+      simp [*]
+      apply And.intro
+      { exact Safe.function ((p, e) :: (fp' ++ fs)) }
+      {
+        intro arg h10
+        specialize h2 arg h10
+        specialize h5 arg h10
+        have ⟨m,h11⟩ := Pattern.matches_some h5
+        specialize h2 m h11
+        apply subject_expansion
+        { apply NStep.pattern_match _ _ h11 }
+        { exact h2 }
+      }
+    | inr h6 =>
+      sorry
+
 
 theorem Typing.inter_paths_intro :
   (∀ tp te, (tp,te) ∈ paths →
     Typ.wellformed tp ∧ ∃ fp , fp <+: f ∧ FunMatchedTyping am fp tp te ∧ FunMatching am fp tp
   ) →
   Typing am (Expr.function f) (Typ.inter_paths paths)
-:= by sorry
+:= by cases paths with
+| nil =>
+  simp [Typ.inter_paths]
+  apply Typing.top_intro
+  exact Safe.function f
+| cons path paths' =>
+  have (tp,te) := path
+  simp [Typ.inter_paths]
+  intro h0
+  apply Typing.inter_intro
+  {
+    specialize h0 tp te
+    simp at h0
+    have ⟨h1,fp,h3,h4,h5⟩ := h0
+    apply Typing.path_intro h1 h3 h4 h5
+  }
+  { sorry }
+
 
 
 /-
@@ -377,18 +455,6 @@ theorem Typing.unio_right_intro tl :
   Typing am e tr →
   Typing am e (Typ.unio tl tr)
 := by sorry
-
-theorem Typing.top_elim :
-  Typing m e Typ.top →
-  Safe e
-:= by
-  simp [Typing]
-
-theorem Typing.top_intro :
-  Safe e →
-  Typing m e Typ.top
-:= by
-  simp [Typing]
 
 
 theorem Typing.list_diff_elim :

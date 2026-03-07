@@ -717,6 +717,17 @@ def Pattern.matches (e : Expr) (p : Pattern) : Bool :=
   | some _ => true
   | none => false
 
+theorem Pattern.matches_some :
+  Pattern.matches e p → ∃ m , Pattern.match e p = some m
+:= by
+  simp [Pattern.matches]
+  match Pattern.match e p with
+  | some m =>
+    simp
+  | none =>
+    simp
+
+
 mutual
   def Pattern.Disjoint (p0 p1 : Pattern): Prop :=
     ∀ e, Pattern.matches e p0 → Pattern.matches e p1 → False
