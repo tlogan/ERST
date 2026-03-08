@@ -296,36 +296,15 @@ theorem Typing.top_intro :
   simp [Typing]
 
 
-
--- theorem Typing.path_intro :
---   Typ.wellformed tp →
---   (∀ ep ,
---     Typing am ep tp →
---     ∃ eam , Pattern.match ep p = .some eam ∧ Typing am (Expr.instantiate 0 eam e) te
---   ) →
---   Typing am (Expr.function ((p, e) :: f)) (Typ.path tp te)
--- := by
---   intro h0 h1
---   simp [Typing]
---   apply And.intro
---   { apply Safe.function }
---   { apply And.intro h0
---     intro arg h3
---     have ⟨eam,h5,h6⟩ := h1 arg h3
---     apply subject_expansion
---     { exact NStep.pattern_match e f h5 }
---     { exact h6 }
---   }
-
 def FunMatchedTyping (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp te : Typ): Prop :=
-  (∀ p e, (p, e) ∈ f →
-    (∀ ep , Typing am ep tp →
-      ∀ eam , Pattern.match ep p = .some eam → Typing am (Expr.instantiate 0 eam e) te
-    )
-  )
+  ∀ p e, (p, e) ∈ f →
+  ∀ ep , Typing am ep tp →
+  ∀ ep', ReflTrans NStep ep ep' →
+  ∀ eam , (Expr.valued ep' → Pattern.match ep' p = .some eam) →
+  Typing am (Expr.instantiate 0 eam e) te
 
 def FunMatching (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp :Typ) : Prop :=
-  ∃ p e , (p,e) ∈ f ∧ (∀ ep , Typing am ep tp → Pattern.matches ep p)
+  ∃ p e , (p,e) ∈ f ∧ (∀ ep , Typing am ep tp → ∃ ep', ReflTrans NStep ep ep' ∧ Pattern.matches ep' p)
 
 theorem Typing.path_intro :
   Typ.wellformed tp →
@@ -355,20 +334,26 @@ theorem Typing.path_intro :
     { intro arg h6
       specialize h2 arg h6
       specialize h5 arg h6
-      have ⟨m,h7⟩ := Pattern.matches_some h5
+      have ⟨arg',h7,h8⟩ := h5
       clear h5
-      specialize h2 m h7
+      specialize h2 arg' h7
+      have ⟨m,h8⟩ := Pattern.matches_some h8
       cases h4 with
-      | inl h8 =>
-        have ⟨h9,h10⟩ := h8
-        clear h8
-        rw [h9] at h7
-        rw [h10] at h2
-        clear h9 h10
-        apply subject_expansion
-        { apply NStep.pattern_match _ _ h7 }
-        { exact h2 }
-      | inr h7 =>
+      | inl h9 =>
+        have ⟨h10,h11⟩ := h9
+        rw [←h10,←h11]
+        clear h9 h10 h11
+        apply Typing.refl_trans_subject_expansion
+        { apply NStep.refl_trans_applicand _ h7 }
+        {
+          apply Typing.subject_expansion
+          { apply NStep.pattern_match _ _ h8 }
+          { apply h2 m
+            intro h12
+            exact h8
+          }
+        }
+      | inr h9 =>
         sorry
     }
 
@@ -400,32 +385,6 @@ theorem Typing.inter_paths_intro :
     simp [*]
   }
 
-
-
-/-
-TODO: update to
-theorem Typing.inter_paths_intro :
-
-restrict type to intersection of paths
--/
-
--- theorem Typing.function_cons_elim :
---   Typing am (.function [(p,e)]) upper →
---   Typing am (.function f) upper  →
---   Typing am (.function ((p, e) :: f)) upper
--- := by
---   sorry
-
--- theorem Typing.function_cons_tail_elim :
---   (∀ {p' e'}, (p',e') ∈ f → Pattern.Disjoint p p') →
---   (∀ th , Typing am (.function [(p,e)]) th →
---     /- require that type tf has not been negated in type tf -/
---     ∃ e' , Typing am e' (.inter th tf)
---   ) →
---   Typing am (.function f) tf  →
---   Typing am (.function ((p, e) :: f)) tf
--- := by
---   sorry
 
 
 

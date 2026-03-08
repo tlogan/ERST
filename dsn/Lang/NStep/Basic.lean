@@ -529,4 +529,5 @@ theorem NStep.confluence
   { exact NStep.refl_trans_soundness step_b }
 
 
+
 end Lang

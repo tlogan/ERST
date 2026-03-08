@@ -480,6 +480,18 @@ mutual
 end
 
 
+
+theorem Typing.refl_trans_subject_expansion
+  (transition : ReflTrans NStep e e')
+: Typing am e' t → Typing am e t
+:= by sorry
+
+theorem Typing.refl_trans_subject_reduction
+  (transition : ReflTrans NStep e e')
+: Typing am e t → Typing am e' t
+:= by sorry
+
+
 mutual
   theorem Typing.instantiated :
     Typing am e t → Typ.instantiated t
