@@ -414,7 +414,7 @@ end
 
 mutual
 
-  theorem ParRcdStep.value_reduction
+  theorem ParRcdStep.valued_reduction
     (step : ParRcdStep r r')
   : Expr.record_valued r → Expr.record_valued r'
   := by cases step with
@@ -426,11 +426,11 @@ mutual
     apply And.intro
     { apply And.intro
       { apply ParRcdStep.fresh_key_reduction step_rr h0}
-      { apply ParStep.value_reduction step_e h1 }
+      { apply ParStep.valued_reduction step_e h1 }
     }
-    { apply ParRcdStep.value_reduction step_rr h2 }
+    { apply ParRcdStep.valued_reduction step_rr h2 }
 
-  theorem ParStep.value_reduction
+  theorem ParStep.valued_reduction
     (step : ParStep e e')
   : Expr.valued e → Expr.valued e'
   := by cases step with
@@ -441,11 +441,11 @@ mutual
   | @iso body body' l step_body =>
     simp [Expr.valued]
     intro h0
-    apply ParStep.value_reduction step_body h0
+    apply ParStep.valued_reduction step_body h0
   | @record r r' step_r =>
     simp [Expr.valued]
     intro h0
-    apply ParRcdStep.value_reduction step_r h0
+    apply ParRcdStep.valued_reduction step_r h0
   | @function f f' step_f =>
     simp [Expr.valued]
   | _ => simp [Expr.valued]
@@ -1171,7 +1171,7 @@ mutual
           exists (Expr.app (Expr.function fc) arg_c)
           apply And.intro
           { apply ParStep.skip _ h2 h3
-            { exact ParStep.value_reduction h4 isval }
+            { exact ParStep.valued_reduction h4 isval }
             { exact ParStep.skip_reduction isval h4 nomatching }
           }
           { apply ParStep.app
@@ -1225,7 +1225,7 @@ mutual
           }
           {
             apply ParStep.skip _ h2 h4
-            { apply ParStep.value_reduction h3 isval_a }
+            { apply ParStep.valued_reduction h3 isval_a }
             { exact ParStep.skip_reduction isval_a h3 nomatching_a }
           }
     | @pattern_match _ body_b _ arg_b _ m' _ step_body_b step_arg_b matching =>

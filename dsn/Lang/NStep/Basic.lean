@@ -532,14 +532,18 @@ theorem NStep.confluence
 theorem NStep.valued_reduction
   (step : NStep e e')
 : Expr.valued e → Expr.valued e'
-:= by sorry
+:= by
+  apply ParStep.valued_reduction
+  exact ParStep.completeness step
 
 
 theorem NStep.skip_reduction
   (isval : Expr.valued e)
   (step : NStep e e')
 : Pattern.match e p = none → Pattern.match e' p = none
-:= by sorry
+:= by
+  apply ParStep.skip_reduction isval
+  exact ParStep.completeness step
 
 theorem NStep.refl_trans_skip_reduction
   (isval : Expr.valued e)
