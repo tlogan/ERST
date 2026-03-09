@@ -301,12 +301,36 @@ def FunMatchedTyping (am : List (String × (Expr → Prop))) (f : List (Pattern 
   ∀ ep , Typing am ep tp →
   ∀ ep', ReflTrans NStep ep ep' →
   (
-    (Expr.valued ep' ∧ not (Pattern.matches ep' p)) ∨
-    (∀ eam , Pattern.match ep' p = .some eam → Typing am (Expr.instantiate 0 eam e) te)
+    (∃ eam , Pattern.match ep' p = .some eam  ∧ Typing am (Expr.instantiate 0 eam e) te)
+    ∨
+    (Pattern.match ep' p = none ∧ Expr.valued ep')
   )
+
+theorem FunMatchedTyping.cons_reflection :
+  FunMatchedTyping m ((p,e) :: f) tp te →
+  FunMatchedTyping m f tp te
+:= by sorry
 
 def FunMatching (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp :Typ) : Prop :=
   ∃ p e , (p,e) ∈ f ∧ (∀ ep , Typing am ep tp → ∃ ep', ReflTrans NStep ep ep' ∧ Pattern.matches ep' p)
+
+theorem FunMatching.cons_reflection :
+  Typing m arg tp →
+  Pattern.match arg p = none →
+  Expr.valued arg →
+  FunMatching m ((p,e) :: f) tp →
+  FunMatching m f tp
+:= by sorry
+
+theorem Typing.path_elim
+  (typing_cator : Typing am ef (.path t t'))
+  (typing_arg : Typing am ea t)
+: Typing am (.app ef ea) t'
+:= by
+  simp [Typing] at typing_cator
+  have ⟨h0,h1,h2⟩ := typing_cator
+  exact h2 ea typing_arg
+
 
 theorem Typing.path_intro :
   Typ.wellformed tp →
@@ -323,7 +347,9 @@ theorem Typing.path_intro :
     simp [FunMatching] at h3
   | cons pe fp' =>
     have (p,e) := pe
+    have fmt := h2
     simp [FunMatchedTyping] at h2
+    have fm := h3
     simp [FunMatching] at h3
     have ⟨p',⟨e',h4⟩,h5⟩ := h3
     clear h3
@@ -341,35 +367,55 @@ theorem Typing.path_intro :
         rw [←h10,←h11]
         specialize h2 p' e' (Or.inl h9) arg h6 arg' h7
         clear h9 h10 h11
-        rw [h8] at h2
-        simp at h2
         have ⟨m,h13⟩ := Pattern.matches_some h8
+        simp [h13] at h2
         apply Typing.refl_trans_subject_expansion
         { apply NStep.refl_trans_applicand _ h7 }
         {
           apply Typing.subject_expansion
           { apply NStep.pattern_match _ _ h13 }
-          { apply h2 m h13 }
+          { exact h2 }
         }
       | inr h9 =>
         have h10 := h2 p e (Or.inl (And.intro rfl rfl)) arg h6 arg' h7
         have h11 := h2 p' e' (Or.inr h9) arg h6 arg' h7
-        clear h2
-        rw [h8] at h11
-        simp at h11
-        sorry
+        have ⟨m',h13⟩ := Pattern.matches_some h8
+        simp [h13] at h11
+        cases h10 with
+        | inl h14 =>
+          have ⟨m,h15,h16⟩ := h14
+          clear h14
+          apply Typing.refl_trans_subject_expansion
+          { apply NStep.refl_trans_applicand _ h7 }
+          {
+            apply Typing.subject_expansion
+            { apply NStep.pattern_match _ _ h15 }
+            { exact h16 }
+          }
+        | inr h14 =>
+          have ⟨h15,h16⟩ := h14
+          clear h14
+          apply Typing.refl_trans_subject_expansion
+          { apply NStep.refl_trans_applicand _ h7 }
+          {
+            apply Typing.subject_expansion
+            { apply NStep.skip _ _ h16 h15 }
+            {
+              apply Typing.path_elim
+              {
+                apply Typing.path_intro h0 (List.prefix_append fp' fs)
+                { exact FunMatchedTyping.cons_reflection fmt }
+                { apply FunMatching.cons_reflection
+                  { apply Typing.refl_trans_subject_reduction h7 h6 }
+                  { exact h15 }
+                  { exact h16 }
+                  { exact fm }
+                }
+              }
+              { exact refl_trans_subject_reduction h7 h6 }
+            }
+          }
 
-        -- cases h12 : Expr.valued arg' && not (Pattern.matches arg' p) with
-        -- | true =>
-        --   simp at h12
-        --   have ⟨h13,h14⟩ := h12
-        --   clear h12
-        --   -- TODO, pattern skip
-        --   sorry
-        -- | false =>
-        --   simp at h12
-
-        --   sorry
     }
 
 
@@ -402,15 +448,6 @@ theorem Typing.inter_paths_intro :
 
 
 
-
-theorem Typing.path_elim
-  (typing_cator : Typing am ef (.path t t'))
-  (typing_arg : Typing am ea t)
-: Typing am (.app ef ea) t'
-:= by
-  simp [Typing] at typing_cator
-  have ⟨h0,h1,h2⟩ := typing_cator
-  exact h2 ea typing_arg
 
 
 
