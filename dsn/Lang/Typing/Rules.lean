@@ -300,8 +300,10 @@ def FunMatchedTyping (am : List (String × (Expr → Prop))) (f : List (Pattern 
   ∀ p e, (p, e) ∈ f →
   ∀ ep , Typing am ep tp →
   ∀ ep', ReflTrans NStep ep ep' →
-  ∀ eam , (Expr.valued ep' → Pattern.match ep' p = .some eam) →
-  Typing am (Expr.instantiate 0 eam e) te
+  (
+    (Expr.valued ep' ∧ not (Pattern.matches ep' p)) ∨
+    (∀ eam , Pattern.match ep' p = .some eam → Typing am (Expr.instantiate 0 eam e) te)
+  )
 
 def FunMatching (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp :Typ) : Prop :=
   ∃ p e , (p,e) ∈ f ∧ (∀ ep , Typing am ep tp → ∃ ep', ReflTrans NStep ep ep' ∧ Pattern.matches ep' p)
@@ -337,21 +339,37 @@ theorem Typing.path_intro :
       | inl h9 =>
         have ⟨h10,h11⟩ := h9
         rw [←h10,←h11]
-        have ⟨m,h12⟩ := Pattern.matches_some h8
         specialize h2 p' e' (Or.inl h9) arg h6 arg' h7
+        clear h9 h10 h11
+        rw [h8] at h2
+        simp at h2
+        have ⟨m,h13⟩ := Pattern.matches_some h8
         apply Typing.refl_trans_subject_expansion
         { apply NStep.refl_trans_applicand _ h7 }
         {
           apply Typing.subject_expansion
-          { apply NStep.pattern_match _ _ h12
-          }
-          { apply h2 m
-            intro h13
-            exact h12
-          }
+          { apply NStep.pattern_match _ _ h13 }
+          { apply h2 m h13 }
         }
       | inr h9 =>
+        have h10 := h2 p e (Or.inl (And.intro rfl rfl)) arg h6 arg' h7
+        have h11 := h2 p' e' (Or.inr h9) arg h6 arg' h7
+        clear h2
+        rw [h8] at h11
+        simp at h11
         sorry
+
+        -- cases h12 : Expr.valued arg' && not (Pattern.matches arg' p) with
+        -- | true =>
+        --   simp at h12
+        --   have ⟨h13,h14⟩ := h12
+        --   clear h12
+        --   -- TODO, pattern skip
+        --   sorry
+        -- | false =>
+        --   simp at h12
+
+        --   sorry
     }
 
 
