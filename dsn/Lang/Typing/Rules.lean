@@ -325,32 +325,29 @@ theorem Typing.path_intro :
     simp [FunMatching] at h3
     have ⟨p',⟨e',h4⟩,h5⟩ := h3
     clear h3
-    specialize h2 p' e' h4
-
     simp [Typing]
     simp [*]
     apply And.intro
     { exact Safe.function ((p, e) :: (fp' ++ fs)) }
     { intro arg h6
-      specialize h2 arg h6
       specialize h5 arg h6
       have ⟨arg',h7,h8⟩ := h5
       clear h5
-      specialize h2 arg' h7
-      have ⟨m,h8⟩ := Pattern.matches_some h8
       cases h4 with
       | inl h9 =>
         have ⟨h10,h11⟩ := h9
         rw [←h10,←h11]
-        clear h9 h10 h11
+        have ⟨m,h12⟩ := Pattern.matches_some h8
+        specialize h2 p' e' (Or.inl h9) arg h6 arg' h7
         apply Typing.refl_trans_subject_expansion
         { apply NStep.refl_trans_applicand _ h7 }
         {
           apply Typing.subject_expansion
-          { apply NStep.pattern_match _ _ h8 }
+          { apply NStep.pattern_match _ _ h12
+          }
           { apply h2 m
-            intro h12
-            exact h8
+            intro h13
+            exact h12
           }
         }
       | inr h9 =>
