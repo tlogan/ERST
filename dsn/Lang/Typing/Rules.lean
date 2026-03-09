@@ -309,7 +309,11 @@ def FunMatchedTyping (am : List (String × (Expr → Prop))) (f : List (Pattern 
 theorem FunMatchedTyping.cons_reflection :
   FunMatchedTyping m ((p,e) :: f) tp te →
   FunMatchedTyping m f tp te
-:= by sorry
+:= by
+  simp [FunMatchedTyping]
+  intro h0 p' e' h1 arg h2 arg' h3
+  apply h0 p' e' (Or.inr h1) arg h2 arg' h3
+
 
 def FunMatching (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp :Typ) : Prop :=
   ∃ p e , (p,e) ∈ f ∧ (∀ ep , Typing am ep tp → ∃ ep', ReflTrans NStep ep ep' ∧ Pattern.matches ep' p)
@@ -320,7 +324,27 @@ theorem FunMatching.cons_reflection :
   Expr.valued arg →
   FunMatching m ((p,e) :: f) tp →
   FunMatching m f tp
-:= by sorry
+:= by
+  simp [FunMatching]
+  intro h0 h1 h2 p' e' h3 h4
+  cases h3 with
+  | inl h5 =>
+    have ⟨h6,h7⟩ := h5
+    apply False.elim
+    specialize h4 arg h0
+    have ⟨arg',h8,h9⟩ := h4
+    clear h4
+    have ⟨m',h10⟩ := Pattern.matches_some h9
+    have h11 := NStep.refl_trans_skip_reduction h2 h8 h1
+    rw [←h6] at h11
+    rw [h11] at h10
+    contradiction
+  | inr h5 =>
+    exists p'
+    apply And.intro
+    { exists e' }
+    { exact fun ep a => h4 ep a }
+
 
 theorem Typing.path_elim
   (typing_cator : Typing am ef (.path t t'))

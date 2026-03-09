@@ -529,5 +529,29 @@ theorem NStep.confluence
   { exact NStep.refl_trans_soundness step_b }
 
 
+theorem NStep.valued_reduction
+  (step : NStep e e')
+: Expr.valued e → Expr.valued e'
+:= by sorry
+
+
+theorem NStep.skip_reduction
+  (isval : Expr.valued e)
+  (step : NStep e e')
+: Pattern.match e p = none → Pattern.match e' p = none
+:= by sorry
+
+theorem NStep.refl_trans_skip_reduction
+  (isval : Expr.valued e)
+  (step : ReflTrans NStep e e')
+: Pattern.match e p = none → Pattern.match e' p = none
+:= by induction step with
+| refl =>
+  simp
+| @step e em e' lil_step step' ih =>
+  intro h0
+  apply ih
+  { exact valued_reduction lil_step isval }
+  { exact skip_reduction isval lil_step h0 }
 
 end Lang
