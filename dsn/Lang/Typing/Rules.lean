@@ -548,14 +548,7 @@ theorem Typing.lfp_intro :
     apply h6 (fun e => Typing m e (Typ.lfp "" t)) P
     {
       intro e' h7
-      apply Typing.lfp_elim h0
-      {
-        intro h8
-        apply h1
-        apply Typing.free_vars_subset_env h3
-        apply Typ.free_vars_instantiate_lower_bound h8
-      }
-      { exact h2 }
+      apply Typing.lfp_elim h0 h1 h2
       { exact fun a => h5 e' a }
       { exact h7 }
     }
