@@ -511,11 +511,20 @@ theorem Typing.anno_intro {am e t ta} :
 
 theorem Typing.lfp_elim :
   Typ.wellformed (Typ.lfp "" t) →
-  name ∉ Typ.free_vars t →
-  PosMonotonic name am (Typ.instantiate 0 [.var name] t) →
-  (Typing ((name, P) :: am) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
-  Typing am e (Typ.lfp "" t) → P e
-:= by sorry
+  name ∉ Prod.dom m →
+  PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
+  (Typing ((name, P) :: m) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
+  Typing m e (Typ.lfp "" t) → P e
+:= by
+  intro h0 h1 h2 h3 h4
+  have h5 : name ∉ Typ.free_vars t := by
+    intro h5
+    apply h1
+    apply Typing.free_vars_subset_env h4
+    simp [Typ.free_vars]
+    apply h5
+  simp [Typing] at h4
+  sorry
 
 theorem Typing.lfp_intro :
   Typ.wellformed (Typ.lfp "" t) →
