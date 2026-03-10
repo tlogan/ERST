@@ -480,6 +480,10 @@ mutual
 end
 
 
+theorem Typing.free_vars_subset_env :
+  Typing env e t → Typ.free_vars t ⊆ Prod.dom env
+:= by sorry
+
 
 theorem Typing.refl_trans_subject_expansion
   (transition : ReflTrans NStep e e')

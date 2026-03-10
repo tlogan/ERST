@@ -11,6 +11,7 @@ import Lang.Expr.Basic
 import Lang.NStep.Basic
 import Lang.Safe.Basic
 import Lang.Typing.Basic
+import Lang.Typing.Instantiation
 
 set_option pp.fieldNotation false
 set_option eval.pp false
@@ -518,7 +519,7 @@ theorem Typing.lfp_elim :
 
 theorem Typing.lfp_intro :
   Typ.wellformed (Typ.lfp "" t) →
-  name ∉ Typ.free_vars t →
+  name ∉ Prod.dom m →
   PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
   Typing m e (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
   Typing m e (Typ.lfp "" t)
@@ -529,25 +530,44 @@ theorem Typing.lfp_intro :
   { exact Typing.safety h3 }
   { exists name
     simp [*]
-    sorry
-    -- intro P h4 h5
+    intro P h4 h5
 
-    -- apply h5
-    -- have h6 := h2
-    -- unfold Monotonic at h6
-    -- apply h6 (fun e => Typing am e (Typ.lfp "" t)) P
-    -- {
-    --   intro e h7
-    --   apply Typing.lfp_elim  h0 h1 h2 (h5 e)
-    --   exact h7
-    -- }
-    -- { apply Typing.named_instantiation h0
-    --   { simp [Typ.free_vars]
-    --     /- TODO -/
-    --     sorry
-    --   }
-    --   { exact h3 }
-    -- }
+
+    apply h5
+    have h6 := h2
+    simp [PosMonotonic] at h6
+    apply h6 (fun e => Typing m e (Typ.lfp "" t)) P
+    {
+      intro e' h7
+      apply Typing.lfp_elim h0
+      {
+        intro h8
+        apply h1
+        apply Typing.free_vars_subset_env h3
+        apply Typ.free_vars_instantiate_lower_bound h8
+      }
+      { exact h2 }
+      { exact fun a => h5 e' a }
+      { exact h7 }
+    }
+    {
+      apply Typing.named_instantiation
+      {
+        intro h8
+        apply h1
+        apply Typing.free_vars_subset_env h3
+        apply Typ.free_vars_instantiate_lower_bound h8
+      }
+      {
+        simp [Typ.free_vars]
+        intro fv h7
+        apply Typing.free_vars_subset_env h3
+        apply Typ.free_vars_instantiate_lower_bound h7
+      }
+      { exact h1 }
+      { exact h0 }
+      { exact h3 }
+    }
   }
 
 
