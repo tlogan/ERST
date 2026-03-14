@@ -1312,6 +1312,12 @@ theorem Typing.named_instantiation :
     { exact h3 }
   }
 
+theorem Typing.renaming :
+  name ∉ Typ.free_vars t →
+  Typing ((name, P) :: m) e' (Typ.instantiate 0 [Typ.var name] t) →
+  name' ∉ Typ.free_vars t →
+  Typing ((name', P) :: m) e' (Typ.instantiate 0 [Typ.var name'] t)
+:= by sorry
 
 
 end Lang
