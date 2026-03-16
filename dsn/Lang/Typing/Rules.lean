@@ -748,21 +748,73 @@ theorem Subtyping.all_intro {am t ids quals body} :
 := by sorry
 
 
+-- theorem Typing.lfp_elim :
+--   Typ.wellformed (Typ.lfp "" t) →
+--   name ∉ Prod.dom m →
+--   PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
+--   Stable P →
+--   (∀ e, Typing ((name, P) :: m) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
+--   Typing m e (Typ.lfp "" t) → P e
+-- := by
+
+
+-- theorem Typing.lfp_intro :
+--   Typ.wellformed (Typ.lfp "" t) →
+--   name ∉ Prod.dom m →
+--   PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
+--   Typing m e (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
+--   Typing m e (Typ.lfp "" t)
+-- := by
+
 /- Subtyping induction -/
 theorem Subtyping.lfp_elim :
   Typ.wellformed (Typ.lfp "" t) →
-  name ∉ Typ.free_vars t →
-  PosMonotonic name am (Typ.instantiate 0 [.var name] t) →
-  Subtyping am (Typ.instantiate 0 [tr] t) tr →
-  Subtyping am (Typ.lfp "" t) tr
+  name ∉ Prod.dom m →
+  PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
+  Subtyping m (Typ.instantiate 0 [upper] t) upper →
+  Subtyping m (Typ.lfp "" t) upper
 := by
-  sorry
+  simp [Subtyping]
+  intro h0 h1 h2 h3 h4
+  simp [*]
+  intro e h5
+  have h6 : Typing m e upper = (fun e => Typing m e upper) e := by rfl
+  rw [h6]
+  generalize h7 : (fun e => Typing m e upper) = P
+  apply Typing.lfp_elim h0 h1 h2
+  {
+    simp [Stable]
+    intro e' e'' h8
+    rw [←h7]
+    simp
+    apply Iff.intro
+    { intro h9 ; exact Typing.subject_reduction h8 h9 }
+    { intro h9 ; exact Typing.subject_expansion h8 h9 }
+  }
+  { intro e' h8
+    rw [←h7]
+    simp
+    apply h4
+    simp [PosMonotonic] at h2
+
+    have h9 : name ∉ Typ.free_vars t := by
+      intro h9
+      sorry
+
+    apply Typing.nameless_instantiation h9 sorry h1 sorry
+
+    apply h2 P _
+    simp [←h7]
+    exact h8
+
+  }
+  { exact h5 }
 
 
 /- Subtyping recycling -/
 theorem Subtyping.lfp_intro :
   Typ.wellformed (Typ.lfp "" t) →
-  name ∉ Typ.free_vars t →
+  name ∉ Prod.dom m →
   PosMonotonic name am (Typ.instantiate 0 [.var name] t) →
   Subtyping am lower (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
   Subtyping am lower (Typ.lfp "" t)
