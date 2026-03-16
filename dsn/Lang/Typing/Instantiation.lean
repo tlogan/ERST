@@ -1313,9 +1313,9 @@ theorem Typing.named_instantiation :
   }
 
 theorem Typing.renaming :
-  name ∉ Typ.free_vars t →
+  name ∉ Prod.dom m →
+  name' ∉ Prod.dom m →
   Typing ((name, P) :: m) e' (Typ.instantiate 0 [Typ.var name] t) →
-  name' ∉ Typ.free_vars t →
   Typing ((name', P) :: m) e' (Typ.instantiate 0 [Typ.var name'] t)
 := by sorry
 

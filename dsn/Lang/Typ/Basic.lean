@@ -1355,10 +1355,12 @@ theorem Typ.free_vars_shift_vars_reflection :
 := by sorry
 
 theorem Typ.free_vars_instantiate_upper_bound :
+  ∀ m,
   Typ.free_vars (Typ.instantiate depth m e) ⊆ (Typ.free_vars e) ++ List.flatMap Typ.free_vars m
 := by sorry
 
 theorem Typ.free_vars_instantiate_lower_bound :
+  ∀ depth m,
   (Typ.free_vars e) ⊆ Typ.free_vars (Typ.instantiate depth m e)
 := by sorry
 
