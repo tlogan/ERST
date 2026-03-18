@@ -818,12 +818,14 @@ theorem Subtyping.lfp_elim :
 theorem Subtyping.lfp_intro :
   Typ.wellformed (Typ.lfp "" t) →
   name ∉ Prod.dom m →
-  PosMonotonic name am (Typ.instantiate 0 [.var name] t) →
-  Subtyping am lower (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
-  Subtyping am lower (Typ.lfp "" t)
+  PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
+  Subtyping m lower (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
+  Subtyping m lower (Typ.lfp "" t)
 := by
-  sorry
-
-
+  simp [Subtyping]
+  intro wf_lfp fresh monotonic wf_lower subtyping
+  simp [*]
+  intro e typing_lower
+  apply Typing.lfp_intro wf_lfp fresh monotonic (subtyping e typing_lower)
 
 end Lang
