@@ -769,46 +769,49 @@ theorem Subtyping.all_intro {am t ids quals body} :
 /- Subtyping induction -/
 theorem Subtyping.lfp_elim :
   Typ.wellformed (Typ.lfp "" t) →
+  Typ.wellformed upper →
+  Typ.free_vars upper ⊆ Prod.dom m →
   name ∉ Prod.dom m →
   PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
   Subtyping m (Typ.instantiate 0 [upper] t) upper →
   Subtyping m (Typ.lfp "" t) upper
 := by
   simp [Subtyping]
-  intro h0 h1 h2 h3 h4
+  intro h0 h1 h2 h3 h4 h5 h6
   simp [*]
-  intro e h5
-  have h6 : Typing m e upper = (fun e => Typing m e upper) e := by rfl
-  rw [h6]
-  generalize h7 : (fun e => Typing m e upper) = P
-  apply Typing.lfp_elim h0 h1 h2
+  intro e h7
+  have h8 : Typing m e upper = (fun e => Typing m e upper) e := by rfl
+  rw [h8]
+  generalize h9 : (fun e => Typing m e upper) = P
+  apply Typing.lfp_elim h0 h3 h4
   {
     simp [Stable]
-    intro e' e'' h8
-    rw [←h7]
+    intro e' e'' h10
+    rw [←h9]
     simp
     apply Iff.intro
-    { intro h9 ; exact Typing.subject_reduction h8 h9 }
-    { intro h9 ; exact Typing.subject_expansion h8 h9 }
+    { intro h11 ; exact Typing.subject_reduction h10 h11 }
+    { intro h11 ; exact Typing.subject_expansion h10 h11 }
   }
-  { intro e' h8
-    rw [←h7]
+  { intro e' h11
+    rw [←h9]
     simp
-    apply h4
-    simp [PosMonotonic] at h2
+    apply h6
+    simp [PosMonotonic] at h4
 
-    have h9 : name ∉ Typ.free_vars t := by
-      intro h9
-      sorry
+    have h12 : name ∉ Typ.free_vars t := by
+      intro h12
+      apply h3
+      apply Typing.free_vars_subset_env h7
+      exact h12
 
-    apply Typing.nameless_instantiation h9 sorry h1 sorry
-
-    apply h2 P _
-    simp [←h7]
-    exact h8
+    apply Typing.nameless_instantiation h12 h2 h3 h1
+    apply h4 P
+    simp [←h9]
+    exact h11
 
   }
-  { exact h5 }
+  { exact h7 }
 
 
 /- Subtyping recycling -/
