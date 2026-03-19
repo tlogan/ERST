@@ -316,7 +316,7 @@ mutual
           {
             intro h12
             specialize h3 h12
-            simp [Prod.dom] at h3
+            simp at h3
             have ⟨P',h13⟩ := h3
             apply h6 P' h13
           }
@@ -1313,11 +1313,36 @@ theorem Typing.named_instantiation :
   }
 
 theorem Typing.renaming :
-  name ∉ Prod.dom m →
-  name' ∉ Prod.dom m →
+  name ∉ Typ.free_vars t →
+  name' ∉ Typ.free_vars t →
   Typing ((name, P) :: m) e' (Typ.instantiate 0 [Typ.var name] t) →
   Typing ((name', P) :: m) e' (Typ.instantiate 0 [Typ.var name'] t)
-:= by sorry
+:= by cases t with
+| bvar i =>
+  simp [Typ.instantiate]
+  by_cases h0 : i = 0
+  { simp [h0, Typ.shift_vars, Typing,Prod.find] }
+  { simp [h0, Typing] }
+| var name'' =>
+  simp [Typ.instantiate, Typing, Prod.find, Typ.free_vars]
+  by_cases h1 : name = name''
+  { simp [h1] }
+  { simp [*]
+    intro h2 safe P' stable h3 h4
+    simp [*]
+  }
+-- | bot :  Typ
+-- | top :  Typ
+-- | iso : String → Typ → Typ
+-- | entry : String → Typ → Typ
+-- | path : Typ → Typ → Typ
+-- | unio :  Typ → Typ → Typ
+-- | inter :  Typ → Typ → Typ
+-- | diff :  Typ → Typ → Typ
+-- | all :  List String → List (Typ × Typ) → Typ → Typ
+-- | exi :  List String → List (Typ × Typ) → Typ → Typ
+-- | lfp :  String → Typ → Typ
+| _ => sorry
 
 
 end Lang

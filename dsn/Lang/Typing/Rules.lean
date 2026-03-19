@@ -250,40 +250,6 @@ theorem Typing.inter_entries_intro entries :
 
 
 
-/-
-TODO: update to
-theorem Typing.inter_entries_intro :
-
-restrict type to intersection of entries
--/
-
--- theorem Typing.record_cons_tail_elim :
---   Safe e →
---   Prod.key_fresh l r →
---   (∀ te , Typing am e te  →
---     /- require that type (.entry l te) has not been negated in type tr -/
---     ∃ e' , Typing am e' (.inter (.entry l te) tr)
---    ) →
---   Typing am (.record r) tr  →
---   Typing am (.record ((l, e) :: r)) tr
--- := by cases tr with
--- | bvar i =>
---   simp [Typing]
--- | var name =>
---   intro h0 h1 h2
---   simp [Typing]
---   intro h3 P h4 h5 h6
---   simp [*]
---   apply And.intro (Safe.record_cons_intro h3 h0)
---   sorry
--- | _ =>
---   sorry
-
-
-
-
-
-
 theorem Typing.top_elim :
   Typing m e Typ.top →
   Safe e
@@ -518,13 +484,27 @@ theorem Typing.lfp_elim :
   Typing m e (Typ.lfp "" t) → P e
 := by
   intro h0 h1 h2 stable h3 h4
+  have typing := h4
   simp [Typing] at h4
   have ⟨h6,⟨name',h7,h8,h9⟩⟩ := h4
   clear h4
   apply h9 _ stable
   intro e' h10
   apply h3
-  apply Typing.renaming h7 h1 h10
+  apply Typing.renaming
+  { intro fresh_fv
+    apply h7
+    apply Typing.free_vars_subset_env typing
+    simp [Typ.free_vars]
+    exact fresh_fv
+  }
+  { intro fresh_fv
+    apply h1
+    apply Typing.free_vars_subset_env typing
+    simp [Typ.free_vars]
+    exact fresh_fv
+  }
+  { exact h10 }
 
 
 theorem Typing.lfp_intro :
