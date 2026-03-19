@@ -33,9 +33,11 @@ example : Subtyping []
   (Typ.seal [] [typ| LFP [N] <zero/> | <succ> N ])
 := by
   simp [Typ.seal, List.firstIndexOf, List.indexesOf, List.findIdxs]
-  apply @Subtyping.lfp_elim _ "SELF"
+  apply Subtyping.lfp_elim "SELF"
   { reduce ; rfl }
-  { simp [Typ.free_vars] }
+  { reduce ; rfl }
+  { simp [Typ.free_vars, Prod.dom] }
+  { simp [Prod.dom] }
   { simp [Typ.instantiate, Typ.shift_vars]
     apply PosMonotonic.intro
     apply Monotonic.unio_intro
@@ -49,9 +51,9 @@ example : Subtyping []
     }
   }
   { simp [Typ.instantiate, Typ.shift_vars_zero]
-    apply @Subtyping.lfp_intro _ "SELF"
+    apply Subtyping.lfp_intro "SELF"
     { reduce ; rfl }
-    { simp [Typ.free_vars] }
+    { simp [Prod.dom] }
     { simp [Typ.instantiate, Typ.shift_vars]
       apply PosMonotonic.intro
       apply Monotonic.unio_intro
@@ -69,9 +71,9 @@ example : Subtyping []
       }
       { apply Subtyping.unio_right_intro
         apply Subtyping.iso_pres
-        apply @Subtyping.lfp_intro _ "SELF"
+        apply Subtyping.lfp_intro "SELF"
         { reduce ; rfl }
-        { simp [Typ.free_vars] }
+        { simp [Prod.dom] }
         { simp [Typ.instantiate, Typ.shift_vars]
           apply PosMonotonic.intro
           apply Monotonic.unio_intro

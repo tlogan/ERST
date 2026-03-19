@@ -475,7 +475,7 @@ theorem Typing.anno_intro {am e t ta} :
   Typing am (.anno e ta) ta
 := by sorry
 
-theorem Typing.lfp_elim :
+theorem Typing.lfp_elim name :
   Typ.wellformed (Typ.lfp "" t) →
   name ∉ Prod.dom m →
   PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
@@ -507,7 +507,7 @@ theorem Typing.lfp_elim :
   { exact h10 }
 
 
-theorem Typing.lfp_intro :
+theorem Typing.lfp_intro name :
   Typ.wellformed (Typ.lfp "" t) →
   name ∉ Prod.dom m →
   PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
@@ -529,7 +529,7 @@ theorem Typing.lfp_intro :
     apply h6 (fun e => Typing m e (Typ.lfp "" t)) P
     {
       intro e' h7
-      apply Typing.lfp_elim h0 h1 h2 h4 h5 h7
+      apply Typing.lfp_elim name h0 h1 h2 h4 h5 h7
     }
     {
       apply Typing.named_instantiation
@@ -747,7 +747,7 @@ theorem Subtyping.all_intro {am t ids quals body} :
 -- := by
 
 /- Subtyping induction -/
-theorem Subtyping.lfp_elim :
+theorem Subtyping.lfp_elim name :
   Typ.wellformed (Typ.lfp "" t) →
   Typ.wellformed upper →
   Typ.free_vars upper ⊆ Prod.dom m →
@@ -763,7 +763,7 @@ theorem Subtyping.lfp_elim :
   have h8 : Typing m e upper = (fun e => Typing m e upper) e := by rfl
   rw [h8]
   generalize h9 : (fun e => Typing m e upper) = P
-  apply Typing.lfp_elim h0 h3 h4
+  apply Typing.lfp_elim name h0 h3 h4
   {
     simp [Stable]
     intro e' e'' h10
@@ -795,7 +795,7 @@ theorem Subtyping.lfp_elim :
 
 
 /- Subtyping recycling -/
-theorem Subtyping.lfp_intro :
+theorem Subtyping.lfp_intro name :
   Typ.wellformed (Typ.lfp "" t) →
   name ∉ Prod.dom m →
   PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
@@ -806,6 +806,6 @@ theorem Subtyping.lfp_intro :
   intro wf_lfp fresh monotonic wf_lower subtyping
   simp [*]
   intro e typing_lower
-  apply Typing.lfp_intro wf_lfp fresh monotonic (subtyping e typing_lower)
+  apply Typing.lfp_intro name wf_lfp fresh monotonic (subtyping e typing_lower)
 
 end Lang

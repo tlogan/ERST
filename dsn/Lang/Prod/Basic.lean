@@ -27,7 +27,6 @@ def Prod.find [DecidableEq α] (target : α) : List (α × β) → Option β
   else
     Prod.find target xs
 
-
 theorem Prod.find_append_suffix [DecidableEq α] (m1 : List (α × β)) :
   target ∉ Prod.dom m0 →
   Prod.find target (m0 ++ m1) = Prod.find target m1

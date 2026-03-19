@@ -91,6 +91,7 @@ mutual
     (∀ am' ,
       List.length am' = List.length bindings →
       List.Disjoint (Prod.dom am') (Prod.dom am) →
+      /- TODO: append at the end (am ++ am') to avoid swapping around in proofs -/
       (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name, _) => .var name) am') constraints)) →
       (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name, _) => .var name) am') body))
     )
@@ -535,10 +536,16 @@ end
 
 
 
-theorem Typing.env_cons_append_prefix_swap :
+theorem Typing.env_cons_append_prefix_swap_in :
   name ∉ Prod.dom m0 →
   Typing ((name,P) :: (m0 ++ m1)) e t →
-  Typing (m0 ++ (name,item) :: m1) e t
+  Typing (m0 ++ (name,P) :: m1) e t
+:= by sorry
+
+theorem Typing.env_cons_append_prefix_swap_out :
+  name ∉ Prod.dom m0 →
+  Typing (m0 ++ (name,P) :: m1) e t →
+  Typing ((name,P) :: (m0 ++ m1)) e t
 := by sorry
 
 theorem Subtyping.env_append_suffix_reflection :

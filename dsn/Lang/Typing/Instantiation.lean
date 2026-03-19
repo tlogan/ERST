@@ -1331,15 +1331,74 @@ theorem Typing.renaming :
     intro h2 safe P' stable h3 h4
     simp [*]
   }
--- | bot :  Typ
--- | top :  Typ
--- | iso : String → Typ → Typ
--- | entry : String → Typ → Typ
--- | path : Typ → Typ → Typ
--- | unio :  Typ → Typ → Typ
--- | inter :  Typ → Typ → Typ
--- | diff :  Typ → Typ → Typ
--- | all :  List String → List (Typ × Typ) → Typ → Typ
+| bot =>
+  simp [Typ.instantiate, Typing]
+| top =>
+  simp [Typ.instantiate, Typing]
+| iso label body =>
+  simp [Typ.instantiate, Typing, Expr.extract, Pattern.bvar, Typ.free_vars]
+  intro h0 h1 h2 h3
+  simp [*]
+  apply Typing.renaming h0 h1 h3
+| entry label body =>
+  simp [Typ.instantiate, Typing, Expr.project, Pattern.bvar, Typ.free_vars]
+  intro h0 h1 h2 h3
+  simp [*]
+  apply Typing.renaming h0 h1 h3
+| path left right =>
+  simp [Typ.instantiate, Typing, Typ.free_vars]
+  intro h0 h1 h2 h3 h4 h5 h6
+  simp [*]
+  apply And.intro
+  { exact Typ.wellformed_named_instantiation h5 name' }
+  { intro arg h7
+    apply Typing.renaming h1 h3
+    apply h6
+    apply Typing.renaming h2 h0
+    exact h7
+  }
+| unio left right =>
+  simp [Typ.instantiate, Typing, Typ.free_vars]
+  intro h0 h1 h2 h3 h4
+  cases h4 with
+  | inl h5 =>
+    apply Or.inl
+    apply Typing.renaming h0 h2 h5
+  | inr h5 =>
+    apply Or.inr
+    apply Typing.renaming h1 h3 h5
+| inter left right =>
+  simp [Typ.instantiate, Typing, Typ.free_vars]
+  intro h0 h1 h2 h3 h4 h5
+  apply And.intro
+  { apply Typing.renaming h0 h2 h4 }
+  { apply Typing.renaming h1 h3 h5 }
+| diff left right =>
+  simp [Typ.instantiate, Typing, Typ.free_vars]
+  intro h0 h1 h2 h3 h4 h5 h6
+  apply And.intro (Typ.wellformed_named_instantiation h4 name')
+  apply And.intro
+  { apply Typing.renaming h0 h2 h5 }
+  { intro h7
+    apply h6
+    apply Typing.renaming h3 h1 h7
+  }
+| all bs cs body =>
+  simp [Typ.instantiate, Typing, Typ.free_vars]
+  intro h0 h1 h2 h3 h4 h5 h6
+  simp [*]
+  apply And.intro h5
+  intro m' h7 h8 h9
+  /- TODO: update typing definition to avoid need for swapping -/
+  apply Typing.env_cons_append_prefix_swap_in
+  { simp [List.Disjoint] at h8
+    intro h10
+    apply h8 h10
+    simp [Prod.dom]
+  }
+  {
+    sorry
+  }
 -- | exi :  List String → List (Typ × Typ) → Typ → Typ
 -- | lfp :  String → Typ → Typ
 | _ => sorry
