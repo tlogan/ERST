@@ -91,7 +91,6 @@ mutual
     (∀ am' ,
       List.length am' = List.length bindings →
       List.Disjoint (Prod.dom am') (Prod.dom am) →
-      /- TODO: append at the end (am ++ am') to avoid swapping around in proofs -/
       (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name, _) => .var name) am') constraints)) →
       (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name, _) => .var name) am') body))
     )

@@ -1409,7 +1409,7 @@ end
 def Typ.instantiated (t: Typ) := Typ.num_bound_vars t == 0
 
 
-theorem Typ.list_all_mem_instantiate_preservation :
+theorem Typ.list_instantiate_identity :
   (∀ t ∈ ts, t = Typ.instantiate depth m t) →
   ts = Typ.list_instantiate depth m ts
 := by sorry
@@ -1519,6 +1519,16 @@ theorem Typ.instantiate_zero_inside_out offset ma mb e:
     (Typ.instantiate (offset + List.length mb) ma e)
   )
 := by sorry
+
+theorem Typ.instantiate_identity_mem_map_var {f : α → String} {l : List α} ts :
+  ∀ t' ∈ List.map (fun item => Typ.var (f item)) l,
+    t' = Typ.instantiate 0 ts t'
+:= by
+  intro t h14
+  have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
+  rw [←h16]
+  simp [Typ.instantiate]
+
 
 
 -- mutual
