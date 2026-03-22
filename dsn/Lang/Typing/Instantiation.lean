@@ -21,8 +21,6 @@ mutual
 
 
   theorem Subtyping.generalized_nameless_instantiation :
-    name ∉ Typ.free_vars lower →
-    name ∉ Typ.free_vars upper →
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
     name ∉ Prod.dom am' →
@@ -32,17 +30,17 @@ mutual
     Subtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [t] lower) (Typ.instantiate depth [t] upper)
   := by
     simp [Subtyping, Prod.dom]
-    intro h0 h1 h2 h3 h4 h5 wf h6 h7
+    intro h2 h3 h4 h5 wf h6 h7
     apply And.intro
     { exact Typ.wellformed_nameless_instantiation h6 wf }
     { intro e h8
-      apply Typing.generalized_nameless_instantiation h1 h2 h3
+      apply Typing.generalized_nameless_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       {
         apply h7
-        apply Typing.generalized_named_instantiation h0 h2 h3
+        apply Typing.generalized_named_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
         { exact wf }
@@ -54,8 +52,6 @@ mutual
     all_goals (apply Prod.Lex.left ; simp [Typ.zero_lt_size])
 
   theorem Subtyping.generalized_named_instantiation :
-    name ∉ Typ.free_vars lower →
-    name ∉ Typ.free_vars upper →
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
     name ∉ Prod.dom am' →
@@ -65,17 +61,17 @@ mutual
     Subtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] lower) (Typ.instantiate depth [.var name] upper)
   := by
     simp [Subtyping, Prod.dom]
-    intro h0 h1 h2 h3 h4 h5 wf h6 h7
+    intro h2 h3 h4 h5 wf h6 h7
     apply And.intro
     { exact Typ.wellformed_named_instantiation h6 name }
     { intro e h8
-      apply Typing.generalized_named_instantiation h1 h2 h3
+      apply Typing.generalized_named_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       {
         apply h7
-        apply Typing.generalized_nameless_instantiation h0 h2 h3
+        apply Typing.generalized_nameless_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
         { exact wf }
@@ -90,7 +86,6 @@ mutual
 
 
   theorem PosMonotonic.generalized_nameless_instantiation :
-    name ∉ Typ.free_vars body →
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
     name ∉ Prod.dom am' →
@@ -103,7 +98,7 @@ mutual
     PosMonotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [t] body)
   := by
     simp [PosMonotonic, Prod.dom]
-    intro h0 h1 h2 h3 h4 wf h5 h6 h7 h8 P0 P1 h9 e h10
+    intro h1 h2 h3 h4 wf h5 h6 h7 h8 P0 P1 h9 e h10
 
     have h11 :
       (point, P1) :: (am' ++ (name, fun e => Typing am e t) :: am) =
@@ -111,7 +106,7 @@ mutual
     := by rfl
 
     rw [h11]
-    apply Typing.generalized_nameless_instantiation h0 h1
+    apply Typing.generalized_nameless_instantiation h1
     {
       simp [List.Disjoint, Prod.dom]
       apply And.intro h7
@@ -135,7 +130,7 @@ mutual
       := by rfl
 
       rw [h12]
-      apply Typing.generalized_named_instantiation h0 h1
+      apply Typing.generalized_named_instantiation h1
       {
         simp [List.Disjoint, Prod.dom]
         apply And.intro h7
@@ -154,7 +149,6 @@ mutual
   termination_by (Typ.size body, 1)
 
   theorem PosMonotonic.generalized_named_instantiation :
-    name ∉ Typ.free_vars body →
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
     name ∉ Prod.dom am' →
@@ -167,7 +161,7 @@ mutual
     PosMonotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] body)
   := by
     simp [PosMonotonic, Prod.dom]
-    intro h0 h1 h2 h3 h4 wf h5 h6 h7 h8 P0 P1 h9 e h10
+    intro h1 h2 h3 h4 wf h5 h6 h7 h8 P0 P1 h9 e h10
 
     have h11 :
       (point, P1) :: (am' ++ (name, fun e => Typing am e t) :: am) =
@@ -175,7 +169,7 @@ mutual
     := by rfl
 
     rw [h11]
-    apply Typing.generalized_named_instantiation h0 h1
+    apply Typing.generalized_named_instantiation h1
     {
       simp [List.Disjoint, Prod.dom]
       apply And.intro h7
@@ -199,7 +193,7 @@ mutual
       := by rfl
 
       rw [h12]
-      apply Typing.generalized_nameless_instantiation h0 h1
+      apply Typing.generalized_nameless_instantiation h1
       {
         simp [List.Disjoint, Prod.dom]
         apply And.intro h7
@@ -218,7 +212,6 @@ mutual
   termination_by (Typ.size body, 1)
 
   theorem MultiSubtyping.generalized_nameless_instantiation :
-    name ∉ Typ.list_prod_free_vars cs →
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
     name ∉ Prod.dom am' →
@@ -232,15 +225,15 @@ mutual
   | cons c cs' =>
     have (left,right) := c
     simp [Typ.constraints_instantiate, MultiSubtyping, Prod.dom, Typ.list_prod_free_vars]
-    intro h0 h1 h2 h3 h4 h5 h6 wf h7 h8
+    intro h3 h4 h5 h6 wf h7 h8
     apply And.intro
-    { apply Subtyping.generalized_nameless_instantiation h0 h1 h3 h4
+    { apply Subtyping.generalized_nameless_instantiation h3 h4
       { simp [Prod.dom] ; exact h5 }
       { simp [Prod.dom] ; exact h6 }
       { exact wf }
       { exact h7 }
     }
-    { apply MultiSubtyping.generalized_nameless_instantiation h2 h3 h4
+    { apply MultiSubtyping.generalized_nameless_instantiation h3 h4
       { simp [Prod.dom] ; exact h5 }
       { simp [Prod.dom] ; exact h6 }
       { exact wf }
@@ -252,7 +245,6 @@ mutual
 
 
   theorem MultiSubtyping.generalized_named_instantiation :
-    name ∉ Typ.list_prod_free_vars cs →
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
     name ∉ Prod.dom am' →
@@ -266,15 +258,15 @@ mutual
   | cons c cs' =>
     have (left,right) := c
     simp [Typ.constraints_instantiate, MultiSubtyping, Prod.dom, Typ.list_prod_free_vars]
-    intro h0 h1 h2 h3 h4 h5 h6 wf h7 h8
+    intro h3 h4 h5 h6 wf h7 h8
     apply And.intro
-    { apply Subtyping.generalized_named_instantiation h0 h1 h3 h4
+    { apply Subtyping.generalized_named_instantiation h3 h4
       { simp [Prod.dom] ; exact h5 }
       { simp [Prod.dom] ; exact h6 }
       { exact wf }
       { exact h7 }
     }
-    { apply MultiSubtyping.generalized_named_instantiation h2 h3 h4
+    { apply MultiSubtyping.generalized_named_instantiation h3 h4
       { simp [Prod.dom] ; exact h5 }
       { simp [Prod.dom] ; exact h6 }
       { exact wf }
@@ -286,7 +278,6 @@ mutual
 
 
   theorem Typing.generalized_nameless_instantiation :
-    name ∉ Typ.free_vars body →
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
     name ∉ Prod.dom am' →
@@ -302,7 +293,7 @@ mutual
       by_cases h1 : i - depth = 0
       { simp [h1]
         simp [Typ.shift_vars]
-        intro h2 h3 h4 h5 h6 wf
+        intro h3 h4 h5 h6 wf
         simp [Typing]
         intro h7 P h8 h9 h10
         rw [Prod.find_append_suffix _ _] at h9
@@ -331,36 +322,36 @@ mutual
     simp [Typ.instantiate, Typ.free_vars, Typing, Prod.dom]
   | iso l body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 wf h5
+    intro h1 h2 h3 h4 wf h5
     simp [*]
-    apply Typing.generalized_nameless_instantiation h0 h1 h2
+    apply Typing.generalized_nameless_instantiation h1 h2
     { simp [Prod.dom]; exact h3 }
     { simp [Prod.dom]; exact h4 }
     { exact wf }
   | entry l body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 wf h5
+    intro h1 h2 h3 h4 wf h5
     simp [*]
-    apply Typing.generalized_nameless_instantiation h0 h1 h2
+    apply Typing.generalized_nameless_instantiation h1 h2
     { simp [Prod.dom]; exact h3 }
     { simp [Prod.dom]; exact h4 }
     { exact wf }
   | path left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 h5 wf h6 h7 h8
+    intro h2 h3 h4 h5 wf h6 h7 h8
     simp [*]
     apply And.intro
     { apply Typ.wellformed_nameless_instantiation h7
       exact wf
     }
     { intro arg h9
-      apply Typing.generalized_nameless_instantiation h1 h2 h3
+      apply Typing.generalized_nameless_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       {
         apply h8
-        apply Typing.generalized_named_instantiation h0 h2 h3
+        apply Typing.generalized_named_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
         { exact wf }
@@ -373,33 +364,33 @@ mutual
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
   | unio left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 h5 wf h6
+    intro h2 h3 h4 h5 wf h6
     cases h6 with
     | inl h7 =>
       apply Or.inl
-      apply Typing.generalized_nameless_instantiation h0 h2 h3
+      apply Typing.generalized_nameless_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       { exact h7 }
     | inr h7 =>
       apply Or.inr
-      apply Typing.generalized_nameless_instantiation h1 h2 h3
+      apply Typing.generalized_nameless_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       { exact h7 }
   | inter left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 h5 wf h6 h7
+    intro h2 h3 h4 h5 wf h6 h7
     apply And.intro
-    { apply Typing.generalized_nameless_instantiation h0 h2 h3
+    { apply Typing.generalized_nameless_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       { exact h6 }
     }
-    { apply Typing.generalized_nameless_instantiation h1 h2 h3
+    { apply Typing.generalized_nameless_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
@@ -407,11 +398,11 @@ mutual
     }
   | diff left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 h5 wf h6 h7 h8
+    intro h2 h3 h4 h5 wf h6 h7 h8
     apply And.intro
     { apply Typ.wellformed_nameless_instantiation h6 wf }
     { apply And.intro
-      { apply Typing.generalized_nameless_instantiation h0 h2 h3
+      { apply Typing.generalized_nameless_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
         { exact wf }
@@ -419,7 +410,7 @@ mutual
       }
       { intro h9
         apply h8
-        apply Typing.generalized_named_instantiation h1 h2 h3
+        apply Typing.generalized_named_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
         { exact wf }
@@ -428,7 +419,7 @@ mutual
     }
   | all bs cs body =>
     simp [Typ.free_vars, Typ.instantiate]
-    intro h0 h1 h2
+    intro h2
     simp [Typing, Prod.dom]
     intro h3 h4 h5 wf h6 h7 h8
     simp [*]
@@ -452,19 +443,6 @@ mutual
     rw [←List.append_assoc]
 
     apply Typing.generalized_nameless_instantiation
-    {
-      intro h16
-      apply Typ.free_vars_instantiate_upper_bound at h16
-      rw [List.mem_append] at h16
-      cases h16 with
-      | inl h17 =>
-        apply h1
-        exact h17
-      | inr h16 =>
-        simp [Typ.free_vars] at h16
-        have ⟨P,h17⟩ := h16
-        exact h11 P h17
-    }
     { exact h2 }
     { simp [Prod.dom]; exact ⟨h12, h3⟩ }
     { simp [Prod.dom]; exact ⟨h11, h4⟩ }
@@ -495,17 +473,6 @@ mutual
         rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
         rw [←Typ.constraints_instantiate_zero_inside_out]
         apply MultiSubtyping.generalized_named_instantiation
-        {
-          intro h17
-          have h18 := Typ.list_prod_free_vars_instantiate_upper_bound h17
-          simp [Typ.free_vars] at h18
-          cases h18 with
-          | inl h19 =>
-            exact h0 h19
-          | inr h19 =>
-            have ⟨P,h20⟩ := h19
-            exact h11 P h20
-        }
         { exact h2 }
         { simp [Prod.dom]; exact ⟨h12, h3⟩ }
         { simp [Prod.dom]; exact ⟨h11, h4⟩ }
@@ -524,7 +491,7 @@ mutual
   | exi bs cs body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
 
-    intro h0 h1 h2 h3 h4 h5 wf h6 am'' h7 h8 h9 h10 h11 h12
+    intro h2 h3 h4 h5 wf h6 am'' h7 h8 h9 h10 h11 h12
     apply And.intro h6
     exists am''
     apply And.intro h7
@@ -553,18 +520,6 @@ mutual
       {
         rw [←Typ.constraints_instantiate_zero_inside_out]
         apply MultiSubtyping.generalized_nameless_instantiation
-        {
-          intro h16
-          apply Typ.list_prod_free_vars_instantiate_upper_bound at h16
-          rw [List.mem_append] at h16
-          cases h16 with
-          | inl h17 =>
-            exact h0 h17
-          | inr h17 =>
-            simp [Typ.free_vars] at h17
-            have ⟨P,h18⟩ := h17
-            exact h9 P h18
-        }
         { exact h2 }
         { simp [Prod.dom]; exact ⟨h10, h3⟩ }
         { simp [Prod.dom]; exact ⟨h9, h4⟩ }
@@ -587,19 +542,6 @@ mutual
       }
       { rw [←Typ.instantiate_zero_inside_out]
         apply Typing.generalized_nameless_instantiation
-        {
-          intro h16
-          apply Typ.free_vars_instantiate_upper_bound at h16
-          rw [List.mem_append] at h16
-          cases h16 with
-          | inl h17 =>
-            apply h1
-            exact h17
-          | inr h17 =>
-            simp [Typ.free_vars] at h17
-            have ⟨P,h18⟩ := h17
-            exact h9 P h18
-        }
         { exact h2 }
         { simp [Prod.dom]; exact ⟨h10, h3⟩ }
         { simp [Prod.dom]; exact ⟨h9, h4⟩ }
@@ -625,7 +567,7 @@ mutual
 
   | lfp b body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 wf h5 h6 name' h7 h8 h9 h10 h11
+    intro h1 h2 h3 h4 wf h5 h6 name' h7 h8 h9 h10 h11
     simp [*]
     exists name'
     simp [*]
@@ -643,15 +585,6 @@ mutual
       rw [←Typ.instantiate_zero_inside_out]
 
       apply PosMonotonic.generalized_nameless_instantiation
-      { intro h14
-        apply Typ.free_vars_instantiate_upper_bound at h14
-        simp [Typ.free_vars] at h14
-        cases h14 with
-        | inl h15 =>
-          exact h0 h15
-        | inr h15 =>
-          exact h8 (Eq.symm h15)
-      }
       { exact h1 }
       { exact h2 }
       { simp [Prod.dom]; exact h3 }
@@ -695,16 +628,6 @@ mutual
 
       rw [←Typ.instantiate_zero_inside_out]
       apply Typing.generalized_nameless_instantiation
-      {
-        intro h18
-        apply Typ.free_vars_instantiate_upper_bound at h18
-        simp [Typ.free_vars] at h18
-        cases h18 with
-        | inl h19 =>
-          exact h0 h19
-        | inr h19 =>
-          exact h8 (Eq.symm h19)
-      }
       { exact h1 }
       { simp [Prod.dom]; exact ⟨h9, h2⟩ }
       { simp [*, Prod.dom]; intro h18 ; exact h8 (Eq.symm h18) }
@@ -738,7 +661,6 @@ mutual
     )
 
   theorem Typing.generalized_named_instantiation :
-    name ∉ Typ.free_vars body →
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
     name ∉ Prod.dom am' →
@@ -753,7 +675,7 @@ mutual
     { simp [h0]
       by_cases h1 : i - depth = 0
       { simp [h1]
-        intro h2 h3 h4 h5 h6 wf h7
+        intro h3 h4 h5 h6 wf h7
         simp [Typ.shift_vars]
         simp [Typing]
         apply And.intro (Typing.safety h7)
@@ -800,34 +722,34 @@ mutual
     simp [Typ.instantiate, Typ.free_vars, Typing, Prod.dom]
   | iso l body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 wf h5
+    intro h1 h2 h3 h4 wf h5
     simp [*]
-    apply Typing.generalized_named_instantiation h0 h1 h2
+    apply Typing.generalized_named_instantiation h1 h2
     { simp [Prod.dom]; exact h3 }
     { simp [Prod.dom]; exact h4 }
     { exact wf }
   | entry l body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 wf h5
+    intro h1 h2 h3 h4 wf h5
     simp [*]
-    apply Typing.generalized_named_instantiation h0 h1 h2
+    apply Typing.generalized_named_instantiation h1 h2
     { simp [Prod.dom]; exact h3 }
     { simp [Prod.dom]; exact h4 }
     { exact wf }
   | path left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 h5 wf h6 h7 h8
+    intro h2 h3 h4 h5 wf h6 h7 h8
     simp [*]
     apply And.intro
     { apply Typ.wellformed_named_instantiation h7 }
     { intro arg h9
-      apply Typing.generalized_named_instantiation h1 h2 h3
+      apply Typing.generalized_named_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       {
         apply h8
-        apply Typing.generalized_nameless_instantiation h0 h2 h3
+        apply Typing.generalized_nameless_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
         { exact wf }
@@ -840,33 +762,33 @@ mutual
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
   | unio left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 h5 wf h6
+    intro h2 h3 h4 h5 wf h6
     cases h6 with
     | inl h7 =>
       apply Or.inl
-      apply Typing.generalized_named_instantiation h0 h2 h3
+      apply Typing.generalized_named_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       { exact h7 }
     | inr h7 =>
       apply Or.inr
-      apply Typing.generalized_named_instantiation h1 h2 h3
+      apply Typing.generalized_named_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       { exact h7 }
   | inter left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 h5 wf h6 h7
+    intro h2 h3 h4 h5 wf h6 h7
     apply And.intro
-    { apply Typing.generalized_named_instantiation h0 h2 h3
+    { apply Typing.generalized_named_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       { exact h6 }
     }
-    { apply Typing.generalized_named_instantiation h1 h2 h3
+    { apply Typing.generalized_named_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
@@ -874,11 +796,11 @@ mutual
     }
   | diff left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 h5 wf h6 h7 h8
+    intro h2 h3 h4 h5 wf h6 h7 h8
     apply And.intro
     { apply Typ.wellformed_named_instantiation h6 }
     { apply And.intro
-      { apply Typing.generalized_named_instantiation h0 h2 h3
+      { apply Typing.generalized_named_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
         { exact wf }
@@ -886,7 +808,7 @@ mutual
       }
       { intro h9
         apply h8
-        apply Typing.generalized_nameless_instantiation h1 h2 h3
+        apply Typing.generalized_nameless_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
         { exact wf }
@@ -895,7 +817,7 @@ mutual
     }
   | all bs cs body =>
     simp [Typ.free_vars, Typ.instantiate]
-    intro h0 h1 h2
+    intro h2
     simp [Typing, Prod.dom]
     intro h3 h4 h5 wf h6 h7 h8
     simp [*]
@@ -924,19 +846,6 @@ mutual
     rw [h15]
 
     apply Typing.generalized_named_instantiation
-    {
-      intro h16
-      apply Typ.free_vars_instantiate_upper_bound at h16
-      rw [List.mem_append] at h16
-      cases h16 with
-      | inl h17 =>
-        apply h1
-        exact h17
-      | inr h16 =>
-        simp [Typ.free_vars] at h16
-        have ⟨P,h17⟩ := h16
-        exact h11 P h17
-    }
     { exact h2 }
     { simp [Prod.dom]; exact ⟨h12, h3⟩ }
     { simp [Prod.dom]; exact ⟨h11, h4⟩ }
@@ -967,17 +876,6 @@ mutual
         rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
         rw [←Typ.constraints_instantiate_zero_inside_out]
         apply MultiSubtyping.generalized_nameless_instantiation
-        {
-          intro h17
-          have h18 := Typ.list_prod_free_vars_instantiate_upper_bound h17
-          simp [Typ.free_vars] at h18
-          cases h18 with
-          | inl h19 =>
-            exact h0 h19
-          | inr h19 =>
-            have ⟨P,h20⟩ := h19
-            exact h11 P h20
-        }
         { exact h2 }
         { simp [Prod.dom]; exact ⟨h12, h3⟩ }
         { simp [Prod.dom]; exact ⟨h11, h4⟩ }
@@ -996,7 +894,7 @@ mutual
   | exi bs cs body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
 
-    intro h0 h1 h2 h3 h4 h5 wf h6 am'' h7 h8 h9 h10 h11 h12
+    intro h2 h3 h4 h5 wf h6 am'' h7 h8 h9 h10 h11 h12
     apply And.intro h6
     exists am''
     apply And.intro ; exact h7
@@ -1029,18 +927,6 @@ mutual
       {
         rw [←Typ.constraints_instantiate_zero_inside_out]
         apply MultiSubtyping.generalized_named_instantiation
-        {
-          intro h16
-          apply Typ.list_prod_free_vars_instantiate_upper_bound at h16
-          rw [List.mem_append] at h16
-          cases h16 with
-          | inl h17 =>
-            exact h0 h17
-          | inr h17 =>
-            simp [Typ.free_vars] at h17
-            have ⟨P,h18⟩ := h17
-            exact h9 P h18
-        }
         { exact h2 }
         { simp [Prod.dom]; exact ⟨h10, h3⟩ }
         { simp [Prod.dom]; exact ⟨h9, h4⟩ }
@@ -1064,19 +950,6 @@ mutual
       }
       { rw [←Typ.instantiate_zero_inside_out]
         apply Typing.generalized_named_instantiation
-        {
-          intro h16
-          apply Typ.free_vars_instantiate_upper_bound at h16
-          rw [List.mem_append] at h16
-          cases h16 with
-          | inl h17 =>
-            apply h1
-            exact h17
-          | inr h17 =>
-            simp [Typ.free_vars] at h17
-            have ⟨P,h18⟩ := h17
-            exact h9 P h18
-        }
         { exact h2 }
         { simp [Prod.dom]; exact ⟨h10, h3⟩ }
         { simp [Prod.dom]; exact ⟨h9, h4⟩ }
@@ -1102,7 +975,7 @@ mutual
 
   | lfp b body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h0 h1 h2 h3 h4 wf h5 h6 name' h7 h8 h9 h10 h11
+    intro h1 h2 h3 h4 wf h5 h6 name' h7 h8 h9 h10 h11
     simp [*]
     exists name'
     simp [*]
@@ -1118,15 +991,6 @@ mutual
       rw [←h13]
       rw [←Typ.instantiate_zero_inside_out]
       apply PosMonotonic.generalized_named_instantiation
-      { intro h14
-        apply Typ.free_vars_instantiate_upper_bound at h14
-        simp [Typ.free_vars] at h14
-        cases h14 with
-        | inl h15 =>
-          exact h0 h15
-        | inr h15 =>
-          exact h8 (Eq.symm h15)
-      }
       { exact h1 }
       { exact h2 }
       { simp [Prod.dom]; exact h3 }
@@ -1170,16 +1034,6 @@ mutual
 
       rw [←Typ.instantiate_zero_inside_out]
       apply Typing.generalized_named_instantiation
-      {
-        intro h18
-        apply Typ.free_vars_instantiate_upper_bound at h18
-        simp [Typ.free_vars] at h18
-        cases h18 with
-        | inl h19 =>
-          exact h0 h19
-        | inr h19 =>
-          exact h8 (Eq.symm h19)
-      }
       { exact h1 }
       { simp [Prod.dom]; exact ⟨h9, h2⟩ }
       { simp [*, Prod.dom]; intro h18 ; exact h8 (Eq.symm h18) }
@@ -1244,7 +1098,7 @@ theorem Typing.nameless_instantiation :
       [] ++ (name, fun e => Typing am e t) :: am
     := by rfl
     rw [h5]
-    apply Typing.generalized_nameless_instantiation h0 h1
+    apply Typing.generalized_nameless_instantiation h1
     { simp [Prod.dom]}
     { exact Iff.mp List.count_eq_zero rfl }
     { simp [Prod.dom]; exact h2 }
@@ -1267,7 +1121,7 @@ theorem Typing.named_instantiation :
     [] ++ (name, fun e => Typing am e t) :: am
   := by rfl
   rw [h5]
-  apply Typing.generalized_named_instantiation h0 h1
+  apply Typing.generalized_named_instantiation h1
   { simp [Prod.dom]}
   { exact Iff.mp List.count_eq_zero rfl }
   { simp [Prod.dom]; exact h2 }
