@@ -66,6 +66,9 @@ mutual
 
 
   def Typing (am : List (String × (Expr → Prop))) (e : Expr) : Typ → Prop
+  /- TODO: create new type form: pred of size 1 for instantiating bound vars -/
+  /- to avoid problems with renaming variables -/
+  /- TODO: make free vars meaningless / uninterpreted -/
   | .var id => Safe e ∧ ∃ P, Stable P ∧ Prod.find id am = some P ∧ P e
   | .bvar _ => False
   | .bot => False
@@ -78,6 +81,8 @@ mutual
   | .unio left right => Typing am e left ∨ Typing am e right
   | .inter left right => Typing am e left ∧ Typing am e right
   | .diff left right => Typ.wellformed right ∧ Typing am e left ∧ ¬ (Typing am e right)
+
+  ------------------------------
   | .exi bindings constraints body =>
     (∀ a ∈ bindings , a = "") ∧
     ∃ am' ,
@@ -85,6 +90,15 @@ mutual
     List.Disjoint (Prod.dom am') (Prod.dom am) ∧
     (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name,_) => .var name) am') constraints)) ∧
     (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name,_) => .var name) am') body))
+  ------------------------------
+  -- | .exi bindings constraints body =>
+  --   (∀ a ∈ bindings , a = "") ∧
+  --   ∀ names, List.length names = List.length bindings → List.Disjoint names (Prod.dom am) →
+  --     ∃ am' , Prod.dom am' = names ∧
+  --     (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name,_) => .var name) am') constraints)) ∧
+  --     (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name,_) => .var name) am') body))
+  ------------------------------
+
   | .all bindings constraints body =>
     Safe e ∧
     (∀ a ∈ bindings , a = "") ∧
@@ -97,7 +111,8 @@ mutual
   | .lfp a body =>
     Safe e ∧
     a = "" ∧
-    ∃ name, name ∉ (Prod.dom am) ∧
+    /- TODO: does nameless instantiation depends on name not being in domain of env -/
+    ∃ name , name ∉ (Prod.dom am) ∧
     PosMonotonic name am (Typ.instantiate 0 [.var name] body) ∧
     /- infimum of -/
     (∀ P, Stable P →
@@ -320,8 +335,7 @@ mutual
     {
       apply And.intro nameless
       exists name
-      apply And.intro fresh
-      apply And.intro monotonic
+      simp [*]
       intro P h2 h3
       apply Stable.subject_reduction h2 transition
       exact h0 P h2 h3
@@ -451,8 +465,7 @@ mutual
     {
       apply And.intro nameless
       exists name
-      apply And.intro fresh
-      apply And.intro monotonic
+      simp [*]
       intro P h2 h3
       apply Stable.subject_expansion h2 transition
       exact h0 P h2 h3
