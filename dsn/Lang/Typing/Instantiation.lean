@@ -490,77 +490,77 @@ mutual
 
   | exi bs cs body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-
-    intro h2 h3 h4 h5 wf h6 am'' h7 h8 h9 h10 h11 h12
+    intro h2 h3 h4 h5 wf h6 h7
     apply And.intro h6
+    intro names h8 h9 h10 h11
+    have ⟨am'',h12A,h12B,h12C⟩ := h7 names h8 h9 h10 h11
     exists am''
-    apply And.intro h7
+    simp [*]
+    rw [←List.append_assoc]
+
+    have h14 :
+      ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
+        t' = Typ.instantiate depth [t] t'
+    := by
+      intro t h14
+      have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
+      rw [←h16]
+      simp [Typ.instantiate]
+
+    rw [Typ.list_instantiate_identity h14]
+    rw [←h8]
+    rw [←h12A]
+    rw [List.length_map]
+    rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
+
     apply And.intro
-    { apply And.intro h8
-      apply And.intro h9
-      exact h10
-    }
     {
-      rw [←List.append_assoc]
-
-      have h14 :
-        ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
-          t' = Typ.instantiate depth [t] t'
-      := by
-        intro t h14
-        have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
-        rw [←h16]
-        simp [Typ.instantiate]
-
-      rw [Typ.list_instantiate_identity h14]
-      rw [←h7]
-      rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
-
-      apply And.intro
+      rw [←Typ.constraints_instantiate_zero_inside_out]
+      apply MultiSubtyping.generalized_nameless_instantiation
+      { exact h2 }
+      { simp [Prod.dom]; rw [h12A] ; exact ⟨h11, h3⟩ }
+      { simp [Prod.dom]; simp [←h12A] at h10 ; exact ⟨h10, h4⟩  }
+      { simp [Prod.dom]; exact h5 }
+      { exact wf }
       {
-        rw [←Typ.constraints_instantiate_zero_inside_out]
-        apply MultiSubtyping.generalized_nameless_instantiation
-        { exact h2 }
-        { simp [Prod.dom]; exact ⟨h10, h3⟩ }
-        { simp [Prod.dom]; exact ⟨h9, h4⟩ }
-        { simp [Prod.dom]; exact h5 }
-        { exact wf }
+        rw [List.append_assoc]
+        rw [Typ.constraints_instantiate_zero_inside_out]
+        rw [List.length_map (fun x => Typ.var (Prod.fst x))]
+        rw [←List.length_map]
+        rw [h12A]
+        rw [h8]
+        rw [←Typ.list_instantiate_identity]
+        { exact h12B }
         {
-          rw [List.append_assoc]
-          rw [Typ.constraints_instantiate_zero_inside_out]
-          rw [List.length_map (fun x => Typ.var (Prod.fst x))]
-          rw [h7]
-          rw [←Typ.list_instantiate_identity]
-          { exact h11 }
-          {
-            intro t h16
-            have ⟨p,h17,h18⟩ := Iff.mp List.mem_map h16
-            rw [←h18]
-            simp [Typ.instantiate]
-          }
+          intro t h16
+          have ⟨p,h17,h18⟩ := Iff.mp List.mem_map h16
+          rw [←h18]
+          simp [Typ.instantiate]
         }
       }
-      { rw [←Typ.instantiate_zero_inside_out]
-        apply Typing.generalized_nameless_instantiation
-        { exact h2 }
-        { simp [Prod.dom]; exact ⟨h10, h3⟩ }
-        { simp [Prod.dom]; exact ⟨h9, h4⟩ }
-        { simp [Prod.dom]; exact h5 }
-        { exact wf }
-        {
-          rw [List.append_assoc]
-          rw [Typ.instantiate_zero_inside_out]
-          rw [List.length_map (fun x => Typ.var (Prod.fst x))]
-          rw [h7]
+    }
+    { rw [←Typ.instantiate_zero_inside_out]
+      apply Typing.generalized_nameless_instantiation
+      { exact h2 }
+      { simp [Prod.dom]; rw [h12A] ; exact ⟨h11, h3⟩ }
+      { simp [Prod.dom]; simp [←h12A] at h10 ; exact ⟨h10, h4⟩  }
+      { simp [Prod.dom]; exact h5 }
+      { exact wf }
+      {
+        rw [List.append_assoc]
+        rw [Typ.instantiate_zero_inside_out]
+        rw [List.length_map (fun x => Typ.var (Prod.fst x))]
+        rw [←List.length_map]
+        rw [h12A]
+        rw [h8]
 
-          rw [←Typ.list_instantiate_identity]
-          { exact h12 }
-          {
-            intro t h16
-            have ⟨p,h17,h18⟩ := Iff.mp List.mem_map h16
-            rw [←h18]
-            simp [Typ.instantiate]
-          }
+        rw [←Typ.list_instantiate_identity]
+        { exact h12C }
+        {
+          intro t h16
+          have ⟨p,h17,h18⟩ := Iff.mp List.mem_map h16
+          rw [←h18]
+          simp [Typ.instantiate]
         }
       }
     }
@@ -895,81 +895,85 @@ mutual
   | exi bs cs body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
 
-    intro h2 h3 h4 h5 wf h6 am'' h7 h8 h9 h10 h11 h12
+    intro h2 h3 h4 h5 wf h6 h7
+    -- simp [*]
+    -- h7 h8 h9 h10 h11 h12
     apply And.intro h6
+    intro names h8 h9 h10 h11
+    have ⟨am'', h12A, h12B, h12C⟩ := h7 names h8 h9 h10 h11
+    clear h7
     exists am''
-    apply And.intro ; exact h7
+    apply And.intro h12A
+    have h13 :
+      am'' ++ (am' ++ (name, fun e => Typing am e t) :: am) =
+      (am'' ++ am') ++ (name, fun e => Typing am e t) :: am
+    := by exact Eq.symm (List.append_assoc am'' am' ((name, fun e => Typing am e t) :: am))
+    rw [h13]
+
+    have h14 :
+      ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
+        t' = Typ.instantiate depth [Typ.var name] t'
+    := by
+      intro t h14
+      have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
+      rw [←h16]
+      simp [Typ.instantiate]
+
+    rw [Typ.list_instantiate_identity h14]
+    rw [←h8]
+    rw [←h12A]
+    rw [List.length_map]
+    rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
+
     apply And.intro
-    { apply And.intro h8
-      apply And.intro h9
-      exact h10
-    }
     {
-      have h13 :
-        am'' ++ (am' ++ (name, fun e => Typing am e t) :: am) =
-        (am'' ++ am') ++ (name, fun e => Typing am e t) :: am
-      := by exact Eq.symm (List.append_assoc am'' am' ((name, fun e => Typing am e t) :: am))
-      rw [h13]
-
-      have h14 :
-        ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
-          t' = Typ.instantiate depth [Typ.var name] t'
-      := by
-        intro t h14
-        have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
-        rw [←h16]
-        simp [Typ.instantiate]
-
-      rw [Typ.list_instantiate_identity h14]
-      rw [←h7]
-      rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
-
-      apply And.intro
+      rw [←Typ.constraints_instantiate_zero_inside_out]
+      apply MultiSubtyping.generalized_named_instantiation
+      { exact h2 }
+      { simp [Prod.dom]; rw [h12A] ; exact ⟨h11, h3⟩ }
+      { simp [Prod.dom]; simp [←h12A] at h10  ; exact ⟨h10, h4⟩ }
+      { simp [Prod.dom]; exact h5 }
+      { exact wf }
       {
-        rw [←Typ.constraints_instantiate_zero_inside_out]
-        apply MultiSubtyping.generalized_named_instantiation
-        { exact h2 }
-        { simp [Prod.dom]; exact ⟨h10, h3⟩ }
-        { simp [Prod.dom]; exact ⟨h9, h4⟩ }
-        { simp [Prod.dom]; exact h5 }
-        { exact wf }
-        {
-          rw [List.append_assoc]
-          rw [Typ.constraints_instantiate_zero_inside_out]
-          rw [List.length_map (fun x => Typ.var (Prod.fst x))]
-          rw [h7]
+        rw [List.append_assoc]
+        rw [Typ.constraints_instantiate_zero_inside_out]
+        rw [List.length_map (fun x => Typ.var (Prod.fst x))]
+        rw [←List.length_map]
+        rw [h12A]
+        rw [h8]
 
-          rw [←Typ.list_instantiate_identity]
-          { exact h11 }
-          {
-            intro t h16
-            have ⟨p,h17,h18⟩ := Iff.mp List.mem_map h16
-            rw [←h18]
-            simp [Typ.instantiate]
-          }
+        rw [←Typ.list_instantiate_identity]
+        { exact h12B }
+        {
+          intro t h16
+          have ⟨p,h17,h18⟩ := Iff.mp List.mem_map h16
+          rw [←h18]
+          simp [Typ.instantiate]
         }
       }
-      { rw [←Typ.instantiate_zero_inside_out]
-        apply Typing.generalized_named_instantiation
-        { exact h2 }
-        { simp [Prod.dom]; exact ⟨h10, h3⟩ }
-        { simp [Prod.dom]; exact ⟨h9, h4⟩ }
-        { simp [Prod.dom]; exact h5 }
-        { exact wf }
-        {
-          rw [List.append_assoc]
-          rw [Typ.instantiate_zero_inside_out]
-          rw [List.length_map (fun x => Typ.var (Prod.fst x))]
-          rw [h7]
+    }
+    { rw [←Typ.instantiate_zero_inside_out]
+      apply Typing.generalized_named_instantiation
+      { exact h2 }
+      { simp [Prod.dom]; rw [h12A] ; exact ⟨h11, h3⟩ }
+      { simp [Prod.dom]; simp [←h12A] at h10  ; exact ⟨h10, h4⟩ }
+      { simp [Prod.dom]; exact h5 }
+      { exact wf }
+      {
+        rw [List.append_assoc]
+        rw [Typ.instantiate_zero_inside_out]
+        rw [List.length_map (fun x => Typ.var (Prod.fst x))]
+        rw [←List.length_map]
+        rw [h12A]
+        rw [h8]
 
-          rw [←Typ.list_instantiate_identity]
-          { exact h12 }
-          {
-            intro t h16
-            have ⟨p,h17,h18⟩ := Iff.mp List.mem_map h16
-            rw [←h18]
-            simp [Typ.instantiate]
-          }
+        rw [←Typ.list_instantiate_identity]
+        { exact h12C }
+        {
+          intro t h16
+          have ⟨p,h17,h18⟩ := Iff.mp List.mem_map h16
+          rw [←h18]
+          simp [Typ.instantiate]
         }
       }
     }
@@ -1143,140 +1147,6 @@ theorem Typing.named_instantiation :
     }
     { exact h3 }
   }
-
--- mutual
---   theorem Typing.renaming :
---     name ∉ Typ.free_vars t →
---     name' ∉ Typ.free_vars t →
---     Typing ((name, P) :: m) e' (Typ.instantiate 0 [Typ.var name] t) →
---     Typing ((name', P) :: m) e' (Typ.instantiate 0 [Typ.var name'] t)
---   := by cases t with
---   | bvar i =>
---     simp [Typ.instantiate]
---     by_cases h0 : i = 0
---     { simp [h0, Typ.shift_vars, Typing,Prod.find] }
---     { simp [h0, Typing] }
---   | var name'' =>
---     simp [Typ.instantiate, Typing, Prod.find, Typ.free_vars]
---     by_cases h1 : name = name''
---     { simp [h1] }
---     { simp [*]
---       intro h2 safe P' stable h3 h4
---       simp [*]
---     }
---   | bot =>
---     simp [Typ.instantiate, Typing]
---   | top =>
---     simp [Typ.instantiate, Typing]
---   | iso label body =>
---     simp [Typ.instantiate, Typing, Expr.extract, Pattern.bvar, Typ.free_vars]
---     intro h0 h1 h2 h3
---     simp [*]
---     apply Typing.renaming h0 h1 h3
---   | entry label body =>
---     simp [Typ.instantiate, Typing, Expr.project, Pattern.bvar, Typ.free_vars]
---     intro h0 h1 h2 h3
---     simp [*]
---     apply Typing.renaming h0 h1 h3
---   | path left right =>
---     simp [Typ.instantiate, Typing, Typ.free_vars]
---     intro h0 h1 h2 h3 h4 h5 h6
---     simp [*]
---     apply And.intro
---     { exact Typ.wellformed_named_instantiation h5 name' }
---     { intro arg h7
---       apply Typing.renaming h1 h3
---       apply h6
---       apply Typing.renaming h2 h0
---       exact h7
---     }
---   | unio left right =>
---     simp [Typ.instantiate, Typing, Typ.free_vars]
---     intro h0 h1 h2 h3 h4
---     cases h4 with
---     | inl h5 =>
---       apply Or.inl
---       apply Typing.renaming h0 h2 h5
---     | inr h5 =>
---       apply Or.inr
---       apply Typing.renaming h1 h3 h5
---   | inter left right =>
---     simp [Typ.instantiate, Typing, Typ.free_vars]
---     intro h0 h1 h2 h3 h4 h5
---     apply And.intro
---     { apply Typing.renaming h0 h2 h4 }
---     { apply Typing.renaming h1 h3 h5 }
---   | diff left right =>
---     simp [Typ.instantiate, Typing, Typ.free_vars]
---     intro h0 h1 h2 h3 h4 h5 h6
---     apply And.intro (Typ.wellformed_named_instantiation h4 name')
---     apply And.intro
---     { apply Typing.renaming h0 h2 h5 }
---     { intro h7
---       apply h6
---       apply Typing.renaming h3 h1 h7
---     }
---   | all bs cs body =>
---     simp [Typ.instantiate, Typing, Typ.free_vars]
---     intro h0 h1 h2 h3 h4 h5 h6
---     simp [*]
---     apply And.intro h5
---     intro m' h7 h8 h9
---     apply Typing.env_cons_append_prefix_swap_in
---     { simp [List.Disjoint] at h8
---       intro h10
---       apply h8 h10
---       simp [Prod.dom]
---     }
---     {
---       rw [←Nat.zero_add (List.length bs)]
---       rw [Typ.list_instantiate_identity (Typ.instantiate_identity_mem_map_var [Typ.var name'])]
---       rw [←h7]
---       rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
---       rw [←Typ.instantiate_zero_inside_out]
-
---       apply Typing.renaming
---       {
---         intro h10
---         apply Typ.free_vars_instantiate_upper_bound at h10
---         simp [Typ.free_vars] at h10
---         cases h10 with
---         | inl h11 =>
---           exact h1 h11
---         | inr h11 =>
---           have ⟨P',h12⟩ := h11
---           /- TODO: not provable; don't have a the disjoint assumption -/
---           /- TODO: perhaps renaming is the wrong strategy  -/
---           sorry
---       }
---       {
---         intro h10
---         apply Typ.free_vars_instantiate_upper_bound at h10
---         simp [Typ.free_vars] at h10
---         cases h10 with
---         | inl h11 =>
---           exact h3 h11
---         | inr h11 =>
---           have ⟨P',h12⟩ := h11
---           simp [List.Disjoint, Prod.dom] at h8
---           have ⟨h13,h14⟩ := h8 P' h12
---           exact h13 rfl
---       }
---       { sorry }
---     }
---   -- | exi :  List String → List (Typ × Typ) → Typ → Typ
---   -- | lfp :  String → Typ → Typ
---   | _ => sorry
---   termination_by (Typ.size t, 0)
---   decreasing_by
---     all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate] ; try linarith)
---     all_goals (
---       try rw [Typ.constraints_size_instantiate] <;> (try linarith)
---       try rw [Typ.size_instantiate] <;> (try linarith)
---       intro e
---       apply Typ.mem_map_var_size
---     )
--- end
 
 
 end Lang

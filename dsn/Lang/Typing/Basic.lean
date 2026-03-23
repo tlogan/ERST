@@ -80,20 +80,20 @@ mutual
   | .diff left right => Typ.wellformed right ∧ Typing am e left ∧ ¬ (Typing am e right)
 
   ------------------------------
-  | .exi bindings constraints body =>
-    (∀ a ∈ bindings , a = "") ∧
-    ∃ am' ,
-    List.length am' = List.length bindings ∧
-    List.Disjoint (Prod.dom am') (Prod.dom am) ∧
-    (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name,_) => .var name) am') constraints)) ∧
-    (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name,_) => .var name) am') body))
-  ------------------------------
   -- | .exi bindings constraints body =>
   --   (∀ a ∈ bindings , a = "") ∧
-  --   ∀ names, List.length names = List.length bindings → List.Disjoint names (Prod.dom am) →
-  --     ∃ am' , Prod.dom am' = names ∧
-  --     (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name,_) => .var name) am') constraints)) ∧
-  --     (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name,_) => .var name) am') body))
+  --   ∃ am' ,
+  --   List.length am' = List.length bindings ∧
+  --   List.Disjoint (Prod.dom am') (Prod.dom am) ∧
+  --   (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name,_) => .var name) am') constraints)) ∧
+  --   (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name,_) => .var name) am') body))
+  ------------------------------
+  | .exi bindings constraints body =>
+    (∀ a ∈ bindings , a = "") ∧
+    ∀ names, List.length names = List.length bindings → List.Disjoint names (Prod.dom am) →
+      ∃ am' , Prod.dom am' = names ∧
+      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name,_) => .var name) am') constraints)) ∧
+      (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name,_) => .var name) am') body))
   ------------------------------
 
   | .all bindings constraints body =>
@@ -152,6 +152,12 @@ def MultiTyping
 := ∀ {x t}, Prod.find x context = .some t → ∃ e, (Prod.find x eam) = .some e ∧ Typing tam e t
 
 
+theorem fresh_names n names':
+  ∃ names : List String,
+  List.length names = n ∧ List.Disjoint names names'
+:= by sorry
+
+
 
 theorem Typing.safety :
   Typing am e t → Safe e
@@ -200,9 +206,10 @@ theorem Typing.safety :
   apply h0
 | exi bs cs body =>
   simp [Typing]
-  intro h0 am h1 h2 h3 h4 e' h5
-  apply Typing.safety h4
-  apply h5
+  intro h0 h1 e' h2
+  have ⟨names,h3,h4⟩ := fresh_names (List.length bs) (Prod.dom am)
+  have ⟨am',h5,h6,h7⟩ := h1 names h3 h4
+  apply Typing.safety h7 _ h2
 | lfp x body =>
   simp [Typing]
   intro h0 h1 h2 name h3
@@ -307,11 +314,13 @@ mutual
 
   | exi bs quals body =>
     simp [Typing]
-    intro h0 am' h1 h2 h3 h4
+    intro h0 h1
     apply And.intro h0
+    intro names h3 h4
+    have ⟨am',h5,h6,h7⟩ := h1 names h3 h4
     exists am'
     simp [*]
-    apply Typing.subject_reduction transition h4
+    apply Typing.subject_reduction transition h7
 
   | all bs quals body =>
     simp [Typing]
@@ -438,11 +447,13 @@ mutual
 
   | exi bs quals body =>
     simp [Typing]
-    intro h0 am' h1 h2 h3 h4
+    intro h0 h1
     apply And.intro h0
+    intro names h3 h4
+    have ⟨am',h5,h6,h7⟩ := h1 names h3 h4
     exists am'
     simp [*]
-    apply Typing.subject_expansion transition h4
+    apply Typing.subject_expansion transition h7
 
   | all bs quals body =>
     simp [Typing]
@@ -625,6 +636,7 @@ theorem Typing.joinable_reflection {a b am t} :
   { exact h1 }
 
 
+#check List.length_map
 
 
 end Lang
