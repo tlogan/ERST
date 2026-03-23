@@ -477,77 +477,61 @@ theorem Typing.anno_intro {am e t ta} :
 
 theorem Typing.lfp_elim name :
   Typ.wellformed (Typ.lfp "" t) →
+  Stable P →
   name ∉ Prod.dom m →
   PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
-  Stable P →
   (∀ e, Typing ((name, P) :: m) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
   Typing m e (Typ.lfp "" t) → P e
 := by
-  intro h0 h1 h2 stable h3 h4
+  intro h0 stable h1 h2 h3 h4
   have typing := h4
   simp [Typing] at h4
-  have ⟨h6,⟨name',h7,h8,h9⟩⟩ := h4
+  have ⟨h6,h7⟩ := h4
   clear h4
-  apply h9 _ stable
-  intro e' h10
-  apply h3
-  apply Typing.renaming
-  { intro fresh_fv
-    apply h7
-    apply Typing.free_vars_subset_env typing
-    simp [Typ.free_vars]
-    exact fresh_fv
-  }
-  { intro fresh_fv
-    apply h1
-    apply Typing.free_vars_subset_env typing
-    simp [Typ.free_vars]
-    exact fresh_fv
-  }
-  { exact h10 }
+  have ⟨h8,h9⟩ := h7 name h1
+  apply h9 P stable h3
 
 
-theorem Typing.lfp_intro name :
+theorem Typing.lfp_intro :
   Typ.wellformed (Typ.lfp "" t) →
-  name ∉ Prod.dom m →
-  PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
+  -- name ∉ Prod.dom m → -- PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
+  (∀ name ∉ Prod.dom m , PosMonotonic name m (Typ.instantiate 0 [.var name] t)) →
   Typing m e (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
   Typing m e (Typ.lfp "" t)
 := by
   simp [Typing]
-  intro h0 h1 h2 h3
+  intro h0 h1 h2
   apply And.intro
-  { exact Typing.safety h3 }
-  { exists name
-    simp [*]
-    intro P h4 h5
-
-
-    apply h5
-    have h6 := h2
+  { exact Typing.safety h2 }
+  {
+    intro name fresh
+    apply And.intro (h1 name fresh)
+    intro P stable h3
+    apply h3
+    have h6 := (h1 name fresh)
     simp [PosMonotonic] at h6
     apply h6 (fun e => Typing m e (Typ.lfp "" t)) P
     {
       intro e' h7
-      apply Typing.lfp_elim name h0 h1 h2 h4 h5 h7
+      apply Typing.lfp_elim name h0 stable fresh (h1 name fresh) h3 h7
     }
     {
       apply Typing.named_instantiation
       {
         intro h8
-        apply h1
-        apply Typing.free_vars_subset_env h3
+        apply fresh
+        apply Typing.free_vars_subset_env h2
         apply Typ.free_vars_instantiate_lower_bound _ _ h8
       }
       {
         simp [Typ.free_vars]
         intro fv h7
-        apply Typing.free_vars_subset_env h3
+        apply Typing.free_vars_subset_env h2
         apply Typ.free_vars_instantiate_lower_bound _ _ h7
       }
-      { exact h1 }
+      { exact fresh }
       { exact h0 }
-      { exact h3 }
+      { exact h2 }
     }
   }
 
@@ -763,7 +747,7 @@ theorem Subtyping.lfp_elim name :
   have h8 : Typing m e upper = (fun e => Typing m e upper) e := by rfl
   rw [h8]
   generalize h9 : (fun e => Typing m e upper) = P
-  apply Typing.lfp_elim name h0 h3 h4
+  apply Typing.lfp_elim name h0
   {
     simp [Stable]
     intro e' e'' h10
@@ -773,6 +757,8 @@ theorem Subtyping.lfp_elim name :
     { intro h11 ; exact Typing.subject_reduction h10 h11 }
     { intro h11 ; exact Typing.subject_expansion h10 h11 }
   }
+  { exact h3 }
+  { exact h4 }
   { intro e' h11
     rw [←h9]
     simp
@@ -795,17 +781,16 @@ theorem Subtyping.lfp_elim name :
 
 
 /- Subtyping recycling -/
-theorem Subtyping.lfp_intro name :
+theorem Subtyping.lfp_intro :
   Typ.wellformed (Typ.lfp "" t) →
-  name ∉ Prod.dom m →
-  PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
+  (∀ name ∉ Prod.dom m, PosMonotonic name m (Typ.instantiate 0 [.var name] t)) →
   Subtyping m lower (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
   Subtyping m lower (Typ.lfp "" t)
 := by
   simp [Subtyping]
-  intro wf_lfp fresh monotonic wf_lower subtyping
+  intro wf_lfp monotonic wf_lower subtyping
   simp [*]
   intro e typing_lower
-  apply Typing.lfp_intro name wf_lfp fresh monotonic (subtyping e typing_lower)
+  apply Typing.lfp_intro wf_lfp monotonic (subtyping e typing_lower)
 
 end Lang

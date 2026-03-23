@@ -98,8 +98,8 @@ mutual
     PosMonotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [t] body)
   := by
     simp [PosMonotonic, Prod.dom]
-    intro h1 h2 h3 h4 wf h5 h6 h7 h8 P0 P1 h9 e h10
-
+    intro h1 h2 h3 h4 wf _ h6 h7 h8 P0 P1 h9 e h10
+    -- h5 h6 h7
     have h11 :
       (point, P1) :: (am' ++ (name, fun e => Typing am e t) :: am) =
       ((point, P1) :: am') ++ (name, fun e => Typing am e t) :: am
@@ -567,10 +567,11 @@ mutual
 
   | lfp b body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h1 h2 h3 h4 wf h5 h6 name' h7 h8 h9 h10 h11
+    intro h1 h2 h3 h4 wf h5 h6 h7
     simp [*]
-    exists name'
-    simp [*]
+    intro name' h8 h9 h10
+
+    have ⟨h11A,h11B⟩ := h7 name' h8 h9 h10
     apply And.intro
     {
       have h12 :
@@ -590,9 +591,9 @@ mutual
       { simp [Prod.dom]; exact h3 }
       { simp [Prod.dom]; exact h4 }
       { exact wf }
-      { simp [Prod.dom]; exact h7 }
-      { exact h8 }
-      { simp [Prod.dom]; exact h9 }
+      { simp [Prod.dom]; exact h8 }
+      { exact h9 }
+      { simp [Prod.dom]; exact h10 }
       {
         rw [Typ.instantiate_zero_inside_out]
         rw [h13]
@@ -602,14 +603,14 @@ mutual
           simp [Typ.instantiate]
 
         rw [←Typ.list_instantiate_identity h14]
-        apply h10
+        apply h11A
       }
     }
-    { intro P stable h12
-      apply h11 P stable
+    {
+      intro P stable h12
+      apply h11B P stable
       intro e' h13
       apply h12
-
 
       have h14 :
         ∀ t' ∈ [Typ.var name'], t' = Typ.instantiate depth [t] t'
@@ -629,8 +630,8 @@ mutual
       rw [←Typ.instantiate_zero_inside_out]
       apply Typing.generalized_nameless_instantiation
       { exact h1 }
-      { simp [Prod.dom]; exact ⟨h9, h2⟩ }
-      { simp [*, Prod.dom]; intro h18 ; exact h8 (Eq.symm h18) }
+      { simp [Prod.dom]; exact ⟨h10, h2⟩ }
+      { simp [*, Prod.dom]; intro h18 ; exact h9 (Eq.symm h18) }
       { simp [*, Prod.dom] }
       { exact wf }
       {
@@ -975,10 +976,10 @@ mutual
 
   | lfp b body =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h1 h2 h3 h4 wf h5 h6 name' h7 h8 h9 h10 h11
+    intro h1 h2 h3 h4 wf h5 h6 h7
     simp [*]
-    exists name'
-    simp [*]
+    intro name' h8 h9 h10
+    have ⟨h11A,h11B⟩ := h7 name' h8 h9 h10
     apply And.intro
     {
       have h12 :
@@ -996,9 +997,9 @@ mutual
       { simp [Prod.dom]; exact h3 }
       { simp [Prod.dom]; exact h4 }
       { exact wf }
-      { simp [Prod.dom]; exact h7 }
-      { exact h8 }
-      { simp [Prod.dom]; exact h9 }
+      { simp [Prod.dom]; exact h8 }
+      { exact h9 }
+      { simp [Prod.dom]; exact h10 }
       {
         rw [Typ.instantiate_zero_inside_out]
         rw [h13]
@@ -1008,14 +1009,13 @@ mutual
           simp [Typ.instantiate]
 
         rw [←Typ.list_instantiate_identity h14]
-        apply h10
+        apply h11A
       }
     }
     { intro P stable h12
-      apply h11 P stable
+      apply h11B P stable
       intro e' h13
       apply h12
-
 
       have h14 :
         ∀ t' ∈ [Typ.var name'], t' = Typ.instantiate depth [Typ.var name] t'
@@ -1035,8 +1035,8 @@ mutual
       rw [←Typ.instantiate_zero_inside_out]
       apply Typing.generalized_named_instantiation
       { exact h1 }
-      { simp [Prod.dom]; exact ⟨h9, h2⟩ }
-      { simp [*, Prod.dom]; intro h18 ; exact h8 (Eq.symm h18) }
+      { simp [Prod.dom]; exact ⟨h10, h2⟩ }
+      { simp [*, Prod.dom]; intro h18 ; exact h9 (id (Eq.symm h18)) }
       { simp [*, Prod.dom] }
       { exact wf }
       {
@@ -1144,139 +1144,139 @@ theorem Typing.named_instantiation :
     { exact h3 }
   }
 
-mutual
-  theorem Typing.renaming :
-    name ∉ Typ.free_vars t →
-    name' ∉ Typ.free_vars t →
-    Typing ((name, P) :: m) e' (Typ.instantiate 0 [Typ.var name] t) →
-    Typing ((name', P) :: m) e' (Typ.instantiate 0 [Typ.var name'] t)
-  := by cases t with
-  | bvar i =>
-    simp [Typ.instantiate]
-    by_cases h0 : i = 0
-    { simp [h0, Typ.shift_vars, Typing,Prod.find] }
-    { simp [h0, Typing] }
-  | var name'' =>
-    simp [Typ.instantiate, Typing, Prod.find, Typ.free_vars]
-    by_cases h1 : name = name''
-    { simp [h1] }
-    { simp [*]
-      intro h2 safe P' stable h3 h4
-      simp [*]
-    }
-  | bot =>
-    simp [Typ.instantiate, Typing]
-  | top =>
-    simp [Typ.instantiate, Typing]
-  | iso label body =>
-    simp [Typ.instantiate, Typing, Expr.extract, Pattern.bvar, Typ.free_vars]
-    intro h0 h1 h2 h3
-    simp [*]
-    apply Typing.renaming h0 h1 h3
-  | entry label body =>
-    simp [Typ.instantiate, Typing, Expr.project, Pattern.bvar, Typ.free_vars]
-    intro h0 h1 h2 h3
-    simp [*]
-    apply Typing.renaming h0 h1 h3
-  | path left right =>
-    simp [Typ.instantiate, Typing, Typ.free_vars]
-    intro h0 h1 h2 h3 h4 h5 h6
-    simp [*]
-    apply And.intro
-    { exact Typ.wellformed_named_instantiation h5 name' }
-    { intro arg h7
-      apply Typing.renaming h1 h3
-      apply h6
-      apply Typing.renaming h2 h0
-      exact h7
-    }
-  | unio left right =>
-    simp [Typ.instantiate, Typing, Typ.free_vars]
-    intro h0 h1 h2 h3 h4
-    cases h4 with
-    | inl h5 =>
-      apply Or.inl
-      apply Typing.renaming h0 h2 h5
-    | inr h5 =>
-      apply Or.inr
-      apply Typing.renaming h1 h3 h5
-  | inter left right =>
-    simp [Typ.instantiate, Typing, Typ.free_vars]
-    intro h0 h1 h2 h3 h4 h5
-    apply And.intro
-    { apply Typing.renaming h0 h2 h4 }
-    { apply Typing.renaming h1 h3 h5 }
-  | diff left right =>
-    simp [Typ.instantiate, Typing, Typ.free_vars]
-    intro h0 h1 h2 h3 h4 h5 h6
-    apply And.intro (Typ.wellformed_named_instantiation h4 name')
-    apply And.intro
-    { apply Typing.renaming h0 h2 h5 }
-    { intro h7
-      apply h6
-      apply Typing.renaming h3 h1 h7
-    }
-  | all bs cs body =>
-    simp [Typ.instantiate, Typing, Typ.free_vars]
-    intro h0 h1 h2 h3 h4 h5 h6
-    simp [*]
-    apply And.intro h5
-    intro m' h7 h8 h9
-    apply Typing.env_cons_append_prefix_swap_in
-    { simp [List.Disjoint] at h8
-      intro h10
-      apply h8 h10
-      simp [Prod.dom]
-    }
-    {
-      rw [←Nat.zero_add (List.length bs)]
-      rw [Typ.list_instantiate_identity (Typ.instantiate_identity_mem_map_var [Typ.var name'])]
-      rw [←h7]
-      rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
-      rw [←Typ.instantiate_zero_inside_out]
+-- mutual
+--   theorem Typing.renaming :
+--     name ∉ Typ.free_vars t →
+--     name' ∉ Typ.free_vars t →
+--     Typing ((name, P) :: m) e' (Typ.instantiate 0 [Typ.var name] t) →
+--     Typing ((name', P) :: m) e' (Typ.instantiate 0 [Typ.var name'] t)
+--   := by cases t with
+--   | bvar i =>
+--     simp [Typ.instantiate]
+--     by_cases h0 : i = 0
+--     { simp [h0, Typ.shift_vars, Typing,Prod.find] }
+--     { simp [h0, Typing] }
+--   | var name'' =>
+--     simp [Typ.instantiate, Typing, Prod.find, Typ.free_vars]
+--     by_cases h1 : name = name''
+--     { simp [h1] }
+--     { simp [*]
+--       intro h2 safe P' stable h3 h4
+--       simp [*]
+--     }
+--   | bot =>
+--     simp [Typ.instantiate, Typing]
+--   | top =>
+--     simp [Typ.instantiate, Typing]
+--   | iso label body =>
+--     simp [Typ.instantiate, Typing, Expr.extract, Pattern.bvar, Typ.free_vars]
+--     intro h0 h1 h2 h3
+--     simp [*]
+--     apply Typing.renaming h0 h1 h3
+--   | entry label body =>
+--     simp [Typ.instantiate, Typing, Expr.project, Pattern.bvar, Typ.free_vars]
+--     intro h0 h1 h2 h3
+--     simp [*]
+--     apply Typing.renaming h0 h1 h3
+--   | path left right =>
+--     simp [Typ.instantiate, Typing, Typ.free_vars]
+--     intro h0 h1 h2 h3 h4 h5 h6
+--     simp [*]
+--     apply And.intro
+--     { exact Typ.wellformed_named_instantiation h5 name' }
+--     { intro arg h7
+--       apply Typing.renaming h1 h3
+--       apply h6
+--       apply Typing.renaming h2 h0
+--       exact h7
+--     }
+--   | unio left right =>
+--     simp [Typ.instantiate, Typing, Typ.free_vars]
+--     intro h0 h1 h2 h3 h4
+--     cases h4 with
+--     | inl h5 =>
+--       apply Or.inl
+--       apply Typing.renaming h0 h2 h5
+--     | inr h5 =>
+--       apply Or.inr
+--       apply Typing.renaming h1 h3 h5
+--   | inter left right =>
+--     simp [Typ.instantiate, Typing, Typ.free_vars]
+--     intro h0 h1 h2 h3 h4 h5
+--     apply And.intro
+--     { apply Typing.renaming h0 h2 h4 }
+--     { apply Typing.renaming h1 h3 h5 }
+--   | diff left right =>
+--     simp [Typ.instantiate, Typing, Typ.free_vars]
+--     intro h0 h1 h2 h3 h4 h5 h6
+--     apply And.intro (Typ.wellformed_named_instantiation h4 name')
+--     apply And.intro
+--     { apply Typing.renaming h0 h2 h5 }
+--     { intro h7
+--       apply h6
+--       apply Typing.renaming h3 h1 h7
+--     }
+--   | all bs cs body =>
+--     simp [Typ.instantiate, Typing, Typ.free_vars]
+--     intro h0 h1 h2 h3 h4 h5 h6
+--     simp [*]
+--     apply And.intro h5
+--     intro m' h7 h8 h9
+--     apply Typing.env_cons_append_prefix_swap_in
+--     { simp [List.Disjoint] at h8
+--       intro h10
+--       apply h8 h10
+--       simp [Prod.dom]
+--     }
+--     {
+--       rw [←Nat.zero_add (List.length bs)]
+--       rw [Typ.list_instantiate_identity (Typ.instantiate_identity_mem_map_var [Typ.var name'])]
+--       rw [←h7]
+--       rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
+--       rw [←Typ.instantiate_zero_inside_out]
 
-      apply Typing.renaming
-      {
-        intro h10
-        apply Typ.free_vars_instantiate_upper_bound at h10
-        simp [Typ.free_vars] at h10
-        cases h10 with
-        | inl h11 =>
-          exact h1 h11
-        | inr h11 =>
-          have ⟨P',h12⟩ := h11
-          /- TODO: not provable; don't have a the disjoint assumption -/
-          /- TODO: perhaps renaming is the wrong strategy  -/
-          sorry
-      }
-      {
-        intro h10
-        apply Typ.free_vars_instantiate_upper_bound at h10
-        simp [Typ.free_vars] at h10
-        cases h10 with
-        | inl h11 =>
-          exact h3 h11
-        | inr h11 =>
-          have ⟨P',h12⟩ := h11
-          simp [List.Disjoint, Prod.dom] at h8
-          have ⟨h13,h14⟩ := h8 P' h12
-          exact h13 rfl
-      }
-      { sorry }
-    }
-  -- | exi :  List String → List (Typ × Typ) → Typ → Typ
-  -- | lfp :  String → Typ → Typ
-  | _ => sorry
-  termination_by (Typ.size t, 0)
-  decreasing_by
-    all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate] ; try linarith)
-    all_goals (
-      try rw [Typ.constraints_size_instantiate] <;> (try linarith)
-      try rw [Typ.size_instantiate] <;> (try linarith)
-      intro e
-      apply Typ.mem_map_var_size
-    )
-end
+--       apply Typing.renaming
+--       {
+--         intro h10
+--         apply Typ.free_vars_instantiate_upper_bound at h10
+--         simp [Typ.free_vars] at h10
+--         cases h10 with
+--         | inl h11 =>
+--           exact h1 h11
+--         | inr h11 =>
+--           have ⟨P',h12⟩ := h11
+--           /- TODO: not provable; don't have a the disjoint assumption -/
+--           /- TODO: perhaps renaming is the wrong strategy  -/
+--           sorry
+--       }
+--       {
+--         intro h10
+--         apply Typ.free_vars_instantiate_upper_bound at h10
+--         simp [Typ.free_vars] at h10
+--         cases h10 with
+--         | inl h11 =>
+--           exact h3 h11
+--         | inr h11 =>
+--           have ⟨P',h12⟩ := h11
+--           simp [List.Disjoint, Prod.dom] at h8
+--           have ⟨h13,h14⟩ := h8 P' h12
+--           exact h13 rfl
+--       }
+--       { sorry }
+--     }
+--   -- | exi :  List String → List (Typ × Typ) → Typ → Typ
+--   -- | lfp :  String → Typ → Typ
+--   | _ => sorry
+--   termination_by (Typ.size t, 0)
+--   decreasing_by
+--     all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate] ; try linarith)
+--     all_goals (
+--       try rw [Typ.constraints_size_instantiate] <;> (try linarith)
+--       try rw [Typ.size_instantiate] <;> (try linarith)
+--       intro e
+--       apply Typ.mem_map_var_size
+--     )
+-- end
 
 
 end Lang

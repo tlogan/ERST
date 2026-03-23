@@ -66,9 +66,6 @@ mutual
 
 
   def Typing (am : List (String × (Expr → Prop))) (e : Expr) : Typ → Prop
-  /- TODO: create new type form: pred of size 1 for instantiating bound vars -/
-  /- to avoid problems with renaming variables -/
-  /- TODO: make free vars meaningless / uninterpreted -/
   | .var id => Safe e ∧ ∃ P, Stable P ∧ Prod.find id am = some P ∧ P e
   | .bvar _ => False
   | .bot => False
@@ -112,14 +109,14 @@ mutual
     Safe e ∧
     a = "" ∧
     /- TODO: does nameless instantiation depends on name not being in domain of env -/
-    ∃ name , name ∉ (Prod.dom am) ∧
-    PosMonotonic name am (Typ.instantiate 0 [.var name] body) ∧
-    /- infimum of -/
-    (∀ P, Stable P →
-      /- pre-fixed point -/
-      (∀ e', Typing ((name,P) :: am) e' (Typ.instantiate 0 [.var name] body) → P e') →
-      P e
-    )
+    ∀ name , name ∉ (Prod.dom am) →
+      PosMonotonic name am (Typ.instantiate 0 [.var name] body) ∧
+      /- infimum of -/
+      (∀ P, Stable P →
+        /- pre-fixed point -/
+        (∀ e', Typing ((name,P) :: am) e' (Typ.instantiate 0 [.var name] body) → P e') →
+        P e
+      )
   termination_by t => (Typ.size t, 0)
   decreasing_by
     all_goals (apply Prod.Lex.left ; simp [Typ.size, Typ.size_instantiate] ; try linarith)
@@ -208,8 +205,9 @@ theorem Typing.safety :
   apply h5
 | lfp x body =>
   simp [Typing]
-  intro h0 h1 h2 name h3 h4
-  apply h0
+  intro h0 h1 h2 name h3
+  exact h0 name h3
+
 
 termination_by Typ.size t
 decreasing_by
@@ -329,16 +327,17 @@ mutual
 
   | lfp b body =>
     simp [Typing]
-    intro safe nameless name fresh monotonic h0
+    intro safe nameless h0
     apply And.intro
     { exact Safe.subject_reduction transition safe }
     {
       apply And.intro nameless
-      exists name
-      simp [*]
-      intro P h2 h3
-      apply Stable.subject_reduction h2 transition
-      exact h0 P h2 h3
+      intro name fresh
+      have ⟨h1,h2⟩ := h0 name fresh
+      apply And.intro h1
+      intro P h3 h4
+      apply Stable.subject_reduction h3 transition
+      exact h2 P h3 h4
     }
 
   | var id =>
@@ -459,16 +458,17 @@ mutual
 
   | lfp b body =>
     simp [Typing]
-    intro safe nameless name fresh monotonic h0
+    intro safe nameless h0
     apply And.intro
     { exact Safe.subject_expansion transition safe }
     {
       apply And.intro nameless
-      exists name
-      simp [*]
-      intro P h2 h3
-      apply Stable.subject_expansion h2 transition
-      exact h0 P h2 h3
+      intro name fresh
+      have ⟨h1,h2⟩ := h0 name fresh
+      apply And.intro h1
+      intro P h3 h4
+      apply Stable.subject_expansion h3 transition
+      exact h2 P h3 h4
     }
   | var id =>
     simp [Typing]
