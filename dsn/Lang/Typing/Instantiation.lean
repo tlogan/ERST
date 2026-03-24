@@ -427,7 +427,7 @@ mutual
     intro am'' h9 h10 h11 h12 h13
 
     have h14 :
-      ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
+      ∀ t' ∈ List.map (Typ.var ∘ Prod.fst) am'',
         t' = Typ.instantiate depth [t] t'
     := by
       intro t h14
@@ -437,7 +437,7 @@ mutual
 
     rw [Typ.list_instantiate_identity h14]
     rw [←h9]
-    rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
+    rw [←List.length_map (Typ.var ∘ Prod.fst)]
     rw [←Typ.instantiate_zero_inside_out]
 
     rw [←List.append_assoc]
@@ -451,11 +451,11 @@ mutual
     {
       rw [List.append_assoc]
       rw [Typ.instantiate_zero_inside_out]
-      rw [List.length_map (fun x => Typ.var (Prod.fst x))]
+      rw [List.length_map (Typ.var ∘ Prod.fst)]
       rw [h9]
 
       have h16 :
-        ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
+        ∀ t' ∈ List.map (Typ.var ∘ Prod.fst) am'',
           t' = Typ.instantiate depth [.var name] t'
       := by
         intro t h16
@@ -470,7 +470,7 @@ mutual
         rw [←List.append_assoc]
         rw [Typ.list_instantiate_identity h16]
         rw [←h9]
-        rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
+        rw [←List.length_map (Typ.var ∘ Prod.fst)]
         rw [←Typ.constraints_instantiate_zero_inside_out]
         apply MultiSubtyping.generalized_named_instantiation
         { exact h2 }
@@ -499,7 +499,7 @@ mutual
     rw [←List.append_assoc]
 
     have h14 :
-      ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
+      ∀ t' ∈ List.map Typ.var names,
         t' = Typ.instantiate depth [t] t'
     := by
       intro t h14
@@ -509,9 +509,7 @@ mutual
 
     rw [Typ.list_instantiate_identity h14]
     rw [←h8]
-    rw [←h12A]
-    rw [List.length_map]
-    rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
+    rw [←List.length_map Typ.var]
 
     apply And.intro
     {
@@ -525,9 +523,7 @@ mutual
       {
         rw [List.append_assoc]
         rw [Typ.constraints_instantiate_zero_inside_out]
-        rw [List.length_map (fun x => Typ.var (Prod.fst x))]
-        rw [←List.length_map]
-        rw [h12A]
+        rw [List.length_map Typ.var]
         rw [h8]
         rw [←Typ.list_instantiate_identity]
         { exact h12B }
@@ -549,9 +545,7 @@ mutual
       {
         rw [List.append_assoc]
         rw [Typ.instantiate_zero_inside_out]
-        rw [List.length_map (fun x => Typ.var (Prod.fst x))]
-        rw [←List.length_map]
-        rw [h12A]
+        rw [List.length_map Typ.var]
         rw [h8]
 
         rw [←Typ.list_instantiate_identity]
@@ -826,7 +820,7 @@ mutual
     intro am'' h9 h10 h11 h12 h13
 
     have h14 :
-      ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
+      ∀ t' ∈ List.map (Typ.var ∘ Prod.fst) am'',
         t' = Typ.instantiate depth [Typ.var name] t'
     := by
       intro t h14
@@ -837,7 +831,7 @@ mutual
 
     rw [Typ.list_instantiate_identity h14]
     rw [←h9]
-    rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
+    rw [←List.length_map (Typ.var ∘ Prod.fst)]
     rw [←Typ.instantiate_zero_inside_out]
 
     have h15 :
@@ -855,11 +849,11 @@ mutual
     {
       rw [List.append_assoc]
       rw [Typ.instantiate_zero_inside_out]
-      rw [List.length_map (fun x => Typ.var (Prod.fst x))]
+      rw [List.length_map (Typ.var ∘ Prod.fst)]
       rw [h9]
 
       have h16 :
-        ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
+        ∀ t' ∈ List.map (Typ.var ∘ Prod.fst) am'',
           t' = Typ.instantiate depth [t] t'
       := by
         intro t h16
@@ -874,7 +868,7 @@ mutual
         rw [←List.append_assoc]
         rw [Typ.list_instantiate_identity h16]
         rw [←h9]
-        rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
+        rw [←List.length_map (Typ.var ∘ Prod.fst)]
         rw [←Typ.constraints_instantiate_zero_inside_out]
         apply MultiSubtyping.generalized_nameless_instantiation
         { exact h2 }
@@ -911,7 +905,7 @@ mutual
     rw [h13]
 
     have h14 :
-      ∀ t' ∈ List.map (fun x => Typ.var (Prod.fst x)) am'',
+      ∀ t' ∈ List.map Typ.var names,
         t' = Typ.instantiate depth [Typ.var name] t'
     := by
       intro t h14
@@ -921,9 +915,7 @@ mutual
 
     rw [Typ.list_instantiate_identity h14]
     rw [←h8]
-    rw [←h12A]
-    rw [List.length_map]
-    rw [←List.length_map (fun x => Typ.var (Prod.fst x))]
+    rw [←List.length_map Typ.var]
 
     apply And.intro
     {
@@ -937,9 +929,7 @@ mutual
       {
         rw [List.append_assoc]
         rw [Typ.constraints_instantiate_zero_inside_out]
-        rw [List.length_map (fun x => Typ.var (Prod.fst x))]
-        rw [←List.length_map]
-        rw [h12A]
+        rw [List.length_map Typ.var]
         rw [h8]
 
         rw [←Typ.list_instantiate_identity]
@@ -962,9 +952,7 @@ mutual
       {
         rw [List.append_assoc]
         rw [Typ.instantiate_zero_inside_out]
-        rw [List.length_map (fun x => Typ.var (Prod.fst x))]
-        rw [←List.length_map]
-        rw [h12A]
+        rw [List.length_map Typ.var]
         rw [h8]
 
         rw [←Typ.list_instantiate_identity]

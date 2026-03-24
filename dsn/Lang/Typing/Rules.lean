@@ -475,6 +475,28 @@ theorem Typing.anno_intro {am e t ta} :
   Typing am (.anno e ta) ta
 := by sorry
 
+
+theorem Typing.exi_intro :
+  (∀ a ∈ bs , a = "") →
+  List.length am' = List.length bs →
+  List.Disjoint (Prod.dom am') (Prod.dom am) →
+  MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var (Prod.dom am')) cs) →
+  Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var (Prod.dom am')) body) →
+  Typing am e (Typ.exi bs cs body)
+:= by sorry
+
+theorem Typing.exi_elim :
+  (∀ a ∈ bs , a = "") →
+  List.length names = List.length bs →
+  List.Disjoint names (Prod.dom am) →
+  (∀ am',
+    Prod.dom am' = names →
+    MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs) →
+    Subtyping am (Typ.instantiate 0 (List.map Typ.var names) body) t
+  ) →
+  Typing am e (Typ.exi bs cs body) → Typing am e t
+:= by sorry
+
 theorem Typing.lfp_elim name :
   Typ.wellformed (Typ.lfp "" t) →
   Stable P →
@@ -494,7 +516,6 @@ theorem Typing.lfp_elim name :
 
 theorem Typing.lfp_intro :
   Typ.wellformed (Typ.lfp "" t) →
-  -- name ∉ Prod.dom m → -- PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
   (∀ name ∉ Prod.dom m , PosMonotonic name m (Typ.instantiate 0 [.var name] t)) →
   Typing m e (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
   Typing m e (Typ.lfp "" t)
@@ -672,20 +693,25 @@ theorem Subtyping.list_diff_elim :
 -- := by sorry
 
 
-theorem Subtyping.exi_intro {am t ids quals body} :
-  MultiSubtyping am quals →
-  Subtyping am t body →
-  Subtyping am t (Typ.exi ids quals body)
+theorem Subtyping.exi_intro :
+  (∀ a ∈ bs , a = "") →
+  List.length am' = List.length bs →
+  List.Disjoint (Prod.dom am') (Prod.dom am) →
+  MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var (Prod.dom am')) cs) →
+  Subtyping (am' ++ am) lower (Typ.instantiate 0 (List.map Typ.var (Prod.dom am')) body) →
+  Subtyping am lower (Typ.exi bs cs body)
 := by sorry
 
-theorem Subtyping.exi_elim {am ids quals body t} :
-  ids ∩ Typ.free_vars t = [] →
+theorem Subtyping.exi_elim :
+  (∀ a ∈ bs , a = "") →
+  List.length names = List.length bs →
+  List.Disjoint names (Prod.dom am) →
   (∀ am',
-    Prod.dom am' ⊆ ids →
-    MultiSubtyping (am' ++ am) quals →
-    Subtyping (am' ++ am) body t
+    Prod.dom am' = names →
+    MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs) →
+    Subtyping am (Typ.instantiate 0 (List.map Typ.var names) body) t
   ) →
-  Subtyping am (Typ.exi ids quals body) t
+  Subtyping am (Typ.exi bs cs body) t
 := by sorry
 
 -- theorem Subtyping.all_elim {am am' ids quals body t} :

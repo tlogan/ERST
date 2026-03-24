@@ -79,22 +79,12 @@ mutual
   | .inter left right => Typing am e left ∧ Typing am e right
   | .diff left right => Typ.wellformed right ∧ Typing am e left ∧ ¬ (Typing am e right)
 
-  ------------------------------
-  -- | .exi bindings constraints body =>
-  --   (∀ a ∈ bindings , a = "") ∧
-  --   ∃ am' ,
-  --   List.length am' = List.length bindings ∧
-  --   List.Disjoint (Prod.dom am') (Prod.dom am) ∧
-  --   (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name,_) => .var name) am') constraints)) ∧
-  --   (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name,_) => .var name) am') body))
-  ------------------------------
   | .exi bindings constraints body =>
     (∀ a ∈ bindings , a = "") ∧
     ∀ names, List.length names = List.length bindings → List.Disjoint names (Prod.dom am) →
       ∃ am' , Prod.dom am' = names ∧
-      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name,_) => .var name) am') constraints)) ∧
-      (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name,_) => .var name) am') body))
-  ------------------------------
+      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) constraints)) ∧
+      (Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body))
 
   | .all bindings constraints body =>
     Safe e ∧
@@ -102,8 +92,8 @@ mutual
     (∀ am' ,
       List.length am' = List.length bindings →
       List.Disjoint (Prod.dom am') (Prod.dom am) →
-      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map (fun (name, _) => .var name) am') constraints)) →
-      (Typing (am' ++ am) e (Typ.instantiate 0 (List.map (fun (name, _) => .var name) am') body))
+      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var (Prod.dom am')) constraints)) →
+      (Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var (Prod.dom am')) body))
     )
   | .lfp a body =>
     Safe e ∧
