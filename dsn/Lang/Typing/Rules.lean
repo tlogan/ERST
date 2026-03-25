@@ -478,12 +478,19 @@ theorem Typing.anno_intro {am e t ta} :
 
 theorem Typing.exi_intro :
   (∀ a ∈ bs , a = "") →
-  List.length am' = List.length bs →
-  List.Disjoint (Prod.dom am') (Prod.dom am) →
-  MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var (Prod.dom am')) cs) →
-  Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var (Prod.dom am')) body) →
+  (∀ names, List.length names = List.length bs → List.Disjoint names (Prod.dom am) →
+    ∃ am' , Prod.dom am' = names ∧
+    (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs)) ∧
+    (Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body))
+  ) →
   Typing am e (Typ.exi bs cs body)
-:= by sorry
+:= by
+  simp [Typing]
+  intro h0 h1
+  apply And.intro h0
+  intro names h2 h3
+  have ⟨am',h4,h5,h6⟩ := h1 names h2 h3
+  exists am'
 
 theorem Typing.exi_elim :
   (∀ a ∈ bs , a = "") →

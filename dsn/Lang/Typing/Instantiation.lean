@@ -421,41 +421,43 @@ mutual
     simp [Typ.free_vars, Typ.instantiate]
     intro h2
     simp [Typing, Prod.dom]
-    intro h3 h4 h5 wf h6 h7 h8
+    intro h3 h4 h5 wf h6 h7 names h8 h9 h10 h11 h12
     simp [*]
     apply And.intro h7
-    intro am'' h9 h10 h11 h12 h13
+    exists names
+    simp [*]
+    intro am'' h13 h14
 
-    have h14 :
-      ∀ t' ∈ List.map (Typ.var ∘ Prod.fst) am'',
+    have h15 :
+      ∀ t' ∈ List.map Typ.var names,
         t' = Typ.instantiate depth [t] t'
     := by
-      intro t h14
-      have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
-      rw [←h16]
+      intro t h15
+      have ⟨p,h16,h17⟩ := Iff.mp List.mem_map h15
+      rw [←h17]
       simp [Typ.instantiate]
 
-    rw [Typ.list_instantiate_identity h14]
-    rw [←h9]
-    rw [←List.length_map (Typ.var ∘ Prod.fst)]
+    rw [Typ.list_instantiate_identity h15]
+    rw [←h8]
+    rw [←List.length_map Typ.var]
     rw [←Typ.instantiate_zero_inside_out]
 
     rw [←List.append_assoc]
 
     apply Typing.generalized_nameless_instantiation
     { exact h2 }
-    { simp [Prod.dom]; exact ⟨h12, h3⟩ }
-    { simp [Prod.dom]; exact ⟨h11, h4⟩ }
+    { simp [Prod.dom]; rw [h13] ; exact ⟨h11, h3⟩ }
+    { simp [Prod.dom]; simp [←h13] at h10 ; exact ⟨h10, h4⟩ }
     { simp [Prod.dom]; exact h5 }
     { exact wf }
     {
       rw [List.append_assoc]
       rw [Typ.instantiate_zero_inside_out]
-      rw [List.length_map (Typ.var ∘ Prod.fst)]
-      rw [h9]
+      rw [List.length_map Typ.var]
+      rw [h8]
 
       have h16 :
-        ∀ t' ∈ List.map (Typ.var ∘ Prod.fst) am'',
+        ∀ t' ∈ List.map Typ.var names,
           t' = Typ.instantiate depth [.var name] t'
       := by
         intro t h16
@@ -465,26 +467,24 @@ mutual
 
 
       rw [←Typ.list_instantiate_identity h16]
-      apply h8 _ h9 h10 h11 h12
-      {
-        rw [←List.append_assoc]
-        rw [Typ.list_instantiate_identity h16]
-        rw [←h9]
-        rw [←List.length_map (Typ.var ∘ Prod.fst)]
-        rw [←Typ.constraints_instantiate_zero_inside_out]
-        apply MultiSubtyping.generalized_named_instantiation
-        { exact h2 }
-        { simp [Prod.dom]; exact ⟨h12, h3⟩ }
-        { simp [Prod.dom]; exact ⟨h11, h4⟩ }
-        { simp [Prod.dom]; exact h5 }
-        { exact wf }
-        { rw [List.append_assoc]
-          rw [Typ.constraints_instantiate_zero_inside_out]
-          rw [List.length_map]
-          rw [h9]
-          rw [←Typ.list_instantiate_identity h14]
-          exact h13
-        }
+      apply h12 _ h13
+      rw [←List.append_assoc]
+      rw [Typ.list_instantiate_identity h16]
+      rw [←h8]
+      rw [←List.length_map Typ.var]
+      rw [←Typ.constraints_instantiate_zero_inside_out]
+      apply MultiSubtyping.generalized_named_instantiation
+      { exact h2 }
+      { simp [Prod.dom]; rw [h13] ; exact ⟨h11, h3⟩ }
+      { simp [Prod.dom]; simp [←h13] at h10 ; exact ⟨h10, h4⟩ }
+      { simp [Prod.dom]; exact h5 }
+      { exact wf }
+      { rw [List.append_assoc]
+        rw [Typ.constraints_instantiate_zero_inside_out]
+        rw [List.length_map]
+        rw [h8]
+        rw [←Typ.list_instantiate_identity h15]
+        exact h14
       }
     }
 
@@ -814,46 +814,48 @@ mutual
     simp [Typ.free_vars, Typ.instantiate]
     intro h2
     simp [Typing, Prod.dom]
-    intro h3 h4 h5 wf h6 h7 h8
+    intro h3 h4 h5 wf h6 h7 names h8 h9 h10 h11 h12
     simp [*]
     apply And.intro h7
-    intro am'' h9 h10 h11 h12 h13
+    exists names
+    simp [*]
+    intro am'' h13 h14
 
-    have h14 :
-      ∀ t' ∈ List.map (Typ.var ∘ Prod.fst) am'',
+    have h15 :
+      ∀ t' ∈ List.map Typ.var names,
         t' = Typ.instantiate depth [Typ.var name] t'
     := by
-      intro t h14
-      have ⟨p,h15,h16⟩ := Iff.mp List.mem_map h14
-      rw [←h16]
+      intro t h15
+      have ⟨p,h16,h17⟩ := Iff.mp List.mem_map h15
+      rw [←h17]
       simp [Typ.instantiate]
 
 
-    rw [Typ.list_instantiate_identity h14]
-    rw [←h9]
-    rw [←List.length_map (Typ.var ∘ Prod.fst)]
+    rw [Typ.list_instantiate_identity h15]
+    rw [←h8]
+    rw [←List.length_map Typ.var]
     rw [←Typ.instantiate_zero_inside_out]
 
-    have h15 :
+    have h16A :
       am'' ++ (am' ++ (name, fun e => Typing am e t) :: am) =
       (am'' ++ am') ++ (name, fun e => Typing am e t) :: am
     := by exact Eq.symm (List.append_assoc am'' am' ((name, fun e => Typing am e t) :: am))
-    rw [h15]
+    rw [h16A]
 
     apply Typing.generalized_named_instantiation
     { exact h2 }
-    { simp [Prod.dom]; exact ⟨h12, h3⟩ }
-    { simp [Prod.dom]; exact ⟨h11, h4⟩ }
+    { simp [Prod.dom]; rw [h13] ; exact ⟨h11, h3⟩ }
+    { simp [Prod.dom]; simp [←h13] at h10 ; exact ⟨h10, h4⟩ }
     { simp [Prod.dom]; exact h5 }
     { exact wf }
     {
       rw [List.append_assoc]
       rw [Typ.instantiate_zero_inside_out]
-      rw [List.length_map (Typ.var ∘ Prod.fst)]
-      rw [h9]
+      rw [List.length_map Typ.var]
+      rw [h8]
 
       have h16 :
-        ∀ t' ∈ List.map (Typ.var ∘ Prod.fst) am'',
+        ∀ t' ∈ List.map Typ.var names,
           t' = Typ.instantiate depth [t] t'
       := by
         intro t h16
@@ -863,26 +865,24 @@ mutual
 
 
       rw [←Typ.list_instantiate_identity h16]
-      apply h8 _ h9 h10 h11 h12
-      {
-        rw [←List.append_assoc]
-        rw [Typ.list_instantiate_identity h16]
-        rw [←h9]
-        rw [←List.length_map (Typ.var ∘ Prod.fst)]
-        rw [←Typ.constraints_instantiate_zero_inside_out]
-        apply MultiSubtyping.generalized_nameless_instantiation
-        { exact h2 }
-        { simp [Prod.dom]; exact ⟨h12, h3⟩ }
-        { simp [Prod.dom]; exact ⟨h11, h4⟩ }
-        { simp [Prod.dom]; exact h5 }
-        { exact wf }
-        { rw [←h15]
-          rw [Typ.constraints_instantiate_zero_inside_out]
-          rw [List.length_map]
-          rw [h9]
-          rw [←Typ.list_instantiate_identity h14]
-          exact h13
-        }
+      apply h12 _ h13
+      rw [←List.append_assoc]
+      rw [Typ.list_instantiate_identity h16]
+      rw [←h8]
+      rw [←List.length_map Typ.var]
+      rw [←Typ.constraints_instantiate_zero_inside_out]
+      apply MultiSubtyping.generalized_nameless_instantiation
+      { exact h2 }
+      { simp [Prod.dom]; rw [h13] ; exact ⟨h11, h3⟩ }
+      { simp [Prod.dom]; simp [←h13] at h10 ; exact ⟨h10, h4⟩ }
+      { simp [Prod.dom]; exact h5 }
+      { exact wf }
+      { rw [←h16A]
+        rw [Typ.constraints_instantiate_zero_inside_out]
+        rw [List.length_map]
+        rw [h8]
+        rw [←Typ.list_instantiate_identity h15]
+        exact h14
       }
     }
 

@@ -79,26 +79,25 @@ mutual
   | .inter left right => Typing am e left ∧ Typing am e right
   | .diff left right => Typ.wellformed right ∧ Typing am e left ∧ ¬ (Typing am e right)
 
-  | .exi bindings constraints body =>
-    (∀ a ∈ bindings , a = "") ∧
-    ∀ names, List.length names = List.length bindings → List.Disjoint names (Prod.dom am) →
+  | .exi bs cs body =>
+    (∀ a ∈ bs , a = "") ∧
+    ∀ names, List.length names = List.length bs → List.Disjoint names (Prod.dom am) →
       ∃ am' , Prod.dom am' = names ∧
-      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) constraints)) ∧
+      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs)) ∧
       (Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body))
 
-  | .all bindings constraints body =>
+  | .all bs cs body =>
     Safe e ∧
-    (∀ a ∈ bindings , a = "") ∧
+    (∀ a ∈ bs , a = "") ∧
+    ∃ names, List.length names = List.length bs ∧ List.Disjoint names (Prod.dom am) ∧
     (∀ am' ,
-      List.length am' = List.length bindings →
-      List.Disjoint (Prod.dom am') (Prod.dom am) →
-      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var (Prod.dom am')) constraints)) →
-      (Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var (Prod.dom am')) body))
+      Prod.dom am' = names →
+      (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs)) →
+      (Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body))
     )
   | .lfp a body =>
     Safe e ∧
     a = "" ∧
-    /- TODO: does nameless instantiation depends on name not being in domain of env -/
     ∀ name , name ∉ (Prod.dom am) →
       PosMonotonic name am (Typ.instantiate 0 [.var name] body) ∧
       /- infimum of -/
@@ -192,8 +191,8 @@ theorem Typing.safety :
   apply Typing.safety h1
 | all bs cs body =>
   simp [Typing]
-  intro h0 h1 h2
-  apply h0
+  intro h0 h1 names h2 h3 h4
+  exact h0
 | exi bs cs body =>
   simp [Typing]
   intro h0 h1 e' h2
@@ -314,14 +313,15 @@ mutual
 
   | all bs quals body =>
     simp [Typing]
-    intro h0 h1 h2
+    intro h0 h1 names h2 h3 h4
     apply And.intro
     { apply Safe.subject_reduction transition h0 }
     { apply And.intro h1
-      intro am' h3 h4 h5
+      exists names
+      simp [*]
+      intro am' h5 h6
       apply Typing.subject_reduction transition
-      exact h2 am' h3 h4 h5
-
+      exact h4 am' h5 h6
     }
 
   | lfp b body =>
@@ -435,7 +435,7 @@ mutual
       apply Typing.subject_reduction transition h3
     }
 
-  | exi bs quals body =>
+  | exi bs cs body =>
     simp [Typing]
     intro h0 h1
     apply And.intro h0
@@ -445,16 +445,17 @@ mutual
     simp [*]
     apply Typing.subject_expansion transition h7
 
-  | all bs quals body =>
+  | all bs cs body =>
     simp [Typing]
-    intro h0 h1 h2
+    intro h0 h1 names h2 h3 h4
     apply And.intro
     { apply Safe.subject_expansion transition h0 }
     { apply And.intro h1
-      intro am' h3 h4 h5
+      exists names
+      simp [*]
+      intro am' h5 h6
       apply Typing.subject_expansion transition
-      exact h2 am' h3 h4 h5
-
+      exact h4 am' h5 h6
     }
 
   | lfp b body =>
