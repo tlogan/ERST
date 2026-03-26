@@ -19,8 +19,11 @@ set_option eval.pp false
 namespace Lang
 
 theorem Subtyping.refl am t :
+  Typ.wellformed t →
   Subtyping am t t
-:= by sorry
+:= by
+  simp [Subtyping]
+
 
 theorem Subtyping.transitivity :
   Subtyping am t0 t1 →
@@ -207,21 +210,29 @@ theorem Typing.inter_intro :
   Typing am e tl →
   Typing am e tr →
   Typing am e (Typ.inter tl tr)
-:= by sorry
+:= by
+  simp [Typing]
+  intro h0 h1
+  exact ⟨h0, h1⟩
 
 
 theorem Typing.inter_left_elim  :
-  Subtyping m tl upper →
-  Typing m e (Typ.inter tl tr) →
-  Typing m e upper
-:= by sorry
+  (Typing m e tl → Typing m e upper) →
+  Typing m e (Typ.inter tl tr) → Typing m e upper
+:= by
+  simp [Typing]
+  intro h0 h1 h2
+  exact h0 h1
+
 
 
 theorem Typing.inter_right_elim :
-  Subtyping m tr upper →
+  (Typing m e tr → Typing m e upper) →
   Typing m e (Typ.inter tl tr) → Typing m e upper
-:= by sorry
-
+:= by
+  simp [Typing]
+  intro h0 h1 h2
+  exact h0 h2
 
 
 theorem Typing.inter_entries_intro entries :
