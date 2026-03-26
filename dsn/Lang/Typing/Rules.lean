@@ -735,6 +735,7 @@ theorem Subtyping.list_diff_elim :
 
 
 theorem Subtyping.exi_intro :
+  Typ.wellformed lower →
   (∀ a ∈ bs , a = "") →
   (∀ names, List.length names = List.length bs → List.Disjoint names (Prod.dom am) →
     ∃ am' , Prod.dom am' = names ∧
@@ -746,9 +747,19 @@ theorem Subtyping.exi_intro :
   ) →
   Subtyping am lower (Typ.exi bs cs body)
 := by
-  sorry
+  simp [Subtyping]
+  intro h0 h1 h2
+  simp [*]
+  intro e h4
+  apply Typing.exi_intro h1
+  intro names h5 h6
+  have ⟨am',h7,h8,h9⟩ := h2 names h5 h6
+  exists am'
+  simp [*]
+
 
 theorem Subtyping.exi_elim :
+  Typ.wellformed (Typ.exi bs cs body) →
   List.length names = List.length bs →
   List.Disjoint names (Prod.dom am) →
   (∀ am',
@@ -760,11 +771,20 @@ theorem Subtyping.exi_elim :
   ) →
   Subtyping am (Typ.exi bs cs body) upper
 := by
-  sorry
+  simp [Subtyping]
+  intro h0 h1 h2 h3
+  simp [*]
+  intro e h4
+  apply Typing.exi_elim h1 h2
+  {
+    intro am' h5 h6 h7
+    exact h3 am' h5 h6 e h7
+  }
+  { exact h4 }
 
 
 theorem Subtyping.all_intro :
-  Safe e →
+  Typ.wellformed lower →
   (∀ a ∈ bs , a = "") →
   List.length names = List.length bs →
   List.Disjoint names (Prod.dom am) →
@@ -777,9 +797,20 @@ theorem Subtyping.all_intro :
   ) →
   Subtyping am lower (Typ.all bs cs body)
 := by
-  sorry
+  simp [Subtyping]
+  intro h0 h1 h2 h3 h4
+  simp [*]
+  intro e h6
+  simp [Typing]
+  apply And.intro (Typing.safety h6)
+  apply And.intro h1
+  exists names
+  simp [*]
+  intro am' h7 h8
+  exact h4 am' h7 h8 e h6
 
 theorem Subtyping.all_elim :
+  Typ.wellformed (Typ.all bs cs body) →
   (∀ a ∈ bs , a = "") →
   (∀ names, List.length names = List.length bs → List.Disjoint names (Prod.dom am) →
     ∃ am' , Prod.dom am' = names ∧
@@ -791,7 +822,19 @@ theorem Subtyping.all_elim :
   ) →
   Subtyping am (Typ.all bs cs body) upper
 := by
-  sorry
+  simp [Subtyping]
+  intro h0 h1 h2
+  simp [*]
+  intro e h3
+  apply Typing.all_elim h1
+  {
+    intro names h4 h5
+    have ⟨am',h6,h7,h8⟩ := h2 names h4 h5
+    exists am'
+    simp [*]
+    exact ⟨h7, h8 e⟩
+  }
+  { exact h3 }
 
 /- Subtyping induction -/
 theorem Subtyping.lfp_elim name :
