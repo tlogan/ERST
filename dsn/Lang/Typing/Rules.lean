@@ -206,6 +206,34 @@ theorem Typing.entry_intro l :
     exact h3
   }
 
+theorem Typing.unio_left_intro  :
+  Typing m e tl →
+  Typing m e (Typ.unio tl tr)
+:= by
+  simp [Typing]
+  apply Or.inl
+
+theorem Typing.unio_right_intro  :
+  Typing m e tr →
+  Typing m e (Typ.unio tl tr)
+:= by
+  simp [Typing]
+  apply Or.inr
+
+theorem Typing.unio_elim :
+  (Typing am e tl → Typing am e upper) →
+  (Typing am e tr → Typing am e upper) →
+  Typing am e (Typ.unio tl tr) → Typing am e upper
+:= by
+  simp [Typing]
+  intro h0 h1 h2
+  cases h2 with
+  | inl h3 =>
+    exact h0 h3
+  | inr h3 =>
+    exact h1 h3
+
+
 theorem Typing.inter_intro :
   Typing am e tl →
   Typing am e tr →
@@ -449,27 +477,58 @@ theorem Typing.inter_paths_intro :
   }
 
 
+theorem Typing.diff_intro :
+  Typ.wellformed right → Typing am e left →
+  ¬ (Typing am e right) →
+  Typing am e (Typ.diff left right)
+:= by
+  simp [Typing]
+  intro h0 h1 h2
+  simp [*]
+
+theorem Typing.diff_minu_elim :
+  (Typing am e minu → Typing am e upper) →
+  Typing am e (Typ.diff minu subtra) →
+  Typing am e upper
+:= by
+  simp [Typing]
+  intro h0 h1 h2 h3
+  exact h0 h2
+
+theorem Typing.diff_subtra_elim :
+  (Typing am e left → Typing am e subtra) →
+  Typing am e (Typ.diff left subtra) →
+  Typing am e upper
+:= by
+  simp [Typing]
+  intro h0 h1 h2 h3
+  exact False.elim (h3 (h0 h2))
 
 
-
-
-
-
-theorem Typing.unio_elim :
-  Typing m e (Typ.unio tl tr) →
-  Typing m e tl ∨ Typing m e tr
-:= by simp [Typing]
-
-theorem Typing.unio_left_intro tr :
-  Typing am e tl →
-  Typing am e (Typ.unio tl tr)
+theorem Typing.do_diff_minu_elim :
+  (Typing am e minu → Typing am e upper) →
+  Typing am e (Typ.do_diff minu subtra) →
+  Typing am e upper
 := by sorry
 
 
-theorem Typing.unio_right_intro tl :
-  Typing am e tr →
-  Typing am e (Typ.unio tl tr)
-:= by sorry
+theorem Typing.list_diff_minu_elim :
+  (Typing am e minu → Typing am e upper) →
+  Typing am e (Typ.list_diff minu subtras) →
+  Typing am e upper
+:= by cases subtras with
+| nil =>
+  simp [Typ.list_diff]
+| cons subtra subtras' =>
+  simp [Typ.list_diff]
+  intro h0 h1
+  apply Typing.list_diff_minu_elim
+  {
+    intro h2
+    apply Typing.do_diff_minu_elim h0 h2
+    exact (Typ.capture subtra)
+  }
+  { exact h1 }
 
 
 theorem Typing.list_diff_elim :
