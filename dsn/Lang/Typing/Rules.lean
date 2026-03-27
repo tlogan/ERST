@@ -531,20 +531,6 @@ theorem Typing.list_diff_minu_elim :
   { exact h1 }
 
 
-theorem Typing.list_diff_elim :
-  Typing am e (Typ.list_diff tp subtras) →
-  Typing am e tp
-:= by
-  sorry
-
-
-
-theorem Typing.anno_intro {am e t ta} :
-  Subtyping am t ta →
-  Typing am e t →
-  Typing am (.anno e ta) ta
-:= by sorry
-
 
 theorem Typing.exi_intro :
   (∀ a ∈ bs , a = "") →
@@ -677,13 +663,17 @@ theorem Typing.lfp_intro :
 
 
 
-
-
-
-theorem Subtyping.iso_pres {am bodyl bodyu} l :
+theorem Subtyping.iso_pres l :
   Subtyping am bodyl bodyu →
   Subtyping am (Typ.iso l bodyl) (Typ.iso l bodyu)
-:= by sorry
+:= by
+  simp [Subtyping]
+  simp [Typ.instantiated, Typ.wellformed, Typ.num_bound_vars, Typ.nameless]
+  simp [Typing]
+  intro h0 h1 h2
+  apply And.intro ⟨h0,h1⟩
+  intro e h3 h4
+  exact ⟨h3, h2 (Expr.extract e l) h4⟩
 
 
 theorem Subtyping.entry_pres :
@@ -701,60 +691,184 @@ theorem Subtyping.entry_pres :
 
 
 theorem Subtyping.path_pres {am p q x y} :
+  Typ.wellformed p →
   Subtyping am x p →
   Subtyping am q y →
   Subtyping am (Typ.path p q) (Typ.path x y)
-:= by sorry
+:= by
+  simp [Subtyping]
+  intro h0 h1 h2 h3 h4
+  apply And.intro
+  {
+    simp [Typ.wellformed, Typ.instantiated] at h0 h3
+    simp [Typ.wellformed]
+    simp [Typ.instantiated, Typ.num_bound_vars, Typ.nameless]
+    have ⟨h5,h6⟩ := h0
+    have ⟨h7,h8⟩ := h3
+    apply And.intro ⟨h5, h7⟩ ⟨h6, h8⟩
+  }
+  { simp [Typing]
+    intro e h5 h6 h7
+    simp [*]
+    intro arg h8
+    exact h4 (Expr.app e arg) (h7 arg (h2 arg h8))
+  }
 
 
 theorem Subtyping.bot_elim {am upper} :
   Subtyping am Typ.bot upper
-:= by sorry
+:= by
+  simp [Subtyping]
+  simp [Typ.wellformed, Typ.instantiated, Typ.num_bound_vars, Typ.nameless]
+  simp [Typing]
+
 
 theorem Subtyping.top_intro {am lower} :
+  Typ.wellformed lower →
   Subtyping am lower Typ.top
-:= by sorry
+:= by
+  simp [Subtyping]
+  intro h0
+  simp [*]
+  simp [Typing]
+  intro e h1
+  exact Typing.safety h1
 
 
 theorem Subtyping.unio_elim  :
   Subtyping m tl t →
   Subtyping m tr t →
   Subtyping m (Typ.unio tl tr) t
-:= by sorry
+:= by
+  simp [Subtyping]
+  intro h0 h1 h2 h3
+  apply And.intro
+  {
+    simp [Typ.wellformed, Typ.instantiated] at h0 h2
+    simp [Typ.wellformed, Typ.instantiated, Typ.num_bound_vars, Typ.nameless]
+    have ⟨h5,h6⟩ := h0
+    have ⟨h7,h8⟩ := h2
+    apply And.intro ⟨h5, h7⟩ ⟨h6, h8⟩
 
-theorem Subtyping.unio_left_intro m tl tr :
+  }
+  { simp [Typing]
+    intro e h6
+    cases h6 with
+    | inl h7 =>
+      exact h1 e h7
+    | inr h7 =>
+      exact h3 e h7
+  }
+
+theorem Subtyping.unio_left_intro tr :
   Subtyping m lower tl →
   Subtyping m lower (Typ.unio tl tr)
-:= by sorry
+:= by
+  simp [Subtyping]
+  intro h0 h1
+  simp [*]
+  simp [Typing]
+  intro e h2
+  apply Or.inl (h1 e h2)
 
-theorem Subtyping.unio_right_intro m tr tl :
+theorem Subtyping.unio_right_intro tl :
   Subtyping m lower tr →
   Subtyping m lower (Typ.unio tl tr)
-:= by sorry
+:= by
+  simp [Subtyping]
+  intro h0 h1
+  simp [*]
+  simp [Typing]
+  intro e h2
+  apply Or.inr (h1 e h2)
 
 
 theorem Subtyping.inter_left_elim m tl tr :
+  Typ.wellformed tr →
   Subtyping m tl upper →
   Subtyping m (Typ.inter tl tr) upper
-:= by sorry
+:= by
+  simp [Subtyping]
+  intro h0 h1 h2
+  apply And.intro
+  {
+    simp [Typ.wellformed, Typ.instantiated] at h0 h1
+    simp [Typ.wellformed, Typ.instantiated, Typ.num_bound_vars, Typ.nameless]
+    have ⟨h5,h6⟩ := h0
+    have ⟨h7,h8⟩ := h1
+    apply And.intro ⟨h7, h5⟩ ⟨h8, h6⟩
+  }
+  { simp [Typing]
+    intro e h4 h5
+    exact h2 e h4
+  }
+
 
 
 theorem Subtyping.inter_right_elim m tl tr :
+  Typ.wellformed tl →
   Subtyping m tr upper →
   Subtyping m (Typ.inter tl tr) upper
-:= by sorry
+:= by
+  simp [Subtyping]
+  intro h0 h1 h2
+  apply And.intro
+  {
+    simp [Typ.wellformed, Typ.instantiated] at h0 h1
+    simp [Typ.wellformed, Typ.instantiated, Typ.num_bound_vars, Typ.nameless]
+    have ⟨h5,h6⟩ := h0
+    have ⟨h7,h8⟩ := h1
+    apply And.intro ⟨h5, h7⟩ ⟨h6, h8⟩
+  }
+  { simp [Typing]
+    intro e h4 h5
+    exact h2 e h5
+  }
 
 theorem Subtyping.inter_intro {am t left right} :
   Subtyping am t left →
   Subtyping am t right →
   Subtyping am t (Typ.inter left right)
-:= by sorry
+:= by
+  simp [Subtyping]
+  intro h0 h1 h2 h3
+  simp [*]
+  simp [Typing]
+  intro e h4
+  exact ⟨h1 e h4, h3 e h4⟩
 
 theorem Subtyping.unio_antec {am t left right upper} :
   Subtyping am t (Typ.path left upper) →
   Subtyping am t (Typ.path right upper) →
   Subtyping am t (Typ.path (Typ.unio left right) upper)
-:= by sorry
+:= by
+  simp [Subtyping, Typing]
+  intro h0 h1 h2 h3
+  simp [*]
+  intro e h4
+  have ⟨h5,h6,h7⟩ := h1 e h4
+  clear h1
+  have ⟨h8,h9,h10⟩ := h3 e h4
+  clear h3
+  simp [*]
+  apply And.intro
+  {
+
+    simp [Typ.wellformed, Typ.instantiated] at h6 h9
+    simp [Typ.wellformed, Typ.instantiated, Typ.num_bound_vars, Typ.nameless]
+
+    have ⟨h10,h11⟩ := h6
+    have ⟨h12,h13⟩ := h9
+    apply And.intro ⟨h10, h12⟩ ⟨h11, h13⟩
+  }
+  {
+    intro arg h7
+    cases h7 with
+    | inl h8 =>
+      exact h7 arg h8
+    | inr h8 =>
+      exact h10 arg h8
+  }
 
 theorem Subtyping.inter_conseq {am t upper left right} :
   Subtyping am t (Typ.path upper left) →
