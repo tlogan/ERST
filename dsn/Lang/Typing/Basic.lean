@@ -59,6 +59,7 @@ mutual
 
   def PosMonotonic (name : String) (am : List (String × (Expr → Prop))) (t : Typ) : Prop :=
     (∀ P0 P1 : Expr → Prop,
+      Stable P0 → Stable P1 →
       (∀ e, P0 e → P1 e) →
       (∀ e , Typing ((name,P0)::am) e t → Typing ((name,P1)::am) e t)
     )
@@ -121,6 +122,7 @@ end
 
 def NegMonotonic (name : String) (am : List (String × (Expr → Prop))) (t : Typ) : Prop :=
   (∀ P0 P1 : Expr → Prop,
+    Stable P0 → Stable P1 →
     (∀ e, P0 e → P1 e) →
     (∀ e , Typing ((name,P1)::am) e t → Typing ((name,P0)::am) e t)
   )

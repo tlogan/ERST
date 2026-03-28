@@ -98,7 +98,7 @@ mutual
     PosMonotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [t] body)
   := by
     simp [PosMonotonic, Prod.dom]
-    intro h1 h2 h3 h4 wf _ h6 h7 h8 P0 P1 h9 e h10
+    intro h1 h2 h3 h4 wf _ h6 h7 h8 P0 P1 stable_P0 stable_P1 h9 e h10
     -- h5 h6 h7
     have h11 :
       (point, P1) :: (am' ++ (name, fun e => Typing am e t) :: am) =
@@ -122,7 +122,7 @@ mutual
     { exact wf }
     {
       simp
-      apply h8 _ _ h9
+      apply h8 _ _ stable_P0 stable_P1 h9
 
       have h12 :
         (point, P0) :: (am' ++ (name, fun e => Typing am e t) :: am) =
@@ -161,7 +161,7 @@ mutual
     PosMonotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] body)
   := by
     simp [PosMonotonic, Prod.dom]
-    intro h1 h2 h3 h4 wf h5 h6 h7 h8 P0 P1 h9 e h10
+    intro h1 h2 h3 h4 wf h5 h6 h7 h8 P0 P1 stable_P0 stable_P1 h9 e h10
 
     have h11 :
       (point, P1) :: (am' ++ (name, fun e => Typing am e t) :: am) =
@@ -185,7 +185,7 @@ mutual
     { exact wf }
     {
       simp
-      apply h8 _ _ h9
+      apply h8 _ _ stable_P0 stable_P1 h9
 
       have h12 :
         (point, P0) :: (am' ++ (name, fun e => Typing am e t) :: am) =

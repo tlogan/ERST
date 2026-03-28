@@ -53,11 +53,25 @@ theorem NegMonotonic.intro :
 
 theorem Monotonic.bvar_intro :
   Monotonic polarity name m (Typ.bvar i)
-:= by sorry
+:= by
+  simp [Monotonic, PosMonotonic, NegMonotonic, Typing]
+
 
 theorem Monotonic.positive_var_intro :
   Monotonic true name m (Typ.var name')
-:= by sorry
+:= by
+  simp [Monotonic, PosMonotonic]
+  intro P0 P1 stable_P0 stable_P1 h0
+  simp [Typing, Prod.find]
+  by_cases h1 : name = name'
+  { simp [h1] ; clear h1
+    intro e h2 P h3 h4 h5
+    simp [*]
+  }
+  { simp [h1] ; clear h1
+    intro e h1 P h2 h3 h4
+    simp [*]
+  }
 
 theorem Monotonic.negative_var_intro :
   name ≠ name' →
@@ -638,6 +652,18 @@ theorem Typing.lfp_intro :
     simp [PosMonotonic] at h6
     apply h6 (fun e => Typing m e (Typ.lfp "" t)) P
     {
+      simp [Stable]
+      intro e e' h7
+      apply Iff.intro
+      { intro h8
+        exact subject_reduction h7 h8
+      }
+      { intro h8
+        exact subject_expansion h7 h8
+      }
+    }
+    { exact stable }
+    {
       intro e' h7
       apply Typing.lfp_elim name h0 stable fresh (h1 name fresh) h3 h7
     }
@@ -1123,8 +1149,29 @@ theorem Subtyping.lfp_elim name :
 
     apply Typing.nameless_instantiation h12 h2 h3 h1
     apply h4 P
-    simp [←h9]
-    exact h11
+    { rw [←h9]
+      simp [Stable]
+      intro e e' h13
+      apply Iff.intro
+      { intro h14
+        exact Typing.subject_reduction h13 h14
+      }
+      { intro h14
+        exact Typing.subject_expansion h13 h14
+      }
+    }
+    { simp [Stable]
+      intro e e' h13
+      apply Iff.intro
+      { intro h14
+        exact Typing.subject_reduction h13 h14
+      }
+      { intro h14
+        exact Typing.subject_expansion h13 h14
+      }
+    }
+    { simp [←h9] }
+    { exact h11 }
 
   }
   { exact h7 }
