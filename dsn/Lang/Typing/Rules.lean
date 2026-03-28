@@ -783,7 +783,7 @@ theorem Subtyping.unio_right_intro tl :
   apply Or.inr (h1 e h2)
 
 
-theorem Subtyping.inter_left_elim m tl tr :
+theorem Subtyping.inter_left_elim :
   Typ.wellformed tr →
   Subtyping m tl upper →
   Subtyping m (Typ.inter tl tr) upper
@@ -805,7 +805,7 @@ theorem Subtyping.inter_left_elim m tl tr :
 
 
 
-theorem Subtyping.inter_right_elim m tl tr :
+theorem Subtyping.inter_right_elim :
   Typ.wellformed tl →
   Subtyping m tr upper →
   Subtyping m (Typ.inter tl tr) upper
@@ -825,7 +825,7 @@ theorem Subtyping.inter_right_elim m tl tr :
     exact h2 e h5
   }
 
-theorem Subtyping.inter_intro {am t left right} :
+theorem Subtyping.inter_intro :
   Subtyping am t left →
   Subtyping am t right →
   Subtyping am t (Typ.inter left right)
@@ -837,7 +837,7 @@ theorem Subtyping.inter_intro {am t left right} :
   intro e h4
   exact ⟨h1 e h4, h3 e h4⟩
 
-theorem Subtyping.unio_antec {am t left right upper} :
+theorem Subtyping.unio_antec :
   Subtyping am t (Typ.path left upper) →
   Subtyping am t (Typ.path right upper) →
   Subtyping am t (Typ.path (Typ.unio left right) upper)
@@ -870,52 +870,112 @@ theorem Subtyping.unio_antec {am t left right upper} :
       exact h10 arg h8
   }
 
-theorem Subtyping.inter_conseq {am t upper left right} :
+theorem Subtyping.inter_conseq :
   Subtyping am t (Typ.path upper left) →
   Subtyping am t (Typ.path upper right) →
   Subtyping am t (Typ.path upper (Typ.inter left right))
-:= by sorry
+:= by
+  simp [Subtyping, Typing]
+  intro h0 h1 h2 h3
+  simp [*]
+  intro e h4
+  simp [*]
+  have ⟨h5,h6,h7⟩ := h1 e h4
+  have ⟨h8,h9,h10⟩ := h3 e h4
+  simp [*]
+  intro arg h11
+  exact ⟨h7 arg h11, h10 arg h11⟩
 
-theorem Subtyping.inter_entry {am t l left right} :
+theorem Subtyping.inter_entry :
   Subtyping am t (Typ.entry l left) →
   Subtyping am t (Typ.entry l right) →
   Subtyping am t (Typ.entry l (Typ.inter left right))
-:= by sorry
-
-
-
-
-theorem Subtyping.diff_elim {am lower sub upper} :
-  Subtyping am lower (Typ.unio sub upper) →
-  Subtyping am (Typ.diff lower sub) upper
-:= by sorry
-
-
-
-theorem Subtyping.diff_sub_elim {am lower upper} sub:
-  Subtyping am lower sub →
-  Subtyping am (Typ.diff lower sub) upper
-:= by sorry
-
-theorem Subtyping.diff_upper_elim {am lower upper} sub:
-  Subtyping am lower upper →
-  Subtyping am (Typ.diff lower sub) upper
-:= by sorry
-
-
-
-theorem Subtyping.diff_intro {am t left right} :
-  Subtyping am t left →
-  ¬ (Subtyping am t right) →
-  ¬ (Subtyping am right t) →
-  Subtyping am t (Typ.diff left right)
-:= by sorry
-
-theorem Subtyping.list_diff_elim :
-  Subtyping am tp upper →
-  Subtyping am (Typ.list_diff tp subtras) upper
 := by
-  sorry
+  simp [Subtyping, Typing]
+  intro h0 h1 h2 h3
+  simp [*]
+  intro e h4
+  simp [*]
+
+
+theorem Subtyping.diff_minu_elim :
+  Typ.wellformed subtra →
+  Subtyping am minu upper →
+  Subtyping am (Typ.diff minu subtra) upper
+:= by
+  simp [Subtyping]
+  intro h0 h1 h2
+  apply And.intro
+  {
+    simp [Typ.wellformed, Typ.instantiated] at h0 h1
+    simp [Typ.wellformed, Typ.instantiated, Typ.num_bound_vars, Typ.nameless]
+    have ⟨h3,h4⟩ := h0
+    have ⟨h5,h6⟩ := h1
+    apply And.intro ⟨h5, h3⟩ ⟨h6, h4⟩
+  }
+  {
+    intro e h3
+    exact Typing.diff_minu_elim (h2 e) h3
+  }
+
+
+theorem Subtyping.diff_subtra_elim upper :
+  Typ.wellformed subtra →
+  Subtyping am minu subtra →
+  Subtyping am (Typ.diff minu subtra) upper
+:= by
+  simp [Subtyping]
+  intro h0 h1 h2
+  apply And.intro
+  {
+    simp [Typ.wellformed, Typ.instantiated] at h0 h1
+    simp [Typ.wellformed, Typ.instantiated, Typ.num_bound_vars, Typ.nameless]
+    have ⟨h3,h4⟩ := h0
+    have ⟨h5,h6⟩ := h1
+    apply And.intro ⟨h5, h3⟩ ⟨h6, h4⟩
+  }
+  {
+    intro e h4
+    exact Typing.diff_subtra_elim (h2 e) h4
+  }
+
+
+
+theorem Subtyping.diff_intro :
+  Typ.wellformed subtra →
+  Subtyping am lower minu →
+  (∀ e, Typing am e lower → ¬ Typing am e subtra) →
+  Subtyping am lower (Typ.diff minu subtra)
+:= by
+  simp [Subtyping]
+  intro h0 h1 h2 h3
+  simp [*]
+  intro e h4
+  apply Typing.diff_intro h0 (h2 e h4)
+  exact h3 e h4
+
+
+
+-- theorem Typing.list_diff_minu_elim :
+--   (Typing am e minu → Typing am e upper) →
+--   Typing am e (Typ.list_diff minu subtras) →
+--   Typing am e upper
+
+theorem Subtyping.list_diff_minu_elim :
+  Typ.list_wellformed subtras →
+  Subtyping am minu upper →
+  Subtyping am (Typ.list_diff minu subtras) upper
+:= by
+  simp [Subtyping]
+  intro h0 h1 h2
+  apply And.intro
+  {
+    simp [Typ.wellformed_list_diff]
+    simp [*]
+  }
+  { intro e h3
+    exact Typing.list_diff_minu_elim (h2 e) h3
+  }
 
 
 theorem Subtyping.exi_intro :
