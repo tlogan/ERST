@@ -57,11 +57,13 @@ theorem Monotonic.bvar_intro :
   simp [Monotonic, PosMonotonic, NegMonotonic, Typing]
 
 
+
 theorem Monotonic.positive_var_intro :
   Monotonic true name m (Typ.var name')
 := by
   simp [Monotonic, PosMonotonic]
   intro P0 P1 stable_P0 stable_P1 h0
+  clear stable_P0
   simp [Typing, Prod.find]
   by_cases h1 : name = name'
   { simp [h1] ; clear h1
@@ -76,17 +78,66 @@ theorem Monotonic.positive_var_intro :
 theorem Monotonic.negative_var_intro :
   name ≠ name' →
   Monotonic false name m (Typ.var name')
-:= by sorry
+:= by
+  intro h0
+  simp [Monotonic, NegMonotonic]
+  simp [Typing, Prod.find, h0]
 
 theorem Monotonic.iso_intro :
   Monotonic polarity name m t →
   Monotonic polarity name m (Typ.iso l t)
-:= by sorry
+:= by
+  simp [Monotonic]
+  intro h0
+  cases h0 with
+  | inl h1 =>
+    have ⟨h2,h3⟩ := h1
+    simp [*]
+    simp [PosMonotonic]
+    intro P0 P1 stable_P0 stable_P1 h4 e
+    simp [Typing]
+    intro h5 h6
+    simp [*]
+    simp [PosMonotonic] at h3
+    apply h3 P0 P1 stable_P0 stable_P1 h4 _ h6
+  | inr h1 =>
+    have ⟨h2,h3⟩ := h1
+    simp [*]
+    simp [NegMonotonic]
+    intro P0 P1 stable_P0 stable_P1 h4 e
+    simp [Typing]
+    intro h5 h6
+    simp [*]
+    simp [NegMonotonic] at h3
+    apply h3 P0 P1 stable_P0 stable_P1 h4 _ h6
 
 theorem Monotonic.entry_intro :
   Monotonic polarity name m t →
   Monotonic polarity name m (Typ.entry l t)
-:= by sorry
+:= by
+  simp [Monotonic]
+  intro h0
+  cases h0 with
+  | inl h1 =>
+    have ⟨h2,h3⟩ := h1
+    simp [*]
+    simp [PosMonotonic]
+    intro P0 P1 stable_P0 stable_P1 h4 e
+    simp [Typing]
+    intro h5 h6
+    simp [*]
+    simp [PosMonotonic] at h3
+    apply h3 P0 P1 stable_P0 stable_P1 h4 _ h6
+  | inr h1 =>
+    have ⟨h2,h3⟩ := h1
+    simp [*]
+    simp [NegMonotonic]
+    intro P0 P1 stable_P0 stable_P1 h4 e
+    simp [Typing]
+    intro h5 h6
+    simp [*]
+    simp [NegMonotonic] at h3
+    apply h3 P0 P1 stable_P0 stable_P1 h4 _ h6
 
 theorem Monotonic.path_intro :
   Monotonic (not polarity) name m tl →
