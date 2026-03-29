@@ -51,17 +51,17 @@ theorem NegMonotonic.intro :
 := by
   simp [Monotonic]
 
-theorem Monotonic.bvar_intro :
-  Monotonic polarity name m (Typ.bvar i)
+theorem PosMonotonic.bvar_intro :
+  PosMonotonic name m (Typ.bvar i)
 := by
-  simp [Monotonic, PosMonotonic, NegMonotonic, Typing]
+  simp [PosMonotonic, Typing]
 
 
 
-theorem Monotonic.positive_var_intro :
-  Monotonic true name m (Typ.var name')
+theorem PosMonotonic.var_intro :
+  PosMonotonic name m (Typ.var name')
 := by
-  simp [Monotonic, PosMonotonic]
+  simp [PosMonotonic]
   intro P0 P1 stable_P0 stable_P1 h0
   clear stable_P0
   simp [Typing, Prod.find]
@@ -75,248 +75,229 @@ theorem Monotonic.positive_var_intro :
     simp [*]
   }
 
-theorem Monotonic.negative_var_intro :
+theorem NegMonotonic.var_intro :
   name ≠ name' →
-  Monotonic false name m (Typ.var name')
+  NegMonotonic name m (Typ.var name')
 := by
   intro h0
-  simp [Monotonic, NegMonotonic]
+  simp [NegMonotonic]
   simp [Typing, Prod.find, h0]
 
-theorem Monotonic.iso_intro :
-  Monotonic polarity name m t →
-  Monotonic polarity name m (Typ.iso l t)
+theorem PosMonotonic.iso_elim :
+  PosMonotonic name m (Typ.iso l t) →
+  PosMonotonic name m t
 := by
-  simp [Monotonic]
-  intro h0
-  cases h0 with
-  | inl h1 =>
-    have ⟨h2,h3⟩ := h1
-    simp [*]
-    simp [PosMonotonic]
-    intro P0 P1 stable_P0 stable_P1 h4 e
-    simp [Typing]
-    intro h5 h6
-    simp [*]
-    simp [PosMonotonic] at h3
-    apply h3 P0 P1 stable_P0 stable_P1 h4 _ h6
-  | inr h1 =>
-    have ⟨h2,h3⟩ := h1
-    simp [*]
-    simp [NegMonotonic]
-    intro P0 P1 stable_P0 stable_P1 h4 e
-    simp [Typing]
-    intro h5 h6
-    simp [*]
-    simp [NegMonotonic] at h3
-    apply h3 P0 P1 stable_P0 stable_P1 h4 _ h6
+  simp [PosMonotonic,Typing, Expr.extract]
+  intro h0 P0 P1 stable_P0 stable_P1 h4 e h5
+  -- specialize h0 P0 P1 stable_P0 stable_P1 h4 (Expr.extract e l)
+  sorry
+
+theorem PosMonotonic.iso_intro :
+  PosMonotonic name m t →
+  PosMonotonic name m (Typ.iso l t)
+:= by
+  simp [PosMonotonic]
+  intro h0 P0 P1 stable_P0 stable_P1 h4 e
+  simp [Typing]
+  intro h5 h6
+  simp [*]
+  apply h0 P0 P1 stable_P0 stable_P1 h4 _ h6
 
 theorem Monotonic.entry_intro :
-  Monotonic polarity name m t →
-  Monotonic polarity name m (Typ.entry l t)
+  PosMonotonic name m t →
+  PosMonotonic name m (Typ.entry l t)
 := by
-  simp [Monotonic]
-  intro h0
-  cases h0 with
-  | inl h1 =>
-    have ⟨h2,h3⟩ := h1
-    simp [*]
-    simp [PosMonotonic]
-    intro P0 P1 stable_P0 stable_P1 h4 e
-    simp [Typing]
-    intro h5 h6
-    simp [*]
-    simp [PosMonotonic] at h3
-    apply h3 P0 P1 stable_P0 stable_P1 h4 _ h6
-  | inr h1 =>
-    have ⟨h2,h3⟩ := h1
-    simp [*]
-    simp [NegMonotonic]
-    intro P0 P1 stable_P0 stable_P1 h4 e
-    simp [Typing]
-    intro h5 h6
-    simp [*]
-    simp [NegMonotonic] at h3
-    apply h3 P0 P1 stable_P0 stable_P1 h4 _ h6
+  simp [PosMonotonic]
+  intro h0 P0 P1 stable_P0 stable_P1 h4 e
+  simp [Typing]
+  intro h5 h6
+  simp [*]
+  apply h0 P0 P1 stable_P0 stable_P1 h4 _ h6
 
-theorem Monotonic.path_intro :
-  Monotonic (not polarity) name m tl →
-  Monotonic polarity name m tr →
-  Monotonic polarity name m (Typ.path tl tr)
+theorem PosMonotonic.path_intro :
+  NegMonotonic name m tl →
+  PosMonotonic name m tr →
+  PosMonotonic name m (Typ.path tl tr)
 := by
-  simp [Monotonic]
-  cases polarity with
-  | true =>
-    simp [PosMonotonic, NegMonotonic]
-    intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
-    simp [Typing]
-    intro h3 h4 h5
-    simp [*]
-    intro arg h6
-    apply h1 P0 P1 stable_P0 stable_P1 h2
-    apply h5 arg
-    apply h0 P0 P1 stable_P0 stable_P1 h2
-    apply h6
-  | false =>
-    simp [PosMonotonic, NegMonotonic]
-    intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
-    simp [Typing]
-    intro h3 h4 h5
-    simp [*]
-    intro arg h6
-    apply h1 P0 P1 stable_P0 stable_P1 h2
-    apply h5 arg
-    apply h0 P0 P1 stable_P0 stable_P1 h2
-    apply h6
+  simp [NegMonotonic,PosMonotonic]
+  intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
+  simp [Typing]
+  intro h3 h4 h5
+  simp [*]
+  intro arg h6
+  apply h1 P0 P1 stable_P0 stable_P1 h2
+  apply h5 arg
+  apply h0 P0 P1 stable_P0 stable_P1 h2
+  apply h6
 
-theorem Monotonic.bot_intro :
-  Monotonic polarity name m (Typ.bot)
+theorem PosMonotonic.bot_intro :
+  PosMonotonic name m (Typ.bot)
 := by
-  simp [Monotonic]
-  simp [NegMonotonic,PosMonotonic, Typing]
+  simp [PosMonotonic,Typing]
 
-theorem Monotonic.top_intro :
-  Monotonic polarity name m (Typ.top)
+theorem PosMonotonic.top_intro :
+  PosMonotonic name m (Typ.top)
 := by
-  simp [Monotonic]
-  simp [NegMonotonic,PosMonotonic, Typing]
+  simp [PosMonotonic, Typing]
 
 
-theorem Monotonic.unio_intro :
-  Monotonic polarity name m tl →
-  Monotonic polarity name m tr →
-  Monotonic polarity name m (Typ.unio tl tr)
+theorem PosMonotonic.unio_intro :
+  PosMonotonic name m tl →
+  PosMonotonic name m tr →
+  PosMonotonic name m (Typ.unio tl tr)
 := by
-  simp [Monotonic]
-  cases polarity with
-  | true =>
-    simp [PosMonotonic,NegMonotonic]
-    intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
-    simp [Typing]
-    intro h3
-    cases h3 with
-    | inl h4 =>
-      apply Or.inl
-      apply h0 P0 P1 stable_P0 stable_P1 h2 e h4
-    | inr h4 =>
-      apply Or.inr
-      apply h1 P0 P1 stable_P0 stable_P1 h2 e h4
-  | false =>
-    simp [PosMonotonic,NegMonotonic]
-    intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
-    simp [Typing]
-    intro h3
-    cases h3 with
-    | inl h4 =>
-      apply Or.inl
-      apply h0 P0 P1 stable_P0 stable_P1 h2 e h4
-    | inr h4 =>
-      apply Or.inr
-      apply h1 P0 P1 stable_P0 stable_P1 h2 e h4
+  simp [PosMonotonic]
+  intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
+  simp [Typing]
+  intro h3
+  cases h3 with
+  | inl h4 =>
+    apply Or.inl
+    apply h0 P0 P1 stable_P0 stable_P1 h2 e h4
+  | inr h4 =>
+    apply Or.inr
+    apply h1 P0 P1 stable_P0 stable_P1 h2 e h4
 
-theorem Monotonic.inter_intro :
-  Monotonic polarity name m tl →
-  Monotonic polarity name m tr →
-  Monotonic polarity name m (Typ.inter tl tr)
+theorem PosMonotonic.inter_intro :
+  PosMonotonic name m tl →
+  PosMonotonic name m tr →
+  PosMonotonic name m (Typ.inter tl tr)
 := by
-  simp [Monotonic]
-  cases polarity with
-  | true =>
-    simp [PosMonotonic,NegMonotonic]
-    intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
-    simp [Typing]
-    intro h3 h4
-    apply And.intro
-    { apply h0 P0 P1 stable_P0 stable_P1 h2 e h3 }
-    { apply h1 P0 P1 stable_P0 stable_P1 h2 e h4  }
-  | false =>
-    simp [PosMonotonic,NegMonotonic]
-    intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
-    simp [Typing]
-    intro h3 h4
-    apply And.intro
-    { apply h0 P0 P1 stable_P0 stable_P1 h2 e h3 }
-    { apply h1 P0 P1 stable_P0 stable_P1 h2 e h4  }
+  simp [PosMonotonic]
+  intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
+  simp [Typing]
+  intro h3 h4
+  apply And.intro
+  { apply h0 P0 P1 stable_P0 stable_P1 h2 e h3 }
+  { apply h1 P0 P1 stable_P0 stable_P1 h2 e h4  }
 
-theorem Monotonic.diff_intro :
-  Monotonic polarity name m tl →
-  Monotonic (not polarity) name m tr →
-  Monotonic polarity name m (Typ.diff tl tr)
+theorem PosMonotonic.diff_intro :
+  PosMonotonic name m tl →
+  NegMonotonic name m tr →
+  PosMonotonic name m (Typ.diff tl tr)
 := by
-  simp [Monotonic]
-  cases polarity with
-  | true =>
-    simp [PosMonotonic,NegMonotonic]
-    intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
-    simp [Typing]
-    intro h3 h4 h5
-    simp [*]
-    apply And.intro
-    { apply h0 P0 P1 stable_P0 stable_P1 h2 e h4 }
-    { intro h6
-      apply h5
-      apply h1 P0 P1 stable_P0 stable_P1 h2 e h6
-    }
-  | false =>
-    simp [PosMonotonic,NegMonotonic]
-    intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
-    simp [Typing]
-    intro h3 h4 h5
-    simp [*]
-    apply And.intro
-    { apply h0 P0 P1 stable_P0 stable_P1 h2 e h4 }
-    { intro h6
-      apply h5
-      apply h1 P0 P1 stable_P0 stable_P1 h2 e h6
-    }
+  simp [PosMonotonic,NegMonotonic]
+  intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
+  simp [Typing]
+  intro h3 h4 h5
+  simp [*]
+  apply And.intro
+  { apply h0 P0 P1 stable_P0 stable_P1 h2 e h4 }
+  { intro h6
+    apply h5
+    apply h1 P0 P1 stable_P0 stable_P1 h2 e h6
+  }
 
-theorem Monotonic.all_intro :
+theorem PosMonotonic.all_intro :
   (∀ b ∈ bs , b = "") →
   List.length m' = List.length bs →
   List.Disjoint (Prod.dom m') (Prod.dom m) →
   (∀ name' ∈ Prod.dom m',
-    EitherMultiMonotonic polarity name' (m' ++ m)
+    EitherMultiMonotonic name' (m' ++ m)
       (Typ.constraints_instantiate 0 (List.map (fun (name', P) => .var name') m') ((.bot,t) :: cs))
   ) →
-  Monotonic polarity name (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
-  Monotonic polarity name m (Typ.all bs cs t)
+  PosMonotonic name (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
+  PosMonotonic name m (Typ.all bs cs t)
 := by sorry
 
-theorem Monotonic.exi_intro :
-  (∀ b ∈ bs , b = "") →
-  List.length m' = List.length bs →
-  List.Disjoint (Prod.dom m') (Prod.dom m) →
-  (∀ name' ∈ Prod.dom m',
-    EitherMultiMonotonic polarity name' (m' ++ m)
-      (Typ.constraints_instantiate 0 (List.map (fun (name', P) => .var name') m') ((t,.top) :: cs))
-  ) →
-  Monotonic polarity name (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
-  Monotonic polarity name m (Typ.all bs cs t)
-:= by sorry
+-- theorem PosMonotonic.exi_intro :
+--   (∀ b ∈ bs , b = "") →
+--   List.length m' = List.length bs →
+--   List.Disjoint (Prod.dom m') (Prod.dom m) →
+--   (∀ name' ∈ Prod.dom m',
+--     EitherMultiMonotonic name' (m' ++ m)
+--       (Typ.constraints_instantiate 0 (List.map (fun (name', P) => .var name') m') ((t,.top) :: cs))
+--   ) →
+--   PosMonotonic name (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
+--   PosMonotonic name m (Typ.exi bs cs t)
+-- := by sorry
 
+mutual
+  theorem PosMonotonic.env_generalization :
+    PosMonotonic name ((name',P) :: m) t →
+    ∀ P, PosMonotonic name ((name',P) :: m) t
+  := by cases t with
+  | bvar i =>
+    simp [PosMonotonic,Typing]
+  | var name'' =>
+    simp [PosMonotonic,Typing]
+    intro h0 P' P0 P1 stable_P0 stable_P1 h2 e h3 P'' stable''
+    simp [Prod.find]
+    by_cases h4 : name = name''
+    { simp [h4]
+      intro h5 h6
+      simp [*]
+    }
+    { simp [h4]
+      by_cases h5 : name' = name''
+      { simp [h5]
+        intro h6 h7
+        simp [*]
+      }
+      { simp [h5]
+        intro h6 h7
+        simp [*]
+      }
+    }
+  | bot =>
+    simp [PosMonotonic,Typing]
+  | top =>
+    simp [PosMonotonic,Typing]
 
-theorem Monotonic.lfp_intro :
-  (∀ name' P,
-    Monotonic polarity name
-      ((name',P) :: m)
-      (Typ.instantiate 0 [Typ.var name'] body)
-  ) →
-  Monotonic polarity name m (Typ.lfp "" body)
-:= by
-  simp [Monotonic]
-  cases polarity with
-  | true =>
-    simp [PosMonotonic, NegMonotonic]
+  | iso l body =>
+    intro h0 P'
+    apply PosMonotonic.iso_intro
+    apply PosMonotonic.env_generalization
+    apply PosMonotonic.iso_elim h0
+  | lfp a body =>
+    intro h0 P'
+    apply PosMonotonic.lfp_intro
+    intro name'' P''
+    apply PosMonotonic.lfp_elim at h0
+    apply PosMonotonic.env_cons_swap
+    { sorry }
+    apply PosMonotonic.env_generalization
+    apply PosMonotonic.env_cons_swap
+    { sorry }
+    apply h0 name'' P''
+
+  | _ => sorry
+  termination_by (Typ.size t)
+  decreasing_by
+    all_goals sorry
+
+  theorem PosMonotonic.lfp_elim :
+    PosMonotonic name m (Typ.lfp a body) →
+    (∀ name' P,
+      PosMonotonic name
+        ((name',P) :: m)
+        (Typ.instantiate 0 [Typ.var name'] body)
+    )
+  := by
+    sorry
+  termination_by (Typ.size body)
+  decreasing_by
+    sorry
+
+  theorem PosMonotonic.lfp_intro :
+    (∀ name' P,
+      PosMonotonic name
+        ((name',P) :: m)
+        (Typ.instantiate 0 [Typ.var name'] body)
+    ) →
+    PosMonotonic name m (Typ.lfp a body)
+  := by
+    simp [PosMonotonic]
     intro h0 P0 P1 stable_P0 stable_P1 h1 e
     simp [Typing]
     intro h2 h3
     simp [*]
-    intro name' h4
-    simp [Prod.dom] at h3 h4
-    have ⟨h6,h7⟩ := h4 ; clear h4
-    have ⟨h8,h9⟩ := h3 name' h6 h7
+    intro h4 name' h5
+    simp [Prod.dom] at h4 h5
+    have ⟨h6,h7⟩ := h5 ; clear h5
+    have ⟨h8,h9⟩ := h4 name' h6 h7
     apply And.intro
-    { sorry }
+    { exact PosMonotonic.env_generalization h8 P1 }
     {
       intro P stable h10
       apply h9 P stable
@@ -329,8 +310,13 @@ theorem Monotonic.lfp_intro :
       { intro h12 ; exact h6 h12 }
       exact h11
     }
-  | false =>
+  termination_by (Typ.size body)
+  decreasing_by
     sorry
+
+end
+
+
 
 
 /-

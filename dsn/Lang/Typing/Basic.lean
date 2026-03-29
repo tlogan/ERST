@@ -134,8 +134,8 @@ def Monotonic (polarity : Bool) (name : String) (am : List (String × (Expr → 
 def MultiMonotonic (polarity : Bool) (name : String) (am : List (String × (Expr → Prop))) (cs : List (Typ × Typ)) : Prop :=
   ∀ lower upper, (lower,upper) ∈ cs → Monotonic (not polarity) name am lower ∧ Monotonic polarity name am upper
 
-def EitherMultiMonotonic (polarity : Bool) (name : String) (am : List (String × (Expr → Prop))) (cs : List (Typ × Typ)) : Prop :=
-  MultiMonotonic polarity name am cs
+def EitherMultiMonotonic (name : String) (am : List (String × (Expr → Prop))) (cs : List (Typ × Typ)) : Prop :=
+  MultiMonotonic .true name am cs ∨ MultiMonotonic .false name am cs
 
 
 def MultiTyping
@@ -555,6 +555,12 @@ theorem Typing.env_cons_swap :
   name ≠ name' →
   Typing ((name,P) :: (name',P') :: m) e t →
   Typing ((name',P') :: (name,P) :: m) e t
+:= by sorry
+
+theorem PosMonotonic.env_cons_swap :
+  name ≠ name' →
+  PosMonotonic point ((name,P) :: (name',P') :: m) t →
+  PosMonotonic point ((name',P') :: (name,P) :: m) t
 := by sorry
 
 
