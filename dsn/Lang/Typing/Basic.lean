@@ -551,18 +551,24 @@ mutual
 end
 
 
-
-theorem Typing.env_cons_append_prefix_swap_in :
-  name ∉ Prod.dom m0 →
-  Typing ((name,P) :: (m0 ++ m1)) e t →
-  Typing (m0 ++ (name,P) :: m1) e t
+theorem Typing.env_cons_swap :
+  name ≠ name' →
+  Typing ((name,P) :: (name',P') :: m) e t →
+  Typing ((name',P') :: (name,P) :: m) e t
 := by sorry
 
-theorem Typing.env_cons_append_prefix_swap_out :
-  name ∉ Prod.dom m0 →
-  Typing (m0 ++ (name,P) :: m1) e t →
-  Typing ((name,P) :: (m0 ++ m1)) e t
-:= by sorry
+
+-- theorem Typing.env_cons_append_swap_in :
+--   name ∉ Prod.dom m0 →
+--   Typing ((name,P) :: (m0 ++ m1)) e t →
+--   Typing (m0 ++ (name,P) :: m1) e t
+-- := by sorry
+
+-- theorem Typing.env_cons_append_swap_out :
+--   name ∉ Prod.dom m0 →
+--   Typing (m0 ++ (name,P) :: m1) e t →
+--   Typing ((name,P) :: (m0 ++ m1)) e t
+-- := by sorry
 
 theorem Subtyping.env_append_suffix_reflection :
   List.Disjoint (Prod.dom m0) (Typ.free_vars lower) →
