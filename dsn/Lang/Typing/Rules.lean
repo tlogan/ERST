@@ -83,14 +83,21 @@ theorem NegMonotonic.var_intro :
   simp [NegMonotonic]
   simp [Typing, Prod.find, h0]
 
+
+theorem Typing.env_weakening_generalizaiton :
+  (Typing m e t → Typing m' e t) →
+  (∀ e , Typing m e t → Typing m' e t)
+:= by sorry
+
 theorem PosMonotonic.iso_elim :
   PosMonotonic name m (Typ.iso l t) →
   PosMonotonic name m t
 := by
   simp [PosMonotonic,Typing, Expr.extract]
   intro h0 P0 P1 stable_P0 stable_P1 h4 e h5
-  -- specialize h0 P0 P1 stable_P0 stable_P1 h4 (Expr.extract e l)
-  sorry
+  specialize h0 P0 P1 stable_P0 stable_P1 h4 e (Typing.safety h5)
+  simp [Typing.safety h5] at h0
+  apply Typing.env_weakening_generalizaiton h0 e h5
 
 theorem PosMonotonic.iso_intro :
   PosMonotonic name m t →
