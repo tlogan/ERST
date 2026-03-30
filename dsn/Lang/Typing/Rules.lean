@@ -10,6 +10,7 @@ import Lang.Typ.Basic
 import Lang.Expr.Basic
 import Lang.NStep.Basic
 import Lang.Safe.Basic
+import Lang.Safe.Rules
 import Lang.Typing.Basic
 import Lang.Typing.Instantiation
 
@@ -84,20 +85,28 @@ theorem NegMonotonic.var_intro :
   simp [Typing, Prod.find, h0]
 
 
-theorem Typing.env_weakening_generalizaiton :
-  (Typing m e t → Typing m' e t) →
-  (∀ e , Typing m e t → Typing m' e t)
+theorem Typing.iso_elim :
+  Typing m (Expr.iso l e) (Typ.iso l t) → Typing m e t
 := by sorry
+
+theorem Typing.iso_intro :
+  Typing m e t →
+  Typing m (Expr.iso l e) (Typ.iso l t)
+:= by
+  sorry
+
 
 theorem PosMonotonic.iso_elim :
   PosMonotonic name m (Typ.iso l t) →
   PosMonotonic name m t
 := by
-  simp [PosMonotonic,Typing, Expr.extract]
+  simp [PosMonotonic]
   intro h0 P0 P1 stable_P0 stable_P1 h4 e h5
-  specialize h0 P0 P1 stable_P0 stable_P1 h4 e (Typing.safety h5)
-  simp [Typing.safety h5] at h0
-  apply Typing.env_weakening_generalizaiton h0 e h5
+  have h6 := Safe.iso_intro l (Typing.safety h5)
+  specialize h0 P0 P1 stable_P0 stable_P1 h4 (Expr.iso l e)
+  apply Typing.iso_elim
+  apply h0 (Typing.iso_intro h5)
+
 
 theorem PosMonotonic.iso_intro :
   PosMonotonic name m t →
@@ -358,19 +367,6 @@ theorem Typing.var_intro :
   intro h0 h1 h2 h3
   simp [*]
 
-theorem Typing.iso_elim :
-  Typing am e (Typ.iso l t) →
-  Safe e ∧ Typing am (Expr.extract e l) t
-:= by simp [Typing]
-
-theorem Typing.iso_intro :
-  Safe e →
-  Typing m (Expr.extract e l) t →
-  Typing m e (Typ.iso l t)
-:= by
-  simp [Typing]
-  intro h0 h1
-  simp [*]
 
 
 
