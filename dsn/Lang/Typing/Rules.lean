@@ -86,14 +86,44 @@ theorem NegMonotonic.var_intro :
 
 
 theorem Typing.iso_elim :
-  Typing m (Expr.iso l e) (Typ.iso l t) → Typing m e t
-:= by sorry
+  Typing m (Expr.iso l e) (Typ.iso l t) →
+  Typing m e t
+:= by
+  simp [Typing]
+  intro h0 h1
+  apply @Typing.subject_reduction (Expr.extract (Expr.iso l e) l)
+  {
+    simp [Expr.extract, Pattern.bvar]
+    have h2 : e = (Expr.instantiate 0 [e] (Expr.bvar 0)) := by
+      simp [Expr.instantiate, Expr.shift_vars_zero]
+    rw [h2]
+    apply NStep.pattern_match
+    simp [Pattern.match]
+    simp [←h2]
+  }
+  { exact h1 }
 
 theorem Typing.iso_intro :
   Typing m e t →
   Typing m (Expr.iso l e) (Typ.iso l t)
 := by
-  sorry
+  simp [Typing]
+  intro h0
+  apply And.intro
+  { apply Safe.iso_intro
+    exact safety h0
+  }
+  {
+    simp [Expr.extract, Pattern.bvar]
+    apply Typing.subject_expansion
+    { apply NStep.pattern_match
+      simp [Pattern.match]
+      rfl
+    }
+    { simp [Expr.instantiate, Expr.shift_vars_zero]
+      exact h0
+    }
+  }
 
 
 theorem PosMonotonic.iso_elim :
