@@ -18,4 +18,9 @@ theorem Safe.iso_intro l :
   Safe e → Safe (Expr.iso l e)
 := by sorry
 
+theorem Safe.record_intro :
+  (∀ l e, (l,e) ∈ r → Safe e) →
+  Safe (Expr.record r)
+:= by sorry
+
 end Lang

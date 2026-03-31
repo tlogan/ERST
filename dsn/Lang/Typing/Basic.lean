@@ -149,6 +149,55 @@ theorem fresh_names n names':
 := by sorry
 
 
+theorem Typing.weakening_env_generalization :
+  Stable P0 → Stable P1 →
+  (∀ e, P0 e → P1 e) →
+  (Typing ((name,P0)::m) e t → Typing ((name,P1)::m) e t) →
+  (∀ m, Typing ((name,P0)::m) e t → Typing ((name,P1)::m) e t)
+:= by cases t with
+| bvar i =>
+  simp [Typing]
+| var name' =>
+  simp [Typing]
+  intro stable0 stable1 weakening h0 m' h1 P h2
+  simp [Prod.find]
+  by_cases h4 : name = name'
+  { simp [h4]
+    intro P' h5
+    simp [*]
+  }
+  { simp [h4]
+    intro h5 h6
+    simp [*]
+  }
+| bot =>
+  simp [Typing]
+| top =>
+  simp [Typing]
+
+| iso l body =>
+  intro h0 h1 h2 h3 m'
+  simp [Typing]
+  simp [Typing] at h3
+  intro h4 h5
+  specialize h3 h4
+  simp [*]
+  simp [*] at h3
+  apply Typing.weakening_env_generalization h0 h1 h2 h3 _ h5
+| _ => sorry
+
+theorem PosMonotonic.env_generalization :
+  PosMonotonic name ((name',P) :: m) t →
+  ∀ P, PosMonotonic name ((name',P) :: m) t
+:= by
+  simp [PosMonotonic]
+  intro h0 P' P0 P1 stable_P0 stable_P1 h1 e h2
+  specialize h0 P0 P1 stable_P0 stable_P1 h1 e
+  exact Typing.weakening_env_generalization stable_P0 stable_P1 h1 h0 ((name', P') :: m) h2
+
+
+
+
 
 theorem Typing.safety :
   Typing am e t → Safe e
@@ -558,7 +607,6 @@ theorem Typing.env_cons_swap :
 := by sorry
 
 theorem PosMonotonic.env_cons_swap :
-  name ≠ name' →
   PosMonotonic point ((name,P) :: (name',P') :: m) t →
   PosMonotonic point ((name',P') :: (name,P) :: m) t
 := by sorry

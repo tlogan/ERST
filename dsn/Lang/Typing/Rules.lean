@@ -85,59 +85,6 @@ theorem NegMonotonic.var_intro :
   simp [Typing, Prod.find, h0]
 
 
-theorem Typing.iso_elim :
-  Typing m (Expr.iso l e) (Typ.iso l t) →
-  Typing m e t
-:= by
-  simp [Typing]
-  intro h0 h1
-  apply @Typing.subject_reduction (Expr.extract (Expr.iso l e) l)
-  {
-    simp [Expr.extract, Pattern.bvar]
-    have h2 : e = (Expr.instantiate 0 [e] (Expr.bvar 0)) := by
-      simp [Expr.instantiate, Expr.shift_vars_zero]
-    rw [h2]
-    apply NStep.pattern_match
-    simp [Pattern.match]
-    simp [←h2]
-  }
-  { exact h1 }
-
-theorem Typing.iso_intro :
-  Typing m e t →
-  Typing m (Expr.iso l e) (Typ.iso l t)
-:= by
-  simp [Typing]
-  intro h0
-  apply And.intro
-  { apply Safe.iso_intro
-    exact safety h0
-  }
-  {
-    simp [Expr.extract, Pattern.bvar]
-    apply Typing.subject_expansion
-    { apply NStep.pattern_match
-      simp [Pattern.match]
-      rfl
-    }
-    { simp [Expr.instantiate, Expr.shift_vars_zero]
-      exact h0
-    }
-  }
-
-
-theorem PosMonotonic.iso_elim :
-  PosMonotonic name m (Typ.iso l t) →
-  PosMonotonic name m t
-:= by
-  simp [PosMonotonic]
-  intro h0 P0 P1 stable_P0 stable_P1 h4 e h5
-  have h6 := Safe.iso_intro l (Typing.safety h5)
-  specialize h0 P0 P1 stable_P0 stable_P1 h4 (Expr.iso l e)
-  apply Typing.iso_elim
-  apply h0 (Typing.iso_intro h5)
-
-
 theorem PosMonotonic.iso_intro :
   PosMonotonic name m t →
   PosMonotonic name m (Typ.iso l t)
@@ -149,7 +96,8 @@ theorem PosMonotonic.iso_intro :
   simp [*]
   apply h0 P0 P1 stable_P0 stable_P1 h4 _ h6
 
-theorem Monotonic.entry_intro :
+
+theorem PosMonotonic.entry_intro :
   PosMonotonic name m t →
   PosMonotonic name m (Typ.entry l t)
 := by
@@ -258,109 +206,153 @@ theorem PosMonotonic.all_intro :
 --   PosMonotonic name m (Typ.exi bs cs t)
 -- := by sorry
 
-mutual
-  theorem PosMonotonic.env_generalization :
-    PosMonotonic name ((name',P) :: m) t →
-    ∀ P, PosMonotonic name ((name',P) :: m) t
-  := by cases t with
-  | bvar i =>
-    simp [PosMonotonic,Typing]
-  | var name'' =>
-    simp [PosMonotonic,Typing]
-    intro h0 P' P0 P1 stable_P0 stable_P1 h2 e h3 P'' stable''
-    simp [Prod.find]
-    by_cases h4 : name = name''
-    { simp [h4]
-      intro h5 h6
-      simp [*]
-    }
-    { simp [h4]
-      by_cases h5 : name' = name''
-      { simp [h5]
-        intro h6 h7
-        simp [*]
-      }
-      { simp [h5]
-        intro h6 h7
-        simp [*]
-      }
-    }
-  | bot =>
-    simp [PosMonotonic,Typing]
-  | top =>
-    simp [PosMonotonic,Typing]
 
-  | iso l body =>
-    intro h0 P'
-    apply PosMonotonic.iso_intro
-    apply PosMonotonic.env_generalization
-    apply PosMonotonic.iso_elim h0
-  | lfp a body =>
-    intro h0 P'
-    apply PosMonotonic.lfp_intro
-    intro name'' P''
-    apply PosMonotonic.lfp_elim at h0
-    apply PosMonotonic.env_cons_swap
-    { sorry }
-    apply PosMonotonic.env_generalization
-    apply PosMonotonic.env_cons_swap
-    { sorry }
-    apply h0 name'' P''
 
-  | _ => sorry
-  termination_by (Typ.size t)
-  decreasing_by
-    all_goals sorry
+theorem PosMonotonic.lfp_intro :
+  (∀ name' P,
+    PosMonotonic name
+      ((name',P) :: m)
+      (Typ.instantiate 0 [Typ.var name'] body)
+  ) →
+  PosMonotonic name m (Typ.lfp a body)
+:= by
+  simp [PosMonotonic]
+  intro h0 P0 P1 stable_P0 stable_P1 h1 e
+  simp [Typing]
+  intro h2 h3
+  simp [*]
+  intro h4 name' h5
+  simp [Prod.dom] at h4 h5
+  have ⟨h6,h7⟩ := h5 ; clear h5
+  have ⟨h8,h9⟩ := h4 name' h6 h7
+  apply And.intro
+  { exact PosMonotonic.env_generalization h8 P1 }
+  {
+    intro P stable h10
+    apply h9 P stable
+    intro  e' h11
+    apply h10
+    apply Typing.env_cons_swap
+    { intro h12 ; apply h6 (Eq.symm h12) }
+    apply h0 name' P P0 P1 stable_P0 stable_P1 h1
+    apply Typing.env_cons_swap
+    { intro h12 ; exact h6 h12 }
+    exact h11
+  }
 
-  theorem PosMonotonic.lfp_elim :
-    PosMonotonic name m (Typ.lfp a body) →
-    (∀ name' P,
-      PosMonotonic name
-        ((name',P) :: m)
-        (Typ.instantiate 0 [Typ.var name'] body)
-    )
-  := by
-    sorry
-  termination_by (Typ.size body)
-  decreasing_by
-    sorry
 
-  theorem PosMonotonic.lfp_intro :
-    (∀ name' P,
-      PosMonotonic name
-        ((name',P) :: m)
-        (Typ.instantiate 0 [Typ.var name'] body)
-    ) →
-    PosMonotonic name m (Typ.lfp a body)
-  := by
-    simp [PosMonotonic]
-    intro h0 P0 P1 stable_P0 stable_P1 h1 e
-    simp [Typing]
-    intro h2 h3
-    simp [*]
-    intro h4 name' h5
-    simp [Prod.dom] at h4 h5
-    have ⟨h6,h7⟩ := h5 ; clear h5
-    have ⟨h8,h9⟩ := h4 name' h6 h7
-    apply And.intro
-    { exact PosMonotonic.env_generalization h8 P1 }
-    {
-      intro P stable h10
-      apply h9 P stable
-      intro  e' h11
-      apply h10
-      apply Typing.env_cons_swap
-      { intro h12 ; apply h6 (Eq.symm h12) }
-      apply h0 name' P P0 P1 stable_P0 stable_P1 h1
-      apply Typing.env_cons_swap
-      { intro h12 ; exact h6 h12 }
-      exact h11
-    }
-  termination_by (Typ.size body)
-  decreasing_by
-    sorry
+-- mutual
+--   theorem PosMonotonic.env_generalization :
+--     PosMonotonic name ((name',P) :: m) t →
+--     ∀ P, PosMonotonic name ((name',P) :: m) t
+--   := by cases t with
+--   | bvar i =>
+--     simp [PosMonotonic,Typing]
+--   | var name'' =>
+--     simp [PosMonotonic,Typing]
+--     intro h0 P' P0 P1 stable_P0 stable_P1 h2 e h3 P'' stable''
+--     clear h0
+--     simp [Prod.find]
+--     by_cases h4 : name = name''
+--     { simp [h4]
+--       intro h5 h6
+--       simp [*]
+--     }
+--     { simp [h4]
+--       by_cases h5 : name' = name''
+--       { simp [h5]
+--         intro h6 h7
+--         simp [*]
+--       }
+--       { simp [h5]
+--         intro h6 h7
+--         simp [*]
+--       }
+--     }
+--   | bot =>
+--     simp [PosMonotonic,Typing]
+--   | top =>
+--     simp [PosMonotonic,Typing]
 
-end
+--   | iso l body =>
+--     intro h0 P'
+--     apply PosMonotonic.iso_intro
+--     apply PosMonotonic.env_generalization
+--     apply PosMonotonic.iso_elim h0
+
+--   | entry l body =>
+--     intro h0 P'
+--     apply PosMonotonic.entry_intro
+--     apply PosMonotonic.env_generalization
+--     apply PosMonotonic.entry_elim h0
+
+--   | lfp a body =>
+--     intro h0 P'
+--     apply PosMonotonic.lfp_intro
+--     intro name'' P''
+--     apply PosMonotonic.lfp_elim at h0
+--     apply PosMonotonic.env_cons_swap
+--     apply PosMonotonic.env_generalization
+--     apply PosMonotonic.env_cons_swap
+--     apply h0 name'' P''
+
+--   | _ => sorry
+--   termination_by (Typ.size t)
+--   decreasing_by
+--     all_goals sorry
+
+--   theorem PosMonotonic.lfp_elim :
+--     PosMonotonic name m (Typ.lfp a body) →
+--     (∀ name' P,
+--       PosMonotonic name
+--         ((name',P) :: m)
+--         (Typ.instantiate 0 [Typ.var name'] body)
+--     )
+--   := by
+--     simp [PosMonotonic]
+--     intro h0 name' P P0 P1 stable_P0 stable_P1 h1 e h2
+--     specialize h0 P0 P1 stable_P0 stable_P1 h1 e
+--     sorry
+--   termination_by (Typ.size body)
+--   decreasing_by
+--     sorry
+
+--   theorem PosMonotonic.lfp_intro :
+--     (∀ name' P,
+--       PosMonotonic name
+--         ((name',P) :: m)
+--         (Typ.instantiate 0 [Typ.var name'] body)
+--     ) →
+--     PosMonotonic name m (Typ.lfp a body)
+--   := by
+--     simp [PosMonotonic]
+--     intro h0 P0 P1 stable_P0 stable_P1 h1 e
+--     simp [Typing]
+--     intro h2 h3
+--     simp [*]
+--     intro h4 name' h5
+--     simp [Prod.dom] at h4 h5
+--     have ⟨h6,h7⟩ := h5 ; clear h5
+--     have ⟨h8,h9⟩ := h4 name' h6 h7
+--     apply And.intro
+--     { exact PosMonotonic.env_generalization h8 P1 }
+--     {
+--       intro P stable h10
+--       apply h9 P stable
+--       intro  e' h11
+--       apply h10
+--       apply Typing.env_cons_swap
+--       { intro h12 ; apply h6 (Eq.symm h12) }
+--       apply h0 name' P P0 P1 stable_P0 stable_P1 h1
+--       apply Typing.env_cons_swap
+--       { intro h12 ; exact h6 h12 }
+--       exact h11
+--     }
+--   termination_by (Typ.size body)
+--   decreasing_by
+--     sorry
+
+-- end
 
 
 
@@ -397,7 +389,33 @@ theorem Typing.var_intro :
   intro h0 h1 h2 h3
   simp [*]
 
+theorem Typing.iso_elim :
+  Typing m e (Typ.iso l t) →
+  Typing m (Expr.extract e l) t
+:= by
+  simp [Typing]
 
+theorem Typing.iso_intro :
+  Typing m e t →
+  Typing m (Expr.iso l e) (Typ.iso l t)
+:= by
+  simp [Typing]
+  intro h0
+  apply And.intro
+  { apply Safe.iso_intro
+    exact safety h0
+  }
+  {
+    simp [Expr.extract, Pattern.bvar]
+    apply Typing.subject_expansion
+    { apply NStep.pattern_match
+      simp [Pattern.match]
+      rfl
+    }
+    { simp [Expr.instantiate, Expr.shift_vars_zero]
+      exact h0
+    }
+  }
 
 
 
@@ -419,6 +437,7 @@ theorem Typing.entry_intro l :
   { simp [Expr.instantiate, Expr.shift_vars_zero]
     exact h3
   }
+
 
 theorem Typing.unio_left_intro  :
   Typing m e tl →
@@ -886,6 +905,7 @@ theorem Typing.lfp_intro :
       { exact h2 }
     }
   }
+
 
 
 
