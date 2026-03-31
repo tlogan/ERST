@@ -552,16 +552,16 @@ mutual
 end
 
 
-theorem Typing.env_cons_swap :
-  name ≠ name' →
-  Typing ((name,P) :: (name',P') :: m) e t →
-  Typing ((name',P') :: (name,P) :: m) e t
-:= by sorry
+-- theorem Typing.env_cons_swap :
+--   name ≠ name' →
+--   Typing ((name,P) :: (name',P') :: m) e t →
+--   Typing ((name',P') :: (name,P) :: m) e t
+-- := by sorry
 
-theorem PosMonotonic.env_cons_swap :
-  PosMonotonic point ((name,P) :: (name',P') :: m) t →
-  PosMonotonic point ((name',P') :: (name,P) :: m) t
-:= by sorry
+-- theorem PosMonotonic.env_cons_swap :
+--   PosMonotonic point ((name,P) :: (name',P') :: m) t →
+--   PosMonotonic point ((name',P') :: (name,P) :: m) t
+-- := by sorry
 
 
 -- theorem Typing.env_cons_append_swap_in :
@@ -576,69 +576,69 @@ theorem PosMonotonic.env_cons_swap :
 --   Typing ((name,P) :: (m0 ++ m1)) e t
 -- := by sorry
 
-theorem Subtyping.env_append_suffix_reflection :
-  List.Disjoint (Prod.dom m0) (Typ.free_vars lower) →
-  List.Disjoint (Prod.dom m0) (Typ.free_vars upper) →
-  Subtyping (m0 ++ m1) lower upper →
-  Subtyping m1 lower upper
-:= by
-  sorry
+-- theorem Subtyping.env_append_suffix_reflection :
+--   List.Disjoint (Prod.dom m0) (Typ.free_vars lower) →
+--   List.Disjoint (Prod.dom m0) (Typ.free_vars upper) →
+--   Subtyping (m0 ++ m1) lower upper →
+--   Subtyping m1 lower upper
+-- := by
+--   sorry
 
-theorem Subtyping.env_append_suffix_preservation :
-  List.Disjoint (Prod.dom m0) (Typ.free_vars lower) →
-  List.Disjoint (Prod.dom m0) (Typ.free_vars upper) →
-  Subtyping m1 lower upper →
-  Subtyping (m0 ++ m1) lower upper
-:= by
-  sorry
+-- theorem Subtyping.env_append_suffix_preservation :
+--   List.Disjoint (Prod.dom m0) (Typ.free_vars lower) →
+--   List.Disjoint (Prod.dom m0) (Typ.free_vars upper) →
+--   Subtyping m1 lower upper →
+--   Subtyping (m0 ++ m1) lower upper
+-- := by
+--   sorry
 
-theorem MultiSubtyping.env_append_suffix_reflection :
-  List.Disjoint (Prod.dom m0) (Typ.list_prod_free_vars cs) →
-  MultiSubtyping (m0 ++ m1) cs →
-  MultiSubtyping m1 cs
-:= by sorry
+-- theorem MultiSubtyping.env_append_suffix_reflection :
+--   List.Disjoint (Prod.dom m0) (Typ.list_prod_free_vars cs) →
+--   MultiSubtyping (m0 ++ m1) cs →
+--   MultiSubtyping m1 cs
+-- := by sorry
 
-theorem MultiSubtyping.env_append_suffix_preservation :
-  List.Disjoint (Prod.dom m0) (Typ.list_prod_free_vars cs) →
-  MultiSubtyping m1 cs →
-  MultiSubtyping (m0 ++ m1) cs
-:= by sorry
+-- theorem MultiSubtyping.env_append_suffix_preservation :
+--   List.Disjoint (Prod.dom m0) (Typ.list_prod_free_vars cs) →
+--   MultiSubtyping m1 cs →
+--   MultiSubtyping (m0 ++ m1) cs
+-- := by sorry
 
-theorem MultiSubtyping.subset_preservation {am cs cs'} :
-  cs ⊆ cs' →
-  MultiSubtyping am cs'  →
-  MultiSubtyping am cs
-:= by sorry
-
-
-theorem MultiTyping.pred_env_append_suffix_preservation :
-  List.Disjoint (Prod.dom predEnv0) (ListTyping.free_vars vts) →
-  MultiTyping predEnv1 exprEnv vts →
-  MultiTyping (predEnv0 ++ predEnv1) exprEnv vts
-:= by sorry
-
-theorem MultiTyping.expr_env_append_prefix_preservation :
-  MultiTyping predEnv exprEnv0 vts →
-  ∀ exprEnv1, MultiTyping tam (exprEnv0 ++ exprEnv1) vts
-:= by sorry
+-- theorem MultiSubtyping.subset_preservation {am cs cs'} :
+--   cs ⊆ cs' →
+--   MultiSubtyping am cs'  →
+--   MultiSubtyping am cs
+-- := by sorry
 
 
+-- theorem MultiTyping.pred_env_append_suffix_preservation :
+--   List.Disjoint (Prod.dom predEnv0) (ListTyping.free_vars vts) →
+--   MultiTyping predEnv1 exprEnv vts →
+--   MultiTyping (predEnv0 ++ predEnv1) exprEnv vts
+-- := by sorry
 
-theorem Typing.joinable_preservation {a b am t} :
-  Joinable (ReflTrans NStep) a b →
-  Typing am a t →
-  Typing am b t
-:= by sorry
+-- theorem MultiTyping.expr_env_append_prefix_preservation :
+--   MultiTyping predEnv exprEnv0 vts →
+--   ∀ exprEnv1, MultiTyping tam (exprEnv0 ++ exprEnv1) vts
+-- := by sorry
 
-theorem Typing.joinable_reflection {a b am t} :
-  Joinable (ReflTrans NStep) a b →
-  Typing am b t →
-  Typing am a t
-:= by
-  intro h0 h1
-  apply Typing.joinable_preservation
-  { apply Joinable.symm h0 }
-  { exact h1 }
+
+
+-- theorem Typing.joinable_preservation {a b am t} :
+--   Joinable (ReflTrans NStep) a b →
+--   Typing am a t →
+--   Typing am b t
+-- := by sorry
+
+-- theorem Typing.joinable_reflection {a b am t} :
+--   Joinable (ReflTrans NStep) a b →
+--   Typing am b t →
+--   Typing am a t
+-- := by
+--   intro h0 h1
+--   apply Typing.joinable_preservation
+--   { apply Joinable.symm h0 }
+--   { exact h1 }
 
 
 #check List.length_map
