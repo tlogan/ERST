@@ -191,7 +191,7 @@ theorem Typing.safety :
 | exi bs cs body =>
   simp [Typing]
   intro h0 h1 e' h2
-  have ⟨names,h3,h4,_⟩ := String.fresh_names (List.length bs) (Prod.dom am)
+  have ⟨names,h3,h4⟩ := String.fresh_names (List.length bs) (Prod.dom am)
   have ⟨am',h5,h6,h7⟩ := h1 names h3 h4
   apply Typing.safety h7 _ h2
 | lfp x body =>

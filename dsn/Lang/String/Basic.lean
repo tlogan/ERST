@@ -8,6 +8,7 @@ import Lang.List.Basic
 
 set_option pp.fieldNotation false
 
+
 namespace Lang
 
 #check Lean.mkFreshId
@@ -149,21 +150,56 @@ List.foldl (fun r s => r ++ s) name names ++ Nat.repr i ∉ names
   }
   { apply String.foldl_append_list_exclusion }
 
+
+
+-- theorem Nat.repr_injectivity :
+--   (Nat.repr i) = (Nat.repr n') → i = n'
+-- := by
+--   simp [Nat.repr]
+--   intro h0
+
+--   sorry
+
+-- theorem String.indexed_name_uniqueness :
+--   List.Pairwise (fun x y => x ≠ y) (List.map (fun i => name ++ Nat.repr i) (List.range n))
+-- := by cases n with
+-- | zero =>
+--   simp [List.range, List.range.loop]
+-- | succ n' =>
+--   rw [List.range_succ]
+--   simp
+--   rw [List.pairwise_append]
+--   apply And.intro
+--   { apply String.indexed_name_uniqueness }
+--   {
+--     apply And.intro
+--     { exact List.pairwise_singleton (fun x y => ¬x = y) (name ++ Nat.repr n') }
+--     { simp
+--       intro i h0 h2
+--       apply congrArg String.data at h2
+--       simp at h2
+--       apply String.ext at h2
+--       apply Nat.repr_injectivity at h2
+--       rw [h2] at h0
+--       exact Iff.mp (lt_self_iff_false n') h0
+--     }
+--   }
+
 theorem String.fresh_names n names':
   ∃ names : List String,
   List.length names = n ∧
-  List.Disjoint names names' ∧
-  List.Pairwise (fun x y => x ≠ y) names
+  List.Disjoint names names'
+  /- NOTE: uniqueness of names isn't necessary
+  -- ∧ List.Pairwise (fun x y => x ≠ y) names
+  -/
 := by
   exists (List.map (fun i => (String.join names') ++ (Nat.repr i)) (List.range n))
 
   apply And.intro
   { simp }
-  apply And.intro
   { simp [List.Disjoint, String.join]
     intro i h0
     exact foldl_append_list_exclusion
   }
-  { sorry }
 
 end Lang
