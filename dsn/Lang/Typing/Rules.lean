@@ -216,8 +216,11 @@ theorem PosMonotonic.all_intro :
 theorem PosMonotonic.excluded_intro :
   name ∉ Typ.free_vars t →
   PosMonotonic name m t
-:= by sorry
-
+:= by
+  simp [PosMonotonic]
+  intro h0 P0 P1 stable_P0 stable_P1 h1 e h2
+  apply Typing.env_cons_suffix_preservation h0
+  apply Typing.env_cons_suffix_reflection h0 h2
 
 
 /-

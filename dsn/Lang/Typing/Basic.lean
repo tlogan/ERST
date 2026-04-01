@@ -143,14 +143,6 @@ def MultiTyping
 := ∀ {x t}, Prod.find x context = .some t → ∃ e, (Prod.find x eam) = .some e ∧ Typing tam e t
 
 
-theorem fresh_names n names':
-  ∃ names : List String,
-  List.length names = n ∧ List.Disjoint names names'
-:= by sorry
-
-
-
-
 theorem Typing.safety :
   Typing am e t → Safe e
 := by cases t with
@@ -199,7 +191,7 @@ theorem Typing.safety :
 | exi bs cs body =>
   simp [Typing]
   intro h0 h1 e' h2
-  have ⟨names,h3,h4⟩ := fresh_names (List.length bs) (Prod.dom am)
+  have ⟨names,h3,h4,_⟩ := String.fresh_names (List.length bs) (Prod.dom am)
   have ⟨am',h5,h6,h7⟩ := h1 names h3 h4
   apply Typing.safety h7 _ h2
 | lfp x body =>

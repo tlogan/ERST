@@ -1,5 +1,9 @@
 import Lean
 
+import Mathlib.Data.String.Lemmas
+-- (for String.length_append, String.length_join, etc.) and/or
+import Mathlib.Data.List.Lemmas
+
 import Lang.List.Basic
 
 set_option pp.fieldNotation false
@@ -98,7 +102,68 @@ elab_rules : term
     Lean.Elab.Term.elabTerm s none
 
 
--- syntax "{" term "}"  : ids
 
+theorem String.length_repr_non_zero :
+  String.length (Nat.repr i) ≠ 0
+:= by
+  simp [Nat.repr]
+  sorry
+
+
+
+theorem String.foldl_append_seed_exclusion :
+List.foldl (fun r s => r ++ s) (pre ++ name ++ post) names ++ Nat.repr i ≠ name
+:= by cases names with
+| nil =>
+  intro h0
+  apply congrArg String.length at h0
+  simp at h0
+  have h2 :
+    String.length pre + String.length name =
+    String.length name + String.length pre
+  := by exact Nat.add_comm (String.length pre) (String.length name)
+  rw [h2] at h0 ; clear h2
+  simp [Nat.add_assoc] at h0
+  have ⟨h3,h4,h5⟩ := h0
+  clear h0 h3
+  apply String.length_repr_non_zero h5
+| cons name' names' =>
+  simp [List.foldl]
+  have h0 :
+    pre ++ name ++ post ++ name' =
+    pre ++ name ++ (post ++ name')
+  := by exact String.append_assoc (pre ++ name) post name'
+  rw [h0]
+  apply String.foldl_append_seed_exclusion
+
+theorem String.foldl_append_list_exclusion :
+List.foldl (fun r s => r ++ s) name names ++ Nat.repr i ∉ names
+:= by cases names with
+| nil =>
+  simp
+| cons name' names' =>
+  simp
+  apply And.intro
+  { rw [←String.append_empty (name ++ name')]
+    apply String.foldl_append_seed_exclusion
+  }
+  { apply String.foldl_append_list_exclusion }
+
+theorem String.fresh_names n names':
+  ∃ names : List String,
+  List.length names = n ∧
+  List.Disjoint names names' ∧
+  List.Pairwise (fun x y => x ≠ y) names
+:= by
+  exists (List.map (fun i => (String.join names') ++ (Nat.repr i)) (List.range n))
+
+  apply And.intro
+  { simp }
+  apply And.intro
+  { simp [List.Disjoint, String.join]
+    intro i h0
+    exact foldl_append_list_exclusion
+  }
+  { sorry }
 
 end Lang
