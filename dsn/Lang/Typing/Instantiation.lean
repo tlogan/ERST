@@ -277,6 +277,12 @@ mutual
     all_goals (apply Prod.Lex.left ; simp [List.pair_typ_size, List.pair_typ_zero_lt_size, Typ.zero_lt_size])
 
 
+  /-
+  -- NOTE:
+  -- requirement: Typ.free_vars t ⊆ Prod.dom am
+  -- ensures fresh wrt am (e.g. within universal/existential rule) is transferred to freshness wrt t
+  -- necessary, since the universal rule has no awareness of t directly
+  -/
   theorem Typing.generalized_nameless_instantiation :
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
@@ -655,6 +661,13 @@ mutual
       apply Typ.mem_map_var_size
     )
 
+
+  /-
+  -- NOTE:
+  -- requirement: Typ.free_vars t ⊆ Prod.dom am
+  -- ensures fresh wrt am (e.g. within universal/existential rule) is transferred to freshness wrt t
+  -- necessary, since the universal rule has no awareness of t directly
+  -/
   theorem Typing.generalized_named_instantiation :
     Typ.free_vars t ⊆ Prod.dom am →
     List.Disjoint (Prod.dom am') (Prod.dom am) →
