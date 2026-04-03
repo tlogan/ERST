@@ -490,9 +490,16 @@ mutual
 end
 
 
-theorem Typing.free_vars_subset_env :
-  Typing env e t → Typ.free_vars t ⊆ Prod.dom env
-:= by sorry
+-- theorem Typing.free_vars_subset_env :
+--   Typing env e t → Typ.free_vars t ⊆ Prod.dom env
+-- := by cases t with
+-- | bvar i =>
+--   simp [Typing]
+-- -- | var name =>
+-- --   simp [Typing, Typ.free_vars]
+-- --   intro h0 P h1 h2 h3
+-- | _ =>
+--   sorry
 
 
 theorem Typing.refl_trans_subject_expansion
