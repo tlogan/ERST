@@ -306,7 +306,9 @@ mutual
         {
           simp [Prod.find] at h9
           simp [←h9] at h10
-          have h11 := Typing.instantiated h10
+
+          simp [Typ.wellformed] at wf
+          have ⟨h11,_⟩ := wf
           rw [←Typ.instantiated_shift_vars_preservation h11]
           apply Typing.env_append_suffix_preservation (List.disjoint_of_subset_right h3 h4)
           apply Typing.env_cons_suffix_preservation
@@ -707,7 +709,8 @@ mutual
             }
           }
           { simp
-            have h8 := Typing.instantiated h7
+            simp [Typ.wellformed] at wf
+            have ⟨h8,_⟩ := wf
             have h9 : name ∉ Typ.free_vars t := by
               intro h10
               specialize h3 h10
@@ -717,7 +720,7 @@ mutual
             apply Typing.env_cons_suffix_reflection h9
 
             apply Typing.env_append_suffix_reflection (List.disjoint_of_subset_right h3 h4)
-            rw [← Typ.instantiated_shift_vars_reflection h8]
+            rw [Typ.instantiated_shift_vars_preservation h8]
             exact h7
 
           }

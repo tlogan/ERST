@@ -1223,11 +1223,6 @@ theorem Subtyping.lfp_elim name :
     apply h6
     simp [PosMonotonic] at h4
 
-    -- have h12 : name ∉ Typ.free_vars t := by
-    --   intro h12
-    --   apply h3
-    --   exact h2A h12
-
     apply Typing.nameless_instantiation h2A h2 h3 h1
     apply h4 P
     { rw [←h9]

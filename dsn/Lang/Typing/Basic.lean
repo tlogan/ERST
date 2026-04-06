@@ -66,6 +66,7 @@ mutual
   termination_by (Typ.size t, 1)
 
 
+  /- TODO: try removing Typ.wellformed from this and Subtyping definition -/
   def Typing (am : List (String × (Expr → Prop))) (e : Expr) : Typ → Prop
   | .var id => Safe e ∧ ∃ P, Stable P ∧ Prod.find id am = some P ∧ P e
   | .bvar _ => False
@@ -502,22 +503,35 @@ end
 --   sorry
 
 
+theorem Typing.refl_trans_left_subject_expansion
+  (transition : ReflTransLeft NStep e e')
+: Typing am e' t → Typing am e t
+:= by induction transition with
+| refl =>
+  intro h0 ; exact h0
+| @step em e' h0 h1 ih =>
+  intro h2
+  apply ih ; clear ih
+  apply Typing.subject_expansion h1 h2
+
 theorem Typing.refl_trans_subject_expansion
   (transition : ReflTrans NStep e e')
 : Typing am e' t → Typing am e t
-:= by sorry
+:= by
+  apply Typing.refl_trans_left_subject_expansion
+  exact ReflTrans.reverse transition
 
 theorem Typing.refl_trans_subject_reduction
   (transition : ReflTrans NStep e e')
 : Typing am e t → Typing am e' t
-:= by sorry
+:= by induction transition with
+| refl =>
+  intro h0 ; exact h0
+| @step e em e' h0 h1 ih =>
+  intro h2
+  apply ih ; clear ih
+  apply Typing.subject_reduction h0 h2
 
-
-mutual
-  theorem Typing.instantiated :
-    Typing am e t → Typ.instantiated t
-  := by sorry
-end
 
 mutual
   theorem Typing.env_cons_suffix_reflection :
