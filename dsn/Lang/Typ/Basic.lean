@@ -1479,18 +1479,26 @@ mutual
   := by sorry
 end
 
-
 mutual
-  theorem Typ.instantiated_shift_vars_preservation :
-    Typ.instantiated t →
+  theorem Typ.num_bound_vars_zero_shift_vars_preservation :
+    Typ.num_bound_vars t = 0 →
     t = Typ.shift_vars threshold offset t
   := by sorry
 
-  theorem Typ.instantiated_shift_vars_reflection :
-    Typ.instantiated (Typ.shift_vars threshold offset t) →
+  theorem Typ.num_bound_vars_zero_shift_vars_reflection :
+    Typ.num_bound_vars (Typ.shift_vars threshold offset t) = 0 →
     Typ.shift_vars threshold offset t = t
   := by sorry
 end
+
+
+theorem Typ.instantiated_shift_vars_preservation :
+  Typ.instantiated t →
+  t = Typ.shift_vars threshold offset t
+:= by
+  simp [Typ.instantiated]
+  apply Typ.num_bound_vars_zero_shift_vars_preservation
+
 
 
 
