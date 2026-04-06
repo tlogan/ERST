@@ -30,16 +30,14 @@ mutual
     Subtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [t] lower) (Typ.instantiate depth [t] upper)
   := by
     simp [Subtyping, Prod.dom]
-    intro h2 h3 h4 h5 wf h6 h7
-    apply And.intro
-    { exact Typ.wellformed_nameless_instantiation h6 wf }
+    intro h2 h3 h4 h5 wf h6
     { intro e h8
       apply Typing.generalized_nameless_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       {
-        apply h7
+        apply h6
         apply Typing.generalized_named_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
@@ -61,16 +59,14 @@ mutual
     Subtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] lower) (Typ.instantiate depth [.var name] upper)
   := by
     simp [Subtyping, Prod.dom]
-    intro h2 h3 h4 h5 wf h6 h7
-    apply And.intro
-    { exact Typ.wellformed_named_instantiation h6 name }
+    intro h2 h3 h4 h5 wf h6
     { intro e h8
       apply Typing.generalized_named_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       {
-        apply h7
+        apply h6
         apply Typing.generalized_nameless_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
@@ -346,19 +342,19 @@ mutual
     { exact wf }
   | path left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h2 h3 h4 h5 wf h6 h7 h8
+    intro h2 h3 h4 h5 wf h6 h7
     simp [*]
-    apply And.intro
-    { apply Typ.wellformed_nameless_instantiation h7
-      exact wf
-    }
+    -- apply And.intro
+    -- { apply Typ.wellformed_nameless_instantiation h7
+    --   exact wf
+    -- }
     { intro arg h9
       apply Typing.generalized_nameless_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       {
-        apply h8
+        apply h7
         apply Typing.generalized_named_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
@@ -406,15 +402,13 @@ mutual
     }
   | diff left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h2 h3 h4 h5 wf h6 h7 h8
-    apply And.intro
-    { apply Typ.wellformed_nameless_instantiation h6 wf }
+    intro h2 h3 h4 h5 wf h6 h8
     { apply And.intro
       { apply Typing.generalized_nameless_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
         { exact wf }
-        { exact h7 }
+        { exact h6 }
       }
       { intro h9
         apply h8
@@ -749,17 +743,15 @@ mutual
     { exact wf }
   | path left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h2 h3 h4 h5 wf h6 h7 h8
+    intro h2 h3 h4 h5 wf h6 h7
     simp [*]
-    apply And.intro
-    { apply Typ.wellformed_named_instantiation h7 }
     { intro arg h9
       apply Typing.generalized_named_instantiation h2 h3
       { simp [Prod.dom]; exact h4 }
       { simp [Prod.dom]; exact h5 }
       { exact wf }
       {
-        apply h8
+        apply h7
         apply Typing.generalized_nameless_instantiation h2 h3
         { simp [Prod.dom]; exact h4 }
         { simp [Prod.dom]; exact h5 }
@@ -807,24 +799,21 @@ mutual
     }
   | diff left right =>
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
-    intro h2 h3 h4 h5 wf h6 h7 h8
+    intro h2 h3 h4 h5 wf h7 h8
     apply And.intro
-    { apply Typ.wellformed_named_instantiation h6 }
-    { apply And.intro
-      { apply Typing.generalized_named_instantiation h2 h3
-        { simp [Prod.dom]; exact h4 }
-        { simp [Prod.dom]; exact h5 }
-        { exact wf }
-        { exact h7 }
-      }
-      { intro h9
-        apply h8
-        apply Typing.generalized_nameless_instantiation h2 h3
-        { simp [Prod.dom]; exact h4 }
-        { simp [Prod.dom]; exact h5 }
-        { exact wf }
-        { exact h9 }
-      }
+    { apply Typing.generalized_named_instantiation h2 h3
+      { simp [Prod.dom]; exact h4 }
+      { simp [Prod.dom]; exact h5 }
+      { exact wf }
+      { exact h7 }
+    }
+    { intro h9
+      apply h8
+      apply Typing.generalized_nameless_instantiation h2 h3
+      { simp [Prod.dom]; exact h4 }
+      { simp [Prod.dom]; exact h5 }
+      { exact wf }
+      { exact h9 }
     }
   | all bs cs body =>
     simp [Typ.free_vars, Typ.instantiate]

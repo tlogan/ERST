@@ -42,7 +42,6 @@ theorem Stable.subject_expansion :
 
 mutual
   def Subtyping (am : List (String × (Expr → Prop))) (left : Typ) (right : Typ) : Prop :=
-    Typ.wellformed left ∧
     ∀ e, Typing am e left → Typing am e right
   termination_by (Typ.size left + Typ.size right, 0)
   decreasing_by
@@ -66,7 +65,6 @@ mutual
   termination_by (Typ.size t, 1)
 
 
-  /- TODO: try removing Typ.wellformed from this and Subtyping definition -/
   def Typing (am : List (String × (Expr → Prop))) (e : Expr) : Typ → Prop
   | .var id => Safe e ∧ ∃ P, Stable P ∧ Prod.find id am = some P ∧ P e
   | .bvar _ => False
@@ -75,11 +73,11 @@ mutual
   | .iso l t => Safe e ∧ Typing am (.extract e l) t
   | .entry l t => Safe e ∧ Typing am (.project e l) t
   | .path left right =>
-    Safe e ∧ Typ.wellformed left ∧
+    Safe e ∧
     ∀ arg , Typing am arg left → Typing am (.app e arg) right
   | .unio left right => Typing am e left ∨ Typing am e right
   | .inter left right => Typing am e left ∧ Typing am e right
-  | .diff left right => Typ.wellformed right ∧ Typing am e left ∧ ¬ (Typing am e right)
+  | .diff left right => Typing am e left ∧ ¬ (Typing am e right)
 
   | .exi bs cs body =>
     (∀ a ∈ bs , a = "") ∧
@@ -183,8 +181,8 @@ theorem Typing.safety :
   apply Typing.safety h0
 | diff t0 t1 =>
   simp [Typing]
-  intro h0 h1 h2
-  apply Typing.safety h1
+  intro h0 h1
+  apply Typing.safety h0
 | all bs cs body =>
   simp [Typing]
   intro h0 h1 names h2 h3 h4
@@ -259,13 +257,13 @@ mutual
 
   | path left right =>
     simp [Typing]
-    intro h0 h1 h2
+    intro h0 h1
     apply And.intro (Safe.subject_reduction transition h0)
-    apply And.intro h1
+    -- apply And.intro h1
     intro arg h3
     apply Typing.subject_reduction
     { apply NStep.applicator _ transition }
-    { exact h2 arg h3 }
+    { exact h1 arg h3 }
 
   | unio left right =>
     unfold Typing
@@ -287,13 +285,11 @@ mutual
 
   | diff left right =>
     simp [Typing]
-    intro h0 h1 h2
-    apply And.intro h0
+    intro h0 h1
     apply And.intro
-    { apply Typing.subject_reduction transition h1 }
-    {
-      intro h3
-      apply h2
+    { apply Typing.subject_reduction transition h0 }
+    { intro h3
+      apply h1
       apply Typing.subject_expansion transition h3
     }
 
@@ -393,13 +389,13 @@ mutual
 
   | path left right =>
     simp [Typing]
-    intro h0 h1 h2
+    intro h0 h1
     apply And.intro (Safe.subject_expansion transition h0)
-    apply And.intro h1
+    -- apply And.intro h1
     intro arg h3
     apply Typing.subject_expansion
     { apply NStep.applicator _ transition }
-    { exact h2 arg h3 }
+    { exact h1 arg h3 }
 
   | unio left right =>
     unfold Typing
@@ -421,13 +417,11 @@ mutual
 
   | diff left right =>
     simp [Typing]
-    intro h0 h1 h2
-    apply And.intro h0
+    intro h0 h1
     apply And.intro
-    { apply Typing.subject_expansion transition h1 }
-    {
-      intro h3
-      apply h2
+    { apply Typing.subject_expansion transition h0 }
+    { intro h3
+      apply h1
       apply Typing.subject_reduction transition h3
     }
 
