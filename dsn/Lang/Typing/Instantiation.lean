@@ -26,8 +26,8 @@ mutual
     name ∉ Prod.dom am' →
     name ∉ Prod.dom am →
     Typ.wellformed t →
-    Subtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] lower) (Typ.instantiate depth [.var name] upper) →
-    Subtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [t] lower) (Typ.instantiate depth [t] upper)
+    Subtyping tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.instantiate depth [.var name] lower) (Typ.instantiate depth [.var name] upper) →
+    Subtyping tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.instantiate depth [t] lower) (Typ.instantiate depth [t] upper)
   := by
     simp [Subtyping, Prod.dom]
     intro h2 h3 h4 h5 wf h6
@@ -55,8 +55,8 @@ mutual
     name ∉ Prod.dom am' →
     name ∉ Prod.dom am →
     Typ.wellformed t →
-    Subtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [t] lower) (Typ.instantiate depth [t] upper) →
-    Subtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] lower) (Typ.instantiate depth [.var name] upper)
+    Subtyping tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.instantiate depth [t] lower) (Typ.instantiate depth [t] upper) →
+    Subtyping tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.instantiate depth [.var name] lower) (Typ.instantiate depth [.var name] upper)
   := by
     simp [Subtyping, Prod.dom]
     intro h2 h3 h4 h5 wf h6
@@ -90,15 +90,15 @@ mutual
     point ∉ Prod.dom am' →
     point ≠ name →
     point ∉ Prod.dom am →
-    PosMonotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] body) →
-    PosMonotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [t] body)
+    PosMonotonic point tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.instantiate depth [.var name] body) →
+    PosMonotonic point tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.instantiate depth [t] body)
   := by
     simp [PosMonotonic, Prod.dom]
     intro h1 h2 h3 h4 wf _ h6 h7 h8 P0 P1 stable_P0 stable_P1 h9 e h10
     -- h5 h6 h7
     have h11 :
-      (point, P1) :: (am' ++ (name, fun e => Typing am e t) :: am) =
-      ((point, P1) :: am') ++ (name, fun e => Typing am e t) :: am
+      (point, P1) :: (am' ++ (name, fun e => Typing tvars am e t) :: am) =
+      ((point, P1) :: am') ++ (name, fun e => Typing tvars am e t) :: am
     := by rfl
 
     rw [h11]
@@ -121,8 +121,8 @@ mutual
       apply h8 _ _ stable_P0 stable_P1 h9
 
       have h12 :
-        (point, P0) :: (am' ++ (name, fun e => Typing am e t) :: am) =
-        ((point, P0) :: am') ++ (name, fun e => Typing am e t) :: am
+        (point, P0) :: (am' ++ (name, fun e => Typing tvars am e t) :: am) =
+        ((point, P0) :: am') ++ (name, fun e => Typing tvars am e t) :: am
       := by rfl
 
       rw [h12]
@@ -153,15 +153,15 @@ mutual
     point ∉ Prod.dom am' →
     point ≠ name →
     point ∉ Prod.dom am →
-    PosMonotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [t] body) →
-    PosMonotonic point (am' ++ (name,fun e => Typing am e t) :: am) (Typ.instantiate depth [.var name] body)
+    PosMonotonic point tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.instantiate depth [t] body) →
+    PosMonotonic point tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.instantiate depth [.var name] body)
   := by
     simp [PosMonotonic, Prod.dom]
     intro h1 h2 h3 h4 wf h5 h6 h7 h8 P0 P1 stable_P0 stable_P1 h9 e h10
 
     have h11 :
-      (point, P1) :: (am' ++ (name, fun e => Typing am e t) :: am) =
-      ((point, P1) :: am') ++ (name, fun e => Typing am e t) :: am
+      (point, P1) :: (am' ++ (name, fun e => Typing tvars am e t) :: am) =
+      ((point, P1) :: am') ++ (name, fun e => Typing tvars am e t) :: am
     := by rfl
 
     rw [h11]
@@ -184,8 +184,8 @@ mutual
       apply h8 _ _ stable_P0 stable_P1 h9
 
       have h12 :
-        (point, P0) :: (am' ++ (name, fun e => Typing am e t) :: am) =
-        ((point, P0) :: am') ++ (name, fun e => Typing am e t) :: am
+        (point, P0) :: (am' ++ (name, fun e => Typing tvars am e t) :: am) =
+        ((point, P0) :: am') ++ (name, fun e => Typing tvars am e t) :: am
       := by rfl
 
       rw [h12]
@@ -213,8 +213,8 @@ mutual
     name ∉ Prod.dom am' →
     name ∉ Prod.dom am →
     Typ.wellformed t →
-    MultiSubtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.constraints_instantiate depth [.var name] cs) →
-    MultiSubtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.constraints_instantiate depth [t] cs)
+    MultiSubtyping tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.constraints_instantiate depth [.var name] cs) →
+    MultiSubtyping tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.constraints_instantiate depth [t] cs)
   := by cases cs with
   | nil =>
     simp [Typ.constraints_instantiate, MultiSubtyping, Prod.dom]
@@ -246,8 +246,8 @@ mutual
     name ∉ Prod.dom am' →
     name ∉ Prod.dom am →
     Typ.wellformed t →
-    MultiSubtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.constraints_instantiate depth [t] cs) →
-    MultiSubtyping (am' ++ (name,fun e => Typing am e t) :: am) (Typ.constraints_instantiate depth [.var name] cs)
+    MultiSubtyping tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.constraints_instantiate depth [t] cs) →
+    MultiSubtyping tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) (Typ.constraints_instantiate depth [.var name] cs)
   := by cases cs with
   | nil =>
     simp [Typ.constraints_instantiate, MultiSubtyping]
@@ -285,8 +285,10 @@ mutual
     name ∉ Prod.dom am' →
     name ∉ Prod.dom am →
     Typ.wellformed t →
-    Typing (am' ++ (name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [.var name] body) →
-    Typing (am' ++ (name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [t] body)
+    -- TODO: update predicate to have prefix env
+    -- Typing tvars (am' ++ (name,fun e => Typing tvars (am' ++ am) e t) :: am) e (Typ.instantiate depth [.var name] body) →
+    Typing tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) e (Typ.instantiate depth [.var name] body) →
+    Typing tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) e (Typ.instantiate depth [t] body)
   := by cases body with
   | bvar i =>
     simp [Typ.instantiate, Prod.dom]
@@ -423,7 +425,7 @@ mutual
     simp [Typ.free_vars, Typ.instantiate]
     intro h2
     simp [Typing, Prod.dom]
-    intro h3 h4 h5 wf h6 h7 names h8 h9 h10 h11 h12
+    intro h3 h4 h5 wf h6 h7 names h8 h9A h9B h10 h11 h12
     simp [*]
     apply And.intro h7
     exists names
@@ -494,8 +496,8 @@ mutual
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
     intro h2 h3 h4 h5 wf h6 h7
     apply And.intro h6
-    intro names h8 h9 h10 h11
-    have ⟨am'',h12A,h12B,h12C⟩ := h7 names h8 h9 h10 h11
+    intro names h8 h9A h9B h10 h11
+    have ⟨am'',h12A,h12B,h12C⟩ := h7 names h8 h9A h9B h10 h11
     exists am''
     simp [*]
     rw [←List.append_assoc]
@@ -565,9 +567,9 @@ mutual
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
     intro h1 h2 h3 h4 wf h5 h6 h7
     simp [*]
-    intro name' h8 h9 h10
+    intro name' h8A h8B h9 h10
 
-    have ⟨h11A,h11B⟩ := h7 name' h8 h9 h10
+    have ⟨h11A,h11B⟩ := h7 name' h8A h8B h9 h10
     apply And.intro
     {
       have h12 :
@@ -587,7 +589,7 @@ mutual
       { simp [Prod.dom]; exact h3 }
       { simp [Prod.dom]; exact h4 }
       { exact wf }
-      { simp [Prod.dom]; exact h8 }
+      { simp [Prod.dom]; exact h8B }
       { exact h9 }
       { simp [Prod.dom]; exact h10 }
       {
@@ -618,8 +620,8 @@ mutual
       rw [←h16]
 
       have h17 :
-        (name', P) :: (am' ++ (name, fun e => Typing am e t) :: am) =
-        ((name', P) :: am') ++ (name, fun e => Typing am e t) :: am
+        (name', P) :: (am' ++ (name, fun e => Typing tvars am e t) :: am) =
+        ((name', P) :: am') ++ (name, fun e => Typing tvars am e t) :: am
       := by exact rfl
       rw [h17]
 
@@ -633,8 +635,8 @@ mutual
       {
 
         have h18 :
-          (name', P) :: (am' ++ (name, fun e => Typing am e t) :: am) =
-          ((name', P) :: am') ++ (name, fun e => Typing am e t) :: am
+          (name', P) :: (am' ++ (name, fun e => Typing tvars am e t) :: am) =
+          ((name', P) :: am') ++ (name, fun e => Typing tvars am e t) :: am
         := by exact rfl
         rw [←h18]
         rw [Typ.instantiate_zero_inside_out]
@@ -670,8 +672,8 @@ mutual
     name ∉ Prod.dom am' →
     name ∉ Prod.dom am →
     Typ.wellformed t →
-    Typing (am' ++ (name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [t] body) →
-    Typing (am' ++ (name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [.var name] body)
+    Typing tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) e (Typ.instantiate depth [t] body) →
+    Typing tvars (am' ++ (name,fun e => Typing tvars am e t) :: am) e (Typ.instantiate depth [.var name] body)
   := by cases body with
   | bvar i =>
     simp [Typ.instantiate, Prod.dom]
@@ -683,7 +685,7 @@ mutual
         simp [Typ.shift_vars]
         simp [Typing]
         apply And.intro (Typing.safety h7)
-        exists (fun e => Typing am e t)
+        exists (fun e => Typing tvars am e t)
         apply And.intro
         {
           unfold Stable
@@ -819,7 +821,7 @@ mutual
     simp [Typ.free_vars, Typ.instantiate]
     intro h2
     simp [Typing, Prod.dom]
-    intro h3 h4 h5 wf h6 h7 names h8 h9 h10 h11 h12
+    intro h3 h4 h5 wf h6 h7 names h8 h9A h9B h10 h11 h12
     simp [*]
     apply And.intro h7
     exists names
@@ -842,9 +844,9 @@ mutual
     rw [←Typ.instantiate_zero_inside_out]
 
     have h16A :
-      am'' ++ (am' ++ (name, fun e => Typing am e t) :: am) =
-      (am'' ++ am') ++ (name, fun e => Typing am e t) :: am
-    := by exact Eq.symm (List.append_assoc am'' am' ((name, fun e => Typing am e t) :: am))
+      am'' ++ (am' ++ (name, fun e => Typing tvars am e t) :: am) =
+      (am'' ++ am') ++ (name, fun e => Typing tvars am e t) :: am
+    := by exact Eq.symm (List.append_assoc am'' am' ((name, fun e => Typing tvars am e t) :: am))
     rw [h16A]
 
     apply Typing.generalized_named_instantiation
@@ -898,15 +900,15 @@ mutual
     -- simp [*]
     -- h7 h8 h9 h10 h11 h12
     apply And.intro h6
-    intro names h8 h9 h10 h11
-    have ⟨am'', h12A, h12B, h12C⟩ := h7 names h8 h9 h10 h11
+    intro names h8 h9A h9B h10 h11
+    have ⟨am'', h12A, h12B, h12C⟩ := h7 names h8 h9A h9B h10 h11
     clear h7
     exists am''
     apply And.intro h12A
     have h13 :
-      am'' ++ (am' ++ (name, fun e => Typing am e t) :: am) =
-      (am'' ++ am') ++ (name, fun e => Typing am e t) :: am
-    := by exact Eq.symm (List.append_assoc am'' am' ((name, fun e => Typing am e t) :: am))
+      am'' ++ (am' ++ (name, fun e => Typing tvars am e t) :: am) =
+      (am'' ++ am') ++ (name, fun e => Typing tvars am e t) :: am
+    := by exact Eq.symm (List.append_assoc am'' am' ((name, fun e => Typing tvars am e t) :: am))
     rw [h13]
 
     have h14 :
@@ -975,8 +977,8 @@ mutual
     simp [Typ.free_vars, Typ.instantiate, Typing, Prod.dom]
     intro h1 h2 h3 h4 wf h5 h6 h7
     simp [*]
-    intro name' h8 h9 h10
-    have ⟨h11A,h11B⟩ := h7 name' h8 h9 h10
+    intro name' h8A h8B h9 h10
+    have ⟨h11A,h11B⟩ := h7 name' h8A h8B h9 h10
     apply And.intro
     {
       have h12 :
@@ -994,7 +996,7 @@ mutual
       { simp [Prod.dom]; exact h3 }
       { simp [Prod.dom]; exact h4 }
       { exact wf }
-      { simp [Prod.dom]; exact h8 }
+      { simp [Prod.dom]; exact h8B }
       { exact h9 }
       { simp [Prod.dom]; exact h10 }
       {
@@ -1024,8 +1026,8 @@ mutual
       rw [←h16]
 
       have h17 :
-        (name', P) :: (am' ++ (name, fun e => Typing am e t) :: am) =
-        ((name', P) :: am') ++ (name, fun e => Typing am e t) :: am
+        (name', P) :: (am' ++ (name, fun e => Typing tvars am e t) :: am) =
+        ((name', P) :: am') ++ (name, fun e => Typing tvars am e t) :: am
       := by exact rfl
       rw [h17]
 
@@ -1040,8 +1042,8 @@ mutual
 
         rw [Typ.instantiate_zero_inside_out]
         have h18 :
-          (name', P) :: (am' ++ (name, fun e => Typing am e t) :: am) =
-          ((name', P) :: am') ++ (name, fun e => Typing am e t) :: am
+          (name', P) :: (am' ++ (name, fun e => Typing tvars am e t) :: am) =
+          ((name', P) :: am') ++ (name, fun e => Typing tvars am e t) :: am
         := by exact rfl
         rw [←h18]
         rw [h16]
@@ -1070,12 +1072,12 @@ theorem Typing.nameless_instantiation :
   Typ.free_vars t ⊆ Prod.dom am →
   name ∉ Prod.dom am →
   Typ.wellformed t →
-  Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [.var name] body) →
-  Typing am e (Typ.instantiate depth [t] body)
+  Typing tvars ((name,fun e => Typing tvars am e t) :: am) e (Typ.instantiate depth [.var name] body) →
+  Typing tvars am e (Typ.instantiate depth [t] body)
 := by
   simp [Prod.dom]
   intro h0 h1 h2 wf h3
-  apply @Typing.env_cons_suffix_reflection _ _ (fun e => Typing am e t)
+  apply @Typing.env_cons_suffix_reflection _ _ _ (fun e => Typing tvars am e t)
   {
     intro h5
     apply Typ.free_vars_instantiate_upper_bound at h5
@@ -1091,8 +1093,8 @@ theorem Typing.nameless_instantiation :
   }
   {
     have h5 :
-      (name, fun e => Typing am e t) :: am =
-      [] ++ (name, fun e => Typing am e t) :: am
+      (name, fun e => Typing tvars am e t) :: am =
+      [] ++ (name, fun e => Typing tvars am e t) :: am
     := by rfl
     rw [h5]
     apply Typing.generalized_nameless_instantiation h1
@@ -1108,14 +1110,14 @@ theorem Typing.named_instantiation :
   Typ.free_vars t ⊆ Prod.dom am →
   name ∉ Prod.dom am →
   Typ.wellformed t →
-  Typing am e (Typ.instantiate depth [t] body) →
-  Typing ((name,fun e => Typing am e t) :: am) e (Typ.instantiate depth [.var name] body)
+  Typing tvars am e (Typ.instantiate depth [t] body) →
+  Typing tvars ((name,fun e => Typing tvars am e t) :: am) e (Typ.instantiate depth [.var name] body)
 := by
   simp [Prod.dom]
   intro h0 h1 h2 wf h3
   have h5 :
-    (name, fun e => Typing am e t) :: am =
-    [] ++ (name, fun e => Typing am e t) :: am
+    (name, fun e => Typing tvars am e t) :: am =
+    [] ++ (name, fun e => Typing tvars am e t) :: am
   := by rfl
   rw [h5]
   apply Typing.generalized_named_instantiation h1
@@ -1125,7 +1127,7 @@ theorem Typing.named_instantiation :
   { exact wf }
   {
     simp
-    apply Typing.env_cons_suffix_preservation _ _ (fun e => Typing am e t)
+    apply Typing.env_cons_suffix_preservation _ _ (fun e => Typing tvars am e t)
     { intro h6
       apply Typ.free_vars_instantiate_upper_bound at h6
       simp at h6
