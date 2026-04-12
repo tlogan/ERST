@@ -592,7 +592,298 @@ mutual
     String.namespace_recursive name →
     Typing (m0 ++ (name,P) :: m1) e t →
     Typing (m0 ++ m1) e t
-  := by sorry
+  := by cases t with
+  | bvar i =>
+    simp [Typing]
+  | var name' =>
+    simp [Typing, Typ.free_vars]
+    intro h0 h1 h2 P' h3 h4 h5
+    simp [*]
+    exists P'
+    simp [*]
+    by_cases h6: name' ∈ Prod.dom m0
+    { rw [Prod.find_append_prefix m1 h6]
+      rw [Prod.find_append_prefix ((name,P)::m1) h6] at h4
+      exact h4
+    }
+    { rw [Prod.find_append_suffix m1 h6]
+      rw [Prod.find_append_suffix ((name, P) :: m1) h6] at h4
+      simp [Prod.find] at h4
+      by_cases h7 : name = name'
+      {
+        apply False.elim
+        simp [h7] at h0
+        apply h6 h0
+      }
+      { simp [h7] at h4
+        exact h4
+      }
+    }
+  | bot =>
+    simp [Typing]
+  | top =>
+    simp [Typing]
+  | iso l body =>
+    simp [Typing, Typ.free_vars]
+    intro h0 h1 h2 h3
+    simp [*]
+    apply Typing.env_insert_reflection h0 h1 h3
+  | entry l body =>
+    simp [Typing, Typ.free_vars]
+    intro h0 h1 h2 h3
+    simp [*]
+    apply Typing.env_insert_reflection h0 h1 h3
+  | path antec conseq =>
+    simp [Typing, Typ.free_vars]
+    intro h0 h1 h2 h3
+    simp [*]
+    intro arg h7
+
+    have ⟨h9,h10⟩ := Iff.mp and_or_right h0
+    apply Typing.env_insert_reflection h10 h1
+    apply h3
+    apply Typing.env_insert_preservation h9 h1 h7
+
+  | unio left right =>
+    simp [Typing, Typ.free_vars]
+    intro h0 h1 h2
+
+    have ⟨h3A,h3B⟩ := Iff.mp and_or_right h0
+    cases h2 with
+    | inl h4 =>
+      apply Or.inl
+      apply Typing.env_insert_reflection h3A h1 h4
+    | inr h4 =>
+      apply Or.inr
+      apply Typing.env_insert_reflection h3B h1 h4
+
+  | inter left right =>
+    simp [Typing, Typ.free_vars]
+    intro h0 h1 h2 h3
+    have ⟨h4A,h4B⟩ := Iff.mp and_or_right h0
+    apply And.intro
+    { apply Typing.env_insert_reflection h4A h1 h2}
+    { apply Typing.env_insert_reflection h4B h1 h3 }
+
+
+  | diff minu subtra =>
+    simp [Typing, Typ.free_vars]
+    intro h0 h1 h2 h3
+    have ⟨h4A,h4B⟩ := Iff.mp and_or_right h0
+    apply And.intro
+    { apply Typing.env_insert_reflection h4A h1 h2 }
+    { intro h5
+      apply h3
+      apply Typing.env_insert_preservation h4B h1 h5
+    }
+  | all bs cs body =>
+    simp [Typing, Typ.free_vars]
+    intro h0 h1 h2 h3 names h5 h6 h7 h8
+    simp [*]
+    apply And.intro h3
+    exists names
+    simp [*]
+    have ⟨h0A,h0B⟩ := Iff.mp and_or_right h0
+    apply And.intro
+    {
+      simp [List.Disjoint]
+      intro name' h9
+      simp [Prod.dom]
+      apply And.intro
+      {
+        simp [List.Disjoint, Prod.dom] at h7
+        intro P' h10
+        have ⟨h11,h12⟩ := h7 h9
+        exact h11 P' h10
+      }
+      {
+        simp [List.Disjoint, Prod.dom] at h7
+        intro P' h10
+        have ⟨h11,h12,h13⟩ := h7 h9
+        exact h13 P' h10
+      }
+    }
+    {
+      intro m h9 h10
+      rw [←List.append_assoc]
+      apply Typing.env_insert_reflection
+      { cases h0B with
+        | inl h0C =>
+          apply Or.inl
+          intro h11
+          apply Typ.free_vars_instantiate_upper_bound at h11
+          simp at h11
+          cases h11 with
+          | inl h12 =>
+            exact h0C h12
+          | inr h12 =>
+            simp [Typ.free_vars] at h12
+            simp [String.no_namespace_recursive] at h6
+            apply h6 name h12
+            exact h1
+        | inr h0C =>
+          apply Or.inr
+          simp [Prod.dom]
+          simp [Prod.dom] at h0C
+          exact Or.inr h0C
+      }
+      { exact h1 }
+      {
+        rw [List.append_assoc]
+        apply h8 _ h9
+        rw [←List.append_assoc]
+        apply MultiSubtyping.env_insert_preservation
+        {
+          cases h0A with
+          | inl h0C =>
+            apply Or.inl
+            intro h11
+            apply Typ.list_prod_free_vars_instantiate_upper_bound at h11
+            simp at h11
+            cases h11 with
+            | inl h12 =>
+              exact h0C h12
+            | inr h12 =>
+              simp [Typ.free_vars] at h12
+              simp [String.no_namespace_recursive] at h6
+              apply h6 name h12
+              exact h1
+          | inr h0C =>
+            apply Or.inr
+            simp [Prod.dom]
+            simp [Prod.dom] at h0C
+            exact Or.inr h0C
+        }
+        { exact h1 }
+        { rw [List.append_assoc]
+          exact h10
+        }
+      }
+    }
+  | exi bs cs body =>
+    simp [Typing, Typ.free_vars]
+    intro h0 h2 h3 h4
+    apply And.intro h3
+    intro names h5 h6 h7
+
+    have h8 : List.Disjoint names (Prod.dom (m0 ++ (name,P) :: m1)) := by
+      simp [List.Disjoint, Prod.dom]
+      simp [List.Disjoint, Prod.dom] at h7
+      intro name' h9
+      have ⟨h10,h11⟩ := h7 h9
+      simp [*]
+      simp [String.no_namespace_recursive] at h6
+      intro h12
+      apply h6 name' h9
+      rw [h12]
+      exact h2
+
+    have ⟨m,h9,h10,h11⟩ := h4 names h5 h6 h8
+    exists m
+    simp [*]
+    have ⟨h1A,h1B⟩ := Iff.mp and_or_right h0
+    apply And.intro
+    {
+      rw [←List.append_assoc]
+      apply MultiSubtyping.env_insert_reflection
+      {
+        cases h1A with
+        | inl h1C =>
+          apply Or.inl
+          intro h12
+          apply Typ.list_prod_free_vars_instantiate_upper_bound at h12
+          simp [Typ.free_vars] at h12
+          cases h12 with
+          | inl h13 =>
+            exact h1C h13
+          | inr h13 =>
+            simp [String.no_namespace_recursive] at h6
+            apply h6 name h13 h2
+        | inr h1C =>
+          apply Or.inr
+          simp [Prod.dom]
+          simp [Prod.dom] at h1C
+          exact Or.inr h1C
+      }
+      { exact h2 }
+      { rw [List.append_assoc] ; exact h10}
+    }
+    { rw [←List.append_assoc]
+      apply Typing.env_insert_reflection
+      { cases h1B with
+        | inl h1C =>
+          apply Or.inl
+          intro h12
+          apply Typ.free_vars_instantiate_upper_bound at h12
+          simp [Typ.free_vars] at h12
+          cases h12 with
+          | inl h13 =>
+            exact h1C h13
+          | inr h13 =>
+            simp [String.no_namespace_recursive] at h6
+            apply h6 name h13 h2
+        | inr h1C =>
+          apply Or.inr
+          simp [Prod.dom]
+          simp [Prod.dom] at h1C
+          exact Or.inr h1C
+      }
+      { exact h2 }
+      { rw [List.append_assoc] ; exact h11 }
+    }
+  | lfp a body =>
+    simp [Typing, Typ.free_vars]
+    intro h0 h1 h2 h3 h4 h5
+    simp [*]
+    intro name' h6
+    have ⟨h7,h8⟩ := h5 name' h6
+
+    apply And.intro
+    { apply @PosMonotonic.env_insert_reflection _ name
+      {
+        by_cases h9 : name = name'
+        { simp [h9] }
+        { simp [h9]
+          cases h0 with
+          | inl h0A =>
+            apply Or.inl
+            intro h10
+            apply Typ.free_vars_instantiate_upper_bound at h10
+            simp at h10
+            simp [h0A,h9,Typ.free_vars] at h10
+          | inr h0A =>
+            simp [h0A]
+        }
+      }
+      { exact h1 }
+      { exact h7 }
+    }
+    { intro P' h9 h10
+      apply h8 _ h9
+      intro e' h11
+      apply h10
+      rw [←List.cons_append]
+      apply @Typing.env_insert_reflection _ name
+      {
+        simp [Prod.dom]
+        by_cases h9 : name = name'
+        { simp [h9] }
+        { simp [h9]
+          cases h0 with
+          | inl h0A =>
+            apply Or.inl
+            intro h10
+            apply Typ.free_vars_instantiate_upper_bound at h10
+            simp at h10
+            simp [h0A,h9,Typ.free_vars] at h10
+          | inr h0A =>
+            simp [Prod.dom] at h0A
+            simp [h0A]
+        }
+      }
+      { exact h1 }
+      { exact h11 }
+    }
   termination_by (Typ.size t, 0)
   decreasing_by
     all_goals sorry
