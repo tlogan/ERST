@@ -871,13 +871,30 @@ mutual
       { exact h7 }
     }
     { intro P' h9 h10
+      apply h8 _ h9
+      intro e' h11
       apply h10
       rw [←List.cons_append]
       apply Typing.env_insert_preservation
-      { sorry }
-      { sorry }
-      { sorry }
-
+      {
+        simp [Prod.dom]
+        by_cases h9 : name = name'
+        { simp [h9] }
+        { simp [h9]
+          cases h0 with
+          | inl h0A =>
+            apply Or.inl
+            intro h10
+            apply Typ.free_vars_instantiate_upper_bound at h10
+            simp at h10
+            simp [h0A,h9,Typ.free_vars] at h10
+          | inr h0A =>
+            simp [Prod.dom] at h0A
+            simp [h0A]
+        }
+      }
+      { exact h1 }
+      { exact h11 }
     }
   termination_by (Typ.size t, 0)
   decreasing_by
