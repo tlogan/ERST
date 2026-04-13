@@ -545,13 +545,56 @@ theorem Typing.refl_trans_subject_reduction
 
 mutual
 
+  theorem Subtyping.env_insert_reflection :
+    (name ∉ Typ.free_vars lower ∧ name ∉ Typ.free_vars upper ∨ name ∈ Prod.dom m0) →
+    String.namespace_recursive name →
+    Subtyping (m0 ++ (name,P) :: m1) lower upper →
+    Subtyping (m0 ++ m1) lower upper
+  := by
+    simp [Subtyping]
+    intro h0 h1 h2 e h3
+    have ⟨h4,h5⟩ := Iff.mp and_or_right h0
+    apply Typing.env_insert_reflection h5 h1
+    apply h2
+    apply Typing.env_insert_preservation h4 h1 h3
+  termination_by (Typ.size lower + Typ.size upper, 0)
+  decreasing_by
+    all_goals (apply Prod.Lex.left ; simp [Typ.zero_lt_size])
+
+  theorem Subtyping.env_insert_preservation :
+    (name ∉ Typ.free_vars lower ∧ name ∉ Typ.free_vars upper ∨ name ∈ Prod.dom m0) →
+    String.namespace_recursive name →
+    Subtyping (m0 ++ m1) lower upper →
+    ∀ P, Subtyping (m0 ++ (name,P) :: m1) lower upper
+  := by
+    simp [Subtyping]
+    intro h0 h1 h2 P e h3
+    have ⟨h4,h5⟩ := Iff.mp and_or_right h0
+    apply Typing.env_insert_preservation h5 h1
+    apply h2
+    apply Typing.env_insert_reflection h4 h1 h3
+  termination_by (Typ.size lower + Typ.size upper, 0)
+  decreasing_by
+    all_goals (apply Prod.Lex.left ; simp [Typ.zero_lt_size])
+
+
   theorem MultiSubtyping.env_insert_reflection :
     (name ∉ Typ.list_prod_free_vars cs ∨ name ∈ Prod.dom m0) →
     String.namespace_recursive name →
     MultiSubtyping (m0 ++ (name,P) :: m1) cs →
     MultiSubtyping (m0 ++ m1) cs
-  := by sorry
-  termination_by sts => (List.pair_typ_size cs, 0)
+  := by cases cs with
+  | nil =>
+    simp [MultiSubtyping]
+  | cons c cs' =>
+    have (lower,upper) := c
+    simp [MultiSubtyping, Typ.list_prod_free_vars]
+    intro h0 h1 h2 h3
+    have ⟨h4,h5⟩ := Iff.mp and_or_right h0
+    apply And.intro
+    { apply Subtyping.env_insert_reflection h4 h1 h2 }
+    { apply MultiSubtyping.env_insert_reflection h5 h1 h3 }
+  termination_by (List.pair_typ_size cs, 0)
   decreasing_by
     all_goals sorry
 
@@ -560,8 +603,18 @@ mutual
     String.namespace_recursive name →
     MultiSubtyping (m0 ++ m1) cs →
     ∀ P, MultiSubtyping (m0 ++ (name,P) :: m1) cs
-  := by sorry
-  termination_by sts => (List.pair_typ_size cs, 0)
+  := by cases cs with
+  | nil =>
+    simp [MultiSubtyping]
+  | cons c cs' =>
+    have (lower,upper) := c
+    simp [MultiSubtyping, Typ.list_prod_free_vars]
+    intro h0 h1 h2 h3 P
+    have ⟨h4,h5⟩ := Iff.mp and_or_right h0
+    apply And.intro
+    { apply Subtyping.env_insert_preservation h4 h1 h2 }
+    { apply MultiSubtyping.env_insert_preservation h5 h1 h3 }
+  termination_by (List.pair_typ_size cs, 0)
   decreasing_by
     all_goals sorry
 
@@ -571,20 +624,60 @@ mutual
     String.namespace_recursive name →
     PosMonotonic point (m0 ++ (name,P) :: m1) t →
     PosMonotonic point (m0 ++ m1) t
-  := by sorry
-  termination_by sts => (Typ.size t, 1)
-  decreasing_by
-    all_goals sorry
+  := by
+    simp [PosMonotonic]
+    intro h0 h1 h2 P0 P1 stable0 stable1 h3 e h5
+    rw [←List.cons_append]
+    apply @Typing.env_insert_reflection _ name
+    { simp [Prod.dom]
+      simp [Prod.dom] at h0
+      exact h0
+    }
+    { exact h1 }
+    {
+      rw [List.cons_append]
+      apply h2 _ _ stable0 stable1 h3
+      rw [←List.cons_append]
+      apply Typing.env_insert_preservation
+      { simp [Prod.dom]
+        simp [Prod.dom] at h0
+        exact h0
+      }
+      { exact h1 }
+      { exact h5 }
+    }
+  termination_by (Typ.size t, 1)
 
   theorem PosMonotonic.env_insert_preservation :
     (name ∉ Typ.free_vars t ∨ name = point ∨ name ∈ Prod.dom m0)  →
     String.namespace_recursive name →
     PosMonotonic point (m0 ++ m1) t →
     ∀ P, PosMonotonic point (m0 ++ (name,P) :: m1) t
-  := by sorry
-  termination_by sts => (Typ.size t, 1)
-  decreasing_by
-    all_goals sorry
+  := by
+    simp [PosMonotonic]
+    intro h0 h1 h2 P P0 P1 stable0 stable1 h3 e h5
+    rw [←List.cons_append]
+    apply Typing.env_insert_preservation
+    { simp [Prod.dom]
+      simp [Prod.dom] at h0
+      exact h0
+    }
+    { exact h1 }
+    {
+      rw [List.cons_append]
+      apply h2 _ _ stable0 stable1 h3
+      rw [←List.cons_append]
+      apply @Typing.env_insert_reflection _ name
+      { simp [Prod.dom]
+        simp [Prod.dom] at h0
+        exact h0
+      }
+      { exact h1 }
+      { exact h5 }
+    }
+  termination_by (Typ.size t, 1)
+  -- decreasing_by
+  --   all_goals sorry
 
 
   theorem Typing.env_insert_reflection :
