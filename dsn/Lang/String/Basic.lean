@@ -112,7 +112,7 @@ theorem String.length_repr_non_zero :
 
 
 theorem String.foldl_append_seed_exclusion :
-name_prefix ++ List.foldl (fun r s => r ++ s) (pre ++ name ++ post) names ++ Nat.repr i ≠ name
+List.foldl (fun r s => r ++ s) (pre ++ name ++ post) names ++ Nat.repr i ≠ name
 := by cases names with
 | nil =>
   intro h0
@@ -123,7 +123,6 @@ name_prefix ++ List.foldl (fun r s => r ++ s) (pre ++ name ++ post) names ++ Nat
     String.length name + String.length pre
   := by exact Nat.add_comm (String.length pre) (String.length name)
   simp [it] at h0 ; clear it
-  rw [Nat.add_left_comm] at h0
   rw [Nat.add_assoc] at h0
   rw [Nat.add_assoc] at h0
   simp at h0
@@ -140,7 +139,7 @@ name_prefix ++ List.foldl (fun r s => r ++ s) (pre ++ name ++ post) names ++ Nat
   apply String.foldl_append_seed_exclusion
 
 theorem String.foldl_append_list_exclusion :
-name_prefix ++ List.foldl (fun r s => r ++ s) name names ++ Nat.repr i ∉ names
+List.foldl (fun r s => r ++ s) name names ++ Nat.repr i ∉ names
 := by cases names with
 | nil =>
   simp
@@ -188,53 +187,50 @@ name_prefix ++ List.foldl (fun r s => r ++ s) name names ++ Nat.repr i ∉ names
 --   }
 
 
-def String.recursive_prefix := "_r_"
+-- def String.recursive_prefix := "_r_"
 
-def String.namespace_recursive (name : String) : Prop :=
-  String.IsPrefix recursive_prefix name
-
-
-def String.no_namespace_recursive (names : List String) : Prop :=
-  ∀ name ∈ names, ¬ String.namespace_recursive name
+-- def String.namespace_recursive (name : String) : Prop :=
+--   String.IsPrefix recursive_prefix name
 
 
-def String.quantified_prefix := "_q_"
-def String.namespace_quantified (name : String) : Prop :=
-  String.IsPrefix quantified_prefix name
+-- def String.no_namespace_recursive (names : List String) : Prop :=
+--   ∀ name ∈ names, ¬ String.namespace_recursive name
 
 
-example :
-  ∀ name,
-    String.IsPrefix String.quantified_prefix name →
-    ¬ String.IsPrefix String.recursive_prefix name
-:= by
-  simp [String.quantified_prefix, String.recursive_prefix, String.IsPrefix]
-  intro name h0 h1
-
-  simp [List.IsPrefix] at h0 h1
-  have ⟨xs,h2⟩ := h0
-  have ⟨ys,h3⟩ := h1
-  simp [←h2] at h3
+-- def String.quantified_prefix := "_q_"
+-- def String.namespace_quantified (name : String) : Prop :=
+--   String.IsPrefix quantified_prefix name
 
 
-theorem String.fresh_names n names' name_prefix :
+-- example :
+--   ∀ name,
+--     String.IsPrefix String.quantified_prefix name →
+--     ¬ String.IsPrefix String.recursive_prefix name
+-- := by
+--   simp [String.quantified_prefix, String.recursive_prefix, String.IsPrefix]
+--   intro name h0 h1
+
+--   simp [List.IsPrefix] at h0 h1
+--   have ⟨xs,h2⟩ := h0
+--   have ⟨ys,h3⟩ := h1
+--   simp [←h2] at h3
+
+
+theorem String.fresh_names n names' :
   ∃ names : List String,
   List.length names = n ∧
-  List.Disjoint names names' ∧
-  (∀ name ∈ names, String.IsPrefix name_prefix name)
+  List.Disjoint names names'
   /- NOTE: uniqueness of names isn't necessary
   -- ∧ List.Pairwise (fun x y => x ≠ y) names
   -/
 := by
-  exists (List.map (fun i => name_prefix ++ (String.join names') ++ (Nat.repr i)) (List.range n))
+  exists (List.map (fun i => (String.join names') ++ (Nat.repr i)) (List.range n))
 
   apply And.intro
   { simp }
-  apply And.intro
   { simp [List.Disjoint, String.join]
     intro i h0 h1
     apply String.foldl_append_list_exclusion h1
   }
-  { simp [String.IsPrefix] }
 
 end Lang
