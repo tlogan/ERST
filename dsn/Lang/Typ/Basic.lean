@@ -1369,6 +1369,11 @@ theorem Typ.list_prod_free_vars_instantiate_upper_bound :
   Typ.list_prod_free_vars (Typ.constraints_instantiate depth m cs) ⊆ (Typ.list_prod_free_vars cs) ++ List.flatMap Typ.free_vars m
 := by sorry
 
+theorem Typ.list_prod_free_vars_instantiate_lower_bound :
+  ∀ depth m,
+  (Typ.list_prod_free_vars cs) ⊆ Typ.list_prod_free_vars (Typ.constraints_instantiate depth m cs)
+:= by sorry
+
 
 
 
