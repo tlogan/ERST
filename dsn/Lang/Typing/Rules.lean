@@ -19,17 +19,17 @@ set_option eval.pp false
 
 namespace Lang
 
-theorem Subtyping.refl am t :
+theorem Subtyping.refl :
   Typ.wellformed t →
-  Subtyping am t t
+  Subtyping tmp m t t
 := by
   simp [Subtyping]
 
 
 theorem Subtyping.transitivity :
-  Subtyping am t0 t1 →
-  Subtyping am t1 t2 →
-  Subtyping am t0 t2
+  Subtyping tmp am t0 t1 →
+  Subtyping tmp am t1 t2 →
+  Subtyping tmp am t0 t2
 := by
   simp [Subtyping]
   intro h0 h1 e h4
@@ -39,26 +39,26 @@ theorem Subtyping.transitivity :
 
 
 theorem PosMonotonic.intro :
-  Monotonic true name m t →
-  PosMonotonic name m t
+  Monotonic true name tmp m t →
+  PosMonotonic name tmp m t
 := by
   simp [Monotonic]
 
 theorem NegMonotonic.intro :
-  Monotonic false name m t →
-  NegMonotonic name m t
+  Monotonic false name tmp m t →
+  NegMonotonic name tmp m t
 := by
   simp [Monotonic]
 
 theorem PosMonotonic.bvar_intro :
-  PosMonotonic name m (Typ.bvar i)
+  PosMonotonic name m tmp (Typ.bvar i)
 := by
   simp [PosMonotonic, Typing]
 
 
 
 theorem PosMonotonic.var_intro :
-  PosMonotonic name m (Typ.var name')
+  PosMonotonic name tmp m (Typ.var name')
 := by
   simp [PosMonotonic]
   intro P0 P1 stable_P0 stable_P1 h0
@@ -76,7 +76,7 @@ theorem PosMonotonic.var_intro :
 
 theorem NegMonotonic.var_intro :
   name ≠ name' →
-  NegMonotonic name m (Typ.var name')
+  NegMonotonic name tmp m (Typ.var name')
 := by
   intro h0
   simp [NegMonotonic]
@@ -84,8 +84,8 @@ theorem NegMonotonic.var_intro :
 
 
 theorem PosMonotonic.iso_intro :
-  PosMonotonic name m t →
-  PosMonotonic name m (Typ.iso l t)
+  PosMonotonic name tmp m t →
+  PosMonotonic name tmp m (Typ.iso l t)
 := by
   simp [PosMonotonic]
   intro h0 P0 P1 stable_P0 stable_P1 h4 e
@@ -96,8 +96,8 @@ theorem PosMonotonic.iso_intro :
 
 
 theorem PosMonotonic.entry_intro :
-  PosMonotonic name m t →
-  PosMonotonic name m (Typ.entry l t)
+  PosMonotonic name tmp m t →
+  PosMonotonic name tmp m (Typ.entry l t)
 := by
   simp [PosMonotonic]
   intro h0 P0 P1 stable_P0 stable_P1 h4 e
@@ -107,9 +107,9 @@ theorem PosMonotonic.entry_intro :
   apply h0 P0 P1 stable_P0 stable_P1 h4 _ h6
 
 theorem PosMonotonic.path_intro :
-  NegMonotonic name m tl →
-  PosMonotonic name m tr →
-  PosMonotonic name m (Typ.path tl tr)
+  NegMonotonic name tmp m tl →
+  PosMonotonic name tmp m tr →
+  PosMonotonic name tmp m (Typ.path tl tr)
 := by
   simp [NegMonotonic,PosMonotonic]
   intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
@@ -123,20 +123,20 @@ theorem PosMonotonic.path_intro :
   apply h6
 
 theorem PosMonotonic.bot_intro :
-  PosMonotonic name m (Typ.bot)
+  PosMonotonic name tmp m (Typ.bot)
 := by
   simp [PosMonotonic,Typing]
 
 theorem PosMonotonic.top_intro :
-  PosMonotonic name m (Typ.top)
+  PosMonotonic name tmp m (Typ.top)
 := by
   simp [PosMonotonic, Typing]
 
 
 theorem PosMonotonic.unio_intro :
-  PosMonotonic name m tl →
-  PosMonotonic name m tr →
-  PosMonotonic name m (Typ.unio tl tr)
+  PosMonotonic name tmp m tl →
+  PosMonotonic name tmp m tr →
+  PosMonotonic name tmp m (Typ.unio tl tr)
 := by
   simp [PosMonotonic]
   intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
@@ -151,9 +151,9 @@ theorem PosMonotonic.unio_intro :
     apply h1 P0 P1 stable_P0 stable_P1 h2 e h4
 
 theorem PosMonotonic.inter_intro :
-  PosMonotonic name m tl →
-  PosMonotonic name m tr →
-  PosMonotonic name m (Typ.inter tl tr)
+  PosMonotonic name tmp m tl →
+  PosMonotonic name tmp m tr →
+  PosMonotonic name tmp m (Typ.inter tl tr)
 := by
   simp [PosMonotonic]
   intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
@@ -164,9 +164,9 @@ theorem PosMonotonic.inter_intro :
   { apply h1 P0 P1 stable_P0 stable_P1 h2 e h4  }
 
 theorem PosMonotonic.diff_intro :
-  PosMonotonic name m tl →
-  NegMonotonic name m tr →
-  PosMonotonic name m (Typ.diff tl tr)
+  PosMonotonic name tmp m tl →
+  NegMonotonic name tmp m tr →
+  PosMonotonic name tmp m (Typ.diff tl tr)
 := by
   simp [PosMonotonic,NegMonotonic]
   intro h0 h1 P0 P1 stable_P0 stable_P1 h2 e
@@ -184,11 +184,11 @@ theorem PosMonotonic.all_intro :
   List.length m' = List.length bs →
   List.Disjoint (Prod.dom m') (Prod.dom m) →
   (∀ name' ∈ Prod.dom m',
-    EitherMultiMonotonic name' (m' ++ m)
+    EitherMultiMonotonic name' tmp (m' ++ m)
       (Typ.constraints_instantiate 0 (List.map (fun (name', P) => .var name') m') ((.bot,t) :: cs))
   ) →
-  PosMonotonic name (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
-  PosMonotonic name m (Typ.all bs cs t)
+  PosMonotonic name tmp (m' ++ m) (Typ.instantiate 0 (List.map (fun (name', P) => .var name') m') t) →
+  PosMonotonic name tmp m (Typ.all bs cs t)
 := by sorry
 
 -- theorem PosMonotonic.exi_intro :
@@ -212,7 +212,7 @@ theorem PosMonotonic.all_intro :
 
 theorem PosMonotonic.excluded_intro :
   name ∉ Typ.free_vars t →
-  PosMonotonic name m t
+  PosMonotonic name tmp m t
 := by
   simp [PosMonotonic]
   intro h0 P0 P1 stable_P0 stable_P1 h1 e h2
@@ -238,7 +238,7 @@ def Typ.compute_polarity (name : String) (m : List (String → (Expr → Prop)))
 
 
 theorem Typing.var_elim :
-  Typing m e (Typ.var name) →
+  Typing tmp m e (Typ.var name) →
   Safe e ∧ ∃ P, Stable P ∧ Prod.find name m = some P ∧ P e
 := by
   simp [Typing]
@@ -246,21 +246,21 @@ theorem Typing.var_elim :
 theorem Typing.var_intro :
   Safe e → Stable P →
   Prod.find name m = some P → P e →
-  Typing m e (Typ.var name)
+  Typing tmp m e (Typ.var name)
 := by
   simp [Typing]
   intro h0 h1 h2 h3
   simp [*]
 
 theorem Typing.iso_elim :
-  Typing m e (Typ.iso l t) →
-  Typing m (Expr.extract e l) t
+  Typing tmp m e (Typ.iso l t) →
+  Typing tmp m (Expr.extract e l) t
 := by
   simp [Typing]
 
 theorem Typing.iso_intro :
-  Typing m e t →
-  Typing m (Expr.iso l e) (Typ.iso l t)
+  Typing tmp m e t →
+  Typing tmp m (Expr.iso l e) (Typ.iso l t)
 := by
   simp [Typing]
   intro h0
@@ -286,8 +286,8 @@ theorem Typing.entry_intro l :
   Prod.keys_unique r →
   Safe (.record r) →
   (l,e) ∈ r →
-  Typing am e t →
-  Typing am (Expr.record r) (Typ.entry l t)
+  Typing tmp am e t →
+  Typing tmp am (Expr.record r) (Typ.entry l t)
 := by
   simp [Typing, Expr.project]
   intro h0 h1 h2 h3
@@ -303,23 +303,23 @@ theorem Typing.entry_intro l :
 
 
 theorem Typing.unio_left_intro  :
-  Typing m e tl →
-  Typing m e (Typ.unio tl tr)
+  Typing tmp m e tl →
+  Typing tmp m e (Typ.unio tl tr)
 := by
   simp [Typing]
   apply Or.inl
 
 theorem Typing.unio_right_intro  :
-  Typing m e tr →
-  Typing m e (Typ.unio tl tr)
+  Typing tmp m e tr →
+  Typing tmp m e (Typ.unio tl tr)
 := by
   simp [Typing]
   apply Or.inr
 
 theorem Typing.unio_elim :
-  (Typing am e tl → Typing am e upper) →
-  (Typing am e tr → Typing am e upper) →
-  Typing am e (Typ.unio tl tr) → Typing am e upper
+  (Typing tmp am e tl → Typing tmp am e upper) →
+  (Typing tmp am e tr → Typing tmp am e upper) →
+  Typing tmp am e (Typ.unio tl tr) → Typing tmp am e upper
 := by
   simp [Typing]
   intro h0 h1 h2
@@ -331,9 +331,9 @@ theorem Typing.unio_elim :
 
 
 theorem Typing.inter_intro :
-  Typing am e tl →
-  Typing am e tr →
-  Typing am e (Typ.inter tl tr)
+  Typing tmp am e tl →
+  Typing tmp am e tr →
+  Typing tmp am e (Typ.inter tl tr)
 := by
   simp [Typing]
   intro h0 h1
@@ -341,8 +341,8 @@ theorem Typing.inter_intro :
 
 
 theorem Typing.inter_left_elim  :
-  (Typing m e tl → Typing m e upper) →
-  Typing m e (Typ.inter tl tr) → Typing m e upper
+  (Typing tmp m e tl → Typing tmp m e upper) →
+  Typing tmp m e (Typ.inter tl tr) → Typing tmp m e upper
 := by
   simp [Typing]
   intro h0 h1 h2
@@ -351,8 +351,8 @@ theorem Typing.inter_left_elim  :
 
 
 theorem Typing.inter_right_elim :
-  (Typing m e tr → Typing m e upper) →
-  Typing m e (Typ.inter tl tr) → Typing m e upper
+  (Typing tmp m e tr → Typing tmp m e upper) →
+  Typing tmp m e (Typ.inter tl tr) → Typing tmp m e upper
 := by
   simp [Typing]
   intro h0 h1 h2
@@ -362,8 +362,8 @@ theorem Typing.inter_right_elim :
 theorem Typing.inter_entries_intro entries :
   Prod.keys_unique r →
   Safe (.record r) →
-  (∀ l t, (l,t) ∈ entries → ∃ e, (l,e) ∈ r ∧ Typing am e t) →
-  Typing am (Expr.record r) (Typ.inter_entries entries)
+  (∀ l t, (l,t) ∈ entries → ∃ e, (l,e) ∈ r ∧ Typing tmp am e t) →
+  Typing tmp am (Expr.record r) (Typ.inter_entries entries)
 := by cases entries with
 | nil =>
   simp [Typ.inter_entries, Typing]
@@ -386,46 +386,46 @@ theorem Typing.inter_entries_intro entries :
 
 
 theorem Typing.top_elim :
-  Typing m e Typ.top →
+  Typing tmp m e Typ.top →
   Safe e
 := by
   simp [Typing]
 
 theorem Typing.top_intro :
   Safe e →
-  Typing m e Typ.top
+  Typing tmp m e Typ.top
 := by
   simp [Typing]
 
 
-def FunMatchedTyping (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp te : Typ): Prop :=
+def FunMatchedTyping (tmp : String) (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp te : Typ): Prop :=
   ∀ p e, (p, e) ∈ f →
-  ∀ ep , Typing am ep tp →
+  ∀ ep , Typing tmp am ep tp →
   ∀ ep', ReflTrans NStep ep ep' →
   (
-    (∃ eam , Pattern.match ep' p = .some eam  ∧ Typing am (Expr.instantiate 0 eam e) te)
+    (∃ eam , Pattern.match ep' p = .some eam  ∧ Typing tmp am (Expr.instantiate 0 eam e) te)
     ∨
     (Pattern.match ep' p = none ∧ Expr.valued ep')
   )
 
 theorem FunMatchedTyping.cons_reflection :
-  FunMatchedTyping m ((p,e) :: f) tp te →
-  FunMatchedTyping m f tp te
+  FunMatchedTyping tmp m ((p,e) :: f) tp te →
+  FunMatchedTyping tmp m f tp te
 := by
   simp [FunMatchedTyping]
   intro h0 p' e' h1 arg h2 arg' h3
   apply h0 p' e' (Or.inr h1) arg h2 arg' h3
 
 
-def FunMatching (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp :Typ) : Prop :=
-  ∃ p e , (p,e) ∈ f ∧ (∀ ep , Typing am ep tp → ∃ ep', ReflTrans NStep ep ep' ∧ Pattern.matches ep' p)
+def FunMatching (tmp : String) (am : List (String × (Expr → Prop))) (f : List (Pattern × Expr)) (tp :Typ) : Prop :=
+  ∃ p e , (p,e) ∈ f ∧ (∀ ep , Typing tmp am ep tp → ∃ ep', ReflTrans NStep ep ep' ∧ Pattern.matches ep' p)
 
 theorem FunMatching.cons_reflection :
-  Typing m arg tp →
+  Typing tmp m arg tp →
   Pattern.match arg p = none →
   Expr.valued arg →
-  FunMatching m ((p,e) :: f) tp →
-  FunMatching m f tp
+  FunMatching tmp m ((p,e) :: f) tp →
+  FunMatching tmp m f tp
 := by
   simp [FunMatching]
   intro h0 h1 h2 p' e' h3 h4
@@ -449,9 +449,9 @@ theorem FunMatching.cons_reflection :
 
 
 theorem Typing.path_elim
-  (typing_cator : Typing am ef (.path t t'))
-  (typing_arg : Typing am ea t)
-: Typing am (.app ef ea) t'
+  (typing_cator : Typing tmp am ef (.path t t'))
+  (typing_arg : Typing tmp am ea t)
+: Typing tmp am (.app ef ea) t'
 := by
   simp [Typing] at typing_cator
   have ⟨h0,h1⟩ := typing_cator
@@ -461,9 +461,9 @@ theorem Typing.path_elim
 theorem Typing.path_intro :
   Typ.wellformed tp →
   fp <+: f →
-  FunMatchedTyping am fp tp te →
-  FunMatching am fp tp →
-  Typing am (Expr.function f) (Typ.path tp te)
+  FunMatchedTyping tmp am fp tp te →
+  FunMatching tmp am fp tp →
+  Typing tmp am (Expr.function f) (Typ.path tp te)
 := by
   simp [List.IsPrefix]
   intro h0 fs h1 h2 h3
@@ -546,9 +546,9 @@ theorem Typing.path_intro :
 
 theorem Typing.inter_paths_intro :
   (∀ tp te, (tp,te) ∈ paths →
-    Typ.wellformed tp ∧ ∃ fp , fp <+: f ∧ FunMatchedTyping am fp tp te ∧ FunMatching am fp tp
+    Typ.wellformed tp ∧ ∃ fp , fp <+: f ∧ FunMatchedTyping tmp am fp tp te ∧ FunMatching tmp am fp tp
   ) →
-  Typing am (Expr.function f) (Typ.inter_paths paths)
+  Typing tmp am (Expr.function f) (Typ.inter_paths paths)
 := by cases paths with
 | nil =>
   simp [Typ.inter_paths]
@@ -573,27 +573,27 @@ theorem Typing.inter_paths_intro :
 
 
 theorem Typing.diff_intro :
-  Typ.wellformed right → Typing am e left →
-  ¬ (Typing am e right) →
-  Typing am e (Typ.diff left right)
+  Typ.wellformed right → Typing tmp am e left →
+  ¬ (Typing tmp am e right) →
+  Typing tmp am e (Typ.diff left right)
 := by
   simp [Typing]
   intro h0 h1 h2
   simp [*]
 
 theorem Typing.diff_minu_elim :
-  (Typing am e minu → Typing am e upper) →
-  Typing am e (Typ.diff minu subtra) →
-  Typing am e upper
+  (Typing tmp am e minu → Typing tmp am e upper) →
+  Typing tmp am e (Typ.diff minu subtra) →
+  Typing tmp am e upper
 := by
   simp [Typing]
   intro h0 h2 h3
   exact h0 h2
 
 theorem Typing.diff_subtra_elim :
-  (Typing am e left → Typing am e subtra) →
-  Typing am e (Typ.diff left subtra) →
-  Typing am e upper
+  (Typing tmp am e left → Typing tmp am e subtra) →
+  Typing tmp am e (Typ.diff left subtra) →
+  Typing tmp am e upper
 := by
   simp [Typing]
   intro h0 h2 h3
@@ -601,16 +601,16 @@ theorem Typing.diff_subtra_elim :
 
 
 theorem Typing.do_diff_minu_elim :
-  (Typing am e minu → Typing am e upper) →
-  Typing am e (Typ.do_diff minu subtra) →
-  Typing am e upper
+  (Typing tmp am e minu → Typing tmp am e upper) →
+  Typing tmp am e (Typ.do_diff minu subtra) →
+  Typing tmp am e upper
 := by sorry
 
 
 theorem Typing.list_diff_minu_elim :
-  (Typing am e minu → Typing am e upper) →
-  Typing am e (Typ.list_diff minu subtras) →
-  Typing am e upper
+  (Typing tmp am e minu → Typing tmp am e upper) →
+  Typing tmp am e (Typ.list_diff minu subtras) →
+  Typing tmp am e upper
 := by cases subtras with
 | nil =>
   simp [Typ.list_diff]
@@ -629,34 +629,35 @@ theorem Typing.list_diff_minu_elim :
 
 theorem Typing.exi_intro :
   (∀ a ∈ bs , a = "") →
-  (∀ names, List.length names = List.length bs → List.Disjoint names (Prod.dom am) →
+  (∀ names, List.length names = List.length bs →
+    List.Disjoint names (tmp :: Typ.list_prod_free_vars cs ++ Typ.free_vars body) →
     ∃ am' , Prod.dom am' = names ∧
-    (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs)) ∧
-    (Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body))
+    (MultiSubtyping tmp (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs)) ∧
+    (Typing tmp (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body))
   ) →
-  Typing am e (Typ.exi bs cs body)
+  Typing tmp am e (Typ.exi bs cs body)
 := by
   simp [Typing]
   intro h0 h1
   apply And.intro h0
-  intro names h2 h3
-  have ⟨am',h4,h5,h6⟩ := h1 names h2 h3
+  intro names h2 h3A h3B h3C
+  have ⟨am',h4,h5,h6⟩ := h1 names h2 h3A h3B h3C
   exists am'
 
 theorem Typing.exi_elim :
   List.length names = List.length bs →
-  List.Disjoint names (Prod.dom am) →
+  List.Disjoint names (tmp :: Typ.list_prod_free_vars cs ++ Typ.free_vars body) →
   (∀ am',
     Prod.dom am' = names →
-    MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs) →
-    Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body) →
-    Typing am e upper
+    MultiSubtyping tmp (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs) →
+    Typing tmp (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body) →
+    Typing tmp am e upper
   ) →
-  Typing am e (Typ.exi bs cs body) → Typing am e upper
+  Typing tmp am e (Typ.exi bs cs body) → Typing tmp am e upper
 := by
   simp [Typing]
-  intro h0 h1 h2 h3 h4
-  have ⟨am',h5,h6,h7⟩ := h4 names h0 h1
+  intro h0 h1A h1B h1C h2 h3 h4
+  have ⟨am',h5,h6,h7⟩ := h4 names h0 h1A h1B h1C
   apply h2 _ h5 h6 h7
 
 
@@ -664,75 +665,74 @@ theorem Typing.all_intro :
   Safe e →
   (∀ a ∈ bs , a = "") →
   List.length names = List.length bs →
-  List.Disjoint names (Prod.dom am) →
+  List.Disjoint names (tmp :: Typ.list_prod_free_vars cs ++ Typ.free_vars body) →
   (∀ am',
     Prod.dom am' = names →
-    MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs) →
-    Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body)
+    MultiSubtyping tmp (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs) →
+    Typing tmp (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body)
   ) →
-  Typing am e (Typ.all bs cs body)
+  Typing tmp am e (Typ.all bs cs body)
 := by
   simp [Typing]
-  intro h0 h1 h2 h3 h4
+  intro h0 h1 h2 h3A h3B h3C h4
   simp [*]
   apply And.intro h1
   exists names
 
 theorem Typing.all_elim :
   (∀ a ∈ bs , a = "") →
-  (∀ names, List.length names = List.length bs → List.Disjoint names (Prod.dom am) →
+  (∀ names, List.length names = List.length bs → List.Disjoint names (tmp :: Typ.list_prod_free_vars cs ++ Typ.free_vars body) →
     ∃ am' , Prod.dom am' = names ∧
-    (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs)) ∧
+    (MultiSubtyping tmp (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs)) ∧
     (
-      Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body) →
-      Typing am e upper
+      Typing tmp (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body) →
+      Typing tmp am e upper
     )
   ) →
-  Typing am e (Typ.all bs cs body) →
-  Typing am e upper
+  Typing tmp am e (Typ.all bs cs body) →
+  Typing tmp am e upper
 := by
   simp [Typing]
-  intro h0 h1 h2 h3 names h5 h6 h7
-  have ⟨am',h8,h9,h10⟩ :=  h1 names h5 h6
+  intro h0 h1 h2 h3 names h5 h6A h6B h6C h7
+  have ⟨am',h8,h9,h10⟩ :=  h1 names h5 h6A h6B h6C
   apply h10
   exact h7 am' h8 h9
 
-theorem Typing.lfp_elim name :
+theorem Typing.lfp_elim :
   Typ.wellformed (Typ.lfp "" t) →
   Stable P →
-  name ∉ Prod.dom m →
-  PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
-  (∀ e, Typing ((name, P) :: m) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
-  Typing m e (Typ.lfp "" t) → P e
+  name ∉ (tmp :: Typ.free_vars t) →
+  PosMonotonic name tmp m (Typ.instantiate 0 [.var name] t) →
+  (∀ e, Typing tmp ((name, P) :: m) e (Typ.instantiate 0 [Typ.var name] t) → P e) →
+  Typing tmp m e (Typ.lfp "" t) → P e
 := by
-  intro h0 stable h1 h2 h3 h4
-  have typing := h4
+  simp
+  intro h0 stable h1A h1B h2 h3 h4
   simp [Typing] at h4
   have ⟨h6,h7⟩ := h4
-  clear h4
-  have ⟨h8,h9⟩ := h7 name h1
+  have ⟨h8,h9⟩ := h7 name h1A h1B
   apply h9 P stable h3
 
 
 theorem Typing.lfp_intro :
   Typ.wellformed (Typ.lfp "" t) →
-  Typ.free_vars (Typ.lfp "" t) ⊆ Prod.dom m →
-  (∀ name ∉ Prod.dom m , PosMonotonic name m (Typ.instantiate 0 [.var name] t)) →
-  Typing m e (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
-  Typing m e (Typ.lfp "" t)
+  Typ.free_vars (Typ.lfp "" t) = [] →
+  (∀ name ∉ (tmp :: Typ.free_vars t) , PosMonotonic name tmp m (Typ.instantiate 0 [.var name] t)) →
+  Typing tmp m e (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
+  Typing tmp m e (Typ.lfp "" t)
 := by
   simp [Typing]
   intro h0 h0A h1 h2
   apply And.intro
   { exact Typing.safety h2 }
   {
-    intro name fresh
-    apply And.intro (h1 name fresh)
+    intro name freshA freshB
+    have h6 := (h1 name freshA freshB)
+    apply And.intro h6
     intro P stable h3
     apply h3
-    have h6 := (h1 name fresh)
     simp [PosMonotonic] at h6
-    apply h6 (fun e => Typing m e (Typ.lfp "" t)) P
+    apply h6 (fun e => Typing name [] e (Typ.lfp "" t)) P
     {
       simp [Stable]
       intro e e' h7
@@ -747,18 +747,24 @@ theorem Typing.lfp_intro :
     { exact stable }
     {
       intro e' h7
-      apply Typing.lfp_elim name h0 stable fresh (h1 name fresh) h3 h7
+      apply Typing.lfp_elim h0 stable
+      { exact List.not_mem_cons_of_ne_of_not_mem freshA freshB }
+      { exact h1 name freshA freshB }
+      { exact h3 }
+      {
+        apply Typing.env_preservation h0A
+        exact tmpvar_generalization h7 tmp
+      }
     }
     {
+      apply @Typing.tmpvar_generalization name
       apply Typing.named_instantiation
       { intro h8
-        apply fresh
-        exact h0A h8
+        exact freshB h8
       }
       { exact h0A }
-      { exact fresh }
       { exact h0 }
-      { exact h2 }
+      { exact tmpvar_generalization h2 name }
     }
   }
 
@@ -766,8 +772,8 @@ theorem Typing.lfp_intro :
 
 
 theorem Subtyping.iso_pres l :
-  Subtyping am bodyl bodyu →
-  Subtyping am (Typ.iso l bodyl) (Typ.iso l bodyu)
+  Subtyping tmp am bodyl bodyu →
+  Subtyping tmp am (Typ.iso l bodyl) (Typ.iso l bodyu)
 := by
   simp [Subtyping]
   -- simp [Typ.instantiated, Typ.wellformed, Typ.num_bound_vars, Typ.nameless]
@@ -777,8 +783,8 @@ theorem Subtyping.iso_pres l :
 
 
 theorem Subtyping.entry_pres :
-  Subtyping am t t' →
-  Subtyping am (.entry l t) (.entry l t')
+  Subtyping tmp am t t' →
+  Subtyping tmp am (.entry l t) (.entry l t')
 := by
   simp [Subtyping]
   simp [Typing]
@@ -789,9 +795,9 @@ theorem Subtyping.entry_pres :
 
 theorem Subtyping.path_pres {am p q x y} :
   Typ.wellformed p →
-  Subtyping am x p →
-  Subtyping am q y →
-  Subtyping am (Typ.path p q) (Typ.path x y)
+  Subtyping tmp am x p →
+  Subtyping tmp am q y →
+  Subtyping tmp am (Typ.path p q) (Typ.path x y)
 := by
   simp [Subtyping]
   intro h0 h1 h2
@@ -804,7 +810,7 @@ theorem Subtyping.path_pres {am p q x y} :
 
 
 theorem Subtyping.bot_elim {am upper} :
-  Subtyping am Typ.bot upper
+  Subtyping tmp am Typ.bot upper
 := by
   simp [Subtyping]
   simp [Typing]
@@ -812,7 +818,7 @@ theorem Subtyping.bot_elim {am upper} :
 
 theorem Subtyping.top_intro {am lower} :
   Typ.wellformed lower →
-  Subtyping am lower Typ.top
+  Subtyping tmp am lower Typ.top
 := by
   simp [Subtyping]
   intro h0
@@ -822,9 +828,9 @@ theorem Subtyping.top_intro {am lower} :
 
 
 theorem Subtyping.unio_elim  :
-  Subtyping m tl t →
-  Subtyping m tr t →
-  Subtyping m (Typ.unio tl tr) t
+  Subtyping tmp m tl t →
+  Subtyping tmp m tr t →
+  Subtyping tmp m (Typ.unio tl tr) t
 := by
   simp [Subtyping]
   intro h0 h1
@@ -838,8 +844,8 @@ theorem Subtyping.unio_elim  :
   }
 
 theorem Subtyping.unio_left_intro tr :
-  Subtyping m lower tl →
-  Subtyping m lower (Typ.unio tl tr)
+  Subtyping tmp m lower tl →
+  Subtyping tmp m lower (Typ.unio tl tr)
 := by
   simp [Subtyping]
   intro h0
@@ -849,8 +855,8 @@ theorem Subtyping.unio_left_intro tr :
   exact h0 e h2
 
 theorem Subtyping.unio_right_intro tl :
-  Subtyping m lower tr →
-  Subtyping m lower (Typ.unio tl tr)
+  Subtyping tmp m lower tr →
+  Subtyping tmp m lower (Typ.unio tl tr)
 := by
   simp [Subtyping]
   intro h0
@@ -862,8 +868,8 @@ theorem Subtyping.unio_right_intro tl :
 
 theorem Subtyping.inter_left_elim :
   Typ.wellformed tr →
-  Subtyping m tl upper →
-  Subtyping m (Typ.inter tl tr) upper
+  Subtyping tmp m tl upper →
+  Subtyping tmp m (Typ.inter tl tr) upper
 := by
   simp [Subtyping]
   intro h0 h1
@@ -876,8 +882,8 @@ theorem Subtyping.inter_left_elim :
 
 theorem Subtyping.inter_right_elim :
   Typ.wellformed tl →
-  Subtyping m tr upper →
-  Subtyping m (Typ.inter tl tr) upper
+  Subtyping tmp m tr upper →
+  Subtyping tmp m (Typ.inter tl tr) upper
 := by
   simp [Subtyping]
   intro h0 h1
@@ -887,9 +893,9 @@ theorem Subtyping.inter_right_elim :
   }
 
 theorem Subtyping.inter_intro :
-  Subtyping am t left →
-  Subtyping am t right →
-  Subtyping am t (Typ.inter left right)
+  Subtyping tmp am t left →
+  Subtyping tmp am t right →
+  Subtyping tmp am t (Typ.inter left right)
 := by
   simp [Subtyping]
   intro h0 h1
@@ -898,9 +904,9 @@ theorem Subtyping.inter_intro :
   exact ⟨h0 e h4, h1 e h4⟩
 
 theorem Subtyping.unio_antec :
-  Subtyping am t (Typ.path left upper) →
-  Subtyping am t (Typ.path right upper) →
-  Subtyping am t (Typ.path (Typ.unio left right) upper)
+  Subtyping tmp am t (Typ.path left upper) →
+  Subtyping tmp am t (Typ.path right upper) →
+  Subtyping tmp am t (Typ.path (Typ.unio left right) upper)
 := by
   simp [Subtyping, Typing]
   intro h0 h1
@@ -917,9 +923,9 @@ theorem Subtyping.unio_antec :
   }
 
 theorem Subtyping.inter_conseq :
-  Subtyping am t (Typ.path upper left) →
-  Subtyping am t (Typ.path upper right) →
-  Subtyping am t (Typ.path upper (Typ.inter left right))
+  Subtyping tmp am t (Typ.path upper left) →
+  Subtyping tmp am t (Typ.path upper right) →
+  Subtyping tmp am t (Typ.path upper (Typ.inter left right))
 := by
   simp [Subtyping, Typing]
   intro h0 h1
@@ -931,9 +937,9 @@ theorem Subtyping.inter_conseq :
   exact ⟨h6 arg h11, h9 arg h11⟩
 
 theorem Subtyping.inter_entry :
-  Subtyping am t (Typ.entry l left) →
-  Subtyping am t (Typ.entry l right) →
-  Subtyping am t (Typ.entry l (Typ.inter left right))
+  Subtyping tmp am t (Typ.entry l left) →
+  Subtyping tmp am t (Typ.entry l right) →
+  Subtyping tmp am t (Typ.entry l (Typ.inter left right))
 := by
   simp [Subtyping, Typing]
   intro h0 h1
@@ -943,8 +949,8 @@ theorem Subtyping.inter_entry :
 
 theorem Subtyping.diff_minu_elim :
   Typ.wellformed subtra →
-  Subtyping am minu upper →
-  Subtyping am (Typ.diff minu subtra) upper
+  Subtyping tmp am minu upper →
+  Subtyping tmp am (Typ.diff minu subtra) upper
 := by
   simp [Subtyping]
   intro h0 h1
@@ -956,8 +962,8 @@ theorem Subtyping.diff_minu_elim :
 
 theorem Subtyping.diff_subtra_elim upper :
   Typ.wellformed subtra →
-  Subtyping am minu subtra →
-  Subtyping am (Typ.diff minu subtra) upper
+  Subtyping tmp am minu subtra →
+  Subtyping tmp am (Typ.diff minu subtra) upper
 := by
   simp [Subtyping]
   intro h0 h1
@@ -970,9 +976,9 @@ theorem Subtyping.diff_subtra_elim upper :
 
 theorem Subtyping.diff_intro :
   Typ.wellformed subtra →
-  Subtyping am lower minu →
-  (∀ e, Typing am e lower → ¬ Typing am e subtra) →
-  Subtyping am lower (Typ.diff minu subtra)
+  Subtyping tmp am lower minu →
+  (∀ e, Typing tmp am e lower → ¬ Typing tmp am e subtra) →
+  Subtyping tmp am lower (Typ.diff minu subtra)
 := by
   simp [Subtyping]
   intro h0 h1 h2
@@ -983,14 +989,14 @@ theorem Subtyping.diff_intro :
 
 
 -- theorem Typing.list_diff_minu_elim :
---   (Typing am e minu → Typing am e upper) →
---   Typing am e (Typ.list_diff minu subtras) →
---   Typing am e upper
+--   (Typing tmp am e minu → Typing tmp am e upper) →
+--   Typing tmp am e (Typ.list_diff minu subtras) →
+--   Typing tmp am e upper
 
 theorem Subtyping.list_diff_minu_elim :
   Typ.list_wellformed subtras →
-  Subtyping am minu upper →
-  Subtyping am (Typ.list_diff minu subtras) upper
+  Subtyping tmp am minu upper →
+  Subtyping tmp am (Typ.list_diff minu subtras) upper
 := by
   simp [Subtyping]
   intro h0 h1
@@ -1002,22 +1008,23 @@ theorem Subtyping.list_diff_minu_elim :
 theorem Subtyping.exi_intro :
   Typ.wellformed lower →
   (∀ a ∈ bs , a = "") →
-  (∀ names, List.length names = List.length bs → List.Disjoint names (Prod.dom am) →
+  (∀ names, List.length names = List.length bs → List.Disjoint names (tmp :: Typ.list_prod_free_vars cs ++ Typ.free_vars body) →
     ∃ am' , Prod.dom am' = names ∧
-    (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs)) ∧
+    (MultiSubtyping tmp (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs)) ∧
     (∀ e,
-      Typing am e lower →
-      Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body)
+      Typing tmp am e lower →
+      Typing tmp (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body)
     )
   ) →
-  Subtyping am lower (Typ.exi bs cs body)
+  Subtyping tmp am lower (Typ.exi bs cs body)
 := by
   simp [Subtyping]
-  intro h0 h1 h2
-  intro e h4
+  intro h0 h1 h2 e h4
   apply Typing.exi_intro h1
   intro names h5 h6
-  have ⟨am',h7,h8,h9⟩ := h2 names h5 h6
+  simp at h6
+  have ⟨h6A,h6B,h6C⟩ := h6
+  have ⟨am',h7,h8,h9⟩ := h2 names h5 h6A h6B h6C
   exists am'
   simp [*]
 
@@ -1025,23 +1032,23 @@ theorem Subtyping.exi_intro :
 theorem Subtyping.exi_elim :
   Typ.wellformed (Typ.exi bs cs body) →
   List.length names = List.length bs →
-  List.Disjoint names (Prod.dom am) →
+  List.Disjoint names (tmp :: Typ.list_prod_free_vars cs ++ Typ.free_vars body) →
   (∀ am',
     Prod.dom am' = names →
-    MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs) →
+    MultiSubtyping tmp (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs) →
     ∀ e,
-    Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body) →
-    Typing am e upper
+    Typing tmp (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body) →
+    Typing tmp am e upper
   ) →
-  Subtyping am (Typ.exi bs cs body) upper
+  Subtyping tmp am (Typ.exi bs cs body) upper
 := by
   simp [Subtyping]
-  intro h0 h1 h2 h3
-  intro e h4
-  apply Typing.exi_elim h1 h2
+  intro h0 h1 h2 h3A h3B h3C e h4
+  apply Typing.exi_elim h1
+  { simp [*] ; exact ⟨h3A, h3B⟩ }
   {
     intro am' h5 h6 h7
-    exact h3 am' h5 h6 e h7
+    exact h3C am' h5 h6 e h7
   }
   { exact h4 }
 
@@ -1050,19 +1057,18 @@ theorem Subtyping.all_intro :
   Typ.wellformed lower →
   (∀ a ∈ bs , a = "") →
   List.length names = List.length bs →
-  List.Disjoint names (Prod.dom am) →
+  List.Disjoint names (tmp :: Typ.list_prod_free_vars cs ++ Typ.free_vars body) →
   (∀ am',
     Prod.dom am' = names →
-    MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs) →
+    MultiSubtyping tmp (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs) →
     ∀ e,
-    Typing am e lower →
-    Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body)
+    Typing tmp am e lower →
+    Typing tmp (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body)
   ) →
-  Subtyping am lower (Typ.all bs cs body)
+  Subtyping tmp am lower (Typ.all bs cs body)
 := by
   simp [Subtyping]
-  intro h0 h1 h2 h3 h4
-  intro e h6
+  intro h0 h1 h2 h3A h3B h3C h4 e h6
   simp [Typing]
   apply And.intro (Typing.safety h6)
   apply And.intro h1
@@ -1074,48 +1080,48 @@ theorem Subtyping.all_intro :
 theorem Subtyping.all_elim :
   Typ.wellformed (Typ.all bs cs body) →
   (∀ a ∈ bs , a = "") →
-  (∀ names, List.length names = List.length bs → List.Disjoint names (Prod.dom am) →
+  (∀ names, List.length names = List.length bs → List.Disjoint names (tmp :: Typ.list_prod_free_vars cs ++ Typ.free_vars body) →
     ∃ am' , Prod.dom am' = names ∧
-    (MultiSubtyping (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs)) ∧
+    (MultiSubtyping tmp (am' ++ am) (Typ.constraints_instantiate 0 (List.map Typ.var names) cs)) ∧
     (∀ e,
-      Typing (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body) →
-      Typing am e upper
+      Typing tmp (am' ++ am) e (Typ.instantiate 0 (List.map Typ.var names) body) →
+      Typing tmp am e upper
     )
   ) →
-  Subtyping am (Typ.all bs cs body) upper
+  Subtyping tmp am (Typ.all bs cs body) upper
 := by
   simp [Subtyping]
-  intro h0 h1 h2
-  intro e h3
-  apply Typing.all_elim h1
-  {
-    intro names h4 h5
-    have ⟨am',h6,h7,h8⟩ := h2 names h4 h5
+  intro h0 h1 h2 e h3
+  apply @Typing.all_elim _ _ cs body
+  { exact h1 }
+  { intro names h4 h5
+    simp at h5
+    have ⟨h5A,h5B,h5C⟩ := h5
+    have ⟨am',h6,h7,h8⟩ := h2 names h4 h5A h5B h5C
     exists am'
     simp [*]
-    exact ⟨h7, h8 e⟩
+    intro h9
+    exact h8 e h9
   }
   { exact h3 }
 
 /- Subtyping induction -/
 theorem Subtyping.lfp_elim name :
   Typ.wellformed (Typ.lfp "" t) →
+  Typ.free_vars upper = [] →
   Typ.wellformed upper →
-  -- Typ.free_vars (Typ.lfp "" t) ⊆ Prod.dom m →
-  name ∉ Typ.free_vars t →
-  Typ.free_vars upper ⊆ Prod.dom m →
-  name ∉ Prod.dom m →
-  PosMonotonic name m (Typ.instantiate 0 [.var name] t) →
-  Subtyping m (Typ.instantiate 0 [upper] t) upper →
-  Subtyping m (Typ.lfp "" t) upper
+  name ∉ (tmp :: Typ.free_vars t) →
+  PosMonotonic name tmp m (Typ.instantiate 0 [.var name] t) →
+  Subtyping tmp m (Typ.instantiate 0 [upper] t) upper →
+  Subtyping tmp m (Typ.lfp "" t) upper
 := by
   simp [Subtyping]
   intro h0 h1 h2A h2 h3 h4 h5
   intro e h7
-  have h8 : Typing m e upper = (fun e => Typing m e upper) e := by rfl
+  have h8 : Typing tmp m e upper = (fun e => Typing tmp m e upper) e := by rfl
   rw [h8]
-  generalize h9 : (fun e => Typing m e upper) = P
-  apply Typing.lfp_elim name h0
+  generalize h9 : (fun e => Typing tmp m e upper) = P
+  apply Typing.lfp_elim h0
   {
     simp [Stable]
     intro e' e'' h10
@@ -1125,7 +1131,9 @@ theorem Subtyping.lfp_elim name :
     { intro h11 ; exact Typing.subject_reduction h10 h11 }
     { intro h11 ; exact Typing.subject_expansion h10 h11 }
   }
-  { exact h3 }
+  { simp
+    exact ⟨h2,h3⟩
+  }
   { exact h4 }
   { intro e' h11
     rw [←h9]
@@ -1133,7 +1141,9 @@ theorem Subtyping.lfp_elim name :
     apply h5
     simp [PosMonotonic] at h4
 
-    apply Typing.nameless_instantiation h2A h2 h3 h1
+    apply @Typing.tmpvar_generalization name
+    apply Typing.nameless_instantiation h3 h1 h2A
+    apply @Typing.tmpvar_generalization tmp
     apply h4 P
     { rw [←h9]
       simp [Stable]
@@ -1156,7 +1166,11 @@ theorem Subtyping.lfp_elim name :
         exact Typing.subject_expansion h13 h14
       }
     }
-    { simp [←h9] }
+    { simp [←h9]
+      intro e' h12
+      apply @Typing.tmpvar_generalization tmp
+      exact Typing.env_reflection h1 h12
+    }
     { exact h11 }
 
   }
@@ -1166,13 +1180,21 @@ theorem Subtyping.lfp_elim name :
 /- Subtyping recycling -/
 theorem Subtyping.lfp_intro :
   Typ.wellformed (Typ.lfp "" t) →
-  Typ.free_vars (Typ.lfp "" t) ⊆ Prod.dom m →
-  (∀ name ∉ Prod.dom m, PosMonotonic name m (Typ.instantiate 0 [.var name] t)) →
-  Subtyping m lower (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
-  Subtyping m lower (Typ.lfp "" t)
+  Typ.free_vars (Typ.lfp "" t) = [] →
+  (∀ name ∉ (tmp :: Typ.free_vars t), PosMonotonic name tmp m (Typ.instantiate 0 [.var name] t)) →
+  Subtyping tmp m lower (Typ.instantiate 0 [(Typ.lfp "" t)] t) →
+  Subtyping tmp m lower (Typ.lfp "" t)
 := by
   simp [Subtyping]
   intro wf_lfp h monotonic subtyping e typing_lower
-  apply Typing.lfp_intro wf_lfp h monotonic (subtyping e typing_lower)
+  apply Typing.lfp_intro wf_lfp h
+  {
+    intro name h0
+    simp at h0
+    have ⟨h1,h2⟩ := h0
+    specialize monotonic name h1 h2
+    exact monotonic
+  }
+  { exact subtyping e typing_lower }
 
 end Lang

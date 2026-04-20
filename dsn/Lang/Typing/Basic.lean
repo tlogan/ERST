@@ -1319,6 +1319,15 @@ theorem Typing.env_reflection :
 
 
 
+mutual
+  theorem Typing.tmpvar_generalization :
+    Typing tmp m e t →
+    ∀ tmp' , Typing tmp' m e t
+  := by sorry
+end
+
+
+
 
 
 end Lang
