@@ -676,6 +676,13 @@ mutual
 end
 
 
+def Typ.list_free_vars : List Typ → List String
+| [] => []
+| t :: ts =>
+  Typ.free_vars t ∪ Typ.list_free_vars ts
+
+
+
 def ListTyping.free_vars : List (String × Typ) → List String
 | [] => []
 | (_,t) :: ts => Typ.free_vars t ∪ ListTyping.free_vars ts
@@ -1377,7 +1384,6 @@ theorem Typ.list_prod_free_vars_instantiate_lower_bound :
 
 
 
-
 mutual
   def Typ.constraints_num_bound_vars : List (Typ × Typ) → Nat
   | [] => 0
@@ -1411,7 +1417,26 @@ mutual
 end
 
 
-def Typ.instantiated (t: Typ) := Typ.num_bound_vars t == 0
+def Typ.instantiated (t: Typ) : Bool := Typ.num_bound_vars t == 0
+
+
+def Typ.list_prod_instantiated (cs : List (Typ × Typ)) : Bool :=
+  List.exi cs (fun (left,right) => Typ.instantiated left || Typ.instantiated right)
+
+theorem Typ.free_vars_instantiator_lower_bound :
+  ∀ depth ts,
+  ¬ Typ.instantiated t →
+  (Typ.list_free_vars ts) ⊆ Typ.free_vars (Typ.instantiate depth ts t)
+:= by sorry
+
+theorem Typ.list_prod_free_vars_instantiator_lower_bound :
+  ∀ depth ts,
+  ¬ Typ.list_prod_instantiated cs →
+  (Typ.list_free_vars ts) ⊆ Typ.list_prod_free_vars (Typ.constraints_instantiate depth ts cs)
+:= by sorry
+
+
+
 
 
 theorem Typ.list_instantiate_identity :
@@ -1503,6 +1528,20 @@ theorem Typ.instantiated_shift_vars_preservation :
 := by
   simp [Typ.instantiated]
   apply Typ.num_bound_vars_zero_shift_vars_preservation
+
+
+
+theorem Typ.instantiated_instantiate_reflexivity :
+  Typ.instantiated t →
+  Typ.instantiate depth ts t = t
+:= by
+  sorry
+
+theorem Typ.list_prod_instantiated_instantiate_reflexivity :
+  Typ.list_prod_instantiated cs →
+  Typ.constraints_instantiate depth ts cs = cs
+:= by
+  sorry
 
 
 

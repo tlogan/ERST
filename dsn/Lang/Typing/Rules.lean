@@ -19,6 +19,7 @@ set_option eval.pp false
 
 namespace Lang
 
+
 theorem Subtyping.refl :
   Typ.wellformed t →
   Subtyping tmp m t t
@@ -758,7 +759,7 @@ theorem Typing.lfp_intro :
     }
     {
       apply @Typing.tmpvar_generalization name
-      apply Typing.named_instantiation
+      apply Typing.instantiate_naming
       { intro h8
         exact freshB h8
       }
@@ -1142,7 +1143,7 @@ theorem Subtyping.lfp_elim name :
     simp [PosMonotonic] at h4
 
     apply @Typing.tmpvar_generalization name
-    apply Typing.nameless_instantiation h3 h1 h2A
+    apply Typing.instantiate_anonymization h3 h1 h2A
     apply @Typing.tmpvar_generalization tmp
     apply h4 P
     { rw [←h9]
