@@ -11,6 +11,14 @@ namespace Lang
 def Prod.dom (xs : List (α × β)) :=
   List.map Prod.fst xs
 
+def Prod.range (xs : List (α × β)) :=
+  List.map Prod.snd xs
+
+theorem Prod.dom_zip_eq :
+  List.length xs = List.length ys →
+  Prod.dom (List.zip xs ys) = xs
+:= by sorry
+
 
 def Prod.remove [DecidableEq α] (target : α) (xs : List (α × β)) : List (α × β)
 := List.filter (fun (key,_) => key != target) xs

@@ -1319,5 +1319,4 @@ theorem Typing.env_reflection :
 
 
 
-
 end Lang

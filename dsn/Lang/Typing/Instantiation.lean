@@ -17,8 +17,6 @@ set_option eval.pp false
 namespace Lang
 
 ----------------------------------------------
--- TBD: might not actually need the renaming; can get disjoint guarantee from instantiated types
-----------------------------------------------
 -- mutual
 --   theorem Typing.instantiate_name_generalization :
 --     name ∉ Prod.dom am' →
@@ -32,19 +30,42 @@ namespace Lang
 -- end
 
 
--- mutual
---   theorem Typing.instantiate_names_generalization :
---     List.length names = List.length preds →
---     List.Disjoint names (Prod.dom am') →
---     List.Disjoint names (Typ.free_vars body) →
---     Typing (m0 ++ (List.zip names preds) ++ m2) e (Typ.instantiate depth (List.map .var names) body) →
---     ∀ {names'},
---     List.length names' = List.length preds →
---     List.Disjoint names' (Prod.dom am') →
---     List.Disjoint names' (Typ.free_vars body) →
---     Typing (m0 ++ (List.zip names' preds) ++ m2) e (Typ.instantiate depth (List.map .var names') body)
---   := by sorry
--- end
+mutual
+  theorem Typing.generalized_instantiate_names_generalization :
+    List.length names = List.length preds →
+    List.Disjoint names (Prod.dom m') →
+    List.Disjoint names (Typ.free_vars body) →
+    Typing (m' ++ (List.zip names preds) ++ m) e (Typ.instantiate depth (List.map .var names) body) →
+    ∀ {names'},
+    List.length names' = List.length preds →
+    List.Disjoint names' (Prod.dom m') →
+    List.Disjoint names' (Typ.free_vars body) →
+    Typing (m' ++ (List.zip names' preds) ++ m) e (Typ.instantiate depth (List.map .var names') body)
+  := by sorry
+end
+
+theorem MultiSubtyping.instantiate_names_generalization :
+  List.length names = List.length preds →
+  List.Disjoint names (Typ.list_prod_free_vars cs) →
+  MultiSubtyping ((List.zip names preds) ++ m) (Typ.constraints_instantiate depth (List.map .var names) cs) →
+  ∀ {names'},
+  List.length names' = List.length preds →
+  List.Disjoint names' (Typ.list_prod_free_vars cs) →
+  MultiSubtyping ((List.zip names' preds) ++ m) (Typ.constraints_instantiate depth (List.map .var names') cs)
+:= by sorry
+
+
+theorem Typing.instantiate_names_generalization :
+  List.length names = List.length preds →
+  List.Disjoint names (Typ.free_vars body) →
+  Typing ((List.zip names preds) ++ m) e (Typ.instantiate depth (List.map .var names) body) →
+  ∀ {names'},
+  List.length names' = List.length preds →
+  List.Disjoint names' (Typ.free_vars body) →
+  Typing ((List.zip names' preds) ++ m) e (Typ.instantiate depth (List.map .var names') body)
+:= by sorry
+
+
 ----------------------------------------------
 
 
@@ -333,7 +354,7 @@ mutual
       apply Typing.generalized_instantiate_naming h2 h3 h4 h9
     }
   | all bs cs body =>
-    simp [Typ.instantiate, Typ.free_vars]
+    simp [Typ.free_vars,Typ.instantiate]
     intro h1 h2A h2B
     simp [Typing]
     intro h3 h4 h5 h6 names h7 h8 h9 h10
@@ -369,9 +390,7 @@ mutual
 
         rw [←List.append_assoc]
 
-        simp [Typ.free_vars] at h2
-        have ⟨h16,h17⟩ := h2
-        apply Typing.env_insert_reflection (Or.inl h17)
+        apply Typing.env_insert_reflection (Or.inl h2B)
         rw [←Typ.instantiated_instantiate_reflexivity h15B]
         rw [←Typ.instantiated_instantiate_reflexivity h15B]
         rw [List.append_assoc]
@@ -380,7 +399,7 @@ mutual
         rw [Typ.list_prod_instantiated_instantiate_reflexivity h15A]
 
         rw [←List.append_assoc]
-        apply MultiSubtyping.env_insert_preservation (Or.inl h16)
+        apply MultiSubtyping.env_insert_preservation (Or.inl h2A)
         rw [←Typ.list_prod_instantiated_instantiate_reflexivity h15A]
         rw [←Typ.list_prod_instantiated_instantiate_reflexivity h15A]
         rw [List.append_assoc]
@@ -486,48 +505,48 @@ mutual
     }
 
   | exi bs cs body =>
-    simp [Typ.instantiate, Typing]
-    intro h2 h3 h4 h5 h6
-    apply And.intro h5
-    intro names h7 h8 h9 h10
-    specialize h6 names h7 h8
-    have h11A : List.Disjoint names (Typ.list_prod_free_vars (Typ.constraints_instantiate (depth + List.length bs) [Typ.var name] cs)) := by
-      simp [List.Disjoint] at h9
+    simp [Typ.free_vars,Typ.instantiate,Typing]
+    intro h2 h3A h3B h4 h5 h6 h7
+    apply And.intro h6
+    intro names h8 h9 h10
+
+    have ⟨names',length_eq,disjointness⟩ := String.fresh_names (List.length bs) (name :: Typ.list_prod_free_vars cs ++ Typ.free_vars body)
+
+    -- TODO:
+    -- choose some arbitrary fresh names: names' where name ∉ names'
+    -- derive the conclusion in terms of names'
+    -- apply IH to anonymize
+    -- rename names' to names and am''' to am''
+    -- exists am''
+
+
+
+    specialize h7 names' length_eq
+    have h11A : List.Disjoint names' (Typ.list_prod_free_vars (Typ.constraints_instantiate (depth + List.length bs) [Typ.var name] cs)) := by
+      simp [List.Disjoint] at disjointness
       simp [List.Disjoint]
       intro name' h11 h12
       apply Typ.list_prod_free_vars_instantiate_upper_bound at h12
       simp [Typ.free_vars] at h12
-      cases h12 with
-      | inl h13 =>
-        apply h9 h11
-        apply Typ.list_prod_free_vars_instantiate_lower_bound _ _ h13
-      | inr h13 =>
-        rw [h13] at h11
-        exact h8 h11
+      have ⟨h14,h15,h16⟩ := disjointness h11
+      simp [h14] at h12
+      exact h15 h12
 
-    have h11B : List.Disjoint names (Typ.free_vars (Typ.instantiate (depth + List.length bs) [Typ.var name] body)) := by
-      simp [List.Disjoint] at h10
+    have h11B : List.Disjoint names' (Typ.free_vars (Typ.instantiate (depth + List.length bs) [Typ.var name] body)) := by
+      simp [List.Disjoint] at disjointness
       simp [List.Disjoint]
       intro name' h11 h12
       apply Typ.free_vars_instantiate_upper_bound at h12
       simp [Typ.free_vars] at h12
-      cases h12 with
-      | inl h13 =>
-        apply h10 h11
-        apply Typ.free_vars_instantiate_lower_bound _ _ h13
-      | inr h13 =>
-        rw [h13] at h11
-        exact h8 h11
+      have ⟨h14,h15,h16⟩ := disjointness h11
+      simp [h14] at h12
+      exact h16 h12
 
-    have ⟨am'',h12A,h12B,h12C⟩ := h6 h11A h11B
+    have ⟨am'',h12A,h12B,h12C⟩ := h7 h11A h11B
 
 
-    exists am''
-    simp [*]
-    rw [←List.append_assoc]
-
-    have h14 :
-      ∀ t' ∈ List.map Typ.var names,
+    have h12D :
+      ∀ t' ∈ List.map Typ.var names',
         t' = Typ.instantiate depth [t] t'
     := by
       intro t h14
@@ -535,30 +554,47 @@ mutual
       rw [←h16]
       simp [Typ.instantiate]
 
-    rw [Typ.list_instantiate_identity h14]
-    rw [←h7]
-    rw [←List.length_map Typ.var]
 
 
-    have h2A : name ∉ Prod.dom (am'' ++ am') := by
+    have h2A : name ∉ names' := by
+      simp [List.Disjoint] at disjointness
+      intro h13
+      specialize disjointness h13
+      simp at disjointness
+
+
+    have h2B : name ∉ Prod.dom (am'' ++ am') := by
+      simp [Prod.dom]
       simp [Prod.dom] at h2
-      simp [Prod.dom,h2]
-      rw [←h12A] at h8
-      simp [Prod.dom] at h8
-      exact h8
+      simp [h2]
+      rw [←h12A] at h2A
+      simp [Prod.dom] at h2A
+      exact h2A
 
-    apply And.intro
-    {
+
+    have h12B' : MultiSubtyping (am'' ++ (am' ++ am))
+      (Typ.constraints_instantiate 0 (List.map Typ.var names')
+      (Typ.constraints_instantiate (depth + List.length bs) [t] cs))
+    := by
+      rw [←List.append_assoc]
+      rw [Typ.list_instantiate_identity h12D]
+      rw [←length_eq]
+      rw [←List.length_map Typ.var]
       rw [←Typ.constraints_instantiate_zero_inside_out]
       apply MultiSubtyping.generalized_instantiate_anonymization
-      { exact h2A }
-      { exact h3 }
+      { exact h2B }
+      {
+        intro h13
+        apply Typ.list_prod_free_vars_instantiate_upper_bound at h13
+        simp [Typ.free_vars,h2A,h3A] at h13
+      }
       { exact h4 }
+      { exact h5 }
       {
         rw [List.append_assoc]
         rw [Typ.constraints_instantiate_zero_inside_out]
         rw [List.length_map Typ.var]
-        rw [h7]
+        rw [length_eq]
         rw [←Typ.list_instantiate_identity]
         { exact h12B }
         {
@@ -568,17 +604,31 @@ mutual
           simp [Typ.instantiate]
         }
       }
-    }
-    { rw [←Typ.instantiate_zero_inside_out]
+
+
+    have h12C' : Typing (am'' ++ (am' ++ am)) e
+      (Typ.instantiate 0 (List.map Typ.var names')
+      (Typ.instantiate (depth + List.length bs) [t] body))
+    := by
+      rw [←List.append_assoc]
+      rw [Typ.list_instantiate_identity h12D]
+      rw [←length_eq]
+      rw [←List.length_map Typ.var]
+      rw [←Typ.instantiate_zero_inside_out]
       apply Typing.generalized_instantiate_anonymization
-      { exact h2A }
-      { exact h3 }
+      { exact h2B }
+      {
+        intro h13
+        apply Typ.free_vars_instantiate_upper_bound at h13
+        simp [Typ.free_vars,h2A,h3B] at h13
+      }
       { exact h4 }
+      { exact h5 }
       {
         rw [List.append_assoc]
         rw [Typ.instantiate_zero_inside_out]
         rw [List.length_map Typ.var]
-        rw [h7]
+        rw [length_eq]
 
         rw [←Typ.list_instantiate_identity]
         { exact h12C }
@@ -589,7 +639,70 @@ mutual
           simp [Typ.instantiate]
         }
       }
-    }
+
+    have h13 : am'' = List.zip names' (Prod.range am'') := by
+      rw [←h12A]
+      simp [Prod.dom, Prod.range]
+      apply List.zip_of_prod rfl rfl
+
+    rw [h13] at h12B'
+    rw [h13] at h12C'
+
+    have h14 : List.length names' = List.length (Prod.range am'') := by
+      simp [Prod.range]
+      apply congrArg List.length at h12A
+      simp [Prod.dom] at h12A
+      simp [h12A]
+
+    have h15 : List.length names = List.length (Prod.range am'') := by
+      simp [Prod.range]
+      apply congrArg List.length at h12A
+      simp [Prod.dom] at h12A
+      rw [h12A]
+      simp [h8,length_eq]
+
+
+    have h12B'' : MultiSubtyping (List.zip names (Prod.range am'') ++ (am' ++ am))
+      (Typ.constraints_instantiate 0 (List.map Typ.var names)
+      (Typ.constraints_instantiate (depth + List.length bs) [t] cs))
+    := by
+      apply MultiSubtyping.instantiate_names_generalization h14
+      {
+        simp [List.Disjoint]
+        simp [List.Disjoint] at disjointness
+        intro name'' h16 h17
+        have ⟨h18,h19,h20⟩ := disjointness h17
+        apply Typ.list_prod_free_vars_instantiate_upper_bound at h17
+        simp at h17
+        simp [h19,h4] at h17
+      }
+      { exact h12B' }
+      { exact h15 }
+      { exact h9 }
+
+    have h12C'' : Typing (List.zip names (Prod.range am'') ++ (am' ++ am)) e
+      (Typ.instantiate 0 (List.map Typ.var names)
+      (Typ.instantiate (depth + List.length bs) [t] body))
+    := by
+      apply Typing.instantiate_names_generalization h14
+      {
+        simp [List.Disjoint]
+        simp [List.Disjoint] at disjointness
+        intro name'' h16 h17
+        have ⟨h18,h19,h20⟩ := disjointness h16
+        apply Typ.free_vars_instantiate_upper_bound at h17
+        simp at h17
+        simp [h20,h4] at h17
+      }
+      { exact h12C' }
+      { exact h15 }
+      { exact h10 }
+
+    exists (List.zip names (Prod.range am''))
+    apply And.intro
+    { rw [Prod.dom_zip_eq h15] }
+    { exact ⟨h12B'', h12C''⟩ }
+
 
   | lfp b body =>
     simp [Typ.instantiate, Typing]
