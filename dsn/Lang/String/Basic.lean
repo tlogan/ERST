@@ -233,4 +233,12 @@ theorem String.fresh_names n names' :
     apply String.foldl_append_list_exclusion h1
   }
 
+theorem String.fresh_name (names : List String):
+  ∃ name, name ∉ names
+:= by
+  exists (String.join names)++ (Nat.repr 0)
+  simp [String.join]
+  intro h0
+  apply String.foldl_append_list_exclusion h0
+
 end Lang
