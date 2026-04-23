@@ -1531,13 +1531,13 @@ theorem Typ.instantiated_shift_vars_preservation :
 
 
 
-theorem Typ.instantiated_instantiate_reflexivity :
+theorem Typ.instantiated_instantiate_identity :
   Typ.instantiated t →
   Typ.instantiate depth ts t = t
 := by
   sorry
 
-theorem Typ.list_prod_instantiated_instantiate_reflexivity :
+theorem Typ.list_prod_instantiated_instantiate_identity :
   Typ.list_prod_instantiated cs →
   Typ.constraints_instantiate depth ts cs = cs
 := by

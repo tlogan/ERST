@@ -385,23 +385,23 @@ mutual
     { intro am'' h13 h14
       by_cases h15 : Typ.list_prod_instantiated cs ∧ Typ.instantiated body
       { have ⟨h15A,h15B⟩ := h15
-        rw [Typ.instantiated_instantiate_reflexivity h15B]
-        rw [Typ.instantiated_instantiate_reflexivity h15B]
+        rw [Typ.instantiated_instantiate_identity h15B]
+        rw [Typ.instantiated_instantiate_identity h15B]
 
         rw [←List.append_assoc]
 
         apply Typing.env_insert_reflection (Or.inl h2B)
-        rw [←Typ.instantiated_instantiate_reflexivity h15B]
-        rw [←Typ.instantiated_instantiate_reflexivity h15B]
+        rw [←Typ.instantiated_instantiate_identity h15B]
+        rw [←Typ.instantiated_instantiate_identity h15B]
         rw [List.append_assoc]
         apply h10 _ h13
-        rw [Typ.list_prod_instantiated_instantiate_reflexivity h15A]
-        rw [Typ.list_prod_instantiated_instantiate_reflexivity h15A]
+        rw [Typ.list_prod_instantiated_instantiate_identity h15A]
+        rw [Typ.list_prod_instantiated_instantiate_identity h15A]
 
         rw [←List.append_assoc]
         apply MultiSubtyping.env_insert_preservation (Or.inl h2A)
-        rw [←Typ.list_prod_instantiated_instantiate_reflexivity h15A]
-        rw [←Typ.list_prod_instantiated_instantiate_reflexivity h15A]
+        rw [←Typ.list_prod_instantiated_instantiate_identity h15A]
+        rw [←Typ.list_prod_instantiated_instantiate_identity h15A]
         rw [List.append_assoc]
         exact h14
       }
@@ -511,15 +511,6 @@ mutual
     intro names h8 h9 h10
 
     have ⟨names',length_eq,disjointness⟩ := String.fresh_names (List.length bs) (name :: Typ.list_prod_free_vars cs ++ Typ.free_vars body)
-
-    -- TODO:
-    -- choose some arbitrary fresh names: names' where name ∉ names'
-    -- derive the conclusion in terms of names'
-    -- apply IH to anonymize
-    -- rename names' to names and am''' to am''
-    -- exists am''
-
-
 
     specialize h7 names' length_eq
     have h11A : List.Disjoint names' (Typ.list_prod_free_vars (Typ.constraints_instantiate (depth + List.length bs) [Typ.var name] cs)) := by
