@@ -54,7 +54,6 @@ theorem MultiSubtyping.instantiate_names_generalization :
   MultiSubtyping ((List.zip names' preds) ++ m) (Typ.constraints_instantiate depth (List.map .var names') cs)
 := by sorry
 
-
 theorem Typing.instantiate_names_generalization :
   List.length names = List.length preds →
   List.Disjoint names (Typ.free_vars body) →
@@ -64,6 +63,24 @@ theorem Typing.instantiate_names_generalization :
   List.Disjoint names' (Typ.free_vars body) →
   Typing ((List.zip names' preds) ++ m) e (Typ.instantiate depth (List.map .var names') body)
 := by sorry
+
+
+theorem PosMonotonic.instantiate_name_generalization :
+  name ∉ (Typ.free_vars body) →
+  PosMonotonic name m (Typ.instantiate depth [.var name] body) →
+  ∀ {name'},
+  name' ∉ (Typ.free_vars body) →
+  PosMonotonic name' m (Typ.instantiate depth [.var name'] body)
+:= by sorry
+
+theorem Typing.instantiate_name_generalization :
+  name ∉ (Typ.free_vars body) →
+  Typing ((name,P) :: m) e (Typ.instantiate depth [.var name] body) →
+  ∀ {name'},
+  name' ∉ (Typ.free_vars body) →
+  Typing ((name',P) :: m) e (Typ.instantiate depth [.var name'] body)
+:= by sorry
+
 
 
 ----------------------------------------------
@@ -754,73 +771,86 @@ mutual
         apply h11A
       }
 
-    have h11B' : ∀ (P : Expr → Prop), Stable P →
-      (∀ (e' : Expr),
-          Typing ((name'', P) :: (am' ++ am)) e'
-              (Typ.instantiate 0 [Typ.var name''] (Typ.instantiate (depth + 1) [t] body)) →
-            P e') →
-        P e
-    := by
+
+    apply And.intro
+    {
+
+      apply @PosMonotonic.instantiate_name_generalization _ name''
+      {
+        intro h13
+        apply Typ.free_vars_instantiate_upper_bound at h13
+        simp [h2,h8B] at h13
+      }
+      { exact h11A' }
+      { exact h7 }
+    }
+    {
       intro P stable h12
       apply h11B P stable
       intro e' h13
       apply h12
 
-      have h14 :
-        ∀ t' ∈ [Typ.var name''], t' = Typ.instantiate depth [t] t'
+      have h11B' : Typing ((name'', P) :: (am' ++ am)) e'
+        (Typ.instantiate 0 [Typ.var name''] (Typ.instantiate (depth + 1) [t] body))
       := by
-        simp [Typ.instantiate]
 
-      rw [Typ.list_instantiate_identity h14]
-      have h16 : List.length [Typ.var name''] = 1 := by exact rfl
-      rw [←h16]
-
-      have h17 :
-        (name'', P) :: (am' ++ am) =
-        ((name'', P) :: am') ++ am
-      := by exact rfl
-
-      rw [h17]
-
-      rw [←Typ.instantiate_zero_inside_out]
-      apply @Typing.generalized_instantiate_anonymization _ name
-      {
-        simp [Prod.dom]
-        simp [Prod.dom] at h0
-        apply And.intro
-        { intro h18 ; exact h8A (Eq.symm h18) }
-        { intro P ; exact h0 P }
-      }
-      {
-        intro h18
-        apply Typ.free_vars_instantiate_upper_bound at h18
-        simp [Typ.free_vars,h1] at h18
-        apply h8A
-        simp [h18]
-      }
-      { exact h2 }
-      { exact h3 }
-      { have h18 :
-          (name'', P) :: (am' ++ (name, fun e => Typing [] e t) :: am) =
-          ((name'', P) :: am') ++ (name, fun e => Typing [] e t) :: am
-        := by exact rfl
-        rw [←h18]
-        rw [Typ.instantiate_zero_inside_out]
-        rw [h16]
-        have h19 :
-          ∀ t' ∈ [Typ.var name''], t' = Typ.instantiate depth [Typ.var name] t'
+        have h14 :
+          ∀ t' ∈ [Typ.var name''], t' = Typ.instantiate depth [t] t'
         := by
           simp [Typ.instantiate]
-        rw [←Typ.list_instantiate_identity h19]
-        exact h13
-      }
 
-    apply And.intro
-    { --TODO: renaming
-      sorry
-    }
-    { -- TODO: renaming
-      sorry
+        rw [Typ.list_instantiate_identity h14]
+        have h16 : List.length [Typ.var name''] = 1 := by exact rfl
+        rw [←h16]
+
+        have h17 :
+          (name'', P) :: (am' ++ am) =
+          ((name'', P) :: am') ++ am
+        := by exact rfl
+
+        rw [h17]
+
+        rw [←Typ.instantiate_zero_inside_out]
+        apply @Typing.generalized_instantiate_anonymization _ name
+        {
+          simp [Prod.dom]
+          simp [Prod.dom] at h0
+          apply And.intro
+          { intro h18 ; exact h8A (Eq.symm h18) }
+          { intro P ; exact h0 P }
+        }
+        {
+          intro h18
+          apply Typ.free_vars_instantiate_upper_bound at h18
+          simp [Typ.free_vars,h1] at h18
+          apply h8A
+          simp [h18]
+        }
+        { exact h2 }
+        { exact h3 }
+        { have h18 :
+            (name'', P) :: (am' ++ (name, fun e => Typing [] e t) :: am) =
+            ((name'', P) :: am') ++ (name, fun e => Typing [] e t) :: am
+          := by exact rfl
+          rw [←h18]
+          rw [Typ.instantiate_zero_inside_out]
+          rw [h16]
+          have h19 :
+            ∀ t' ∈ [Typ.var name''], t' = Typ.instantiate depth [Typ.var name] t'
+          := by
+            simp [Typ.instantiate]
+          rw [←Typ.list_instantiate_identity h19]
+          exact h13
+        }
+
+      apply @Typing.instantiate_name_generalization _ name''
+      {
+        intro h13
+        apply Typ.free_vars_instantiate_upper_bound at h13
+        simp [h2,h8B] at h13
+      }
+      { exact h11B'  }
+      { exact h7  }
     }
   termination_by (Typ.size body, 0)
   decreasing_by
@@ -928,9 +958,9 @@ mutual
     intro h1 h2 h3 h4 h5 h6 h7
     simp [*]
     intro arg h9
-    apply Typing.generalized_instantiate_naming h2 h3 h4
-    apply h6
-    apply Typing.generalized_instantiate_anonymization h2 h3 h4 h9
+    apply Typing.generalized_instantiate_naming h1 h3 h4 h5
+    apply h7
+    apply Typing.generalized_instantiate_anonymization h1 h2 h4 h5 h9
 
   | bot =>
     simp [Typ.instantiate, Typing]
