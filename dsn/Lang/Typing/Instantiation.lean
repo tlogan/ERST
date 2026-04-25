@@ -1323,22 +1323,58 @@ mutual
     }
 
   | lfp b body =>
-    simp [Typ.instantiate, Typing]
-    intro h1 h2 h3 h4 h5 h6
+    simp [Typ.free_vars, Typ.instantiate, Typing]
+    intro h0 h1 h2 h3 h4 h5 h6
     simp [*]
-    intro name' h7 h8
-    specialize h6 name' h7
+    intro name' h7
+
+    specialize h6 name'
 
 
-    have h9 : name' ∉ Typ.free_vars (Typ.instantiate (depth + 1) [t] body)  := by
+    have h8 : name' ∉ Typ.free_vars (Typ.instantiate (depth + 1) [t] body)  := by
       intro h9
       apply Typ.free_vars_instantiate_upper_bound at h9
       simp [h2] at h9
-      apply h8
+      apply h7
       apply Typ.free_vars_instantiate_lower_bound _ _ h9
 
+    have ⟨h10A,h10B⟩ := h6 h8
 
-    have ⟨h11A,h11B⟩ := h6 h9
+    by_cases h11 : Typ.instantiated body
+    { apply And.intro
+      {
+        rw [Typ.instantiated_instantiate_identity h11]
+        rw [Typ.instantiated_instantiate_identity h11]
+        rw [Typ.instantiated_instantiate_identity h11] at h10A
+        rw [Typ.instantiated_instantiate_identity h11] at h10A
+        apply PosMonotonic.env_insert_preservation (Or.inl h1)
+        exact h10A
+      }
+      { intro P stable h12
+        apply h10B P stable
+        intro e' h13
+        apply h12
+
+        rw [Typ.instantiated_instantiate_identity h11]
+        rw [Typ.instantiated_instantiate_identity h11]
+        rw [Typ.instantiated_instantiate_identity h11] at h13
+        rw [Typ.instantiated_instantiate_identity h11] at h13
+        rw [←List.cons_append]
+        apply Typing.env_insert_preservation (Or.inl h1)
+        rw [List.cons_append]
+        exact h13
+      }
+    }
+
+
+    have h0A : name ≠ name' := by
+      intro h12
+      apply h7
+      apply Typ.free_vars_instantiator_lower_bound
+      apply h11
+      simp [Typ.list_free_vars,Typ.free_vars,h12]
+
+
     apply And.intro
     {
       have h12 :
@@ -1351,10 +1387,15 @@ mutual
       rw [←h13]
       rw [←Typ.instantiate_zero_inside_out]
       apply PosMonotonic.generalized_instantiate_naming
-      { exact h1 }
+      { exact h0 }
+      { intro h14
+        apply Typ.free_vars_instantiate_upper_bound at h14
+        simp [Typ.free_vars,h1] at h14
+        apply h0A h14
+      }
       { exact h2 }
       { exact h3 }
-      { intro h14 ; apply h7 ; simp [h14] }
+      { exact h0A }
       {
         rw [Typ.instantiate_zero_inside_out]
         rw [h13]
@@ -1364,11 +1405,11 @@ mutual
           simp [Typ.instantiate]
 
         rw [←Typ.list_instantiate_identity h14]
-        apply h11A
+        exact h10A
       }
     }
     { intro P stable h12
-      apply h11B P stable
+      apply h10B P stable
       intro e' h13
       apply h12
 
@@ -1390,19 +1431,20 @@ mutual
       rw [←Typ.instantiate_zero_inside_out]
       apply Typing.generalized_instantiate_naming
       { simp [Prod.dom]
-        simp [Prod.dom] at h1
+        simp [Prod.dom] at h0
         simp [*]
-        intro h18
-        apply h7 ; simp [h18]
+      }
+      { intro h14
+        apply Typ.free_vars_instantiate_upper_bound at h14
+        simp [Typ.free_vars,h1] at h14
+        apply h0A h14
       }
       { exact h2 }
       { exact h3 }
-      {
-
-        rw [Typ.instantiate_zero_inside_out]
+      { rw [Typ.instantiate_zero_inside_out]
         have h18 :
-          (name', P) :: (am' ++ (name, fun e => Typing [] e t) :: am) =
-          ((name', P) :: am') ++ (name, fun e => Typing [] e t) :: am
+          (name', P) :: (am' ++ am) =
+          ((name', P) :: am') ++ am
         := by exact rfl
         rw [←h18]
         rw [h16]
