@@ -1151,31 +1151,101 @@ mutual
   | exi bs cs body =>
     simp [Typ.free_vars, Typ.instantiate, Typing]
 
-    intro h2 h3 h4 h5 h6
+    intro h0 h1 h2 h3 h4 h5 h6
     apply And.intro h5
-    intro names h7 h8 h9 h10
-    specialize h6 names h7 h8
+    intro names h7 h8 h9
 
-    have h11A : List.Disjoint names (Typ.list_prod_free_vars (Typ.constraints_instantiate (depth + List.length bs) [t] cs)) := by
+    have h11A : List.Disjoint names
+      (Typ.list_prod_free_vars (Typ.constraints_instantiate (depth + List.length bs) [t] cs))
+    := by
+      simp [List.Disjoint]
+      simp [List.Disjoint] at h8
+      intro name' h10 h11
+      apply h8 h10
+      apply Typ.list_prod_free_vars_instantiate_upper_bound at h11
+      simp [h3] at h11
+      apply Typ.list_prod_free_vars_instantiate_lower_bound
+      exact h11
+
+    have h11B : List.Disjoint names
+      (Typ.free_vars (Typ.instantiate (depth + List.length bs) [t] body))
+    := by
+      simp [List.Disjoint]
       simp [List.Disjoint] at h9
-      simp [List.Disjoint]
-      intro name' h11 h12
-      apply Typ.list_prod_free_vars_instantiate_upper_bound at h12
-      simp [h3] at h12
-      apply h9 h11
-      apply Typ.list_prod_free_vars_instantiate_lower_bound _ _ h12
+      intro name' h10 h11
+      apply h9 h10
+      apply Typ.free_vars_instantiate_upper_bound at h11
+      simp [h3] at h11
+      apply Typ.free_vars_instantiate_lower_bound
+      exact h11
 
-    have h11B : List.Disjoint names (Typ.free_vars (Typ.instantiate (depth + List.length bs) [t] body)) := by
-      simp [List.Disjoint] at h10
-      simp [List.Disjoint]
-      intro name' h11 h12
-      apply Typ.free_vars_instantiate_upper_bound at h12
-      simp [h3] at h12
-      apply h10 h11
-      apply Typ.free_vars_instantiate_lower_bound _ _ h12
+    have ⟨am'',h12A,h12B,h12C⟩ := h6 names h7 h11A h11B
 
-    have ⟨am'', h12A, h12B, h12C⟩ := h6 h11A h11B
     exists am''
+
+    by_cases h13 : Typ.list_prod_instantiated cs ∧ Typ.instantiated body
+    { have ⟨h13A,h13B⟩ := h13
+
+      apply And.intro h12A
+      apply And.intro
+      {
+
+        rw [Typ.list_prod_instantiated_instantiate_identity h13A]
+        rw [Typ.list_prod_instantiated_instantiate_identity h13A]
+
+        rw [←List.append_assoc]
+
+        apply MultiSubtyping.env_insert_preservation (Or.inl h1)
+
+        rw [Typ.list_prod_instantiated_instantiate_identity h13A] at h12B
+        rw [Typ.list_prod_instantiated_instantiate_identity h13A] at h12B
+        rw [List.append_assoc]
+        exact h12B
+      }
+      {
+        rw [Typ.instantiated_instantiate_identity h13B]
+        rw [Typ.instantiated_instantiate_identity h13B]
+
+        rw [←List.append_assoc]
+
+        apply Typing.env_insert_preservation (Or.inl h2)
+
+        rw [Typ.instantiated_instantiate_identity h13B] at h12C
+        rw [Typ.instantiated_instantiate_identity h13B] at h12C
+        rw [List.append_assoc]
+        exact h12C
+      }
+
+    }
+
+    have h0A : name ∉ names := by
+      simp at h13
+      by_cases h14 : Typ.list_prod_instantiated cs
+      {
+        specialize h13 h14
+        simp [List.Disjoint] at h9
+        intro h18
+        apply h9 h18
+        apply Typ.free_vars_instantiator_lower_bound
+        { exact ne_true_of_eq_false h13 }
+        { simp [Typ.list_free_vars, Typ.free_vars] }
+      }
+      {
+        simp [List.Disjoint] at h8
+        intro h18
+        apply h8 h18
+        apply Typ.list_prod_free_vars_instantiator_lower_bound _ _ h14
+        simp [Typ.list_free_vars, Typ.free_vars]
+      }
+
+    have h0B : name ∉ Prod.dom (am'' ++ am') := by
+      simp [Prod.dom]
+      simp [Prod.dom] at h0
+      simp [h0]
+      rw [←h12A] at h0A
+      simp [Prod.dom] at h0A
+      exact h0A
+
     apply And.intro h12A
     have h13 :
       am'' ++ (am' ++ (name, fun e => Typing [] e t) :: am) =
@@ -1196,18 +1266,17 @@ mutual
     rw [←h7]
     rw [←List.length_map Typ.var]
 
-    have h2A : name ∉ Prod.dom (am'' ++ am') := by
-      simp [Prod.dom] at h2
-      simp [Prod.dom,h2]
-      rw [←h12A] at h8
-      simp [Prod.dom] at h8
-      exact h8
 
     apply And.intro
     {
       rw [←Typ.constraints_instantiate_zero_inside_out]
       apply MultiSubtyping.generalized_instantiate_naming
-      { exact h2A }
+      { exact h0B }
+      {
+        intro h15
+        apply Typ.list_prod_free_vars_instantiate_upper_bound at h15
+        simp [Typ.free_vars,h0A,h1] at h15
+      }
       { exact h3 }
       { exact h4 }
       {
@@ -1228,7 +1297,12 @@ mutual
     }
     { rw [←Typ.instantiate_zero_inside_out]
       apply Typing.generalized_instantiate_naming
-      { exact h2A }
+      { exact h0B }
+      {
+        intro h15
+        apply Typ.free_vars_instantiate_upper_bound at h15
+        simp [Typ.free_vars,h0A,h2] at h15
+      }
       { exact h3 }
       { exact h4 }
       {
