@@ -220,7 +220,7 @@ theorem String.fresh_names n names' :
   ∃ names : List String,
   List.length names = n ∧
   List.Disjoint names names'
-  /- NOTE: uniqueness of names isn't necessary
+  /- NOTE: uniqueness of names is necessary for renaming
   -- ∧ List.Pairwise (fun x y => x ≠ y) names
   -/
 := by

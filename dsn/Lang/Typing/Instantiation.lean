@@ -32,55 +32,154 @@ namespace Lang
 
 mutual
   theorem Typing.generalized_instantiate_names_generalization :
+    List.Pairwise (fun x y => x ≠ y) names →
     List.length names = List.length preds →
     List.Disjoint names (Prod.dom m') →
-    List.Disjoint names (Typ.free_vars body) →
-    Typing (m' ++ (List.zip names preds) ++ m) e (Typ.instantiate depth (List.map .var names) body) →
+    List.Disjoint names (Typ.free_vars t) →
+    Typing (m' ++ (List.zip names preds) ++ m) e (Typ.instantiate depth (List.map .var names) t) →
     ∀ {names'},
+    List.Pairwise (fun x y => x ≠ y) names' →
     List.length names' = List.length preds →
     List.Disjoint names' (Prod.dom m') →
-    List.Disjoint names' (Typ.free_vars body) →
-    Typing (m' ++ (List.zip names' preds) ++ m) e (Typ.instantiate depth (List.map .var names') body)
-  := by sorry
+    List.Disjoint names' (Typ.free_vars t) →
+    Typing (m' ++ (List.zip names' preds) ++ m) e (Typ.instantiate depth (List.map .var names') t)
+  := by cases t with
+  | bvar i =>
+    simp [Typ.instantiate]
+    intro h0 h1 h2 h3 h4 names' h5 h6 h7 h8
+    by_cases it : depth ≤ i
+    { simp [it] at h4
+      simp [it]
+      by_cases h9 : i - depth < List.length preds
+      {
+        have h10 := h9
+        rw [←h1] at h9
+        rw [←h6] at h10
+
+        simp [List.getElem?_eq_getElem h9] at h4
+        simp [List.getElem?_eq_getElem h10]
+
+        simp [Typ.shift_vars,Typing] at h4
+        have ⟨h4A,P,h4B,h4C,h4D⟩ := h4
+        simp [Typ.shift_vars,Typing]
+        simp [*]
+        exists P
+        simp [*]
+
+
+        have h11A : names[i - depth] ∈ names := by exact List.getElem_mem h9
+        have h11B : names[i - depth] ∉ Prod.dom m' := by
+          simp [List.Disjoint] at h2
+          exact h2 h11A
+
+        have h11C : names[i - depth] ∈ Prod.dom (List.zip names preds) := by
+          rw [Prod.dom_zip_eq h1]
+          exact h11A
+
+
+        have h12A : names'[i - depth] ∈ names' := by exact List.getElem_mem h10
+        have h12B : names'[i - depth] ∉ Prod.dom m' := by
+          simp [List.Disjoint] at h7
+          exact h7 h12A
+        have h12C : names'[i - depth] ∈ Prod.dom (List.zip names' preds) := by
+          rw [Prod.dom_zip_eq h6]
+          exact h12A
+
+        rw [Prod.find_append_suffix _ h11B] at h4C
+        rw [Prod.find_append_suffix _ h12B]
+
+        rw [Prod.find_append_prefix _ h11C] at h4C
+        rw [Prod.find_append_prefix _ h12C]
+
+        rw [←h4C]
+
+
+        apply Prod.find_keys_generalization (i - depth)
+        { exact h5 }
+        { exact h0 }
+        { simp [h1,h6] }
+        { exact List.getElem?_eq_getElem h10 }
+        { exact List.getElem?_eq_getElem h9 }
+      }
+      {
+        sorry
+      }
+    }
+    { simp [it,Typing] at h4 }
+  | var name => sorry
+  | _ => sorry
 end
 
 theorem MultiSubtyping.instantiate_names_generalization :
+  List.Pairwise (fun x y => x ≠ y) names →
   List.length names = List.length preds →
   List.Disjoint names (Typ.list_prod_free_vars cs) →
   MultiSubtyping ((List.zip names preds) ++ m) (Typ.constraints_instantiate depth (List.map .var names) cs) →
   ∀ {names'},
+  List.Pairwise (fun x y => x ≠ y) names' →
   List.length names' = List.length preds →
   List.Disjoint names' (Typ.list_prod_free_vars cs) →
   MultiSubtyping ((List.zip names' preds) ++ m) (Typ.constraints_instantiate depth (List.map .var names') cs)
 := by sorry
 
 theorem Typing.instantiate_names_generalization :
+  List.Pairwise (fun x y => x ≠ y) names →
   List.length names = List.length preds →
-  List.Disjoint names (Typ.free_vars body) →
-  Typing ((List.zip names preds) ++ m) e (Typ.instantiate depth (List.map .var names) body) →
+  List.Disjoint names (Typ.free_vars t) →
+  Typing ((List.zip names preds) ++ m) e (Typ.instantiate depth (List.map .var names) t) →
   ∀ {names'},
+  List.Pairwise (fun x y => x ≠ y) names' →
   List.length names' = List.length preds →
-  List.Disjoint names' (Typ.free_vars body) →
-  Typing ((List.zip names' preds) ++ m) e (Typ.instantiate depth (List.map .var names') body)
-:= by sorry
-
-
-theorem PosMonotonic.instantiate_name_generalization :
-  name ∉ (Typ.free_vars body) →
-  PosMonotonic name m (Typ.instantiate depth [.var name] body) →
-  ∀ {name'},
-  name' ∉ (Typ.free_vars body) →
-  PosMonotonic name' m (Typ.instantiate depth [.var name'] body)
-:= by sorry
+  List.Disjoint names' (Typ.free_vars t) →
+  Typing ((List.zip names' preds) ++ m) e (Typ.instantiate depth (List.map .var names') t)
+:= by
+  intro h0 h1 h2 h3 names' h4 h5
+  have it : List.zip names preds = [] ++ List.zip names preds := rfl
+  rw [it] at h3
+  have it : List.zip names' preds = [] ++ List.zip names' preds := rfl
+  rw [it]
+  apply @Typing.generalized_instantiate_names_generalization names
+  { exact h0 }
+  { exact h1 }
+  { simp [Prod.dom] }
+  { exact h2 }
+  { exact h3 }
+  { exact h4 }
+  { exact h5 }
+  { simp [Prod.dom] }
 
 theorem Typing.instantiate_name_generalization :
-  name ∉ (Typ.free_vars body) →
-  Typing ((name,P) :: m) e (Typ.instantiate depth [.var name] body) →
+  name ∉ (Typ.free_vars t) →
+  Typing ((name,P) :: m) e (Typ.instantiate depth [.var name] t) →
   ∀ {name'},
-  name' ∉ (Typ.free_vars body) →
-  Typing ((name',P) :: m) e (Typ.instantiate depth [.var name'] body)
-:= by sorry
+  name' ∉ (Typ.free_vars t) →
+  Typing ((name',P) :: m) e (Typ.instantiate depth [.var name'] t)
+:= by
+  intro h0 h1 name' h2
+  rw [←List.map_singleton]
+  rw [←List.map_singleton] at h1
+  have it : (name,P) :: m = List.zip [name] [P] ++ m := by rfl
+  rw [it] at h1
+  have it : (name',P) :: m = List.zip [name'] [P] ++ m := by rfl
+  rw [it]
 
+  apply @Typing.instantiate_names_generalization [name]
+  { exact List.pairwise_singleton (fun x y => x ≠ y) name }
+  { exact rfl }
+  { simp ; exact h0 }
+  { simp ; exact h1 }
+  { exact List.pairwise_singleton (fun x y => x ≠ y) name' }
+  { rfl }
+  { simp ; exact h2 }
+
+theorem PosMonotonic.instantiate_name_generalization :
+  name ∉ (Typ.free_vars t) →
+  PosMonotonic name m (Typ.instantiate depth [.var name] t) →
+  ∀ {name'},
+  name' ∉ (Typ.free_vars t) →
+  PosMonotonic name' m (Typ.instantiate depth [.var name'] t)
+:= by
+  sorry
 
 
 ----------------------------------------------

@@ -131,6 +131,17 @@ def Prod.keys_unique [DecidableEq α]: List (α × β) → Bool
 
 
 
+theorem Prod.find_keys_generalization [DecidableEq α] (i : Nat) {key key' : α} {keys keys': List α}:
+  List.Pairwise (fun x y => x ≠ y) keys →
+  List.Pairwise (fun x y => x ≠ y) keys' →
+  List.length keys = List.length keys' →
+  keys[i]? = some key →
+  keys'[i]? = some key' →
+  Prod.find key (List.zip keys vals) = Prod.find key' (List.zip keys' vals)
+:= by sorry
+
+
+
 -- def find (target : String) : List (String × α) → Option α
 -- | .nil => none
 -- | (key, e) :: m =>
